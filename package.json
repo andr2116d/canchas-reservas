@@ -12,7 +12,14 @@
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces --if-present",
     "prepare": "husky",
-    "test": "npm run test --workspaces"
+    "test": "npm run test --workspaces",
+    "postinstall": "npm run db:generate -w server",
+    "setup": "node scripts/setup.mjs",
+    "predev": "docker compose --env-file server/.env up -d --wait && npm run db:deploy -w server",
+    "db:migrate": "npm run db:migrate -w server --",
+    "db:reset": "npm run db:reset -w server",
+    "db:studio": "npm run db:studio -w server",
+    "db:stop": "docker compose --env-file server/.env stop"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
