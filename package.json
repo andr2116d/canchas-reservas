@@ -12,7 +12,8 @@
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces --if-present",
     "prepare": "husky",
-    "test": "npm run test --workspaces"
+    "test": "npm run test --workspaces",
+    "postinstall": "npm run db:generate -w server"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

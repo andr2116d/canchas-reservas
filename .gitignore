@@ -21,3 +21,4 @@ opencode.json
 pnpm-lock.yaml
 yarn.lock
 bun.lock
+server/src/generated/
