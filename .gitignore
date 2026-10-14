@@ -8,3 +8,16 @@ dist/
 coverage/
 *.tsbuildinfo
 next-env.d.ts
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.claude/
+.codex/
+.cursor/
+.opencode/
+opencode.json
+.mcp.json
+.github/copilot-instructions.md
+pnpm-lock.yaml
+yarn.lock
+bun.lock
