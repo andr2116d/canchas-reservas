@@ -11,7 +11,8 @@
     "dev:server": "npm run start:dev -w server",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces --if-present",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "npm run test --workspaces"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
