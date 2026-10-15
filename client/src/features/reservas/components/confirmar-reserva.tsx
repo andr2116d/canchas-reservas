@@ -117,9 +117,13 @@ export function PantallaConfirmarReserva(props: Props = {}) {
           <p className="font-display text-3xl font-bold tabular-nums text-cesped-700">
             {creada.codigo}
           </p>
-          <p className="text-sm text-texto-suave">
-            Tiempo para pagar el adelanto: {tiempoRestante}
-          </p>
+          {creada.estado === "CONFIRMADA" ? (
+            <p className="text-sm text-texto-suave">Pagaste el adelanto con tu crédito.</p>
+          ) : (
+            <p className="text-sm text-texto-suave">
+              Tiempo para pagar el adelanto: {tiempoRestante}
+            </p>
+          )}
           <Button variante="secundario" onClick={() => router.push("/jugador/disponibilidad")}>
             Volver a la grilla
           </Button>
