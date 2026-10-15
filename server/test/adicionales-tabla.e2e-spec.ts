@@ -127,4 +127,15 @@ describe('Tabla adicional (e2e)', () => {
       creado.actualizadoEn.getTime(),
     );
   });
+
+  it.each(['Balón', 'Chalecos', 'Agua'])(
+    'el seed deja un solo adicional %s',
+    async (nombre) => {
+      await expect(
+        prisma.adicional.count({
+          where: { nombre: { equals: nombre, mode: 'insensitive' } },
+        }),
+      ).resolves.toBe(1);
+    },
+  );
 });
