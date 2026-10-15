@@ -21,3 +21,20 @@ export function horaEnLima(instante: Date | string) {
     hourCycle: "h23",
   }).format(new Date(instante));
 }
+
+export function diaYHoraEnLima(instante: Date | string) {
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat("es-PE", {
+      timeZone: ZONA,
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date(instante))
+      .map((parte) => [parte.type, parte.value]),
+  );
+  return `${partes.weekday} ${partes.day}/${partes.month} a las ${partes.hour}:${partes.minute}`;
+}
