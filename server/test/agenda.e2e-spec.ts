@@ -6,7 +6,12 @@ import { AppModule } from '../src/app.module';
 import { Reloj } from '../src/common/reloj/reloj';
 import { crearPayloadSesion } from '../src/common/sesion/cookie-sesion';
 import { configurarApp } from '../src/configurar-app';
-import type { EstadoReserva, Rol } from '../src/generated/prisma/client';
+import type {
+  ConceptoPago,
+  EstadoPago,
+  EstadoReserva,
+  Rol,
+} from '../src/generated/prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const DIA = '2031-03-10';
@@ -110,6 +115,24 @@ describe('Agenda (e2e)', () => {
     reservas[nombre] = reserva.id;
     return reserva.id;
   };
+
+  const insertarPago = (
+    reservaId: number,
+    concepto: ConceptoPago,
+    monto: number,
+    estado: EstadoPago,
+  ) =>
+    prisma.pago.create({
+      data: {
+        reservaId,
+        concepto,
+        canal: 'RECEPCION',
+        metodo: 'EFECTIVO',
+        monto,
+        estado,
+        registradoPorId: recepcion.id,
+      },
+    });
 
   const agenda = (query: Record<string, string | number>, cookie?: string) => {
     const peticion = request(servidor()).get('/api/agenda').query(query);
@@ -300,6 +323,46 @@ describe('Agenda (e2e)', () => {
         recepcion.cookie,
       ).expect(200);
       expect(sinTurno.body).toEqual([]);
+    });
+  });
+
+  describe('saldo', () => {
+    beforeAll(async () => {
+      await insertarPago(reservas.confirmada!, 'ADELANTO', 40, 'APROBADO');
+      await insertarPago(reservas.confirmada!, 'SALDO', 20, 'RECHAZADO');
+      await insertarPago(reservas.enJuego!, 'ADELANTO', 40, 'APROBADO');
+      await insertarPago(reservas.enJuego!, 'SALDO', 40, 'APROBADO');
+      await insertarPago(reservas.enJuego!, 'ADICIONALES', 15, 'APROBADO');
+      await insertarPago(reservas.cancelada!, 'ADELANTO', 40, 'RECHAZADO');
+    });
+
+    const montos = async (nombre: string) => {
+      const { body } = await agenda({ fecha: DIA }, recepcion.cookie).expect(
+        200,
+      );
+      const { adelantoPagado, saldoPendiente } = turno(body as Turno[], nombre);
+      return { adelantoPagado, saldoPendiente };
+    };
+
+    it('un adelanto aprobado de 40 sobre 80 deja 40 y el rechazado no cuenta', async () => {
+      await expect(montos('confirmada')).resolves.toEqual({
+        adelantoPagado: 40,
+        saldoPendiente: 40,
+      });
+    });
+
+    it('un adelanto rechazado no cuenta como pagado', async () => {
+      await expect(montos('cancelada')).resolves.toEqual({
+        adelantoPagado: 0,
+        saldoPendiente: 80,
+      });
+    });
+
+    it('adelanto y saldo aprobados dejan la reserva pagada sin contar adicionales', async () => {
+      await expect(montos('enJuego')).resolves.toEqual({
+        adelantoPagado: 40,
+        saldoPendiente: 0,
+      });
     });
   });
 });
