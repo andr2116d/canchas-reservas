@@ -57,7 +57,10 @@ describe('ReservasService', () => {
     reloj as unknown as Reloj,
     turnos as unknown as TurnosService,
     tarifas as unknown as TarifasService,
-    new ReglaCancelacionService(prisma as unknown as PrismaService),
+    new ReglaCancelacionService(
+      prisma as unknown as PrismaService,
+      auditoria as unknown as AuditoriaService,
+    ),
     auditoria as unknown as AuditoriaService,
     gateway as unknown as TurnosGateway,
   );
