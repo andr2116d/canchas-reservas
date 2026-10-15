@@ -21,6 +21,7 @@ describe('Tabla reserva (e2e)', () => {
   let prisma: PrismaService;
   let jugadorId: number;
   let canchaId: number;
+  let otraCanchaId: number;
   let reservas = 0;
 
   const crearReserva = ({
@@ -94,6 +95,14 @@ describe('Tabla reserva (e2e)', () => {
       },
     });
     canchaId = cancha.id;
+    const otraCancha = await prisma.cancha.create({
+      data: {
+        nombre: `Tabla Reserva Otra ${sufijo}`,
+        tamano: 'FUTBOL_5',
+        iluminacion: true,
+      },
+    });
+    otraCanchaId = otraCancha.id;
   });
 
   afterEach(async () => {
@@ -101,7 +110,9 @@ describe('Tabla reserva (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.cancha.deleteMany({ where: { id: canchaId } });
+    await prisma.cancha.deleteMany({
+      where: { id: { in: [canchaId, otraCanchaId] } },
+    });
     await prisma.usuario.deleteMany({ where: { id: jugadorId } });
     await app.close();
   });
@@ -138,6 +149,33 @@ describe('Tabla reserva (e2e)', () => {
 
     await expect(crearReserva()).resolves.toMatchObject({
       estado: 'PENDIENTE_PAGO',
+    });
+  });
+
+  it('permite la misma fecha y hora en otra cancha', async () => {
+    await crearReserva();
+
+    await expect(crearReserva({ cancha: otraCanchaId })).resolves.toMatchObject(
+      { canchaId: otraCanchaId },
+    );
+    await expect(contarTurno()).resolves.toBe(1);
+    await expect(contarTurno(otraCanchaId)).resolves.toBe(1);
+  });
+
+  it('permite la misma cancha y hora en otra fecha', async () => {
+    await crearReserva();
+
+    await expect(crearReserva({ fecha: '2026-11-21' })).resolves.toMatchObject({
+      fecha: new Date('2026-11-21'),
+    });
+    await expect(contarTurno()).resolves.toBe(1);
+  });
+
+  it('permite otra hora en la misma cancha y fecha', async () => {
+    await crearReserva();
+
+    await expect(crearReserva({ hora: '19:00' })).resolves.toMatchObject({
+      horaInicio: '19:00',
     });
   });
 });
