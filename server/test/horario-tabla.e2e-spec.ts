@@ -58,4 +58,20 @@ describe('Tablas horario_dia y configuracion (e2e)', () => {
     expect(configuraciones[0].id).toBe(1);
     expect(configuraciones[0].inicioNoche).toMatch(FORMATO_HORA);
   });
+
+  it('la base no permite una configuración con id distinto de 1', async () => {
+    await expect(
+      prisma.configuracion.create({ data: { id: 2 } }),
+    ).rejects.toMatchObject({
+      meta: {
+        driverAdapterError: {
+          cause: {
+            code: '23514',
+            message: expect.stringContaining('configuracion_fila_unica'),
+          },
+        },
+      },
+    });
+    await expect(prisma.configuracion.count()).resolves.toBe(1);
+  });
 });
