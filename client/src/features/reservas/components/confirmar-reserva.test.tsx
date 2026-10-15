@@ -19,7 +19,7 @@ const RESUMEN = {
   saldo: 30,
   creditoDisponible: 10,
   minutosParaPagar: 15,
-  regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: 30 },
+  regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z" },
 };
 
 function renderPantalla() {
@@ -75,5 +75,36 @@ describe("PantallaConfirmarReserva", () => {
     boton.click();
 
     await screen.findByText("LP7K2M9Q");
+  });
+
+  it("muestra el plazo de cancelación con el texto de la regla", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(RESUMEN), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(
+      "Puedes cancelar hasta el lunes 19/10 a las 18:00 (24 h antes) y se te devolverá tu adelanto como crédito. Si cancelas después, el adelanto queda retenido.",
+    );
+  });
+
+  it("con devolución indica que el adelanto se devuelve en recepción", async () => {
+    const resumen = { ...RESUMEN, regla: { ...RESUMEN.regla, tipoCompensacion: "DEVOLUCION" } };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(/y se te devolverá tu adelanto en recepción\./);
+  });
+
+  it("con 0 horas se puede cancelar hasta el inicio del turno", async () => {
+    const resumen = {
+      ...RESUMEN,
+      regla: { horasAnticipacion: 0, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-20T23:00:00.000Z" },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(/^Puedes cancelar hasta el inicio del turno y se te devolverá tu adelanto como crédito\./);
   });
 });
