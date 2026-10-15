@@ -5,15 +5,23 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { moneda, fecha } from "@/lib/formato";
+import { diaYHoraEnLima, moneda, fecha } from "@/lib/formato";
 import { useCrearReserva, useResumenReserva } from "../hooks";
 import { ErrorApi } from "@/lib/api";
-import type { ReservaCreada } from "../api";
+import type { ReservaCreada, ResumenReserva } from "../api";
 
-const TIPO_COMPENSACION: Record<string, string> = {
-  DEVOLUCION: "devolución",
-  CREDITO: "crédito",
+const DESTINO_ADELANTO: Record<ResumenReserva["regla"]["tipoCompensacion"], string> = {
+  DEVOLUCION: "en recepción",
+  CREDITO: "como crédito",
 };
+
+function textoReglaCancelacion({ horasAnticipacion, tipoCompensacion, plazoLimite }: ResumenReserva["regla"]) {
+  const hasta =
+    horasAnticipacion === 0
+      ? "hasta el inicio del turno"
+      : `hasta el ${diaYHoraEnLima(plazoLimite)} (${horasAnticipacion} h antes)`;
+  return `Puedes cancelar ${hasta} y se te devolverá tu adelanto ${DESTINO_ADELANTO[tipoCompensacion]}. Si cancelas después, el adelanto queda retenido.`;
+}
 
 function formatearTiempo(restanteMs: number) {
   if (restanteMs <= 0) return "00:00";
@@ -197,11 +205,7 @@ export function PantallaConfirmarReserva(props: Props = {}) {
 
           <div className="rounded-lg border border-linea bg-fondo px-3 py-2 text-sm">
             <p className="font-medium">Regla de cancelación</p>
-            <p className="text-texto-suave">
-              Cancelando con al menos {resumen.regla.horasAnticipacion} horas de anticipación:{" "}
-              {TIPO_COMPENSACION[resumen.regla.tipoCompensacion] ?? resumen.regla.tipoCompensacion.toLowerCase()}.
-              Plazo límite de {resumen.regla.plazoLimite} días.
-            </p>
+            <p className="text-texto-suave">{textoReglaCancelacion(resumen.regla)}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">

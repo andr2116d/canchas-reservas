@@ -26,7 +26,7 @@ export type ResumenReserva = {
   saldo: number;
   creditoDisponible: number;
   minutosParaPagar: number;
-  regla: { horasAnticipacion: number; tipoCompensacion: TipoCompensacion; plazoLimite: number };
+  regla: { horasAnticipacion: number; tipoCompensacion: TipoCompensacion; plazoLimite: string };
 };
 
 export type ReservaCreada = {
