@@ -12,7 +12,8 @@ import {
   type ValoresCrearRecepcionista,
   type ValoresEditarRecepcionista,
 } from "../schemas";
-import { aplicarErroresServidor, MensajeServidor } from "./errores-servidor";
+import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { MensajeServidor } from "./errores-servidor";
 
 const CAMPOS_CREAR = [
   "nombres",
