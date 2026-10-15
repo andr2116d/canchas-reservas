@@ -90,4 +90,58 @@ describe('generarTurnos', () => {
       );
     });
   });
+
+  it('un día cerrado genera una lista vacía', () => {
+    expect(
+      generarTurnos({ abierto: false, apertura: null, cierre: null }, '18:00'),
+    ).toEqual([]);
+    expect(
+      generarTurnos(
+        { abierto: false, apertura: '08:00', cierre: '23:00' },
+        '18:00',
+      ),
+    ).toEqual([]);
+  });
+
+  it('acepta 08:15 y genera turnos desde 08:15', () => {
+    const lista = generarTurnos(abierto('08:15', '12:00'), '18:00');
+    expect(lista[0]).toEqual({
+      horaInicio: '08:15',
+      horaFin: '09:15',
+      franja: 'DIA',
+    });
+    expect(lista).toHaveLength(3);
+  });
+
+  it.each([
+    ['08:00', '23:00', '18:00'],
+    ['08:15', '23:15', '18:00'],
+    ['06:40', '23:59', '18:40'],
+    ['10:00', '22:00', '17:20'],
+    ['00:00', '23:59', '12:30'],
+  ])(
+    'de %s a %s con noche a las %s ningún turno cruza el inicio de noche',
+    (apertura, cierre, inicioNoche) => {
+      const lista = generarTurnos(abierto(apertura, cierre), inicioNoche);
+      expect(lista.length).toBeGreaterThan(0);
+      for (const turno of lista) {
+        expect(turno.horaInicio >= apertura).toBe(true);
+        expect(turno.horaFin <= cierre).toBe(true);
+        if (turno.franja === 'DIA') {
+          expect(turno.horaFin <= inicioNoche).toBe(true);
+        } else {
+          expect(turno.horaInicio >= inicioNoche).toBe(true);
+        }
+      }
+    },
+  );
+
+  it('si la noche empieza después del cierre todos los turnos son de día', () => {
+    const lista = generarTurnos(abierto('08:00', '12:00'), '18:00');
+    expect(lista.map((t) => t.franja)).toEqual(['DIA', 'DIA', 'DIA', 'DIA']);
+  });
+
+  it('si queda menos de 1 hora no genera turnos', () => {
+    expect(generarTurnos(abierto('17:30', '18:20'), '18:00')).toEqual([]);
+  });
 });
