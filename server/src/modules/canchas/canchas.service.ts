@@ -287,7 +287,7 @@ export class CanchasService {
     }));
   }
 
-  private async buscar(id: number) {
+  async buscar(id: number) {
     if (!Number.isInteger(id) || id < 1 || id > ID_MAXIMO) {
       throw noEncontrada();
     }
