@@ -3,6 +3,7 @@ import { crearValidationPipe } from '../../../common/validacion/validation-pipe'
 import { MENSAJE_OBLIGATORIO, MENSAJES_USUARIO } from './campos-usuario';
 import { CrearRecepcionistaDto } from './crear-recepcionista.dto';
 import { EditarRecepcionistaDto } from './editar-recepcionista.dto';
+import { RegistrarJugadorDto } from './registrar-jugador.dto';
 
 const VALIDO = {
   nombres: '  Ana María ',
@@ -14,22 +15,22 @@ const VALIDO = {
   contrasena: 'Recepcion123',
 };
 
+const pipe = crearValidationPipe();
+
+const validar = (metatype: new () => object, valor: unknown) =>
+  pipe.transform(valor, { type: 'body', metatype });
+
+const erroresDe = async (metatype: new () => object, valor: unknown) => {
+  const error = await validar(metatype, valor).catch((e: unknown) => e);
+  expect(error).toBeInstanceOf(BadRequestException);
+  return (
+    (error as BadRequestException).getResponse() as {
+      errores: Record<string, string>;
+    }
+  ).errores;
+};
+
 describe('Validaciones de recepcionista', () => {
-  const pipe = crearValidationPipe();
-
-  const validar = (metatype: new () => object, valor: unknown) =>
-    pipe.transform(valor, { type: 'body', metatype });
-
-  const erroresDe = async (metatype: new () => object, valor: unknown) => {
-    const error = await validar(metatype, valor).catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(BadRequestException);
-    return (
-      (error as BadRequestException).getResponse() as {
-        errores: Record<string, string>;
-      }
-    ).errores;
-  };
-
   it('acepta datos válidos, recorta espacios y pasa el correo a minúsculas', async () => {
     const dto = (await validar(
       CrearRecepcionistaDto,
@@ -112,5 +113,64 @@ describe('Validaciones de recepcionista', () => {
       numeroDocumento: '71234567',
     });
     expect(Object.keys(errores).sort()).toEqual(['numeroDocumento', 'rol']);
+  });
+});
+
+describe('Validaciones de jugador', () => {
+  const JUGADOR = { ...VALIDO, contrasena: 'Cancha2026' };
+
+  it('acepta datos válidos, recorta espacios y pasa el correo a minúsculas', async () => {
+    const dto = (await validar(
+      RegistrarJugadorDto,
+      JUGADOR,
+    )) as RegistrarJugadorDto;
+
+    expect(dto.nombres).toBe('Ana María');
+    expect(dto.correo).toBe('ana@laprevia.pe');
+  });
+
+  it('marca cada campo vacío como obligatorio', async () => {
+    expect(await erroresDe(RegistrarJugadorDto, {})).toEqual({
+      nombres: MENSAJE_OBLIGATORIO,
+      apellidos: MENSAJE_OBLIGATORIO,
+      tipoDocumento: MENSAJE_OBLIGATORIO,
+      numeroDocumento: MENSAJE_OBLIGATORIO,
+      correo: MENSAJE_OBLIGATORIO,
+      telefono: MENSAJE_OBLIGATORIO,
+      contrasena: MENSAJE_OBLIGATORIO,
+    });
+  });
+
+  it('rechaza una contraseña de menos de 8 caracteres', async () => {
+    expect(
+      await erroresDe(RegistrarJugadorDto, {
+        ...JUGADOR,
+        contrasena: '1234567',
+      }),
+    ).toEqual({ contrasena: MENSAJES_USUARIO.contrasena });
+  });
+
+  it('rechaza un DNI de 7 dígitos y un correo sin @', async () => {
+    expect(
+      await erroresDe(RegistrarJugadorDto, {
+        ...JUGADOR,
+        numeroDocumento: '7123456',
+      }),
+    ).toEqual({ numeroDocumento: MENSAJES_USUARIO.dni });
+    expect(
+      await erroresDe(RegistrarJugadorDto, {
+        ...JUGADOR,
+        correo: 'lucia.correo',
+      }),
+    ).toEqual({ correo: MENSAJES_USUARIO.correo });
+  });
+
+  it('exige un celular de 9 dígitos que empiece con 9', async () => {
+    expect(
+      await erroresDe(RegistrarJugadorDto, {
+        ...JUGADOR,
+        telefono: '812345678',
+      }),
+    ).toEqual({ telefono: MENSAJES_USUARIO.telefono });
   });
 });
