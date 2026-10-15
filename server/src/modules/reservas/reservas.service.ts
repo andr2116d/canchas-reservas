@@ -141,7 +141,7 @@ export class ReservasService {
       select: { id: true, codigo: true, estado: true, venceEn: true },
     });
     if (credito.aplicado.gt(0)) {
-      await tx.pago.create({
+      const pago = await tx.pago.create({
         data: {
           reservaId: reserva.id,
           concepto: 'ADELANTO',
@@ -154,6 +154,15 @@ export class ReservasService {
         },
         select: { id: true },
       });
+      for (const uso of credito.usos) {
+        await tx.creditoUso.create({
+          data: { creditoId: uso.creditoId, pagoId: pago.id, monto: uso.monto },
+        });
+        await tx.credito.update({
+          where: { id: uso.creditoId },
+          data: { saldo: { decrement: uso.monto } },
+        });
+      }
     }
     await this.auditoria.registrar(
       {
