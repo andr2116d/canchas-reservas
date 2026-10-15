@@ -53,6 +53,34 @@ function responder(alCrear: Respuesta) {
   return fetchMock;
 }
 
+function responderConLista(
+  lista: Recepcionista[],
+  responder: (url: string, metodo: string) => Respuesta | undefined = () => undefined,
+) {
+  const fetchMock = vi.fn(async (url: string, opciones?: RequestInit) => {
+    const metodo = opciones?.method ?? "GET";
+    const propia = responder(url, metodo);
+    const { status, body } = propia ?? { status: 200, body: metodo === "GET" ? lista : null };
+    return new Response(body === undefined || body === null ? null : JSON.stringify(body), { status });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+async function filaDe(nombre: string) {
+  const tabla = await screen.findByRole("table");
+  const filas = within(tabla).getAllByRole("row") as HTMLTableRowElement[];
+  const fila = filas.find((f) => f.textContent?.includes(nombre));
+  if (!fila) throw new Error(`No se encontró la fila de ${nombre}`);
+  return fila;
+}
+
+type LlamadaFetch = [string, (RequestInit | undefined)?];
+
+function llamadaDe(fetchMock: { mock: { calls: LlamadaFetch[] } }, metodo: string) {
+  return fetchMock.mock.calls.find(([, opciones]) => opciones?.method === metodo);
+}
+
 function renderPantalla() {
   const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -161,5 +189,73 @@ describe("Recepcionistas", () => {
       telefono: "987654321",
       contrasena: "Recepcion123",
     });
+  });
+
+  it("pide confirmación antes de desactivar y avisa con un Toast de éxito", async () => {
+    const fetchMock = responderConLista([ACTIVA]);
+    renderPantalla();
+
+    fireEvent.click(within(await filaDe("Ana María Pérez")).getByRole("button", { name: "Desactivar" }));
+
+    const dialogo = within(await screen.findByRole("dialog"));
+    expect(dialogo.getByText("Desactivar recepcionista")).toBeTruthy();
+    expect(dialogo.getByText(/ya no podrá iniciar sesión/i)).toBeTruthy();
+    expect(llamadaDe(fetchMock, "PATCH")).toBeUndefined();
+
+    fireEvent.click(dialogo.getByRole("button", { name: "Desactivar" }));
+
+    expect((await screen.findByRole("status")).textContent).toBe("Recepcionista desactivado");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const patch = llamadaDe(fetchMock, "PATCH");
+    expect(patch?.[0]).toBe("/api/recepcionistas/3/estado");
+    expect(JSON.parse(patch?.[1]?.body as string)).toEqual({ estado: "INACTIVO" });
+  });
+
+  it("cancela la desactivación sin llamar al servidor", async () => {
+    const fetchMock = responderConLista([ACTIVA]);
+    renderPantalla();
+
+    fireEvent.click(within(await filaDe("Ana María Pérez")).getByRole("button", { name: "Desactivar" }));
+    const dialogo = within(await screen.findByRole("dialog"));
+    fireEvent.click(dialogo.getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(llamadaDe(fetchMock, "PATCH")).toBeUndefined();
+  });
+
+  it("activa sin pedir confirmación y avisa con un Toast de éxito", async () => {
+    const fetchMock = responderConLista([INACTIVO]);
+    renderPantalla();
+
+    fireEvent.click(within(await filaDe("Luis Quispe")).getByRole("button", { name: "Activar" }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect((await screen.findByRole("status")).textContent).toBe("Recepcionista activado");
+    const patch = llamadaDe(fetchMock, "PATCH");
+    expect(patch?.[0]).toBe("/api/recepcionistas/4/estado");
+    expect(JSON.parse(patch?.[1]?.body as string)).toEqual({ estado: "ACTIVO" });
+  });
+
+  it("restablece la contraseña desde el modal y avisa con un Toast de éxito", async () => {
+    const fetchMock = responderConLista([ACTIVA], (url, metodo) =>
+      metodo === "POST" && url.endsWith("/restablecer-contrasena") ? { status: 204 } : undefined,
+    );
+    renderPantalla();
+
+    fireEvent.click(
+      within(await filaDe("Ana María Pérez")).getByRole("button", { name: "Restablecer contraseña" }),
+    );
+
+    const dialogo = within(await screen.findByRole("dialog"));
+    expect(dialogo.getByText("Restablecer contraseña")).toBeTruthy();
+    expect(dialogo.getByText(/La usará en su próximo inicio de sesión/)).toBeTruthy();
+    fireEvent.input(dialogo.getByLabelText("Nueva contraseña"), { target: { value: "NuevaClave2026" } });
+    fireEvent.click(dialogo.getByRole("button", { name: "Restablecer" }));
+
+    expect((await screen.findByRole("status")).textContent).toBe("Contraseña restablecida");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const post = llamadaDe(fetchMock, "POST");
+    expect(post?.[0]).toBe("/api/recepcionistas/3/restablecer-contrasena");
+    expect(JSON.parse(post?.[1]?.body as string)).toEqual({ contrasena: "NuevaClave2026" });
   });
 });
