@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { detalleCambios } from '../auditoria/detalle-cambios';
 import { ESTADOS_RESERVA_FUTURA } from '../canchas/canchas.service';
+import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import {
   aMinutos,
   type DiaHorario,
@@ -64,6 +65,7 @@ export class HorarioService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
+    private readonly gateway: TurnosGateway,
   ) {}
 
   async obtener(cliente: Cliente = this.prisma): Promise<Horario> {
@@ -88,7 +90,7 @@ export class HorarioService {
     );
     const nuevo: Horario = { dias: nuevos, inicioNoche };
 
-    return this.prisma.$transaction(async (tx) => {
+    const guardado = await this.prisma.$transaction(async (tx) => {
       const actual = await this.obtener(tx);
       const cambiados = nuevos.filter(
         (dia, i) => !mismoDia(dia, actual.dias[i]),
@@ -100,7 +102,7 @@ export class HorarioService {
         },
         { dias: cambiados, inicioNoche },
       );
-      if (!detalle) return actual;
+      if (!detalle) return { respuesta: actual, cambio: false };
 
       const fuera = await this.reservasFueraDeHorario(nuevo, tx);
       if (fuera.length > 0 && confirmar !== true) {
@@ -136,8 +138,10 @@ export class HorarioService {
         },
         tx,
       );
-      return nuevo;
+      return { respuesta: nuevo, cambio: true };
     });
+    if (guardado.cambio) this.gateway.notificar(null, null);
+    return guardado.respuesta;
   }
 
   async diaDe(fecha: string, cliente: Cliente = this.prisma) {
