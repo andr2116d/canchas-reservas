@@ -9,7 +9,7 @@ import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { detalleCambios } from '../auditoria/detalle-cambios';
-import { aNumero } from './calculo-tarifa';
+import { aNumero, calcularAdelanto } from './calculo-tarifa';
 import { DefinirTarifaDto } from './dto/definir-tarifa.dto';
 
 export const MENSAJE_CANCHA_NO_ENCONTRADA = 'No se encontró la cancha';
@@ -30,6 +30,13 @@ const CAMPOS_TARIFA = {
 type TarifaGuardada = Prisma.TarifaGetPayload<{
   select: typeof CAMPOS_TARIFA;
 }>;
+
+type Cliente = Prisma.TransactionClient | PrismaService;
+
+export interface ValorTurno {
+  valor: Prisma.Decimal;
+  adelanto: Prisma.Decimal;
+}
 
 function aVigente(tarifa: TarifaGuardada | undefined) {
   if (!tarifa) return null;
@@ -140,6 +147,19 @@ export class TarifasService {
       }
       throw error;
     }
+  }
+
+  async calcularTurno(
+    canchaId: number,
+    franja: Franja,
+    cliente: Cliente = this.prisma,
+  ): Promise<ValorTurno | null> {
+    const tarifa = await cliente.tarifa.findFirst({
+      where: { canchaId, franja, vigenteHasta: null },
+      select: { valor: true },
+    });
+    if (!tarifa) return null;
+    return { valor: tarifa.valor, adelanto: calcularAdelanto(tarifa.valor) };
   }
 
   private async verificarCancha(id: number) {
