@@ -140,4 +140,11 @@ describe('Tabla regla_cancelacion (e2e)', () => {
     ).rejects.toMatchObject({ code: 'P2002' });
     await expect(prisma.reglaCancelacion.count()).resolves.toBe(1);
   });
+
+  it('rechaza una regla con id distinto de 1', async () => {
+    await expect(
+      prisma.reglaCancelacion.create({ data: { id: 2 } }),
+    ).rejects.toMatchObject(violaCheck('regla_fila_unica'));
+    await expect(prisma.reglaCancelacion.count()).resolves.toBe(1);
+  });
 });
