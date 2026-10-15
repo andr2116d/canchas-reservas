@@ -262,4 +262,50 @@ describe('TarifasService', () => {
       ).rejects.toBe(falla);
     });
   });
+
+  describe('calcularTurno', () => {
+    it.each([
+      ['80.00', '80.00', '40.00'],
+      ['55.05', '55.05', '27.53'],
+    ])(
+      'con valor %s devuelve valor %s y adelanto %s',
+      async (valor, esperado, adelanto) => {
+        prisma.tarifa.findFirst.mockResolvedValue({
+          valor: new Prisma.Decimal(valor),
+        });
+
+        const turno = await servicio.calcularTurno(CANCHA_ID, 'NOCHE');
+
+        expect(prisma.tarifa.findFirst).toHaveBeenCalledWith({
+          where: { canchaId: CANCHA_ID, franja: 'NOCHE', vigenteHasta: null },
+          select: { valor: true },
+        });
+        expect(turno?.valor).toBeInstanceOf(Prisma.Decimal);
+        expect(turno?.valor.toFixed(2)).toBe(esperado);
+        expect(turno?.adelanto).toBeInstanceOf(Prisma.Decimal);
+        expect(turno?.adelanto.toFixed(2)).toBe(adelanto);
+      },
+    );
+
+    it('devuelve null si la cancha no tiene tarifa vigente en la franja', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(null);
+
+      await expect(
+        servicio.calcularTurno(CANCHA_ID, 'DIA'),
+      ).resolves.toBeNull();
+    });
+
+    it('usa el cliente de transacción que recibe', async () => {
+      const tx = { tarifa: { findFirst: jest.fn().mockResolvedValue(null) } };
+
+      await servicio.calcularTurno(
+        CANCHA_ID,
+        'DIA',
+        tx as unknown as Prisma.TransactionClient,
+      );
+
+      expect(tx.tarifa.findFirst).toHaveBeenCalled();
+      expect(prisma.tarifa.findFirst).not.toHaveBeenCalled();
+    });
+  });
 });
