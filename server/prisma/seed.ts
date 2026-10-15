@@ -122,7 +122,9 @@ async function demo(adminId: number) {
     { nombre: 'Agua', precio: 2.5 },
   ];
   for (const a of adicionales) {
-    const existe = await prisma.adicional.findFirst({ where: { nombre: a.nombre } });
+    const existe = await prisma.adicional.findFirst({
+      where: { nombre: { equals: a.nombre, mode: 'insensitive' } },
+    });
     if (!existe) await prisma.adicional.create({ data: a });
   }
 }
