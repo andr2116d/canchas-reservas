@@ -23,13 +23,13 @@ export function useIniciarSesion() {
   });
 }
 
-export function useCerrarSesion() {
+export function useCerrarSesion(destino = "/login") {
   const queryClient = useQueryClient();
   const router = useRouter();
   return useMutation({
     mutationFn: cerrarSesion,
     onSuccess: () => {
-      router.replace("/login");
+      router.replace(destino);
       queryClient.clear();
     },
   });

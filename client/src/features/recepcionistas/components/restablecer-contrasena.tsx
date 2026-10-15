@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, Modal } from "@/components/ui";
 import { nombreCompleto, type Recepcionista } from "../api";
 import { esquemaRestablecerContrasena, type ValoresRestablecerContrasena } from "../schemas";
-import { aplicarErroresServidor, MensajeServidor } from "./errores-servidor";
+import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { MensajeServidor } from "./errores-servidor";
 
 type Props = {
   recepcionista: Recepcionista;
