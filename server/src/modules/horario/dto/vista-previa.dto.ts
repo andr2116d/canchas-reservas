@@ -2,7 +2,7 @@ import { IsString, ValidateBy } from 'class-validator';
 
 export const MENSAJE_FECHA = 'La fecha debe tener el formato YYYY-MM-DD';
 
-const FechaValida = () =>
+export const FechaValida = () =>
   ValidateBy({
     name: 'fechaValida',
     validator: {
