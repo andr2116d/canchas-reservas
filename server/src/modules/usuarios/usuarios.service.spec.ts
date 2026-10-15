@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { compare } from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
+
 import {
   MENSAJE_CORREO_DUPLICADO,
   MENSAJE_DOCUMENTO_DUPLICADO,
@@ -149,6 +150,130 @@ describe('UsuariosService', () => {
 
       const error = (await errorDe(
         servicio.crear(NUEVO, 1),
+      )) as ConflictException;
+
+      expect(error).toBeInstanceOf(ConflictException);
+      expect(error.getResponse()).toMatchObject({
+        errores: { correo: MENSAJE_CORREO_DUPLICADO },
+      });
+    });
+  });
+
+
+    describe('registrarJugador', () => {
+    const JUGADOR = {
+      nombres: 'Lucía',
+      apellidos: 'Ramírez Torres',
+      tipoDocumento: 'DNI' as const,
+      numeroDocumento: '71234567',
+      correo: 'lucia@correo.com',
+      telefono: '987654321',
+      contrasena: 'Cancha2026',
+    };
+    const JUGADOR_CREADO = {
+      id: 7,
+      nombres: 'Lucía',
+      apellidos: 'Ramírez Torres',
+      correo: 'lucia@correo.com',
+      rol: 'JUGADOR' as const,
+    };
+
+    it('crea un JUGADOR activo con la contraseña cifrada y sin auditoría', async () => {
+      prisma.usuario.findFirst.mockResolvedValue(null);
+      prisma.usuario.create.mockResolvedValue(JUGADOR_CREADO);
+
+      const creado = await servicio.registrarJugador(JUGADOR);
+
+      const { data } = prisma.usuario.create.mock.calls[0][0] as Llamada;
+      expect(data).toMatchObject({ rol: 'JUGADOR', estado: 'ACTIVO' });
+      expect(data.contrasena).toBeUndefined();
+      expect(data.passwordHash).not.toBe(JUGADOR.contrasena);
+      expect(
+        await compare(JUGADOR.contrasena, data.passwordHash as string),
+      ).toBe(true);
+      expect(creado).toBe(JUGADOR_CREADO);
+      expect(auditoria.registrar).not.toHaveBeenCalled();
+    });
+
+    it('solo selecciona id, nombres, apellidos, correo y rol, nunca passwordHash', async () => {
+      prisma.usuario.findFirst.mockResolvedValue(null);
+      prisma.usuario.create.mockResolvedValue(JUGADOR_CREADO);
+
+      await servicio.registrarJugador(JUGADOR);
+
+      const { select } = prisma.usuario.create.mock.calls[0][0] as {
+        select: Record<string, boolean>;
+      };
+      expect(select).toEqual({
+        id: true,
+        nombres: true,
+        apellidos: true,
+        correo: true,
+        rol: true,
+      });
+      expect(select.passwordHash).toBeUndefined();
+    });
+
+    it('con correo repetido responde 409 en correo y no crea al usuario', async () => {
+      prisma.usuario.findFirst.mockResolvedValueOnce({ id: 1 });
+      prisma.usuario.findFirst.mockResolvedValueOnce(null);
+
+      const error = await errorDe(servicio.registrarJugador(JUGADOR));
+
+      expect(error).toBeInstanceOf(ConflictException);
+      expect((error as ConflictException).getResponse()).toEqual({
+        statusCode: 409,
+        message: MENSAJE_CORREO_DUPLICADO,
+        errores: { correo: MENSAJE_CORREO_DUPLICADO },
+      });
+      expect(prisma.usuario.create).not.toHaveBeenCalled();
+    });
+
+    it('con documento repetido responde 409 en numeroDocumento', async () => {
+      prisma.usuario.findFirst.mockResolvedValueOnce(null);
+      prisma.usuario.findFirst.mockResolvedValueOnce({ id: 2 });
+
+      const error = await errorDe(servicio.registrarJugador(JUGADOR));
+
+      expect(error).toBeInstanceOf(ConflictException);
+      expect((error as ConflictException).getResponse()).toEqual({
+        statusCode: 409,
+        message: MENSAJE_DOCUMENTO_DUPLICADO,
+        errores: { numeroDocumento: MENSAJE_DOCUMENTO_DUPLICADO },
+      });
+      expect(prisma.usuario.create).not.toHaveBeenCalled();
+    });
+
+    it('con correo y documento repetidos devuelve los dos errores', async () => {
+      prisma.usuario.findFirst.mockResolvedValue({ id: 1 });
+
+      const error = (await errorDe(
+        servicio.registrarJugador(JUGADOR),
+      )) as ConflictException;
+
+      expect(error).toBeInstanceOf(ConflictException);
+      expect(error.getResponse()).toMatchObject({
+        statusCode: 409,
+        errores: {
+          correo: MENSAJE_CORREO_DUPLICADO,
+          numeroDocumento: MENSAJE_DOCUMENTO_DUPLICADO,
+        },
+      });
+      expect(prisma.usuario.create).not.toHaveBeenCalled();
+    });
+
+    it('si la base rechaza el duplicado, responde 409 en el campo', async () => {
+      prisma.usuario.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 9 })
+        .mockResolvedValueOnce(null);
+      prisma.usuario.create.mockRejectedValue(
+        Object.assign(new Error('Unique constraint failed'), { code: 'P2002' }),
+      );
+
+      const error = (await errorDe(
+        servicio.registrarJugador(JUGADOR),
       )) as ConflictException;
 
       expect(error).toBeInstanceOf(ConflictException);

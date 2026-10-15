@@ -7,9 +7,14 @@ import { SesionGuard } from '../../common/guards/sesion.guard';
 import { DURACION_SESION_MS } from '../../common/sesion/cookie-sesion';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { UsuariosModule } from '../usuarios/usuarios.module';
+
+
+
 
 @Module({
   imports: [
+    UsuariosModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

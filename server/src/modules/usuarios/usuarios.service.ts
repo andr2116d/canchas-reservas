@@ -15,6 +15,7 @@ import { AuditoriaService } from '../auditoria/auditoria.service';
 import { detalleCambios } from '../auditoria/detalle-cambios';
 import { CrearRecepcionistaDto } from './dto/crear-recepcionista.dto';
 import { EditarRecepcionistaDto } from './dto/editar-recepcionista.dto';
+import { RegistrarJugadorDto } from './dto/registrar-jugador.dto';
 
 export const MENSAJE_NO_ENCONTRADO = 'No se encontró el recepcionista';
 export const MENSAJE_CORREO_DUPLICADO = 'Este correo ya está registrado';
@@ -35,6 +36,14 @@ const CAMPOS_RECEPCIONISTA = {
   telefono: true,
   estado: true,
   creadoEn: true,
+} satisfies Prisma.UsuarioSelect;
+
+const CAMPOS_JUGADOR = {
+  id: true,
+  nombres: true,
+  apellidos: true,
+  correo: true,
+  rol: true,
 } satisfies Prisma.UsuarioSelect;
 
 interface Duplicables {
@@ -98,6 +107,21 @@ export class UsuariosService {
           tx,
         );
         return recepcionista;
+      });
+    } catch (error) {
+      throw await this.traducirDuplicado(error, campos);
+    }
+  }
+
+  async registrarJugador(datos: RegistrarJugadorDto) {
+    const { contrasena, ...campos } = datos;
+    await this.verificarDuplicados(campos);
+    const passwordHash = await hash(contrasena, COSTO_HASH);
+
+    try {
+      return await this.prisma.usuario.create({
+        data: { ...campos, passwordHash, rol: 'JUGADOR', estado: 'ACTIVO' },
+        select: CAMPOS_JUGADOR,
       });
     } catch (error) {
       throw await this.traducirDuplicado(error, campos);
