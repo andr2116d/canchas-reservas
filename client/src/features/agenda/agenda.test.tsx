@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { obtenerSocket } from "@/lib/socket";
 import { useTurnosEnVivo } from "@/lib/use-turnos-en-vivo";
 import { PantallaAgenda } from "./components/agenda";
@@ -38,6 +38,64 @@ vi.mock("@/lib/socket", () => {
     __obtenerHandler: () => handler,
   };
 });
+
+const HOY = "2026-10-20";
+
+function turnoAgenda(
+  id: number,
+  horaInicio: string,
+  estado: string,
+  saldoPendiente: number,
+  acciones: string[],
+  cancha = { id: 1, nombre: "Cancha 1", tamano: "FUTBOL_5" },
+) {
+  const horaFin = `${String(Number(horaInicio.slice(0, 2)) + 1).padStart(2, "0")}:00`;
+  return {
+    ...TURNO_CON_SALDO,
+    id,
+    codigo: `LP-${String(id).padStart(6, "0")}`,
+    horaInicio,
+    horaFin,
+    franja: horaInicio >= "18:00" ? "NOCHE" : "DIA",
+    cancha,
+    cliente: { id, nombre: `Cliente ${id}`, telefono: `98765432${id}` },
+    estado,
+    adelantoPagado: 80 - saldoPendiente,
+    saldoPendiente,
+    acciones,
+  };
+}
+
+const ACCIONES_CONFIRMADA = ["CHECK_IN", "MARCAR_AUSENTE", "CANCELAR", "REUBICAR"];
+const CANCHA_2 = { id: 2, nombre: "Cancha 2", tamano: "FUTBOL_7" };
+
+/** Los 8 estados en un mismo día, con una CONFIRMADA con saldo y otra pagada. */
+const DIA_COMPLETO = [
+  turnoAgenda(1, "08:00", "PENDIENTE_PAGO", 80, ["CANCELAR", "REUBICAR"]),
+  turnoAgenda(2, "09:00", "PENDIENTE_VALIDACION", 80, []),
+  turnoAgenda(3, "10:00", "CONFIRMADA", 40, ACCIONES_CONFIRMADA, CANCHA_2),
+  turnoAgenda(4, "11:00", "CONFIRMADA", 0, ACCIONES_CONFIRMADA),
+  turnoAgenda(5, "12:00", "EN_JUEGO", 30, ["REGISTRAR_ADICIONALES", "FINALIZAR"]),
+  turnoAgenda(6, "13:00", "FINALIZADA", 0, []),
+  turnoAgenda(7, "14:00", "CANCELADA", 80, []),
+  turnoAgenda(8, "15:00", "EXPIRADA", 80, []),
+  turnoAgenda(9, "16:00", "AUSENTE", 40, []),
+];
+
+/** Responde siempre con una respuesta nueva para poder leerla en cada consulta. */
+function responderSiempre(turnos: unknown) {
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify(turnos), { status: 200 }));
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+function parametrosPedidos(fetchMock: { mock: { calls: unknown[][] } }) {
+  return fetchMock.mock.calls.map(([url]) => new URL(String(url), "http://localhost").searchParams);
+}
+
+function ultimaConsulta(fetchMock: { mock: { calls: unknown[][] } }) {
+  return parametrosPedidos(fetchMock).at(-1)!;
+}
 
 function listenersActivos(socket: { on: unknown; off: unknown }, evento: string) {
   const contar = (fn: unknown) =>
@@ -152,5 +210,42 @@ describe("PantallaAgenda", () => {
 
     await new Promise((resolver) => setTimeout(resolver, 50));
     expect(vi.mocked(fetch).mock.calls.length).toBe(llamadas);
+  });
+});
+
+describe("PantallaAgenda con fecha fija", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(`${HOY}T15:00:00-05:00`));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("los filtros de cancha y estado cambian la consulta", async () => {
+    const fetchMock = responderSiempre(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    expect(ultimaConsulta(fetchMock).toString()).toBe(`fecha=${HOY}`);
+
+    const cancha = screen.getByLabelText("Cancha");
+    expect(within(cancha).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "Todas las canchas",
+      "Cancha 1",
+      "Cancha 2",
+    ]);
+    fireEvent.change(cancha, { target: { value: "2" } });
+    await waitFor(() => expect(ultimaConsulta(fetchMock).get("canchaId")).toBe("2"));
+
+    fireEvent.change(screen.getByLabelText("Estado"), { target: { value: "CONFIRMADA" } });
+    await waitFor(() => expect(ultimaConsulta(fetchMock).get("estado")).toBe("CONFIRMADA"));
+    expect(ultimaConsulta(fetchMock).get("canchaId")).toBe("2");
+    expect(ultimaConsulta(fetchMock).get("fecha")).toBe(HOY);
+
+    fireEvent.change(screen.getByLabelText("Cancha"), { target: { value: "" } });
+    await waitFor(() => expect(ultimaConsulta(fetchMock).has("canchaId")).toBe(false));
+    expect(ultimaConsulta(fetchMock).get("estado")).toBe("CONFIRMADA");
   });
 });
