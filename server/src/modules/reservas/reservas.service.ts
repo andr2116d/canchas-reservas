@@ -186,6 +186,35 @@ export class ReservasService {
     };
   }
 
+  async mias(jugadorId: number) {
+    const ahora = this.reloj.ahora();
+    const reservas = await this.prisma.reserva.findMany({
+      where: { jugadorId },
+      select: {
+        id: true,
+        codigo: true,
+        fecha: true,
+        horaInicio: true,
+        horaFin: true,
+        franja: true,
+        estado: true,
+        venceEn: true,
+        inicioEn: true,
+        finEn: true,
+        cancha: { select: { id: true, nombre: true, tamano: true } },
+      },
+      orderBy: [{ inicioEn: 'asc' }, { id: 'asc' }],
+    });
+    const proximas = reservas.filter((r) => r.finEn > ahora);
+    const pasadas = reservas.filter((r) => r.finEn <= ahora).reverse();
+    return [...proximas, ...pasadas].map(
+      ({ fecha, inicioEn: _inicioEn, finEn: _finEn, ...reserva }) => ({
+        ...reserva,
+        fecha: fecha.toISOString().slice(0, 10),
+      }),
+    );
+  }
+
   async creditoDisponible(jugadorId: number, cliente: Cliente) {
     const { _sum } = await cliente.credito.aggregate({
       where: { jugadorId, saldo: { gt: 0 } },
