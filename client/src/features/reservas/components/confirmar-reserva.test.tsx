@@ -77,6 +77,137 @@ describe("PantallaConfirmarReserva", () => {
     await screen.findByText("LP7K2M9Q");
   });
 
+  it("oculta la casilla de crédito si no hay crédito disponible", async () => {
+    const resumen = { ...RESUMEN, creditoDisponible: 0 };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(/Tienes 15 minutos/);
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByText(/Usar mi crédito/)).toBeNull();
+  });
+
+  it("muestra el crédito disponible en la casilla", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(RESUMEN), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText("Usar mi crédito (S/ 10.00 disponible)");
+  });
+
+  it("con crédito mayor al adelanto el adelanto a pagar queda en cero", async () => {
+    const resumen = { ...RESUMEN, creditoDisponible: 50 };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(/Usar mi crédito/);
+    (screen.getByRole("checkbox") as HTMLInputElement).click();
+
+    await screen.findByText("Adelanto a pagar: S/ 0.00");
+  });
+
+  it("recalcula con céntimos sin errores de redondeo", async () => {
+    const resumen = { ...RESUMEN, adelanto: 30.3, creditoDisponible: 10.1 };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(/Usar mi crédito/);
+    (screen.getByRole("checkbox") as HTMLInputElement).click();
+
+    await screen.findByText("Adelanto a pagar: S/ 20.20");
+  });
+
+  it("al desmarcar la casilla deja de mostrar el adelanto recalculado", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(RESUMEN), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(/Usar mi crédito/);
+    const casilla = screen.getByRole("checkbox") as HTMLInputElement;
+    casilla.click();
+    await screen.findByText(/Adelanto a pagar/);
+    casilla.click();
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Adelanto a pagar/)).toBeNull();
+    });
+  });
+
+  it.each([
+    [true, true],
+    [false, false],
+  ])("con la casilla marcada=%s envía usarCredito=%s", async (marcar, esperado) => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(RESUMEN), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: 1, codigo: "LP7K2M9Q", estado: "PENDIENTE_PAGO", venceEn: "2026-10-20T18:15:00.000Z" }), { status: 201 }),
+      )
+      .mockResolvedValue(new Response(JSON.stringify(RESUMEN), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderPantalla();
+
+    await screen.findByText(/Usar mi crédito/);
+    if (marcar) (screen.getByRole("checkbox") as HTMLInputElement).click();
+    (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
+
+    await screen.findByText("LP7K2M9Q");
+    const [url, opciones] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect(url).toMatch(/\/reservas$/);
+    expect(JSON.parse(String(opciones.body))).toEqual({
+      canchaId: 2,
+      fecha: "2026-10-20",
+      horaInicio: "18:00",
+      usarCredito: esperado,
+    });
+  });
+
+  it("si la reserva queda confirmada no muestra la cuenta regresiva", async () => {
+    const resumen = { ...RESUMEN, creditoDisponible: 50 };
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(resumen), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ id: 1, codigo: "LP7K2M9Q", estado: "CONFIRMADA", venceEn: null }), { status: 201 }))
+        .mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })),
+    );
+
+    renderPantalla();
+
+    await screen.findByText(/Usar mi crédito/);
+    (screen.getByRole("checkbox") as HTMLInputElement).click();
+    (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
+
+    await screen.findByText("LP7K2M9Q");
+    expect(screen.getByText("Pagaste el adelanto con tu crédito.")).toBeTruthy();
+    expect(screen.queryByText(/Tiempo para pagar el adelanto/)).toBeNull();
+  });
+
+  it("si la reserva queda pendiente muestra la cuenta regresiva", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(RESUMEN), { status: 200 }))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ id: 1, codigo: "LP7K2M9Q", estado: "PENDIENTE_PAGO", venceEn: "2026-10-20T18:15:00.000Z" }), { status: 201 }),
+        )
+        .mockResolvedValue(new Response(JSON.stringify(RESUMEN), { status: 200 })),
+    );
+
+    renderPantalla();
+
+    (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
+
+    await screen.findByText(/Tiempo para pagar el adelanto/);
+    expect(screen.queryByText("Pagaste el adelanto con tu crédito.")).toBeNull();
+  });
+
   it("muestra el plazo de cancelación con el texto de la regla", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(RESUMEN), { status: 200 })));
 
