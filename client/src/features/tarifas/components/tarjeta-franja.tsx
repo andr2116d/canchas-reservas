@@ -1,78 +1,96 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui";
+import type { ChangeEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Alerta, Badge, Button, Card, Input, useToast } from "@/components/ui";
+import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { fechaEnLima, moneda } from "@/lib/formato";
+import { calcularAdelanto, ETIQUETA_FRANJA, type Franja, type TarifaVigente } from "../api";
+import { useDefinirTarifa } from "../hooks";
+import { esquemaTarifa, sanearValor, type DatosTarifaFormulario, type ValoresTarifa } from "../schemas";
 
-export type Franja = "DIA" | "NOCHE";
-
-export interface TarifaVigente {
-  valor: number;
-  desde: string;
-}
-
-interface TarjetaFranjaProps {
+type Props = {
+  canchaId: number;
   franja: Franja;
   vigente: TarifaVigente | null;
-  error?: string;
-  onGuardar: (valor: string) => void;
-}
+};
 
-const TITULOS: Record<Franja, string> = { DIA: "Día", NOCHE: "Noche" };
+export function TarjetaFranja({ canchaId, franja, vigente }: Props) {
+  const toast = useToast();
+  const definir = useDefinirTarifa(canchaId);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ValoresTarifa, unknown, DatosTarifaFormulario>({
+    resolver: zodResolver(esquemaTarifa),
+    defaultValues: { valor: vigente ? vigente.valor.toFixed(2) : "" },
+  });
 
-// Provisional: reemplazar por el formateo de "@/lib/formato" al implementar la pantalla.
-export const moneda = (valor: number) => `S/ ${valor.toFixed(2)}`;
+  const enviar = handleSubmit(async ({ valor }) => {
+    try {
+      const guardada = await definir.mutateAsync({ franja, valor });
+      reset({ valor: guardada.valor.toFixed(2) });
+      toast.exito(`Tarifa de ${ETIQUETA_FRANJA[franja].toLowerCase()} guardada`);
+    } catch (error) {
+      aplicarErroresServidor(error, setError, ["valor"]);
+    }
+  });
 
-export function TarjetaFranja({ franja, vigente, error, onGuardar }: TarjetaFranjaProps) {
-  const [texto, setTexto] = useState(vigente ? vigente.valor.toFixed(2) : "");
-  const idCampo = `valor-${franja.toLowerCase()}`;
-  const idError = `${idCampo}-error`;
+  const cambiarValor = (evento: ChangeEvent<HTMLInputElement>) => {
+    const sanado = sanearValor(evento.target.value);
+    if (evento.target.value !== sanado) evento.target.value = sanado;
+    setValue("valor", sanado, { shouldValidate: false });
+  };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-noche-900/15 p-6">
+    <Card className="flex flex-col gap-4">
       <header className="flex items-center gap-3">
-        <h2 className="font-display text-xl font-bold text-noche-900">{TITULOS[franja]}</h2>
-        {franja === "NOCHE" && (
-          <span className="rounded-full bg-noche-900/10 px-2.5 py-0.5 text-xs font-medium text-noche-900">
-            Franja noche
-          </span>
-        )}
+        <h2 className="font-display text-xl font-bold text-noche-900">{ETIQUETA_FRANJA[franja]}</h2>
+        {franja === "NOCHE" && <Badge className="bg-noche-900 text-cal-400">Franja noche</Badge>}
       </header>
 
       <div className="flex flex-col gap-1">
         {vigente ? (
           <>
-            <p className="font-display text-[32px] font-bold leading-9 text-noche-900">{moneda(vigente.valor)}</p>
-            <p className="text-sm text-texto-suave">Rige desde el {vigente.desde}</p>
+            <p className="font-display text-[32px] font-bold leading-9 text-noche-900 tabular-nums">
+              {moneda(vigente.valor)}
+            </p>
+            <p className="text-sm text-texto-suave">Rige desde el {fechaEnLima(vigente.vigenteDesde)}</p>
+            <p className="text-sm text-texto-suave tabular-nums">
+              Adelanto (50 %): {moneda(calcularAdelanto(vigente.valor))}
+            </p>
           </>
         ) : (
           <p className="font-display text-[32px] font-bold leading-9 text-texto-suave">Sin tarifa</p>
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={idCampo} className="text-sm font-medium text-noche-900">
-          Nuevo valor por hora
-        </label>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <input
-            id={idCampo}
-            type="text"
-            inputMode="decimal"
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? idError : undefined}
-            placeholder="0.00"
-            className="w-full rounded-lg border border-noche-900/15 bg-transparent px-3 py-2 text-noche-900 placeholder:text-texto-suave focus:outline-none focus:ring-2 focus:ring-noche-900/30 aria-invalid:border-noche-900"
-          />
-          <Button onClick={() => onGuardar(texto)}>Guardar</Button>
+      <form noValidate onSubmit={enviar} className="flex flex-col gap-3">
+        <Alerta>{errors.root?.servidor?.message}</Alerta>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex-1">
+            <Input
+              id={`valor-${franja.toLowerCase()}`}
+              etiqueta="Nuevo valor por hora"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="0.00"
+              error={errors.valor?.message}
+              {...register("valor")}
+              onChange={cambiarValor}
+            />
+          </div>
+          <Button type="submit" cargando={isSubmitting} className="sm:mt-6">
+            Guardar
+          </Button>
         </div>
-        {error && (
-          <p id={idError} role="alert" className="text-sm font-medium text-noche-900">
-            {error}
-          </p>
-        )}
-      </div>
-    </section>
+      </form>
+    </Card>
   );
 }
