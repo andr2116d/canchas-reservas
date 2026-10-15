@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 import { diaYHoraEnLima, moneda, fecha } from "@/lib/formato";
 import { useCrearReserva, useResumenReserva } from "../hooks";
 import { ErrorApi } from "@/lib/api";
@@ -68,10 +69,10 @@ function ConfirmacionTurno({
 
   const [usarCredito, setUsarCredito] = useState(false);
   const [creada, setCreada] = useState<ReservaCreada | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [tiempoRestante, setTiempoRestante] = useState("");
 
   const crear = useCrearReserva();
+  const toast = useToast();
 
   const creditoAplicado = useMemo(() => {
     if (!resumen || !usarCredito) return 0;
@@ -103,14 +104,13 @@ function ConfirmacionTurno({
         usarCredito,
       });
       setCreada(resultado);
-      setToast(null);
     } catch (err) {
       const mensaje =
         err instanceof ErrorApi ? err.message : err instanceof Error ? err.message : "Ocurrió un error";
-      setToast(mensaje);
+      toast.error(mensaje);
       const status = err instanceof ErrorApi ? err.status : 0;
       if (status === 409 || status === 400) {
-        setTimeout(() => router.push("/jugador/disponibilidad"), 0);
+        router.push("/jugador/disponibilidad");
       }
     }
   };
@@ -118,7 +118,6 @@ function ConfirmacionTurno({
   if (creada) {
     return (
       <main className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 py-6">
-        {toast && <Toast mensaje={toast} />}
         <Card className="flex flex-col items-center gap-3 text-center">
           <h1 className="font-display text-[32px] font-bold leading-9 text-noche-900">
             {creada.estado === "CONFIRMADA" ? "¡Reserva confirmada!" : "Reserva creada"}
@@ -144,8 +143,6 @@ function ConfirmacionTurno({
 
   return (
     <main className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 py-6">
-      {toast && <Toast mensaje={toast} />}
-
       <header className="flex flex-col gap-1">
         <h1 className="font-display text-[32px] font-bold leading-9 text-noche-900">
           Confirmar reserva
@@ -233,17 +230,5 @@ function ConfirmacionTurno({
         </Card>
       )}
     </main>
-  );
-}
-
-function Toast({ mensaje }: { mensaje: string }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="fixed right-4 top-4 z-50 rounded-lg bg-error-fondo px-4 py-2 text-sm text-error shadow-sm"
-    >
-      {mensaje}
-    </div>
   );
 }
