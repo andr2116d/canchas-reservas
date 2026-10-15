@@ -57,4 +57,13 @@ describe('Tabla regla_cancelacion (e2e)', () => {
       horasAnticipacion: original.horasAnticipacion,
     });
   });
+
+  it('guarda 0 horas de anticipacion', async () => {
+    await prisma.reglaCancelacion.update({
+      where: { id: 1 },
+      data: { horasAnticipacion: 0 },
+    });
+
+    await expect(leerRegla()).resolves.toMatchObject({ horasAnticipacion: 0 });
+  });
 });
