@@ -737,4 +737,86 @@ describe('Reservas (e2e)', () => {
       ).toBe(2);
     });
   });
+
+  describe('GET /api/reservas/mias', () => {
+    it('devuelve solo las del jugador, las próximas primero', async () => {
+      const jugador = await crearUsuario();
+      const ajeno = await crearUsuario();
+      const canchaId = await crearCancha();
+      const pasada = await insertarReserva(
+        jugador.id,
+        canchaId,
+        '2030-01-10',
+        '18:00',
+        'FINALIZADA',
+      );
+      const antigua = await insertarReserva(
+        jugador.id,
+        canchaId,
+        '2030-01-05',
+        '18:00',
+        'EXPIRADA',
+      );
+      const lejana = await insertarReserva(
+        jugador.id,
+        canchaId,
+        '2030-01-20',
+        '18:00',
+        'CONFIRMADA',
+      );
+      await insertarReserva(
+        ajeno.id,
+        canchaId,
+        '2030-01-16',
+        '18:00',
+        'CONFIRMADA',
+      );
+      const creada = await reservar(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+
+      const res = await request(servidor())
+        .get('/api/reservas/mias')
+        .set('Cookie', jugador.cookie)
+        .expect(200);
+      const mias = res.body as Array<Record<string, unknown>>;
+
+      expect(mias.map((r) => r.id)).toEqual([
+        (creada.body as Creada).id,
+        lejana.id,
+        pasada.id,
+        antigua.id,
+      ]);
+      expect(mias[0]).toEqual({
+        id: (creada.body as Creada).id,
+        codigo: (creada.body as Creada).codigo,
+        fecha: MANANA,
+        horaInicio: '18:00',
+        horaFin: '19:00',
+        franja: 'NOCHE',
+        estado: 'PENDIENTE_PAGO',
+        venceEn: (creada.body as Creada).venceEn,
+        cancha: {
+          id: canchaId,
+          nombre: expect.any(String) as string,
+          tamano: 'FUTBOL_5',
+        },
+      });
+    });
+
+    it('sin reservas devuelve una lista vacía y otro rol responde 403', async () => {
+      const jugador = await crearUsuario();
+      await request(servidor())
+        .get('/api/reservas/mias')
+        .set('Cookie', jugador.cookie)
+        .expect(200, []);
+      const admin = await crearUsuario('ADMINISTRADOR');
+      await request(servidor())
+        .get('/api/reservas/mias')
+        .set('Cookie', admin.cookie)
+        .expect(403);
+    });
+  });
 });
