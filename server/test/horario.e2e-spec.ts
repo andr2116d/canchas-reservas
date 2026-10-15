@@ -6,6 +6,8 @@ import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
 import { MENSAJE_CIERRE_POSTERIOR } from '../src/modules/horario/dto/dia-horario.dto';
 import { MENSAJE_SIETE_DIAS } from '../src/modules/horario/dto/guardar-horario.dto';
+import { MENSAJE_RESERVAS_FUERA_DE_HORARIO } from '../src/modules/horario/horario.service';
+import { diaSemanaDe } from '../src/modules/turnos/generar-turnos';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 interface Dia {
@@ -28,6 +30,15 @@ const cerrado = (diaSemana: number) => ({
   cierre: null,
 });
 const SEMANA: Dia[] = [1, 2, 3, 4, 5, 6, 7].map((dia) => abierto(dia));
+function fechaEnLima(diasDesdeHoy: number) {
+  const hoy = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Lima',
+  }).format(new Date());
+  const fecha = new Date(`${hoy}T00:00:00.000Z`);
+  fecha.setUTCDate(fecha.getUTCDate() + diasDesdeHoy);
+  return fecha.toISOString().slice(0, 10);
+}
+
 const semanaCon = (...cambios: Dia[]) =>
   SEMANA.map(
     (dia) => cambios.find((c) => c.diaSemana === dia.diaSemana) ?? dia,
@@ -51,6 +62,9 @@ describe('Horario (e2e)', () => {
   let cookieRecepcion: string;
   let diasOriginales: Dia[];
   let inicioNocheOriginal: string | undefined;
+  let jugadorId: number;
+  let canchaId: number;
+  let reservas = 0;
 
   const servidor = () => app.getHttpServer() as Parameters<typeof request>[0];
   const iniciarSesion = (credenciales: {
@@ -106,6 +120,32 @@ describe('Horario (e2e)', () => {
       orderBy: { id: 'asc' },
     });
 
+  const crearReserva = (
+    fecha: string,
+    horaInicio: string,
+    horaFin: string,
+    estado: 'CONFIRMADA' | 'PENDIENTE_PAGO' | 'CANCELADA' = 'CONFIRMADA',
+  ) =>
+    prisma.reserva.create({
+      data: {
+        codigo: `E2E-H-${sufijo}-${++reservas}`,
+        jugadorId,
+        creadoPorId: jugadorId,
+        canchaId,
+        fecha: new Date(`${fecha}T00:00:00.000Z`),
+        horaInicio,
+        horaFin,
+        inicioEn: new Date(`${fecha}T${horaInicio}:00-05:00`),
+        finEn: new Date(`${fecha}T${horaFin}:00-05:00`),
+        franja: 'DIA',
+        valorTurno: 60,
+        adelantoMinimo: 30,
+        estado,
+        reglaHorasAnticipacion: 24,
+        reglaTipoCompensacion: 'CREDITO',
+      },
+    });
+
   beforeAll(async () => {
     const modulo = await Test.createTestingModule({
       imports: [AppModule],
@@ -126,11 +166,35 @@ describe('Horario (e2e)', () => {
     await crearUsuario(RECEPCION, 'RECEPCIONISTA', `HR${sufijo}`);
     cookieAdmin = cookieDe(await iniciarSesion(ADMIN).expect(200));
     cookieRecepcion = cookieDe(await iniciarSesion(RECEPCION).expect(200));
+
+    const jugador = await prisma.usuario.create({
+      data: {
+        nombres: 'Lucia',
+        apellidos: 'Rios Prueba',
+        tipoDocumento: 'CE',
+        numeroDocumento: `HJ${sufijo}`,
+        correo: `jugador.horario.${sufijo}@laprevia.test`,
+        telefono: '900000042',
+        passwordHash: 'sin-uso',
+        rol: 'JUGADOR',
+      },
+    });
+    jugadorId = jugador.id;
+    const cancha = await prisma.cancha.create({
+      data: {
+        nombre: `Horario ${sufijo}`,
+        tamano: 'FUTBOL_5',
+        iluminacion: true,
+      },
+    });
+    canchaId = cancha.id;
   });
 
   beforeEach(() => definirHorario(SEMANA, '18:00'));
 
   afterAll(async () => {
+    await prisma.reserva.deleteMany({ where: { canchaId } });
+    await prisma.cancha.deleteMany({ where: { id: canchaId } });
     await prisma.horarioDia.deleteMany({
       where: {
         diaSemana: { notIn: diasOriginales.map((dia) => dia.diaSemana) },
@@ -352,5 +416,109 @@ describe('Horario (e2e)', () => {
         expect(Object.keys(res.body.errores)).toEqual(['fecha']);
       },
     );
+  });
+
+  describe('reservas fuera del nuevo horario', () => {
+    const fecha = fechaEnLima(3);
+    const diaSemana = diaSemanaDe(fecha);
+    const nuevoHorario = semanaCon(abierto(diaSemana, '09:30', '23:00'));
+    const idsDe = (res: request.Response) =>
+      (res.body.reservasFueraDeHorario as { id: number }[]).map((r) => r.id);
+
+    it('sin confirmar responde 409 con la lista y no guarda; con confirmar guarda sin tocar las reservas', async () => {
+      const fuera = await crearReserva(fecha, '08:00', '09:00');
+      const pendiente = await crearReserva(
+        fecha,
+        '10:00',
+        '11:00',
+        'PENDIENTE_PAGO',
+      );
+      const dentro = await crearReserva(fecha, '20:00', '21:00');
+      const cancelada = await crearReserva(
+        fecha,
+        '08:00',
+        '09:00',
+        'CANCELADA',
+      );
+      const pasada = await crearReserva(fechaEnLima(-7), '08:00', '09:00');
+
+      const conflicto = await guardar({
+        dias: nuevoHorario,
+        inicioNoche: '18:00',
+      }).expect(409);
+
+      expect(conflicto.body).toMatchObject({
+        statusCode: 409,
+        message: MENSAJE_RESERVAS_FUERA_DE_HORARIO,
+        errores: {},
+      });
+      expect(conflicto.body.reservasFueraDeHorario).toEqual(
+        expect.arrayContaining([
+          {
+            id: fuera.id,
+            cancha: `Horario ${sufijo}`,
+            fecha,
+            horaInicio: '08:00',
+            jugador: 'Lucia Rios Prueba',
+          },
+          expect.objectContaining({ id: pendiente.id, horaInicio: '10:00' }),
+        ]),
+      );
+      const ids = idsDe(conflicto);
+      expect(ids).not.toContain(dentro.id);
+      expect(ids).not.toContain(cancelada.id);
+      expect(ids).not.toContain(pasada.id);
+      const sinGuardar = await prisma.horarioDia.findUnique({
+        where: { diaSemana },
+      });
+      expect(sinGuardar?.apertura).toBe('08:00');
+
+      const antes = await prisma.reserva.findMany({
+        where: { canchaId },
+        orderBy: { id: 'asc' },
+      });
+      const auditoriasAntes = (await auditoriasHorario()).length;
+
+      const res = await guardar({
+        dias: nuevoHorario,
+        inicioNoche: '18:00',
+        confirmar: true,
+      }).expect(200);
+
+      expect(res.body.dias[diaSemana - 1]).toEqual(
+        abierto(diaSemana, '09:30', '23:00'),
+      );
+      await expect(
+        prisma.reserva.findMany({
+          where: { canchaId },
+          orderBy: { id: 'asc' },
+        }),
+      ).resolves.toEqual(antes);
+      const auditorias = await auditoriasHorario();
+      expect(auditorias).toHaveLength(auditoriasAntes + 1);
+      const detalle = auditorias.at(-1)?.detalle as {
+        reservasFueraDeHorario: number[];
+      };
+      expect(detalle.reservasFueraDeHorario).toEqual(
+        expect.arrayContaining([fuera.id, pendiente.id]),
+      );
+      expect(detalle.reservasFueraDeHorario).not.toContain(dentro.id);
+    });
+
+    it('una reserva cuyo turno sigue existiendo no bloquea el cambio', async () => {
+      await prisma.reserva.deleteMany({ where: { canchaId } });
+      const reserva = await crearReserva(fecha, '12:00', '13:00');
+
+      const res = await guardar({
+        dias: semanaCon(abierto(diaSemana, '09:00', '23:00')),
+        inicioNoche: '18:00',
+      });
+
+      if (res.status === 409) {
+        expect(idsDe(res)).not.toContain(reserva.id);
+      } else {
+        expect(res.status).toBe(200);
+      }
+    });
   });
 });
