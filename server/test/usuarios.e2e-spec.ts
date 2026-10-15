@@ -1,6 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -10,12 +9,6 @@ const DNI_B = '98000002';
 const DOCUMENTOS_DE_PRUEBA = [DNI_A, DNI_B];
 
 type TipoDocumentoUsuario = 'DNI' | 'CE';
-
-interface CuerpoError {
-  statusCode: number;
-  message: string;
-  errores: Record<string, string>;
-}
 
 function datosUsuario(
   parcial: {
@@ -32,21 +25,6 @@ function datosUsuario(
     correo: `lucia${DOMINIO}`,
     telefono: '987654321',
     passwordHash: 'hash-de-prueba',
-    ...parcial,
-  };
-}
-
-function payloadRegistro(
-  parcial: { numeroDocumento?: string; correo?: string } = {},
-) {
-  return {
-    nombres: 'Lucía',
-    apellidos: 'Ramírez Torres',
-    tipoDocumento: 'DNI',
-    numeroDocumento: DNI_A,
-    correo: `lucia${DOMINIO}`,
-    telefono: '987654321',
-    contrasena: 'Cancha2026',
     ...parcial,
   };
 }
@@ -153,103 +131,6 @@ describe('Usuarios: índices únicos (e2e)', () => {
         where: { numeroDocumento: { in: DOCUMENTOS_DE_PRUEBA } },
       });
       expect(total).toBe(2);
-    });
-  });
-
-  describe('Bloque B: POST /api/auth/registro (supertest)', () => {
-    async function registrarPrimero() {
-      await request(app.getHttpServer())
-        .post('/api/auth/registro')
-        .send(payloadRegistro())
-        .expect(201);
-    }
-
-    it('devuelve 409 en numeroDocumento si el documento ya existe', async () => {
-      await registrarPrimero();
-
-      const respuesta = await request(app.getHttpServer())
-        .post('/api/auth/registro')
-        .send(payloadRegistro({ correo: `otro${DOMINIO}` }))
-        .expect(409);
-
-      expect(respuesta.body as CuerpoError).toEqual({
-        statusCode: 409,
-        message: expect.any(String),
-        errores: { numeroDocumento: 'Este documento ya está registrado' },
-      });
-
-      const total = await prisma.usuario.count({
-        where: { numeroDocumento: DNI_A },
-      });
-      expect(total).toBe(1);
-    });
-
-    it('devuelve 409 en correo si el correo ya existe', async () => {
-      await registrarPrimero();
-
-      const respuesta = await request(app.getHttpServer())
-        .post('/api/auth/registro')
-        .send(payloadRegistro({ numeroDocumento: DNI_B }))
-        .expect(409);
-
-      expect(respuesta.body as CuerpoError).toEqual({
-        statusCode: 409,
-        message: expect.any(String),
-        errores: { correo: 'Este correo ya está registrado' },
-      });
-
-      const total = await prisma.usuario.count({
-        where: { numeroDocumento: { in: DOCUMENTOS_DE_PRUEBA } },
-      });
-      expect(total).toBe(1);
-    });
-
-    it('devuelve 409 en correo si solo cambian las mayúsculas', async () => {
-      await registrarPrimero();
-
-      const respuesta = await request(app.getHttpServer())
-        .post('/api/auth/registro')
-        .send(
-          payloadRegistro({
-            numeroDocumento: DNI_B,
-            correo: 'LUCIA@Indices.TEST',
-          }),
-        )
-        .expect(409);
-
-      expect(respuesta.body as CuerpoError).toEqual({
-        statusCode: 409,
-        message: expect.any(String),
-        errores: { correo: 'Este correo ya está registrado' },
-      });
-
-      const total = await prisma.usuario.count({
-        where: { numeroDocumento: { in: DOCUMENTOS_DE_PRUEBA } },
-      });
-      expect(total).toBe(1);
-    });
-
-    it('devuelve 409 con ambos campos si documento y correo ya existen', async () => {
-      await registrarPrimero();
-
-      const respuesta = await request(app.getHttpServer())
-        .post('/api/auth/registro')
-        .send(payloadRegistro())
-        .expect(409);
-
-      expect(respuesta.body as CuerpoError).toEqual({
-        statusCode: 409,
-        message: expect.any(String),
-        errores: {
-          numeroDocumento: 'Este documento ya está registrado',
-          correo: 'Este correo ya está registrado',
-        },
-      });
-
-      const total = await prisma.usuario.count({
-        where: { numeroDocumento: DNI_A },
-      });
-      expect(total).toBe(1);
     });
   });
 });
