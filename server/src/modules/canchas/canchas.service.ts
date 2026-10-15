@@ -261,6 +261,7 @@ export class CanchasService {
       }
       throw error;
     }
+    this.gateway.notificar(null, id);
   }
 
   async reservasFuturas(canchaId: number, cliente: Cliente = this.prisma) {
