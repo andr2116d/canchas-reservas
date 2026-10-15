@@ -1,9 +1,9 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { inicioDeHoyEnLima } from '../../common/fechas-lima';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import {
   CanchasService,
-  inicioDeHoyEnLima,
   MENSAJE_CON_HISTORIAL,
   MENSAJE_CONFIRMAR_DESACTIVAR,
   MENSAJE_ELIMINAR_CON_FUTURAS,
@@ -427,14 +427,6 @@ describe('CanchasService', () => {
       prisma.cancha.findUnique.mockResolvedValue(null);
       await expect(servicio.eliminar(99, ADMIN_ID)).rejects.toBeInstanceOf(
         NotFoundException,
-      );
-    });
-  });
-
-  describe('inicioDeHoyEnLima', () => {
-    it('usa la fecha de Lima aunque en UTC ya sea el día siguiente', () => {
-      expect(inicioDeHoyEnLima(new Date('2026-10-16T03:30:00.000Z'))).toEqual(
-        new Date('2026-10-15T00:00:00.000Z'),
       );
     });
   });

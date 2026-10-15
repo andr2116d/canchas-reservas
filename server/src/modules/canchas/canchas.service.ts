@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { cuerpoError } from '../../common/errores';
+import { inicioDeHoyEnLima } from '../../common/fechas-lima';
 import type { Prisma } from '../../generated/prisma/client';
 import type { EstadoReserva, Rol } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -24,7 +25,6 @@ export const MENSAJE_CON_HISTORIAL =
 
 const ENTIDAD = 'CANCHA';
 const ID_MAXIMO = 2147483647;
-const ZONA = 'America/Lima';
 export const ESTADOS_RESERVA_FUTURA: EstadoReserva[] = [
   'PENDIENTE_PAGO',
   'PENDIENTE_VALIDACION',
@@ -77,13 +77,6 @@ function conReservasFuturas(
     ...cuerpoError(409, message),
     reservasFuturas,
   });
-}
-
-export function inicioDeHoyEnLima(ahora = new Date()) {
-  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA }).format(
-    ahora,
-  );
-  return new Date(`${hoy}T00:00:00.000Z`);
 }
 
 @Injectable()
