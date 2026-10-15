@@ -117,6 +117,7 @@ export class ReservasService {
       ? await this.bloquearCreditos(tx, jugadorId)
       : [];
     const credito = repartirCredito(creditos, turno.valor.adelanto);
+    const confirmada = credito.aplicado.gte(turno.valor.adelanto);
     const reserva = await tx.reserva.create({
       data: {
         codigo: generarCodigo(),
@@ -132,8 +133,11 @@ export class ReservasService {
         finEn: turno.finEn,
         valorTurno: turno.valor.valor,
         adelantoMinimo: turno.valor.adelanto,
-        estado: 'PENDIENTE_PAGO',
-        venceEn: calcularVenceEn(ahora, tiempoLimitePagoMin, turno.inicioEn),
+        estado: confirmada ? 'CONFIRMADA' : 'PENDIENTE_PAGO',
+        venceEn: confirmada
+          ? null
+          : calcularVenceEn(ahora, tiempoLimitePagoMin, turno.inicioEn),
+        confirmadaEn: confirmada ? ahora : null,
         reglaHorasAnticipacion: regla.horasAnticipacion,
         reglaTipoCompensacion: regla.tipoCompensacion,
         creadoEn: ahora,
