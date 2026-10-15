@@ -18,12 +18,44 @@ const violaCheck = (restriccion: string) => ({
 });
 
 describe('Tabla regla_cancelacion (e2e)', () => {
+  const sufijo = String(Date.now()).slice(-11);
+
   let app: INestApplication;
   let prisma: PrismaService;
   let original: ReglaCancelacion;
+  let jugadorId: number;
+  let canchaId: number;
+  let reservas = 0;
 
   const leerRegla = () =>
     prisma.reglaCancelacion.findUniqueOrThrow({ where: { id: 1 } });
+
+  const crearReserva = (
+    copia: Pick<
+      Prisma.ReservaUncheckedCreateInput,
+      'reglaHorasAnticipacion' | 'reglaTipoCompensacion'
+    >,
+  ) => {
+    reservas += 1;
+    const hora = String(7 + reservas).padStart(2, '0');
+    return prisma.reserva.create({
+      data: {
+        codigo: `G${sufijo}${reservas}`,
+        jugadorId,
+        creadoPorId: jugadorId,
+        canchaId,
+        fecha: new Date('2026-11-20'),
+        horaInicio: `${hora}:00`,
+        horaFin: `${hora}:59`,
+        inicioEn: new Date(`2026-11-20T${hora}:00:00-05:00`),
+        finEn: new Date(`2026-11-20T${hora}:59:00-05:00`),
+        franja: 'DIA',
+        valorTurno: 60,
+        adelantoMinimo: 30,
+        ...copia,
+      },
+    });
+  };
 
   beforeAll(async () => {
     const modulo = await Test.createTestingModule({
@@ -34,6 +66,26 @@ describe('Tabla regla_cancelacion (e2e)', () => {
     await app.init();
     prisma = modulo.get(PrismaService);
     original = await leerRegla();
+
+    const jugador = await prisma.usuario.create({
+      data: {
+        nombres: 'Jugador Tabla Regla',
+        tipoDocumento: 'CE',
+        numeroDocumento: `G${sufijo}`,
+        correo: `jugador.tabla.regla.${sufijo}@laprevia.test`,
+        telefono: '900000031',
+        passwordHash: 'sin-uso',
+      },
+    });
+    jugadorId = jugador.id;
+    const cancha = await prisma.cancha.create({
+      data: {
+        nombre: `Tabla Regla ${sufijo}`,
+        tamano: 'FUTBOL_5',
+        iluminacion: true,
+      },
+    });
+    canchaId = cancha.id;
   });
 
   afterEach(async () => {
@@ -47,6 +99,9 @@ describe('Tabla regla_cancelacion (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.reserva.deleteMany({ where: { jugadorId } });
+    await prisma.cancha.deleteMany({ where: { id: canchaId } });
+    await prisma.usuario.deleteMany({ where: { id: jugadorId } });
     await app.close();
   });
 
@@ -146,5 +201,38 @@ describe('Tabla regla_cancelacion (e2e)', () => {
       prisma.reglaCancelacion.create({ data: { id: 2 } }),
     ).rejects.toMatchObject(violaCheck('regla_fila_unica'));
     await expect(prisma.reglaCancelacion.count()).resolves.toBe(1);
+  });
+
+  it('la reserva conserva su copia de la regla cuando la regla cambia', async () => {
+    const vigente = await leerRegla();
+    const reserva = await crearReserva({
+      reglaHorasAnticipacion: vigente.horasAnticipacion,
+      reglaTipoCompensacion: vigente.tipoCompensacion,
+    });
+
+    await prisma.reglaCancelacion.update({
+      where: { id: 1 },
+      data: {
+        horasAnticipacion: vigente.horasAnticipacion + 12,
+        tipoCompensacion:
+          vigente.tipoCompensacion === 'CREDITO' ? 'DEVOLUCION' : 'CREDITO',
+      },
+    });
+
+    await expect(
+      prisma.reserva.findUniqueOrThrow({ where: { id: reserva.id } }),
+    ).resolves.toMatchObject({
+      reglaHorasAnticipacion: vigente.horasAnticipacion,
+      reglaTipoCompensacion: vigente.tipoCompensacion,
+    });
+  });
+
+  it('la reserva exige la copia de la regla', async () => {
+    await expect(
+      crearReserva({} as Parameters<typeof crearReserva>[0]),
+    ).rejects.toBeInstanceOf(Prisma.PrismaClientValidationError);
+    await expect(
+      prisma.reserva.count({ where: { codigo: `G${sufijo}${reservas}` } }),
+    ).resolves.toBe(0);
   });
 });
