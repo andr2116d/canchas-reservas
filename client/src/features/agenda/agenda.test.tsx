@@ -97,6 +97,31 @@ function ultimaConsulta(fetchMock: { mock: { calls: unknown[][] } }) {
   return parametrosPedidos(fetchMock).at(-1)!;
 }
 
+/** La fila de la tabla de escritorio que empieza a esa hora. */
+function filaDe(hora: string) {
+  const tabla = screen.getByRole("table");
+  const fila = within(tabla)
+    .getAllByRole("row")
+    .find((f) => f.textContent?.startsWith(`${hora}–`));
+  if (!fila) throw new Error(`No hay fila de las ${hora}`);
+  return fila;
+}
+
+/** La tarjeta de celular que empieza a esa hora. */
+function tarjetaDe(hora: string) {
+  const tarjeta = screen
+    .getAllByRole("listitem")
+    .find((item) => item.textContent?.startsWith(`${hora}–`));
+  if (!tarjeta) throw new Error(`No hay tarjeta de las ${hora}`);
+  return tarjeta;
+}
+
+function botonesDe(elemento: HTMLElement) {
+  return within(elemento)
+    .queryAllByRole("button")
+    .map((boton) => boton.textContent);
+}
+
 function listenersActivos(socket: { on: unknown; off: unknown }, evento: string) {
   const contar = (fn: unknown) =>
     (fn as { mock: { calls: [string, unknown][] } }).mock.calls.filter(([e]) => e === evento).length;
@@ -247,5 +272,55 @@ describe("PantallaAgenda con fecha fija", () => {
     fireEvent.change(screen.getByLabelText("Cancha"), { target: { value: "" } });
     await waitFor(() => expect(ultimaConsulta(fetchMock).has("canchaId")).toBe(false));
     expect(ultimaConsulta(fetchMock).get("estado")).toBe("CONFIRMADA");
+  });
+
+  it("cada estado muestra solo los botones de sus acciones, deshabilitados", async () => {
+    responderSiempre(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    const casos: [string, string[]][] = [
+      ["08:00", ["Cancelar", "Reubicar"]],
+      ["09:00", []],
+      ["10:00", ["Check-in", "Marcar ausente", "Cancelar", "Reubicar"]],
+      ["11:00", ["Check-in", "Marcar ausente", "Cancelar", "Reubicar"]],
+      ["12:00", ["Adicionales", "Finalizar"]],
+      ["13:00", []],
+      ["14:00", []],
+      ["15:00", []],
+      ["16:00", []],
+    ];
+
+    for (const [hora, esperados] of casos) {
+      for (const contenedor of [filaDe(hora), tarjetaDe(hora)]) {
+        expect(botonesDe(contenedor)).toEqual(esperados);
+        for (const boton of within(contenedor).queryAllByRole("button")) {
+          expect((boton as HTMLButtonElement).disabled).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("una confirmada con saldo lleva borde y badge de saldo, y una pagada lleva Pagada", async () => {
+    responderSiempre(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    const conSaldo = filaDe("10:00");
+    const pagada = filaDe("11:00");
+
+    expect(within(conSaldo).getByText("Saldo S/ 40.00")).toBeTruthy();
+    expect(within(conSaldo).queryByText("Pagada")).toBeNull();
+    expect(conSaldo.className).toContain("border-alerta");
+
+    expect(within(pagada).getByText("Pagada")).toBeTruthy();
+    expect(within(pagada).queryByText(/^Saldo S\//)).toBeNull();
+    expect(pagada.className).not.toContain("border-alerta");
+
+    expect(within(tarjetaDe("10:00")).getByText("Saldo S/ 40.00")).toBeTruthy();
+    expect(within(tarjetaDe("11:00")).getByText("Pagada")).toBeTruthy();
+    for (const hora of ["08:00", "12:00", "14:00"]) {
+      expect(within(filaDe(hora)).queryByText(/^Saldo S\/|^Pagada$/)).toBeNull();
+    }
   });
 });
