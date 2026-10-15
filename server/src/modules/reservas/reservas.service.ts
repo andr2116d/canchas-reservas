@@ -19,6 +19,7 @@ import { ReglaCancelacionService } from '../regla-cancelacion/regla-cancelacion.
 import { aNumero } from '../tarifas/calculo-tarifa';
 import { TarifasService } from '../tarifas/tarifas.service';
 import { TurnosService } from '../turnos/turnos.service';
+import { repartirCredito } from './aplicacion-credito';
 import { generarCodigo } from './codigo-reserva';
 import { CrearReservaDto } from './dto/crear-reserva.dto';
 import { TurnoReservaDto } from './dto/turno-reserva.dto';
@@ -112,6 +113,10 @@ export class ReservasService {
     const turno = await this.validar(jugadorId, datos, ahora, tx);
     const { tiempoLimitePagoMin } = await this.configuracion(tx);
     const regla = await this.regla.obtenerVigente(tx);
+    const creditos = datos.usarCredito
+      ? await this.bloquearCreditos(tx, jugadorId)
+      : [];
+    const credito = repartirCredito(creditos, turno.valor.adelanto);
     const reserva = await tx.reserva.create({
       data: {
         codigo: generarCodigo(),
@@ -135,6 +140,21 @@ export class ReservasService {
       },
       select: { id: true, codigo: true, estado: true, venceEn: true },
     });
+    if (credito.aplicado.gt(0)) {
+      await tx.pago.create({
+        data: {
+          reservaId: reserva.id,
+          concepto: 'ADELANTO',
+          canal: 'ONLINE',
+          metodo: 'CREDITO',
+          estado: 'APROBADO',
+          monto: credito.aplicado,
+          registradoPorId: jugadorId,
+          creadoEn: ahora,
+        },
+        select: { id: true },
+      });
+    }
     await this.auditoria.registrar(
       {
         usuarioId: jugadorId,
