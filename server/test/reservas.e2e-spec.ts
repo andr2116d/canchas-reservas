@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { BadRequestException, INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module';
 import { Reloj } from '../src/common/reloj/reloj';
 import { crearPayloadSesion } from '../src/common/sesion/cookie-sesion';
 import { configurarApp } from '../src/configurar-app';
+import { ReservasService } from '../src/modules/reservas/reservas.service';
 import type { EstadoReserva, HorarioDia } from '../src/generated/prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -389,6 +390,185 @@ describe('Reservas (e2e)', () => {
           data: { horasAnticipacion: 24, tipoCompensacion: 'CREDITO' },
         });
       }
+    });
+  });
+
+  describe('motivos de rechazo', () => {
+    let jugador: { id: number; cookie: string };
+    let otro: { id: number; cookie: string };
+    let canchaId: number;
+
+    beforeAll(async () => {
+      jugador = await crearUsuario();
+      otro = await crearUsuario();
+      canchaId = await crearCancha();
+    });
+
+    const mismoRechazo = async (
+      datos: { canchaId: number; fecha: string; horaInicio: string },
+      status: number,
+      message: string,
+    ) => {
+      const consulta = await resumen(jugador.cookie, datos).expect(status);
+      expect(consulta.body).toMatchObject({ statusCode: status, message });
+      const creacion = await reservar(jugador.cookie, datos).expect(status);
+      expect(creacion.body).toMatchObject({ statusCode: status, message });
+      return creacion.body as { errores: Record<string, string> };
+    };
+
+    it('sin sesión responde 401 y otro rol responde 403', async () => {
+      const datos = { canchaId, fecha: MANANA, horaInicio: '18:00' };
+      await request(servidor()).post('/api/reservas').send(datos).expect(401);
+      const admin = await crearUsuario('ADMINISTRADOR');
+      await reservar(admin.cookie, datos).expect(403);
+      await resumen(admin.cookie, datos).expect(403);
+    });
+
+    it('un jugador inactivo no puede reservar', async () => {
+      const inactivo = await crearUsuario();
+      await prisma.usuario.update({
+        where: { id: inactivo.id },
+        data: { estado: 'INACTIVO' },
+      });
+      const datos = { canchaId, fecha: MANANA, horaInicio: '18:00' };
+      await reservar(inactivo.cookie, datos).expect(401);
+
+      const reservas = app.get(ReservasService);
+      const error = (await reservas
+        .crear(inactivo.id, { ...datos, usarCredito: false })
+        .catch((e: unknown) => e)) as BadRequestException;
+      expect(error.getResponse()).toMatchObject({
+        statusCode: 400,
+        message: 'Solo un jugador activo puede reservar',
+      });
+    });
+
+    it.each([
+      ['de ayer', '2030-01-13', '18:00'],
+      ['de hoy que ya empezó', HOY, '09:00'],
+      ['de hoy que empieza ahora', HOY, '10:00'],
+    ])('un turno %s ya pasó', async (_caso, fecha, horaInicio) => {
+      const body = await mismoRechazo(
+        { canchaId, fecha, horaInicio },
+        400,
+        'El turno ya pasó',
+      );
+      expect(body.errores).toEqual({ horaInicio: 'El turno ya pasó' });
+    });
+
+    it('acepta hasta hoy + 30 días y rechaza hoy + 31', async () => {
+      await resumen(jugador.cookie, {
+        canchaId,
+        fecha: '2030-02-13',
+        horaInicio: '18:00',
+      }).expect(200);
+      await resumen(jugador.cookie, {
+        canchaId,
+        fecha: HOY,
+        horaInicio: '11:00',
+      }).expect(200);
+      await mismoRechazo(
+        { canchaId, fecha: '2030-02-14', horaInicio: '18:00' },
+        400,
+        'Solo puedes reservar desde hoy hasta dentro de 30 días',
+      );
+    });
+
+    it('la cancha no existe', async () => {
+      await mismoRechazo(
+        { canchaId: 2147483647, fecha: MANANA, horaInicio: '18:00' },
+        400,
+        'No se encontró la cancha',
+      );
+    });
+
+    it('la cancha está desactivada', async () => {
+      const desactivada = await crearCancha(undefined, { activa: false });
+      await mismoRechazo(
+        { canchaId: desactivada, fecha: MANANA, horaInicio: '18:00' },
+        400,
+        'La cancha está desactivada',
+      );
+    });
+
+    it('la cancha está en mantenimiento', async () => {
+      const enMantenimiento = await crearCancha(undefined, {
+        estado: 'EN_MANTENIMIENTO',
+      });
+      await mismoRechazo(
+        { canchaId: enMantenimiento, fecha: MANANA, horaInicio: '18:00' },
+        400,
+        'La cancha está en mantenimiento',
+      );
+    });
+
+    it.each(['07:00', '23:00', '18:30'])(
+      'el turno de las %s está fuera del horario operativo',
+      async (horaInicio) => {
+        await mismoRechazo(
+          { canchaId, fecha: MANANA, horaInicio },
+          400,
+          'El turno está fuera del horario operativo',
+        );
+      },
+    );
+
+    it('la cancha no tiene tarifa para la franja del turno', async () => {
+      const soloDia = await crearCancha({ DIA: 60 });
+      await resumen(jugador.cookie, {
+        canchaId: soloDia,
+        fecha: MANANA,
+        horaInicio: '10:00',
+      }).expect(200);
+      await mismoRechazo(
+        { canchaId: soloDia, fecha: MANANA, horaInicio: '18:00' },
+        400,
+        'La cancha no tiene tarifa para esa franja',
+      );
+    });
+
+    it.each<EstadoReserva>([
+      'PENDIENTE_PAGO',
+      'PENDIENTE_VALIDACION',
+      'CONFIRMADA',
+    ])('el turno con una reserva %s no está disponible', async (estado) => {
+      const cancha = await crearCancha();
+      await insertarReserva(otro.id, cancha, MANANA, '19:00', estado);
+      await mismoRechazo(
+        { canchaId: cancha, fecha: MANANA, horaInicio: '19:00' },
+        409,
+        NO_DISPONIBLE,
+      );
+    });
+
+    it.each<EstadoReserva>(['CANCELADA', 'EXPIRADA'])(
+      'el turno con una reserva %s se puede volver a reservar',
+      async (estado) => {
+        const cancha = await crearCancha();
+        await insertarReserva(otro.id, cancha, MANANA, '19:00', estado);
+        const nuevo = await crearUsuario();
+        await reservar(nuevo.cookie, {
+          canchaId: cancha,
+          fecha: MANANA,
+          horaInicio: '19:00',
+        }).expect(201);
+      },
+    );
+
+    it('datos con formato inválido responden 400 por campo', async () => {
+      const res = await request(servidor())
+        .post('/api/reservas')
+        .set('Cookie', jugador.cookie)
+        .send({ canchaId: 'x', fecha: '2030-02-30', horaInicio: '18' })
+        .expect(400);
+      expect((res.body as { errores: Record<string, string> }).errores).toEqual(
+        {
+          canchaId: 'Elige una cancha válida',
+          fecha: 'La fecha debe tener el formato YYYY-MM-DD',
+          horaInicio: 'La hora debe tener el formato HH:mm, de 00:00 a 23:59',
+          usarCredito: 'Indica si quieres usar tu crédito',
+        },
+      );
     });
   });
 });
