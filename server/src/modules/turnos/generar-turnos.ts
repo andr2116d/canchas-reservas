@@ -50,3 +50,8 @@ export function generarTurnos(dia: DiaHorario, inicioNoche: string): Turno[] {
     ...partirTramo(Math.max(noche, apertura), cierre, 'NOCHE'),
   ];
 }
+
+export function diaSemanaDe(fecha: string) {
+  const dia = new Date(`${fecha}T12:00:00-05:00`).getUTCDay();
+  return dia === 0 ? 7 : dia;
+}

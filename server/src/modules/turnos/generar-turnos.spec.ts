@@ -1,4 +1,4 @@
-import { generarTurnos, type Turno } from './generar-turnos';
+import { diaSemanaDe, generarTurnos, type Turno } from './generar-turnos';
 
 const abierto = (apertura: string, cierre: string) => ({
   abierto: true,
@@ -143,5 +143,18 @@ describe('generarTurnos', () => {
 
   it('si queda menos de 1 hora no genera turnos', () => {
     expect(generarTurnos(abierto('17:30', '18:20'), '18:00')).toEqual([]);
+  });
+});
+
+describe('diaSemanaDe', () => {
+  it.each([
+    ['2026-10-19', 1],
+    ['2026-10-20', 2],
+    ['2026-10-24', 6],
+    ['2026-10-25', 7],
+    ['2026-12-31', 4],
+    ['2027-01-03', 7],
+  ])('%s es el día %i', (fecha, dia) => {
+    expect(diaSemanaDe(fecha)).toBe(dia);
   });
 });
