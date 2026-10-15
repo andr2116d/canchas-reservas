@@ -12,11 +12,16 @@ describe('Tarifas (e2e)', () => {
     correo: `admin.tarifas.${sufijo}@laprevia.test`,
     contrasena: 'Admin12345',
   };
+  const RECEPCION = {
+    correo: `recepcion.tarifas.${sufijo}@laprevia.test`,
+    contrasena: 'Recepcion123',
+  };
 
   let app: INestApplication;
   let prisma: PrismaService;
   let adminId: number;
   let cookieAdmin: string;
+  let cookieRecepcion: string;
   const canchasCreadas: number[] = [];
 
   const servidor = () => app.getHttpServer() as Parameters<typeof request>[0];
@@ -30,7 +35,7 @@ describe('Tarifas (e2e)', () => {
     ) ?? '';
   const crearUsuario = async (
     credenciales: { correo: string; contrasena: string },
-    rol: 'ADMINISTRADOR',
+    rol: 'ADMINISTRADOR' | 'RECEPCIONISTA',
     documento: string,
   ) => {
     const usuario = await prisma.usuario.create({
@@ -81,7 +86,9 @@ describe('Tarifas (e2e)', () => {
     prisma = modulo.get(PrismaService);
 
     adminId = await crearUsuario(ADMIN, 'ADMINISTRADOR', `A${sufijo}`);
+    await crearUsuario(RECEPCION, 'RECEPCIONISTA', `R${sufijo}`);
     cookieAdmin = cookieDe(await iniciarSesion(ADMIN).expect(200));
+    cookieRecepcion = cookieDe(await iniciarSesion(RECEPCION).expect(200));
   });
 
   afterAll(async () => {
@@ -200,6 +207,84 @@ describe('Tarifas (e2e)', () => {
       const canchaId = await crearCancha('Tarifa Inactiva', false);
 
       await definir(canchaId, { franja: 'DIA', valor: 45 }).expect(200);
+    });
+
+    it.each([
+      [0, 'El valor debe ser mayor que 0'],
+      [-5, 'El valor debe ser mayor que 0'],
+      ['80', 'El valor debe ser mayor que 0'],
+      [null, 'El valor debe ser mayor que 0'],
+      [10000, 'El valor no puede ser mayor que 9999.99'],
+      [10.555, 'El valor debe tener hasta 2 decimales'],
+    ])('con valor %p responde 400: %s', async (valor, mensaje) => {
+      const canchaId = await crearCancha(`Tarifa Invalida ${String(valor)}`);
+
+      const res = await definir(canchaId, { franja: 'DIA', valor }).expect(400);
+
+      expect(res.body).toEqual({
+        statusCode: 400,
+        message: mensaje,
+        errores: { valor: mensaje },
+      });
+      await expect(tarifasDe(canchaId)).resolves.toHaveLength(0);
+    });
+
+    it('acepta el máximo 9999.99', async () => {
+      const canchaId = await crearCancha('Tarifa Maxima');
+
+      const res = await definir(canchaId, {
+        franja: 'NOCHE',
+        valor: 9999.99,
+      }).expect(200);
+
+      expect((res.body as { valor: number }).valor).toBe(9999.99);
+    });
+
+    it('sin franja válida responde 400', async () => {
+      const canchaId = await crearCancha('Tarifa Sin Franja');
+
+      const res = await definir(canchaId, {
+        franja: 'TARDE',
+        valor: 50,
+      }).expect(400);
+
+      expect(res.body).toEqual({
+        statusCode: 400,
+        message: 'Elige la franja Día o Noche',
+        errores: { franja: 'Elige la franja Día o Noche' },
+      });
+    });
+
+    it.each(['999999', '2147483648', 'abc'])(
+      'con la cancha %s responde 404',
+      async (id) => {
+        const res = await request(servidor())
+          .put(`/api/canchas/${id}/tarifas`)
+          .set('Cookie', cookieAdmin)
+          .send({ franja: 'DIA', valor: 50 })
+          .expect(404);
+
+        expect(res.body).toEqual({
+          statusCode: 404,
+          message: 'No se encontró la cancha',
+          errores: {},
+        });
+      },
+    );
+
+    it('sin sesión responde 401 y la recepción 403', async () => {
+      const canchaId = await crearCancha('Tarifa Permisos');
+
+      await request(servidor())
+        .put(`/api/canchas/${canchaId}/tarifas`)
+        .send({ franja: 'DIA', valor: 50 })
+        .expect(401);
+      await definir(
+        canchaId,
+        { franja: 'DIA', valor: 50 },
+        cookieRecepcion,
+      ).expect(403);
+      await expect(tarifasDe(canchaId)).resolves.toHaveLength(0);
     });
   });
 });
