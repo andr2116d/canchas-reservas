@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
+import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import {
   MENSAJE_CANCHA_NO_ENCONTRADA,
   MENSAJE_TARIFA_CONCURRENTE,
@@ -40,9 +41,11 @@ describe('TarifasService', () => {
     $transaction: jest.fn(),
   };
   const auditoria = { registrar: jest.fn() };
+  const gateway = { notificar: jest.fn() };
   const servicio = new TarifasService(
     prisma as unknown as PrismaService,
     auditoria as unknown as AuditoriaService,
+    gateway as unknown as TurnosGateway,
   );
 
   beforeEach(() => {
