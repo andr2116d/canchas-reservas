@@ -224,3 +224,72 @@ describe("Pantalla de tarifas", () => {
     expect((await noche.findByRole("alert")).textContent).toBe(mensaje);
   });
 });
+
+describe("Estados de la pantalla de tarifas", () => {
+  it("muestra el esqueleto mientras cargan las canchas y las tarifas", async () => {
+    let soltarTarifas: (respuesta: Response) => void = () => {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) =>
+        url === "/api/canchas"
+          ? Promise.resolve(new Response(JSON.stringify(CANCHAS), { status: 200 }))
+          : new Promise<Response>((resolver) => {
+              soltarTarifas = resolver;
+            }),
+      ),
+    );
+    renderPantalla();
+
+    expect(screen.getAllByTestId("esqueleto-tarifas")).toHaveLength(1);
+    expect(screen.queryByLabelText("Cancha")).toBeNull();
+
+    await screen.findByLabelText("Cancha");
+    expect(screen.getByTestId("esqueleto-tarifas")).toBeTruthy();
+
+    soltarTarifas(new Response(JSON.stringify(TARIFAS_CANCHA_1), { status: 200 }));
+    await screen.findByRole("table", { name: "Historial de tarifas" });
+    expect(screen.queryByTestId("esqueleto-tarifas")).toBeNull();
+  });
+
+  it("si falla la red al pedir las canchas muestra el error y Reintentar las vuelve a pedir", async () => {
+    const fetchMock = responder(rutasBase({ "GET /api/canchas": ["red", { status: 200, body: CANCHAS }] }));
+    renderPantalla();
+
+    const alerta = await screen.findByRole("alert");
+    expect(within(alerta).getByText("No se pudo conectar con el servidor")).toBeTruthy();
+
+    fireEvent.click(within(alerta).getByRole("button", { name: "Reintentar" }));
+
+    expect(await screen.findByLabelText("Cancha")).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(llamadas(fetchMock, "GET", "/api/canchas")).toHaveLength(2);
+  });
+
+  it("si falla la red al pedir las tarifas mantiene el selector y permite reintentar", async () => {
+    const fetchMock = responder(
+      rutasBase({ "GET /api/canchas/1/tarifas": ["red", { status: 200, body: TARIFAS_CANCHA_1 }] }),
+    );
+    renderPantalla();
+
+    const alerta = await screen.findByRole("alert");
+    expect(within(alerta).getByText("No se pudo conectar con el servidor")).toBeTruthy();
+    expect(screen.getByLabelText("Cancha")).toBeTruthy();
+
+    fireEvent.click(within(alerta).getByRole("button", { name: "Reintentar" }));
+
+    expect(await (await tarjeta("Día")).findByText("S/ 55.05")).toBeTruthy();
+    expect(llamadas(fetchMock, "GET", "/api/canchas/1/tarifas")).toHaveLength(2);
+  });
+
+  it("sin canchas muestra el estado vacío con el acceso a canchas y no pide tarifas", async () => {
+    const fetchMock = responder({ "GET /api/canchas": { status: 200, body: [] } });
+    renderPantalla();
+
+    expect(await screen.findByText("Todavía no hay canchas. Crea una para definir sus tarifas.")).toBeTruthy();
+    expect(screen.queryByLabelText("Cancha")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Ir a canchas" }));
+    expect(router.push).toHaveBeenCalledWith("/admin/canchas");
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  });
+});
