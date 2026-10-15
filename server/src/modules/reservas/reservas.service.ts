@@ -10,7 +10,7 @@ import {
   sumarDias,
 } from '../../common/fechas-lima';
 import { Reloj } from '../../common/reloj/reloj';
-import type { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
@@ -220,7 +220,7 @@ export class ReservasService {
       where: { jugadorId, saldo: { gt: 0 } },
       _sum: { saldo: true },
     });
-    return _sum.saldo ?? 0;
+    return _sum.saldo ?? new Prisma.Decimal(0);
   }
 
   private configuracion(cliente: Cliente) {
