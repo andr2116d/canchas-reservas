@@ -170,7 +170,7 @@ describe('Reservas (e2e)', () => {
       .compile();
     app = modulo.createNestApplication();
     configurarApp(app);
-    await app.init();
+    await app.listen(0);
     prisma = modulo.get(PrismaService);
     jwt = modulo.get(JwtService, { strict: false });
     adminId = (await crearUsuario('ADMINISTRADOR')).id;
@@ -669,6 +669,72 @@ describe('Reservas (e2e)', () => {
           where: { usuarioId: jugador.id, entidad: 'RESERVA' },
         }),
       ).toBe(0);
+    });
+  });
+
+  describe('concurrencia', () => {
+    it('de 50 solicitudes simultáneas al mismo turno solo una se crea', async () => {
+      const canchaId = await crearCancha();
+      const jugadores = [];
+      for (let i = 0; i < 50; i++) jugadores.push(await crearUsuario());
+      const datos = { canchaId, fecha: MANANA, horaInicio: '18:00' };
+
+      const respuestas = await Promise.all(
+        jugadores.map((j) => reservar(j.cookie, datos)),
+      );
+
+      const creadas = respuestas.filter((r) => r.status === 201);
+      const rechazadas = respuestas.filter((r) => r.status === 409);
+      expect(creadas).toHaveLength(1);
+      expect(rechazadas).toHaveLength(49);
+      for (const r of rechazadas) {
+        expect(r.body).toMatchObject({
+          statusCode: 409,
+          message: NO_DISPONIBLE,
+        });
+      }
+      expect(
+        await prisma.reserva.count({
+          where: {
+            canchaId,
+            fecha: new Date(`${MANANA}T00:00:00.000Z`),
+            horaInicio: '18:00',
+            estado: {
+              in: ['PENDIENTE_PAGO', 'PENDIENTE_VALIDACION', 'CONFIRMADA'],
+            },
+          },
+        }),
+      ).toBe(1);
+    }, 30000);
+
+    it('dos solicitudes simultáneas del mismo jugador con 1 pendiente: solo pasa una', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha();
+      await insertarReserva(
+        jugador.id,
+        canchaId,
+        MANANA,
+        '18:00',
+        'PENDIENTE_PAGO',
+      );
+
+      const respuestas = await Promise.all(
+        ['19:00', '20:00'].map((horaInicio) =>
+          reservar(jugador.cookie, { canchaId, fecha: MANANA, horaInicio }),
+        ),
+      );
+
+      expect(respuestas.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+        201, 409,
+      ]);
+      expect(respuestas.find((r) => r.status === 409)?.body).toMatchObject({
+        message: 'Ya tienes 2 reservas pendientes de pago',
+      });
+      expect(
+        await prisma.reserva.count({
+          where: { jugadorId: jugador.id, estado: 'PENDIENTE_PAGO' },
+        }),
+      ).toBe(2);
     });
   });
 });
