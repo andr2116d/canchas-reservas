@@ -9,6 +9,7 @@ export function obtenerSocket() {
   }
   global.__socketLaPrevia ??= io(process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001", {
     autoConnect: true,
+    withCredentials: true,
   });
   return global.__socketLaPrevia;
 }
