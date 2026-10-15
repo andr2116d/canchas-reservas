@@ -110,7 +110,7 @@ export function PantallaConfirmarReserva(props: Props = {}) {
         {toast && <Toast mensaje={toast} />}
         <Card className="flex flex-col items-center gap-3 text-center">
           <h1 className="font-display text-[32px] font-bold leading-9 text-noche-900">
-            ¡Reserva confirmada!
+            {creada.estado === "CONFIRMADA" ? "¡Reserva confirmada!" : "Reserva creada"}
           </h1>
           <p className="text-sm text-texto-suave">Tu código de reserva</p>
           <p className="font-display text-3xl font-bold tabular-nums text-cesped-700">

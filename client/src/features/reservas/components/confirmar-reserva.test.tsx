@@ -184,6 +184,7 @@ describe("PantallaConfirmarReserva", () => {
     (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
 
     await screen.findByText("LP7K2M9Q");
+    expect(screen.getByRole("heading", { name: "¡Reserva confirmada!" })).toBeTruthy();
     expect(screen.getByText("Pagaste el adelanto con tu crédito.")).toBeTruthy();
     expect(screen.queryByText(/Tiempo para pagar el adelanto/)).toBeNull();
   });
@@ -205,6 +206,8 @@ describe("PantallaConfirmarReserva", () => {
     (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
 
     await screen.findByText(/Tiempo para pagar el adelanto/);
+    expect(screen.getByRole("heading", { name: "Reserva creada" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "¡Reserva confirmada!" })).toBeNull();
     expect(screen.queryByText("Pagaste el adelanto con tu crédito.")).toBeNull();
   });
 
