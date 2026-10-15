@@ -266,6 +266,92 @@ describe('TarifasService', () => {
     });
   });
 
+  describe('notificación de turnos', () => {
+    const DIA_50 = { franja: 'DIA' as const, valor: 50 };
+
+    it('al crear la primera tarifa notifica la cancha para todas las fechas', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(null);
+      prisma.tarifa.create.mockResolvedValue(tarifa(6, 'DIA', '50.00'));
+      await servicio.definir(CANCHA_ID, DIA_50, ADMIN_ID);
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, CANCHA_ID);
+    });
+
+    it('al reemplazar la vigente notifica la cancha', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(tarifa(4, 'DIA', '40.00'));
+      prisma.tarifa.create.mockResolvedValue(tarifa(6, 'DIA', '50.00'));
+      await servicio.definir(CANCHA_ID, DIA_50, ADMIN_ID);
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, CANCHA_ID);
+    });
+
+    it('notifica recién cuando la transacción confirma', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(null);
+      prisma.tarifa.create.mockResolvedValue(tarifa(6, 'DIA', '50.00'));
+      let confirmar: () => void = () => undefined;
+      prisma.$transaction.mockImplementation(
+        (fn: (tx: unknown) => Promise<unknown>) =>
+          fn(prisma).then(
+            (resultado) =>
+              new Promise((resolve) => {
+                confirmar = () => resolve(resultado);
+              }),
+          ),
+      );
+      const definiendo = servicio.definir(CANCHA_ID, DIA_50, ADMIN_ID);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(auditoria.registrar).toHaveBeenCalled();
+      expect(gateway.notificar).not.toHaveBeenCalled();
+      confirmar();
+      await definiendo;
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+    });
+
+    describe('no notifica', () => {
+      afterEach(() => {
+        expect(gateway.notificar).not.toHaveBeenCalled();
+      });
+
+      it('con el mismo valor que la vigente', async () => {
+        prisma.tarifa.findFirst.mockResolvedValue(tarifa(4, 'DIA', '50.00'));
+        await expect(
+          servicio.definir(CANCHA_ID, DIA_50, ADMIN_ID),
+        ).resolves.toEqual({ franja: 'DIA', valor: 50, vigenteDesde: DESDE });
+      });
+
+      it('si la cancha no existe', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(null);
+        await expect(
+          servicio.definir(99, DIA_50, ADMIN_ID),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
+
+      it('si otra vigente se creó al mismo tiempo', async () => {
+        prisma.tarifa.findFirst.mockResolvedValue(null);
+        prisma.tarifa.create.mockRejectedValue({ code: 'P2002' });
+        await expect(
+          servicio.definir(CANCHA_ID, DIA_50, ADMIN_ID),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+
+      it('si la transacción falla', async () => {
+        prisma.$transaction.mockRejectedValue(new Error('conexión perdida'));
+        await expect(
+          servicio.definir(CANCHA_ID, DIA_50, ADMIN_ID),
+        ).rejects.toThrow('conexión perdida');
+      });
+
+      it('si falla la auditoría dentro de la transacción', async () => {
+        prisma.tarifa.findFirst.mockResolvedValue(null);
+        prisma.tarifa.create.mockResolvedValue(tarifa(6, 'DIA', '50.00'));
+        auditoria.registrar.mockRejectedValue(new Error('fallo al auditar'));
+        await expect(
+          servicio.definir(CANCHA_ID, DIA_50, ADMIN_ID),
+        ).rejects.toThrow('fallo al auditar');
+      });
+    });
+  });
+
   describe('calcularTurno', () => {
     it.each([
       ['80.00', '80.00', '40.00'],
