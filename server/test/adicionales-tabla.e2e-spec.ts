@@ -64,4 +64,22 @@ describe('Tabla adicional (e2e)', () => {
       ).resolves.toBe(1);
     },
   );
+
+  it.each([0, -5, '0.00'])('rechaza el precio %s', async (precio) => {
+    await expect(
+      crearAdicional(`Precio ${sufijo}`, precio),
+    ).rejects.toMatchObject({
+      meta: {
+        driverAdapterError: {
+          cause: {
+            code: '23514',
+            message: expect.stringContaining('adicional_precio_positivo'),
+          },
+        },
+      },
+    });
+    await expect(
+      prisma.adicional.count({ where: { nombre: `Precio ${sufijo}` } }),
+    ).resolves.toBe(0);
+  });
 });
