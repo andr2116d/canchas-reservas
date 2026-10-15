@@ -45,6 +45,20 @@ export const MENSAJES_RESERVA = {
 
 type Cliente = Prisma.TransactionClient | PrismaService;
 
+const INDICE_TURNO = 'reserva_turno_unico';
+
+export function indiceUnicoViolado(error: unknown) {
+  if (typeof error !== 'object' || error === null) return undefined;
+  const { code, meta } = error as {
+    code?: string;
+    meta?: {
+      driverAdapterError?: { cause?: { constraint?: { index?: string } } };
+    };
+  };
+  if (code !== 'P2002') return undefined;
+  return meta?.driverAdapterError?.cause?.constraint?.index;
+}
+
 export function turnoNoDisponible() {
   return new ConflictException(
     cuerpoError(409, MENSAJES_RESERVA.turnoNoDisponible, {
@@ -70,11 +84,18 @@ export class ReservasService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  crear(jugadorId: number, datos: CrearReservaDto) {
-    return this.prisma.$transaction(
-      (tx) => this.crearEn(tx, jugadorId, datos),
-      OPCIONES_TRANSACCION,
-    );
+  async crear(jugadorId: number, datos: CrearReservaDto) {
+    try {
+      return await this.prisma.$transaction(
+        (tx) => this.crearEn(tx, jugadorId, datos),
+        OPCIONES_TRANSACCION,
+      );
+    } catch (error) {
+      if (indiceUnicoViolado(error) === INDICE_TURNO) {
+        throw turnoNoDisponible();
+      }
+      throw error;
+    }
   }
 
   private async crearEn(
