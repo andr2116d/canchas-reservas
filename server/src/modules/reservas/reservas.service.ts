@@ -239,7 +239,7 @@ export class ReservasService {
     await this.validarJugador(jugadorId, cliente);
     const inicioEn = this.validarFecha(datos, ahora);
     const cancha = await this.validarCancha(datos.canchaId, cliente);
-    const turno = await this.validarTurno(datos);
+    const turno = await this.validarTurno(datos, cliente);
     const valor = await this.validarTarifa(cancha.id, turno.franja, cliente);
     await this.validarPendientes(jugadorId, cliente);
     await this.validarTurnoLibre(datos, cliente);
@@ -298,8 +298,11 @@ export class ReservasService {
     return { id: cancha.id, nombre: cancha.nombre, tamano: cancha.tamano };
   }
 
-  private async validarTurno({ fecha, horaInicio }: TurnoReservaDto) {
-    const turnos = await this.turnos.generar(fecha);
+  private async validarTurno(
+    { fecha, horaInicio }: TurnoReservaDto,
+    cliente: Cliente,
+  ) {
+    const turnos = await this.turnos.generar(fecha, cliente);
     const turno = turnos.find((t) => t.horaInicio === horaInicio);
     if (!turno) throw rechazo(MENSAJES_RESERVA.fueraDeHorario, 'horaInicio');
     return turno;

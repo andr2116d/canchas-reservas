@@ -140,15 +140,15 @@ export class HorarioService {
     });
   }
 
-  async diaDe(fecha: string) {
+  async diaDe(fecha: string, cliente: Cliente = this.prisma) {
     const diaSemana = diaSemanaDe(fecha);
-    const dia = await this.prisma.horarioDia.findUnique({
+    const dia = await cliente.horarioDia.findUnique({
       where: { diaSemana },
       select: { diaSemana: true, abierto: true, apertura: true, cierre: true },
     });
     return {
       dia: dia ?? diaCerrado(diaSemana),
-      inicioNoche: await this.inicioNoche(),
+      inicioNoche: await this.inicioNoche(cliente),
     };
   }
 
