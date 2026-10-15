@@ -46,6 +46,8 @@ export const MENSAJES_RESERVA = {
 type Cliente = Prisma.TransactionClient | PrismaService;
 
 const INDICE_TURNO = 'reserva_turno_unico';
+const INDICE_CODIGO = 'reserva_codigo_key';
+export const INTENTOS_CODIGO = 5;
 
 export function indiceUnicoViolado(error: unknown) {
   if (typeof error !== 'object' || error === null) return undefined;
@@ -85,16 +87,18 @@ export class ReservasService {
   ) {}
 
   async crear(jugadorId: number, datos: CrearReservaDto) {
-    try {
-      return await this.prisma.$transaction(
-        (tx) => this.crearEn(tx, jugadorId, datos),
-        OPCIONES_TRANSACCION,
-      );
-    } catch (error) {
-      if (indiceUnicoViolado(error) === INDICE_TURNO) {
-        throw turnoNoDisponible();
+    for (let intento = 1; ; intento++) {
+      try {
+        return await this.prisma.$transaction(
+          (tx) => this.crearEn(tx, jugadorId, datos),
+          OPCIONES_TRANSACCION,
+        );
+      } catch (error) {
+        const indice = indiceUnicoViolado(error);
+        if (indice === INDICE_TURNO) throw turnoNoDisponible();
+        if (indice === INDICE_CODIGO && intento < INTENTOS_CODIGO) continue;
+        throw error;
       }
-      throw error;
     }
   }
 
