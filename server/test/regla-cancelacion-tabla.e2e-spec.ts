@@ -66,4 +66,28 @@ describe('Tabla regla_cancelacion (e2e)', () => {
 
     await expect(leerRegla()).resolves.toMatchObject({ horasAnticipacion: 0 });
   });
+
+  it('crea la regla con id 1, 24 horas y CREDITO por defecto', async () => {
+    let creada: ReglaCancelacion | undefined;
+    const deshacer = new Error('deshacer');
+
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await tx.reglaCancelacion.delete({ where: { id: 1 } });
+        creada = await tx.reglaCancelacion.create({ data: {} });
+        throw deshacer;
+      }),
+    ).rejects.toBe(deshacer);
+
+    expect(creada).toMatchObject({
+      id: 1,
+      horasAnticipacion: 24,
+      tipoCompensacion: 'CREDITO',
+    });
+    expect(creada?.actualizadoEn).toBeInstanceOf(Date);
+    await expect(leerRegla()).resolves.toMatchObject({
+      horasAnticipacion: original.horasAnticipacion,
+      tipoCompensacion: original.tipoCompensacion,
+    });
+  });
 });
