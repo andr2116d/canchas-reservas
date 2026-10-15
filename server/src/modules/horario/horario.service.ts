@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { cuerpoError } from '../../common/errores';
 import type { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { detalleCambios } from '../auditoria/detalle-cambios';
+import { ESTADOS_RESERVA_FUTURA } from '../canchas/canchas.service';
 import {
   aMinutos,
   type DiaHorario,
@@ -13,6 +15,8 @@ import {
 import { DiaHorarioDto } from './dto/dia-horario.dto';
 import { GuardarHorarioDto } from './dto/guardar-horario.dto';
 
+export const MENSAJE_RESERVAS_FUERA_DE_HORARIO =
+  'Hay reservas que quedan fuera del nuevo horario. Confirma para guardar igual';
 export const INICIO_NOCHE_POR_DEFECTO = '18:00';
 const ENTIDAD = 'HORARIO';
 const ID_CONFIGURACION = 1;
@@ -76,7 +80,7 @@ export class HorarioService {
   }
 
   async guardar(
-    { dias, inicioNoche }: GuardarHorarioDto,
+    { dias, inicioNoche, confirmar }: GuardarHorarioDto,
     usuarioId: number,
   ): Promise<Horario> {
     const nuevos = DIAS_SEMANA.map((diaSemana) =>
@@ -98,6 +102,14 @@ export class HorarioService {
       );
       if (!detalle) return actual;
 
+      const fuera = await this.reservasFueraDeHorario(nuevo, tx);
+      if (fuera.length > 0 && confirmar !== true) {
+        throw new ConflictException({
+          ...cuerpoError(409, MENSAJE_RESERVAS_FUERA_DE_HORARIO),
+          reservasFueraDeHorario: fuera,
+        });
+      }
+
       for (const { diaSemana, ...dia } of cambiados) {
         await tx.horarioDia.upsert({
           where: { diaSemana },
@@ -113,7 +125,15 @@ export class HorarioService {
         });
       }
       await this.auditoria.registrar(
-        { usuarioId, accion: 'EDITAR', entidad: ENTIDAD, detalle },
+        {
+          usuarioId,
+          accion: 'EDITAR',
+          entidad: ENTIDAD,
+          detalle:
+            fuera.length > 0
+              ? { ...detalle, reservasFueraDeHorario: fuera.map((r) => r.id) }
+              : detalle,
+        },
         tx,
       );
       return nuevo;
@@ -140,6 +160,48 @@ export class HorarioService {
   async vistaPrevia(fecha: string) {
     const { dia, inicioNoche } = await this.diaDe(fecha);
     return generarTurnos(dia, inicioNoche);
+  }
+
+  async reservasFueraDeHorario(horario: Horario, cliente: Cliente) {
+    const reservas = await cliente.reserva.findMany({
+      where: {
+        estado: { in: ESTADOS_RESERVA_FUTURA },
+        inicioEn: { gt: new Date() },
+      },
+      select: {
+        id: true,
+        fecha: true,
+        horaInicio: true,
+        horaFin: true,
+        cancha: { select: { nombre: true } },
+        jugador: { select: { nombres: true, apellidos: true } },
+      },
+      orderBy: [{ inicioEn: 'asc' }, { id: 'asc' }],
+    });
+    const turnosPorDia = new Map(
+      horario.dias.map((dia) => [
+        dia.diaSemana,
+        generarTurnos(dia, horario.inicioNoche),
+      ]),
+    );
+    return reservas
+      .map(({ fecha, ...reserva }) => ({
+        ...reserva,
+        fecha: fecha.toISOString().slice(0, 10),
+      }))
+      .filter(
+        ({ fecha, horaInicio, horaFin }) =>
+          !turnosPorDia
+            .get(diaSemanaDe(fecha))
+            ?.some((t) => t.horaInicio === horaInicio && t.horaFin === horaFin),
+      )
+      .map(({ id, fecha, horaInicio, cancha, jugador }) => ({
+        id,
+        cancha: cancha.nombre,
+        fecha,
+        horaInicio,
+        jugador: [jugador.nombres, jugador.apellidos].filter(Boolean).join(' '),
+      }));
   }
 
   private async inicioNoche(cliente: Cliente = this.prisma) {
