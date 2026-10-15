@@ -12,6 +12,7 @@ const ACTIVOS: EstadoReserva[] = [
   'EN_JUEGO',
   'FINALIZADA',
 ];
+const INACTIVOS: EstadoReserva[] = ['CANCELADA', 'EXPIRADA', 'AUSENTE'];
 
 describe('Tabla reserva (e2e)', () => {
   const sufijo = String(Date.now()).slice(-11);
@@ -114,4 +115,29 @@ describe('Tabla reserva (e2e)', () => {
       await expect(contarTurno()).resolves.toBe(1);
     },
   );
+
+  it.each(INACTIVOS)(
+    'una reserva %s no bloquea el turno y admite una activa encima',
+    async (estado) => {
+      await crearReserva({ estado });
+      await crearReserva({ estado });
+
+      await expect(crearReserva()).resolves.toMatchObject({
+        estado: 'PENDIENTE_PAGO',
+      });
+      await expect(contarTurno()).resolves.toBe(3);
+    },
+  );
+
+  it('una reserva que pasa a CANCELADA libera el turno', async () => {
+    const reserva = await crearReserva();
+    await prisma.reserva.update({
+      where: { id: reserva.id },
+      data: { estado: 'CANCELADA' },
+    });
+
+    await expect(crearReserva()).resolves.toMatchObject({
+      estado: 'PENDIENTE_PAGO',
+    });
+  });
 });
