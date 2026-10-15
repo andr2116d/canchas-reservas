@@ -365,6 +365,30 @@ describe('Agenda (e2e)', () => {
         saldoPendiente: 0,
       });
     });
+
+    it('suma varios pagos aprobados y no cuenta los que están en proceso o por validar', async () => {
+      const fecha = '2031-03-13';
+      const id = await insertarReserva(
+        'variosPagos',
+        canchaA,
+        '19:00',
+        'CONFIRMADA',
+        fecha,
+      );
+      await insertarPago(id, 'ADELANTO', 10, 'APROBADO');
+      await insertarPago(id, 'ADELANTO', 30, 'APROBADO');
+      await insertarPago(id, 'SALDO', 25, 'APROBADO');
+      await insertarPago(id, 'SALDO', 15, 'EN_PROCESO');
+      await insertarPago(id, 'SALDO', 15, 'PENDIENTE_VALIDACION');
+
+      const { body } = await agenda({ fecha }, recepcion.cookie).expect(200);
+
+      expect(turno(body as Turno[], 'variosPagos')).toMatchObject({
+        valorTurno: 80,
+        adelantoPagado: 40,
+        saldoPendiente: 15,
+      });
+    });
   });
 
   describe('errores', () => {
