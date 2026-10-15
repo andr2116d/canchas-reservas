@@ -433,4 +433,193 @@ describe('CanchasService', () => {
       );
     });
   });
+
+  describe('notificación de turnos', () => {
+    const duplicado = () =>
+      Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+    const transaccionFallida = () =>
+      prisma.$transaction.mockRejectedValue(new Error('conexión perdida'));
+    const NUEVA = {
+      nombre: 'Cancha 9',
+      tamano: 'FUTBOL_7' as const,
+      iluminacion: false,
+    };
+
+    it('crear notifica la cancha creada para todas las fechas', async () => {
+      prisma.cancha.create.mockResolvedValue({ ...CANCHA, id: 9 });
+      await servicio.crear(
+        { nombre: 'Cancha 9', tamano: 'FUTBOL_7', iluminacion: false },
+        ADMIN_ID,
+      );
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, 9);
+    });
+
+    it('editar notifica la cancha editada', async () => {
+      prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+      prisma.cancha.update.mockResolvedValue({ ...CANCHA, nombre: 'Otra' });
+      await servicio.editar(3, { nombre: 'Otra' }, ADMIN_ID);
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, 3);
+    });
+
+    it.each([
+      { activa: false, confirmar: true, actual: true },
+      { activa: true, confirmar: undefined, actual: false },
+    ])(
+      'cambiarActiva a $activa notifica la cancha',
+      async ({ activa, confirmar, actual }) => {
+        prisma.cancha.findUnique.mockResolvedValue({
+          ...CANCHA,
+          activa: actual,
+        });
+        prisma.cancha.update.mockResolvedValue({ ...CANCHA, activa });
+        await servicio.cambiarActiva(3, { activa, confirmar }, ADMIN_ID);
+        expect(gateway.notificar).toHaveBeenCalledTimes(1);
+        expect(gateway.notificar).toHaveBeenCalledWith(null, 3);
+      },
+    );
+
+    it('desactivar sin reservas futuras notifica la cancha', async () => {
+      prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+      prisma.reserva.findMany.mockResolvedValue([]);
+      prisma.cancha.update.mockResolvedValue({ ...CANCHA, activa: false });
+      await servicio.cambiarActiva(3, { activa: false }, ADMIN_ID);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, 3);
+    });
+
+    it('eliminar notifica la cancha eliminada', async () => {
+      prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+      prisma.reserva.findFirst.mockResolvedValue(null);
+      prisma.tarifa.deleteMany.mockResolvedValue({ count: 0 });
+      prisma.bloqueo.deleteMany.mockResolvedValue({ count: 0 });
+      await servicio.eliminar(3, ADMIN_ID);
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, 3);
+    });
+
+    it('notifica recién cuando la transacción confirma', async () => {
+      prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+      prisma.cancha.update.mockResolvedValue({ ...CANCHA, nombre: 'Otra' });
+      let confirmar: () => void = () => undefined;
+      prisma.$transaction.mockImplementation(
+        (fn: (tx: unknown) => Promise<unknown>) =>
+          fn(prisma).then(
+            (cancha) =>
+              new Promise((resolve) => {
+                confirmar = () => resolve(cancha);
+              }),
+          ),
+      );
+      const editando = servicio.editar(3, { nombre: 'Otra' }, ADMIN_ID);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(auditoria.registrar).toHaveBeenCalled();
+      expect(gateway.notificar).not.toHaveBeenCalled();
+      confirmar();
+      await editando;
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+    });
+
+    describe('no notifica', () => {
+      afterEach(() => {
+        expect(gateway.notificar).not.toHaveBeenCalled();
+      });
+
+      it('crear con nombre repetido', async () => {
+        prisma.cancha.create.mockRejectedValue(duplicado());
+        await errorDe(servicio.crear(NUEVA, ADMIN_ID));
+      });
+
+      it('crear con la transacción fallida', async () => {
+        transaccionFallida();
+        await errorDe(servicio.crear(NUEVA, ADMIN_ID));
+      });
+
+      it('editar una cancha que no existe', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(null);
+        await errorDe(servicio.editar(99, { nombre: 'Otra' }, ADMIN_ID));
+      });
+
+      it('editar sin cambios', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        await servicio.editar(3, { nombre: 'Cancha 1' }, ADMIN_ID);
+      });
+
+      it('editar con nombre repetido', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        prisma.cancha.update.mockRejectedValue(duplicado());
+        await errorDe(servicio.editar(3, { nombre: 'cancha 2' }, ADMIN_ID));
+      });
+
+      it('editar con la transacción fallida', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        transaccionFallida();
+        await errorDe(servicio.editar(3, { nombre: 'Otra' }, ADMIN_ID));
+      });
+
+      it('cambiarActiva de una cancha que no existe', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(null);
+        await errorDe(servicio.cambiarActiva(99, { activa: false }, ADMIN_ID));
+      });
+
+      it('cambiarActiva al valor que ya tiene', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        await servicio.cambiarActiva(3, { activa: true }, ADMIN_ID);
+      });
+
+      it('desactivar con reservas futuras sin confirmar', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        prisma.reserva.findMany.mockResolvedValue([RESERVA_FUTURA]);
+        await errorDe(servicio.cambiarActiva(3, { activa: false }, ADMIN_ID));
+      });
+
+      it('cambiarActiva con la transacción fallida', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        transaccionFallida();
+        await errorDe(
+          servicio.cambiarActiva(
+            3,
+            { activa: false, confirmar: true },
+            ADMIN_ID,
+          ),
+        );
+      });
+
+      it('eliminar una cancha que no existe', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(null);
+        await errorDe(servicio.eliminar(99, ADMIN_ID));
+      });
+
+      it('eliminar con reservas futuras', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        prisma.reserva.findFirst.mockResolvedValue({ id: 40 });
+        prisma.reserva.findMany.mockResolvedValue([RESERVA_FUTURA]);
+        await errorDe(servicio.eliminar(3, ADMIN_ID));
+      });
+
+      it('eliminar con historial', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        prisma.reserva.findFirst.mockResolvedValue({ id: 12 });
+        prisma.reserva.findMany.mockResolvedValue([]);
+        await errorDe(servicio.eliminar(3, ADMIN_ID));
+      });
+
+      it('eliminar si aparece una reserva al borrar', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        prisma.reserva.findFirst.mockResolvedValue(null);
+        prisma.tarifa.deleteMany.mockResolvedValue({ count: 0 });
+        prisma.bloqueo.deleteMany.mockResolvedValue({ count: 0 });
+        prisma.cancha.delete.mockRejectedValue(
+          Object.assign(new Error('Foreign key'), { code: 'P2003' }),
+        );
+        await errorDe(servicio.eliminar(3, ADMIN_ID));
+      });
+
+      it('eliminar con la transacción fallida', async () => {
+        prisma.cancha.findUnique.mockResolvedValue(CANCHA);
+        transaccionFallida();
+        await errorDe(servicio.eliminar(3, ADMIN_ID));
+      });
+    });
+  });
 });
