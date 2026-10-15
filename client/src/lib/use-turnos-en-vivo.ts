@@ -8,6 +8,7 @@ import { obtenerSocket } from "./socket";
 /**
  * Escucha `turnos:actualizados` e invalida `claves` cuando el cambio toca `fecha`.
  * Un `null` en `fecha` significa "todas". Un evento con otra forma se ignora.
+ * Al reconectar también invalida, porque pudo perderse un evento.
  */
 export function useTurnosEnVivo(fecha: string, claves: QueryKey[]) {
   const cliente = useQueryClient();
@@ -22,9 +23,22 @@ export function useTurnosEnVivo(fecha: string, claves: QueryKey[]) {
     const manejar = (payload: unknown) => {
       if (afectaFecha(payload, fecha)) invalidar();
     };
+    let desconectado = false;
+    const alDesconectar = () => {
+      desconectado = true;
+    };
+    const alConectar = () => {
+      if (!desconectado) return;
+      desconectado = false;
+      invalidar();
+    };
     socket.on(EVENTO_TURNOS_ACTUALIZADOS, manejar);
+    socket.on("disconnect", alDesconectar);
+    socket.on("connect", alConectar);
     return () => {
       socket.off(EVENTO_TURNOS_ACTUALIZADOS, manejar);
+      socket.off("disconnect", alDesconectar);
+      socket.off("connect", alConectar);
     };
   }, [fecha]);
 }
