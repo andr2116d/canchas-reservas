@@ -12,6 +12,7 @@ import type {
   EstadoReserva,
   Rol,
 } from '../src/generated/prisma/client';
+import { MENSAJE_ESTADO } from '../src/modules/reservas/dto/consultar-agenda.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const DIA = '2031-03-10';
@@ -363,6 +364,63 @@ describe('Agenda (e2e)', () => {
         adelantoPagado: 40,
         saldoPendiente: 0,
       });
+    });
+  });
+
+  describe('errores', () => {
+    it.each([
+      ['con formato incorrecto', '10-03-2031'],
+      ['que no existe', '2031-02-30'],
+    ])('una fecha %s responde 400', async (_caso, fecha) => {
+      const { body } = await agenda({ fecha }, recepcion.cookie).expect(400);
+      expect(body).toEqual({
+        statusCode: 400,
+        message: 'La fecha debe tener el formato YYYY-MM-DD',
+        errores: { fecha: 'La fecha debe tener el formato YYYY-MM-DD' },
+      });
+    });
+
+    it('un estado fuera del enum responde 400', async () => {
+      const { body } = await agenda(
+        { fecha: DIA, estado: 'PAGADA' },
+        recepcion.cookie,
+      ).expect(400);
+      expect(body).toEqual({
+        statusCode: 400,
+        message: MENSAJE_ESTADO,
+        errores: { estado: MENSAJE_ESTADO },
+      });
+    });
+
+    it('un canchaId que no es número responde 400', async () => {
+      const { body } = await agenda(
+        { fecha: DIA, canchaId: 'abc' },
+        recepcion.cookie,
+      ).expect(400);
+      expect(body).toMatchObject({
+        statusCode: 400,
+        errores: { canchaId: 'Elige una cancha válida' },
+      });
+    });
+
+    it('una cancha inexistente responde 404', async () => {
+      const { body } = await agenda(
+        { fecha: DIA, canchaId: 2147483647 },
+        recepcion.cookie,
+      ).expect(404);
+      expect(body).toEqual({
+        statusCode: 404,
+        message: 'No se encontró la cancha',
+        errores: {},
+      });
+    });
+
+    it('un jugador responde 403', async () => {
+      await agenda({ fecha: DIA }, jugador.cookie).expect(403);
+    });
+
+    it('sin sesión responde 401', async () => {
+      await agenda({ fecha: DIA }).expect(401);
     });
   });
 });
