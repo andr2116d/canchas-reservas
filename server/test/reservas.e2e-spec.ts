@@ -1,0 +1,394 @@
+import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Test } from '@nestjs/testing';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { Reloj } from '../src/common/reloj/reloj';
+import { crearPayloadSesion } from '../src/common/sesion/cookie-sesion';
+import { configurarApp } from '../src/configurar-app';
+import type { EstadoReserva, HorarioDia } from '../src/generated/prisma/client';
+import { PrismaService } from '../src/prisma/prisma.service';
+
+const HOY = '2030-01-14';
+const MANANA = '2030-01-15';
+const AHORA = new Date(`${HOY}T10:00:00-05:00`);
+const NO_DISPONIBLE = 'El turno ya no está disponible';
+
+class RelojFijo {
+  instante = AHORA;
+  ahora() {
+    return this.instante;
+  }
+}
+
+interface Resumen {
+  cancha: { id: number; nombre: string; tamano: string };
+  fecha: string;
+  horaInicio: string;
+  horaFin: string;
+  franja: string;
+  valorTurno: number;
+  adelanto: number;
+  saldo: number;
+  creditoDisponible: number;
+  minutosParaPagar: number;
+  regla: {
+    horasAnticipacion: number;
+    tipoCompensacion: string;
+    plazoLimite: string;
+  };
+}
+
+interface Creada {
+  id: number;
+  codigo: string;
+  estado: string;
+  venceEn: string | null;
+}
+
+describe('Reservas (e2e)', () => {
+  const sufijo = String(Date.now()).slice(-9);
+  const reloj = new RelojFijo();
+
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let jwt: JwtService;
+  let adminId: number;
+  let diasOriginales: HorarioDia[];
+  let configuracionOriginal: {
+    inicioNoche: string;
+    tiempoLimitePagoMin: number;
+  };
+  let reglaOriginal: {
+    horasAnticipacion: number;
+    tipoCompensacion: 'DEVOLUCION' | 'CREDITO';
+  };
+  const usuariosCreados: number[] = [];
+  const canchasCreadas: number[] = [];
+  let documentos = 0;
+  let codigos = 0;
+
+  const servidor = () => app.getHttpServer() as Parameters<typeof request>[0];
+
+  const crearUsuario = async (rol: 'JUGADOR' | 'ADMINISTRADOR' = 'JUGADOR') => {
+    documentos++;
+    const usuario = await prisma.usuario.create({
+      data: {
+        nombres: `Reserva ${documentos}`,
+        tipoDocumento: 'CE',
+        numeroDocumento: `R${sufijo}${documentos}`,
+        correo: `reservas.${sufijo}.${documentos}@laprevia.test`,
+        telefono: '900000070',
+        passwordHash: 'sin-uso',
+        rol,
+      },
+    });
+    usuariosCreados.push(usuario.id);
+    const token = await jwt.signAsync(crearPayloadSesion(usuario.id, rol));
+    return { id: usuario.id, cookie: `sesion=${token}` };
+  };
+
+  const crearCancha = async (
+    tarifas: { DIA?: number; NOCHE?: number } = { DIA: 60, NOCHE: 80 },
+    datos: { activa?: boolean; estado?: 'OPERATIVA' | 'EN_MANTENIMIENTO' } = {},
+  ) => {
+    const cancha = await prisma.cancha.create({
+      data: {
+        nombre: `Reservas ${sufijo} ${canchasCreadas.length + 1}`,
+        tamano: 'FUTBOL_5',
+        iluminacion: true,
+        ...datos,
+      },
+    });
+    canchasCreadas.push(cancha.id);
+    for (const [franja, valor] of Object.entries(tarifas)) {
+      await prisma.tarifa.create({
+        data: {
+          canchaId: cancha.id,
+          franja: franja as 'DIA' | 'NOCHE',
+          valor,
+          creadoPorId: adminId,
+        },
+      });
+    }
+    return cancha.id;
+  };
+
+  const insertarReserva = (
+    jugadorId: number,
+    canchaId: number,
+    fecha: string,
+    horaInicio: string,
+    estado: EstadoReserva,
+  ) => {
+    codigos++;
+    const horaFin = `${String(Number(horaInicio.slice(0, 2)) + 1).padStart(2, '0')}:00`;
+    return prisma.reserva.create({
+      data: {
+        codigo: `E${sufijo}${codigos}`,
+        jugadorId,
+        creadoPorId: jugadorId,
+        canchaId,
+        fecha: new Date(`${fecha}T00:00:00.000Z`),
+        horaInicio,
+        horaFin,
+        inicioEn: new Date(`${fecha}T${horaInicio}:00-05:00`),
+        finEn: new Date(`${fecha}T${horaFin}:00-05:00`),
+        franja: 'NOCHE',
+        valorTurno: 80,
+        adelantoMinimo: 40,
+        estado,
+        reglaHorasAnticipacion: 24,
+        reglaTipoCompensacion: 'CREDITO',
+      },
+    });
+  };
+
+  const reservar = (
+    cookie: string,
+    datos: { canchaId: number; fecha: string; horaInicio: string },
+  ) =>
+    request(servidor())
+      .post('/api/reservas')
+      .set('Cookie', cookie)
+      .send({ ...datos, usarCredito: false });
+
+  const resumen = (
+    cookie: string,
+    datos: { canchaId: number; fecha: string; horaInicio: string },
+  ) =>
+    request(servidor())
+      .get('/api/reservas/resumen')
+      .query(datos)
+      .set('Cookie', cookie);
+
+  beforeAll(async () => {
+    const modulo = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(Reloj)
+      .useValue(reloj)
+      .compile();
+    app = modulo.createNestApplication();
+    configurarApp(app);
+    await app.init();
+    prisma = modulo.get(PrismaService);
+    jwt = modulo.get(JwtService, { strict: false });
+    adminId = (await crearUsuario('ADMINISTRADOR')).id;
+
+    diasOriginales = await prisma.horarioDia.findMany();
+    configuracionOriginal = await prisma.configuracion.findUniqueOrThrow({
+      where: { id: 1 },
+      select: { inicioNoche: true, tiempoLimitePagoMin: true },
+    });
+    reglaOriginal = await prisma.reglaCancelacion.findUniqueOrThrow({
+      where: { id: 1 },
+      select: { horasAnticipacion: true, tipoCompensacion: true },
+    });
+
+    for (let diaSemana = 1; diaSemana <= 7; diaSemana++) {
+      const dia = { abierto: true, apertura: '08:00', cierre: '23:00' };
+      await prisma.horarioDia.upsert({
+        where: { diaSemana },
+        update: dia,
+        create: { diaSemana, ...dia },
+      });
+    }
+    await prisma.configuracion.update({
+      where: { id: 1 },
+      data: { inicioNoche: '18:00', tiempoLimitePagoMin: 15 },
+    });
+    await prisma.reglaCancelacion.update({
+      where: { id: 1 },
+      data: { horasAnticipacion: 24, tipoCompensacion: 'CREDITO' },
+    });
+  });
+
+  beforeEach(() => {
+    reloj.instante = AHORA;
+  });
+
+  afterAll(async () => {
+    const canchaId = { in: canchasCreadas };
+    const usuarioId = { in: usuariosCreados };
+    await prisma.reserva.deleteMany({ where: { canchaId } });
+    await prisma.tarifa.deleteMany({ where: { canchaId } });
+    await prisma.cancha.deleteMany({ where: { id: canchaId } });
+    await prisma.credito.deleteMany({ where: { jugadorId: usuarioId } });
+    await prisma.usuario.deleteMany({
+      where: { id: usuarioId, auditorias: { none: {} } },
+    });
+
+    for (const { diaSemana, abierto, apertura, cierre } of diasOriginales) {
+      await prisma.horarioDia.update({
+        where: { diaSemana },
+        data: { abierto, apertura, cierre },
+      });
+    }
+    await prisma.horarioDia.deleteMany({
+      where: { diaSemana: { notIn: diasOriginales.map((d) => d.diaSemana) } },
+    });
+    await prisma.configuracion.update({
+      where: { id: 1 },
+      data: configuracionOriginal,
+    });
+    await prisma.reglaCancelacion.update({
+      where: { id: 1 },
+      data: reglaOriginal,
+    });
+    await app.close();
+  });
+
+  describe('reserva válida', () => {
+    let jugador: { id: number; cookie: string };
+    let canchaId: number;
+
+    beforeAll(async () => {
+      jugador = await crearUsuario();
+      canchaId = await crearCancha();
+    });
+
+    it('el resumen muestra montos, tiempo para pagar y la regla', async () => {
+      await prisma.credito.create({
+        data: { jugadorId: jugador.id, monto: 15, saldo: 12.5 },
+      });
+      await prisma.credito.create({
+        data: { jugadorId: jugador.id, monto: 10, saldo: 0 },
+      });
+      const res = await resumen(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(200);
+      expect(res.body).toEqual({
+        cancha: {
+          id: canchaId,
+          nombre: expect.any(String) as string,
+          tamano: 'FUTBOL_5',
+        },
+        fecha: MANANA,
+        horaInicio: '18:00',
+        horaFin: '19:00',
+        franja: 'NOCHE',
+        valorTurno: 80,
+        adelanto: 40,
+        saldo: 40,
+        creditoDisponible: 12.5,
+        minutosParaPagar: 15,
+        regla: {
+          horasAnticipacion: 24,
+          tipoCompensacion: 'CREDITO',
+          plazoLimite: new Date(`${HOY}T18:00:00-05:00`).toISOString(),
+        },
+      } satisfies Resumen);
+      expect(await prisma.reserva.count({ where: { canchaId } })).toBe(0);
+    });
+
+    it('crea la reserva pendiente con montos, vencimiento, código y regla', async () => {
+      const res = await reservar(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const creada = res.body as Creada;
+      expect(creada).toEqual({
+        id: expect.any(Number) as number,
+        codigo: expect.stringMatching(/^[A-Z0-9]{8}$/) as string,
+        estado: 'PENDIENTE_PAGO',
+        venceEn: new Date(AHORA.getTime() + 15 * 60 * 1000).toISOString(),
+      });
+
+      const guardada = await prisma.reserva.findUniqueOrThrow({
+        where: { id: creada.id },
+      });
+      expect(guardada).toMatchObject({
+        codigo: creada.codigo,
+        jugadorId: jugador.id,
+        creadoPorId: jugador.id,
+        origen: 'PLATAFORMA',
+        canchaId,
+        fecha: new Date(`${MANANA}T00:00:00.000Z`),
+        horaInicio: '18:00',
+        horaFin: '19:00',
+        franja: 'NOCHE',
+        inicioEn: new Date(`${MANANA}T18:00:00-05:00`),
+        finEn: new Date(`${MANANA}T19:00:00-05:00`),
+        estado: 'PENDIENTE_PAGO',
+        reglaHorasAnticipacion: 24,
+        reglaTipoCompensacion: 'CREDITO',
+        creadoEn: AHORA,
+      });
+      expect(guardada.valorTurno.toFixed(2)).toBe('80.00');
+      expect(guardada.adelantoMinimo.toFixed(2)).toBe('40.00');
+    });
+
+    it('los montos guardados no cambian si cambia la tarifa', async () => {
+      const res = await reservar(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '10:00',
+      }).expect(201);
+      await prisma.tarifa.updateMany({
+        where: { canchaId, franja: 'DIA', vigenteHasta: null },
+        data: { valor: 99 },
+      });
+      const guardada = await prisma.reserva.findUniqueOrThrow({
+        where: { id: (res.body as Creada).id },
+      });
+      expect(guardada.valorTurno.toFixed(2)).toBe('60.00');
+      expect(guardada.adelantoMinimo.toFixed(2)).toBe('30.00');
+    });
+
+    it('con un turno a 10 minutos vence en el inicio del turno', async () => {
+      const otro = await crearUsuario();
+      reloj.instante = new Date(`${HOY}T17:50:00-05:00`);
+      const datos = { canchaId, fecha: HOY, horaInicio: '18:00' };
+
+      const res = await resumen(otro.cookie, datos).expect(200);
+      expect((res.body as Resumen).minutosParaPagar).toBe(10);
+
+      const creada = await reservar(otro.cookie, datos).expect(201);
+      expect((creada.body as Creada).venceEn).toBe(
+        new Date(`${HOY}T18:00:00-05:00`).toISOString(),
+      );
+    });
+
+    it('la copia de la regla no cambia si cambia la regla vigente', async () => {
+      const otro = await crearUsuario();
+      const res = await reservar(otro.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '20:00',
+      }).expect(201);
+      await prisma.reglaCancelacion.update({
+        where: { id: 1 },
+        data: { horasAnticipacion: 6, tipoCompensacion: 'DEVOLUCION' },
+      });
+      try {
+        const guardada = await prisma.reserva.findUniqueOrThrow({
+          where: { id: (res.body as Creada).id },
+        });
+        expect(guardada).toMatchObject({
+          reglaHorasAnticipacion: 24,
+          reglaTipoCompensacion: 'CREDITO',
+        });
+        const nueva = await reservar(otro.cookie, {
+          canchaId,
+          fecha: MANANA,
+          horaInicio: '21:00',
+        }).expect(201);
+        await expect(
+          prisma.reserva.findUniqueOrThrow({
+            where: { id: (nueva.body as Creada).id },
+          }),
+        ).resolves.toMatchObject({
+          reglaHorasAnticipacion: 6,
+          reglaTipoCompensacion: 'DEVOLUCION',
+        });
+      } finally {
+        await prisma.reglaCancelacion.update({
+          where: { id: 1 },
+          data: { horasAnticipacion: 24, tipoCompensacion: 'CREDITO' },
+        });
+      }
+    });
+  });
+});
