@@ -11,7 +11,10 @@ export const MENU_ROL: Record<Rol, EnlaceMenu[]> = {
     { etiqueta: "Cancelación", href: "/admin/regla-cancelacion" },
     { etiqueta: "Recepcionistas", href: "/admin/recepcionistas" },
   ],
-  RECEPCIONISTA: [{ etiqueta: "Agenda", href: "/recepcion/agenda" }],
+  RECEPCIONISTA: [
+    { etiqueta: "Disponibilidad", href: "/recepcion/disponibilidad" },
+    { etiqueta: "Agenda", href: "/recepcion/agenda" },
+  ],
   JUGADOR: [
     { etiqueta: "Reservar", href: "/jugador/disponibilidad" },
     { etiqueta: "Mis reservas", href: "/jugador/reservas" },
