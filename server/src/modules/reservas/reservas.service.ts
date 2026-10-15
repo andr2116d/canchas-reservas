@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { cuerpoError } from '../../common/errores';
 import {
   fechaEnLima,
@@ -9,11 +13,13 @@ import { Reloj } from '../../common/reloj/reloj';
 import type { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ESTADOS_RESERVA_FUTURA } from '../canchas/canchas.service';
 import { TarifasService } from '../tarifas/tarifas.service';
 import { TurnosService } from '../turnos/turnos.service';
 import { TurnoReservaDto } from './dto/turno-reserva.dto';
 
 export const DIAS_MAXIMOS_ANTICIPACION = 30;
+export const LIMITE_PENDIENTES = 2;
 
 export const MENSAJES_RESERVA = {
   jugadorInactivo: 'Solo un jugador activo puede reservar',
@@ -24,9 +30,19 @@ export const MENSAJES_RESERVA = {
   canchaEnMantenimiento: 'La cancha está en mantenimiento',
   fueraDeHorario: 'El turno está fuera del horario operativo',
   sinTarifa: 'La cancha no tiene tarifa para esa franja',
+  limitePendientes: `Ya tienes ${LIMITE_PENDIENTES} reservas pendientes de pago`,
+  turnoNoDisponible: 'El turno ya no está disponible',
 } as const;
 
 type Cliente = Prisma.TransactionClient | PrismaService;
+
+export function turnoNoDisponible() {
+  return new ConflictException(
+    cuerpoError(409, MENSAJES_RESERVA.turnoNoDisponible, {
+      horaInicio: MENSAJES_RESERVA.turnoNoDisponible,
+    }),
+  );
+}
 
 function rechazo(mensaje: string, campo?: string) {
   return new BadRequestException(
@@ -54,6 +70,8 @@ export class ReservasService {
     const cancha = await this.validarCancha(datos.canchaId, cliente);
     const turno = await this.validarTurno(datos);
     const valor = await this.validarTarifa(cancha.id, turno.franja, cliente);
+    await this.validarPendientes(jugadorId, cliente);
+    await this.validarTurnoLibre(datos, cliente);
     return {
       cancha,
       ...turno,
@@ -124,5 +142,32 @@ export class ReservasService {
     const valor = await this.tarifas.calcularTurno(canchaId, franja, cliente);
     if (!valor) throw rechazo(MENSAJES_RESERVA.sinTarifa, 'canchaId');
     return valor;
+  }
+
+  private async validarPendientes(jugadorId: number, cliente: Cliente) {
+    const pendientes = await cliente.reserva.count({
+      where: { jugadorId, estado: 'PENDIENTE_PAGO' },
+    });
+    if (pendientes >= LIMITE_PENDIENTES) {
+      throw new ConflictException(
+        cuerpoError(409, MENSAJES_RESERVA.limitePendientes),
+      );
+    }
+  }
+
+  private async validarTurnoLibre(
+    { canchaId, fecha, horaInicio }: TurnoReservaDto,
+    cliente: Cliente,
+  ) {
+    const tomada = await cliente.reserva.findFirst({
+      where: {
+        canchaId,
+        fecha: new Date(`${fecha}T00:00:00.000Z`),
+        horaInicio,
+        estado: { in: ESTADOS_RESERVA_FUTURA },
+      },
+      select: { id: true },
+    });
+    if (tomada) throw turnoNoDisponible();
   }
 }
