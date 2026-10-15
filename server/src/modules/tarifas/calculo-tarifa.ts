@@ -13,6 +13,10 @@ export function deCentimos(centimos: number) {
   return new Prisma.Decimal(centimos).div(100).toDecimalPlaces(2);
 }
 
+export function calcularAdelanto(valor: Monto) {
+  return deCentimos(Math.floor((aCentimos(valor) + 1) / 2));
+}
+
 export function aNumero(monto: Monto) {
   return deCentimos(aCentimos(monto)).toNumber();
 }
