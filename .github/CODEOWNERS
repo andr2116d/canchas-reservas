@@ -1,1 +1,18 @@
-* @andr2116d
+# Andreé revisa solo lo compartido. El resto se mergea solo cuando pasan los checks.
+/.github/ @andr2116d
+/scripts/ @andr2116d
+/docker-compose.yml @andr2116d
+package.json @andr2116d
+/server/prisma/ @andr2116d
+/server/prisma.config.ts @andr2116d
+/server/src/main.ts @andr2116d
+/server/src/app.module.ts @andr2116d
+/server/src/configurar-app.ts @andr2116d
+/server/src/common/ @andr2116d
+/server/src/prisma/ @andr2116d
+/server/src/modules/auth/ @andr2116d
+/client/src/app/layout.tsx @andr2116d
+/client/src/app/globals.css @andr2116d
+/client/src/lib/ @andr2116d
+/client/src/components/ui/ @andr2116d
+/client/src/features/auth/ @andr2116d
