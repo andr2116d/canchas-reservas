@@ -6,3 +6,7 @@ export function inicioDeHoyEnLima(ahora = new Date()) {
   );
   return new Date(`${hoy}T00:00:00.000Z`);
 }
+
+export function instanteEnLima(fecha: string, hora: string) {
+  return new Date(`${fecha}T${hora}:00-05:00`);
+}
