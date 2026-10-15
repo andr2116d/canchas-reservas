@@ -571,4 +571,104 @@ describe('Reservas (e2e)', () => {
       );
     });
   });
+
+  describe('límite de pendientes y auditoría', () => {
+    it('la tercera reserva pendiente responde 409', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha();
+      for (const horaInicio of ['18:00', '19:00']) {
+        await reservar(jugador.cookie, {
+          canchaId,
+          fecha: MANANA,
+          horaInicio,
+        }).expect(201);
+      }
+      const datos = { canchaId, fecha: MANANA, horaInicio: '20:00' };
+      const mensaje = 'Ya tienes 2 reservas pendientes de pago';
+      const consulta = await resumen(jugador.cookie, datos).expect(409);
+      expect(consulta.body).toMatchObject({
+        statusCode: 409,
+        message: mensaje,
+      });
+      const res = await reservar(jugador.cookie, datos).expect(409);
+      expect(res.body).toEqual({
+        statusCode: 409,
+        message: mensaje,
+        errores: {},
+      });
+      expect(
+        await prisma.reserva.count({
+          where: { jugadorId: jugador.id, estado: 'PENDIENTE_PAGO' },
+        }),
+      ).toBe(2);
+    });
+
+    it('las reservas confirmadas no cuentan para el límite', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha();
+      await insertarReserva(
+        jugador.id,
+        canchaId,
+        MANANA,
+        '18:00',
+        'CONFIRMADA',
+      );
+      await insertarReserva(
+        jugador.id,
+        canchaId,
+        MANANA,
+        '19:00',
+        'PENDIENTE_PAGO',
+      );
+      await reservar(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '20:00',
+      }).expect(201);
+    });
+
+    it('la creación queda en auditoría con el usuario', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha();
+      const res = await reservar(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const creada = res.body as Creada;
+      const registros = await prisma.auditoria.findMany({
+        where: { entidad: 'RESERVA', entidadId: creada.id },
+      });
+      expect(registros).toHaveLength(1);
+      expect(registros[0]).toMatchObject({
+        usuarioId: jugador.id,
+        accion: 'CREAR',
+        entidad: 'RESERVA',
+        detalle: {
+          codigo: creada.codigo,
+          canchaId,
+          fecha: MANANA,
+          horaInicio: '18:00',
+          valorTurno: 80,
+          adelantoMinimo: 40,
+        },
+      });
+    });
+
+    it('un rechazo no deja reserva ni auditoría', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({ DIA: 60 });
+      await reservar(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(400);
+      expect(await prisma.reserva.count({ where: { canchaId } })).toBe(0);
+      expect(
+        await prisma.auditoria.count({
+          where: { usuarioId: jugador.id, entidad: 'RESERVA' },
+        }),
+      ).toBe(0);
+    });
+  });
 });
