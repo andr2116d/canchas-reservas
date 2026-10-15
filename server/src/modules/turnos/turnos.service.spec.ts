@@ -15,7 +15,7 @@ describe('TurnosService', () => {
 
     const turnos = await servicio.generar('2026-10-20');
 
-    expect(horario.diaDe).toHaveBeenCalledWith('2026-10-20');
+    expect(horario.diaDe).toHaveBeenCalledWith('2026-10-20', undefined);
     expect(turnos).toEqual([
       { horaInicio: '15:30', horaFin: '16:30', franja: 'DIA' },
       { horaInicio: '16:30', horaFin: '17:30', franja: 'DIA' },
@@ -31,5 +31,17 @@ describe('TurnosService', () => {
     });
 
     await expect(servicio.generar('2026-10-25')).resolves.toEqual([]);
+  });
+
+  it('consulta el horario con el cliente de la transacción', async () => {
+    const tx = {};
+    horario.diaDe.mockResolvedValue({
+      dia: { diaSemana: 2, abierto: false, apertura: null, cierre: null },
+      inicioNoche: '18:00',
+    });
+
+    await servicio.generar('2026-10-20', tx as never);
+
+    expect(horario.diaDe).toHaveBeenCalledWith('2026-10-20', tx);
   });
 });
