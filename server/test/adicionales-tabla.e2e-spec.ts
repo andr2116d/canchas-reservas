@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
+import { Prisma } from '../src/generated/prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('Tabla adicional (e2e)', () => {
@@ -81,5 +82,21 @@ describe('Tabla adicional (e2e)', () => {
     await expect(
       prisma.adicional.count({ where: { nombre: `Precio ${sufijo}` } }),
     ).resolves.toBe(0);
+  });
+
+  it.each([
+    ['0.01', '0.01'],
+    ['9999.99', '9999.99'],
+    [7, '7.00'],
+    ['12.345', '12.35'],
+  ])('guarda el precio %s como %s', async (precio, guardado) => {
+    const { id } = await crearAdicional(`Precio ${sufijo}`, precio);
+
+    const adicional = await prisma.adicional.findUniqueOrThrow({
+      where: { id },
+    });
+    expect(adicional.precio).toBeInstanceOf(Prisma.Decimal);
+    expect(adicional.precio.toFixed(2)).toBe(guardado);
+    expect(adicional.precio.decimalPlaces()).toBeLessThanOrEqual(2);
   });
 });
