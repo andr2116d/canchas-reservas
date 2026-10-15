@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { ReglaCancelacionService } from '../regla-cancelacion/regla-cancelacion.service';
 import { TarifasService } from '../tarifas/tarifas.service';
+import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import { TurnosService } from '../turnos/turnos.service';
 import {
   INTENTOS_CODIGO,
@@ -50,6 +51,7 @@ describe('ReservasService', () => {
   const turnos = { generar: jest.fn() };
   const tarifas = { calcularTurno: jest.fn() };
   const auditoria = { registrar: jest.fn() };
+  const gateway = { notificar: jest.fn() };
   const servicio = new ReservasService(
     prisma as unknown as PrismaService,
     reloj as unknown as Reloj,
@@ -57,6 +59,7 @@ describe('ReservasService', () => {
     tarifas as unknown as TarifasService,
     new ReglaCancelacionService(prisma as unknown as PrismaService),
     auditoria as unknown as AuditoriaService,
+    gateway as unknown as TurnosGateway,
   );
 
   beforeEach(() => {
