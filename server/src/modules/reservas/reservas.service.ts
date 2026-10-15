@@ -223,6 +223,18 @@ export class ReservasService {
     return _sum.saldo ?? new Prisma.Decimal(0);
   }
 
+  private async bloquearCreditos(
+    tx: Prisma.TransactionClient,
+    jugadorId: number,
+  ) {
+    await tx.$queryRaw`SELECT id FROM credito WHERE jugador_id = ${jugadorId} AND saldo > 0 ORDER BY creado_en, id FOR UPDATE`;
+    return tx.credito.findMany({
+      where: { jugadorId, saldo: { gt: 0 } },
+      orderBy: [{ creadoEn: 'asc' }, { id: 'asc' }],
+      select: { id: true, saldo: true },
+    });
+  }
+
   private configuracion(cliente: Cliente) {
     return cliente.configuracion.findUniqueOrThrow({
       where: { id: ID_CONFIGURACION },
