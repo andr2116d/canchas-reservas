@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TablaHistorial, type FilaHistorial } from "./tabla-historial";
+import type { RegistroHistorial } from "../api";
+import { TablaHistorial } from "./tabla-historial";
 import { TarjetaFranja, type Franja, type TarifaVigente } from "./tarjeta-franja";
 
 // ---------------------------------------------------------------------------
@@ -17,12 +18,12 @@ const VIGENTES_EJEMPLO: Record<Franja, TarifaVigente | null> = {
   DIA: { valor: 60, desde: "01/09/2026" },
   NOCHE: { valor: 80, desde: "15/09/2026" },
 };
-const HISTORIAL_EJEMPLO: FilaHistorial[] = [
-  { id: 5, franja: "NOCHE", valor: 80, desde: "15/09/2026", hasta: null },
-  { id: 4, franja: "DIA", valor: 60, desde: "01/09/2026", hasta: null },
-  { id: 3, franja: "NOCHE", valor: 75.5, desde: "10/08/2026", hasta: "15/09/2026" },
-  { id: 2, franja: "DIA", valor: 55.05, desde: "10/08/2026", hasta: "01/09/2026" },
-  { id: 1, franja: "NOCHE", valor: 70, desde: "01/07/2026", hasta: "10/08/2026" },
+const HISTORIAL_EJEMPLO: RegistroHistorial[] = [
+  { id: 5, franja: "NOCHE", valor: 80, vigenteDesde: "2026-09-15T05:00:00Z", vigenteHasta: null },
+  { id: 4, franja: "DIA", valor: 60, vigenteDesde: "2026-09-01T05:00:00Z", vigenteHasta: null },
+  { id: 3, franja: "NOCHE", valor: 75.5, vigenteDesde: "2026-08-10T05:00:00Z", vigenteHasta: "2026-09-15T05:00:00Z" },
+  { id: 2, franja: "DIA", valor: 55.05, vigenteDesde: "2026-08-10T05:00:00Z", vigenteHasta: "2026-09-01T05:00:00Z" },
+  { id: 1, franja: "NOCHE", valor: 70, vigenteDesde: "2026-07-01T05:00:00Z", vigenteHasta: "2026-08-10T05:00:00Z" },
 ];
 // ---------------------------------------------------------------------------
 
@@ -84,7 +85,7 @@ export function PantallaTarifas() {
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-bold text-noche-900">Historial</h2>
-        <TablaHistorial filas={HISTORIAL_EJEMPLO} />
+        <TablaHistorial registros={HISTORIAL_EJEMPLO} />
       </section>
     </div>
   );
