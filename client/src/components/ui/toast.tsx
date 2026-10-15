@@ -53,7 +53,7 @@ export function ProveedorToast({ children }: { children: React.ReactNode }) {
             <div
               key={aviso.id}
               role={aviso.tono === "error" ? "alert" : "status"}
-              className={cn("pointer-events-auto rounded-lg border px-4 py-3 text-sm font-medium shadow-sm", tonos[aviso.tono])}
+              className={cn("rounded-lg border px-4 py-3 text-sm font-medium shadow-sm", tonos[aviso.tono])}
             >
               {aviso.mensaje}
             </div>

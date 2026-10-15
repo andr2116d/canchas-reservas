@@ -6,27 +6,21 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "@/components/layout/logo";
-import { Button, Card, Input } from "@/components/ui";
+import { Alerta, Button, Card, Input } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
-import { cn } from "@/lib/cn";
 import { useIniciarSesion, useSesion } from "../hooks";
 import { RUTA_PANEL } from "../roles";
 import { esquemaLogin, type ValoresLogin } from "../schemas";
 
 function AvisoUrl() {
   const parametros = useSearchParams();
-  const aviso =
-    parametros.get("motivo") === "inactividad"
-      ? { texto: "Tu sesión se cerró por inactividad", clase: "bg-info-fondo text-info" }
-      : parametros.get("registro") === "ok"
-        ? { texto: "Tu cuenta fue creada. Inicia sesión.", clase: "bg-exito-fondo text-exito" }
-        : null;
-  if (!aviso) return null;
-  return (
-    <p role="status" className={cn("rounded-lg px-3 py-2 text-sm", aviso.clase)}>
-      {aviso.texto}
-    </p>
-  );
+  if (parametros.get("motivo") === "inactividad") {
+    return <Alerta tono="info">Tu sesión se cerró por inactividad</Alerta>;
+  }
+  if (parametros.get("registro") === "ok") {
+    return <Alerta tono="exito">Tu cuenta fue creada. Inicia sesión.</Alerta>;
+  }
+  return null;
 }
 
 export function FormularioLogin() {
@@ -73,11 +67,7 @@ export function FormularioLogin() {
           <AvisoUrl />
         </Suspense>
         <form onSubmit={enviar} noValidate className="flex flex-col gap-4">
-          {mensajeServidor && (
-            <p role="alert" className="rounded-lg bg-error-fondo px-3 py-2 text-sm text-error">
-              {mensajeServidor}
-            </p>
-          )}
+          <Alerta>{mensajeServidor}</Alerta>
           <Input
             etiqueta="Correo"
             type="email"

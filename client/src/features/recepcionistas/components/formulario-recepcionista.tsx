@@ -4,7 +4,7 @@ import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { Button, Input, Modal, Select } from "@/components/ui";
+import { Alerta, Button, Input, Modal, Select } from "@/components/ui";
 import type { DatosCrearRecepcionista, DatosEditarRecepcionista, Recepcionista } from "../api";
 import {
   esquemaCrearRecepcionista,
@@ -13,7 +13,6 @@ import {
   type ValoresEditarRecepcionista,
 } from "../schemas";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
-import { MensajeServidor } from "./errores-servidor";
 
 const CAMPOS_CREAR = [
   "nombres",
@@ -81,7 +80,7 @@ export function FormularioCrearRecepcionista({ abierto, onCerrar, onEnviar }: Pr
       acciones={<Acciones formId={formId} enviando={isSubmitting} onCerrar={onCerrar} texto="Crear recepcionista" />}
     >
       <form id={formId} noValidate onSubmit={enviar} className="flex flex-col gap-4">
-        <MensajeServidor mensaje={errors.root?.servidor?.message} />
+        <Alerta>{errors.root?.servidor?.message}</Alerta>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input etiqueta="Nombres" autoComplete="off" error={errors.nombres?.message} {...register("nombres")} />
           <Input etiqueta="Apellidos" autoComplete="off" error={errors.apellidos?.message} {...register("apellidos")} />
@@ -164,7 +163,7 @@ export function FormularioEditarRecepcionista({ recepcionista, abierto, onCerrar
       acciones={<Acciones formId={formId} enviando={isSubmitting} onCerrar={onCerrar} texto="Guardar cambios" />}
     >
       <form id={formId} noValidate onSubmit={enviar} className="flex flex-col gap-4">
-        <MensajeServidor mensaje={errors.root?.servidor?.message} />
+        <Alerta>{errors.root?.servidor?.message}</Alerta>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input etiqueta="Nombres" autoComplete="off" error={errors.nombres?.message} {...register("nombres")} />
           <Input etiqueta="Apellidos" autoComplete="off" error={errors.apellidos?.message} {...register("apellidos")} />

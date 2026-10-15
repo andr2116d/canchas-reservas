@@ -3,11 +3,10 @@
 import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, Modal } from "@/components/ui";
+import { Alerta, Button, Input, Modal } from "@/components/ui";
 import { nombreCompleto, type Recepcionista } from "../api";
 import { esquemaRestablecerContrasena, type ValoresRestablecerContrasena } from "../schemas";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
-import { MensajeServidor } from "./errores-servidor";
 
 type Props = {
   recepcionista: Recepcionista;
@@ -60,7 +59,7 @@ export function RestablecerContrasena({ recepcionista, abierto, onCerrar, onEnvi
           </span>
           . La usará en su próximo inicio de sesión.
         </p>
-        <MensajeServidor mensaje={errors.root?.servidor?.message} />
+        <Alerta>{errors.root?.servidor?.message}</Alerta>
         <Input
           etiqueta="Nueva contraseña"
           type="password"
