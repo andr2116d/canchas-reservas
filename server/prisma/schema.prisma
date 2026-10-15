@@ -221,6 +221,7 @@ model Cancha {
   iluminacion   Boolean
   estado        EstadoCancha @default(OPERATIVA)
   activa        Boolean      @default(true)
+  notaPrueba    String?
   creadoEn      DateTime     @default(now()) @map("creado_en")
   actualizadoEn DateTime     @updatedAt @map("actualizado_en")
 
