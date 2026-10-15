@@ -14,6 +14,11 @@ const ACTIVOS: EstadoReserva[] = [
 ];
 const INACTIVOS: EstadoReserva[] = ['CANCELADA', 'EXPIRADA', 'AUSENTE'];
 
+const violaUnico = (indice: string) => ({
+  code: 'P2002',
+  meta: { driverAdapterError: { cause: { constraint: { index: indice } } } },
+});
+
 const violaCheck = (restriccion: string) => ({
   meta: {
     driverAdapterError: {
@@ -38,18 +43,20 @@ describe('Tabla reserva (e2e)', () => {
     hora = '18:00',
     estado,
     finEn,
+    codigo,
   }: {
     cancha?: number;
     fecha?: string;
     hora?: string;
     estado?: EstadoReserva;
     finEn?: Date;
+    codigo?: string;
   } = {}) => {
     reservas += 1;
     const fin = `${String(Number(hora.slice(0, 2)) + 1).padStart(2, '0')}:00`;
     return prisma.reserva.create({
       data: {
-        codigo: `R${sufijo}${reservas}`,
+        codigo: codigo ?? `R${sufijo}${reservas}`,
         jugadorId,
         creadoPorId: jugadorId,
         canchaId: cancha,
@@ -197,5 +204,14 @@ describe('Tabla reserva (e2e)', () => {
       violaCheck('reserva_horario_valido'),
     );
     await expect(contarTurno()).resolves.toBe(0);
+  });
+
+  it('rechaza una reserva con un codigo repetido en otro turno', async () => {
+    const { codigo } = await crearReserva();
+
+    await expect(crearReserva({ hora: '19:00', codigo })).rejects.toMatchObject(
+      violaUnico('reserva_codigo_key'),
+    );
+    await expect(prisma.reserva.count({ where: { codigo } })).resolves.toBe(1);
   });
 });
