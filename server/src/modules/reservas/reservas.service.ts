@@ -7,7 +7,10 @@ import {
 } from '../../common/fechas-lima';
 import { Reloj } from '../../common/reloj/reloj';
 import type { Prisma } from '../../generated/prisma/client';
+import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TarifasService } from '../tarifas/tarifas.service';
+import { TurnosService } from '../turnos/turnos.service';
 import { TurnoReservaDto } from './dto/turno-reserva.dto';
 
 export const DIAS_MAXIMOS_ANTICIPACION = 30;
@@ -19,6 +22,8 @@ export const MENSAJES_RESERVA = {
   canchaNoEncontrada: 'No se encontró la cancha',
   canchaDesactivada: 'La cancha está desactivada',
   canchaEnMantenimiento: 'La cancha está en mantenimiento',
+  fueraDeHorario: 'El turno está fuera del horario operativo',
+  sinTarifa: 'La cancha no tiene tarifa para esa franja',
 } as const;
 
 type Cliente = Prisma.TransactionClient | PrismaService;
@@ -34,6 +39,8 @@ export class ReservasService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly reloj: Reloj,
+    private readonly turnos: TurnosService,
+    private readonly tarifas: TarifasService,
   ) {}
 
   async validar(
@@ -45,7 +52,16 @@ export class ReservasService {
     await this.validarJugador(jugadorId, cliente);
     const inicioEn = this.validarFecha(datos, ahora);
     const cancha = await this.validarCancha(datos.canchaId, cliente);
-    return { cancha, inicioEn };
+    const turno = await this.validarTurno(datos);
+    const valor = await this.validarTarifa(cancha.id, turno.franja, cliente);
+    return {
+      cancha,
+      ...turno,
+      fecha: datos.fecha,
+      inicioEn,
+      finEn: instanteEnLima(datos.fecha, turno.horaFin),
+      valor,
+    };
   }
 
   private async validarJugador(jugadorId: number, cliente: Cliente) {
@@ -91,5 +107,22 @@ export class ReservasService {
       throw rechazo(MENSAJES_RESERVA.canchaEnMantenimiento, 'canchaId');
     }
     return { id: cancha.id, nombre: cancha.nombre, tamano: cancha.tamano };
+  }
+
+  private async validarTurno({ fecha, horaInicio }: TurnoReservaDto) {
+    const turnos = await this.turnos.generar(fecha);
+    const turno = turnos.find((t) => t.horaInicio === horaInicio);
+    if (!turno) throw rechazo(MENSAJES_RESERVA.fueraDeHorario, 'horaInicio');
+    return turno;
+  }
+
+  private async validarTarifa(
+    canchaId: number,
+    franja: Franja,
+    cliente: Cliente,
+  ) {
+    const valor = await this.tarifas.calcularTurno(canchaId, franja, cliente);
+    if (!valor) throw rechazo(MENSAJES_RESERVA.sinTarifa, 'canchaId');
+    return valor;
   }
 }
