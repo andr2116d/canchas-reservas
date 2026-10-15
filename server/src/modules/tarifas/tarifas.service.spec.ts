@@ -1,9 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import {
   MENSAJE_CANCHA_NO_ENCONTRADA,
+  MENSAJE_TARIFA_CONCURRENTE,
   TarifasService,
 } from './tarifas.service';
 
@@ -234,6 +235,22 @@ describe('TarifasService', () => {
         servicio.definir(99, { franja: 'DIA', valor: 50 }, ADMIN_ID),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('si otra vigente se creó al mismo tiempo responde 409', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(null);
+      prisma.tarifa.create.mockRejectedValue({ code: 'P2002' });
+
+      const error = await errorDe(
+        servicio.definir(CANCHA_ID, { franja: 'DIA', valor: 50 }, ADMIN_ID),
+      );
+
+      expect(error).toBeInstanceOf(ConflictException);
+      expect((error as ConflictException).getResponse()).toEqual({
+        statusCode: 409,
+        message: MENSAJE_TARIFA_CONCURRENTE,
+        errores: {},
+      });
     });
 
     it('propaga los demás errores', async () => {
