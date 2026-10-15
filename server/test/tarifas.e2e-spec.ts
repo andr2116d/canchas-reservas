@@ -4,7 +4,16 @@ import { hash } from 'bcryptjs';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
+import { TarifasService } from '../src/modules/tarifas/tarifas.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+
+interface Historial {
+  id: number;
+  franja: string;
+  valor: number;
+  vigenteDesde: string;
+  vigenteHasta: string | null;
+}
 
 describe('Tarifas (e2e)', () => {
   const sufijo = String(Date.now()).slice(-11);
@@ -19,6 +28,7 @@ describe('Tarifas (e2e)', () => {
 
   let app: INestApplication;
   let prisma: PrismaService;
+  let tarifas: TarifasService;
   let adminId: number;
   let cookieAdmin: string;
   let cookieRecepcion: string;
@@ -68,6 +78,10 @@ describe('Tarifas (e2e)', () => {
       .put(`/api/canchas/${canchaId}/tarifas`)
       .set('Cookie', cookie)
       .send(cuerpo);
+  const consultar = (canchaId: number | string, cookie = cookieAdmin) =>
+    request(servidor())
+      .get(`/api/canchas/${canchaId}/tarifas`)
+      .set('Cookie', cookie);
   const tarifasDe = (canchaId: number) =>
     prisma.tarifa.findMany({ where: { canchaId }, orderBy: { id: 'asc' } });
   const auditoriasDe = (ids: number[]) =>
@@ -84,6 +98,7 @@ describe('Tarifas (e2e)', () => {
     configurarApp(app);
     await app.init();
     prisma = modulo.get(PrismaService);
+    tarifas = modulo.get(TarifasService);
 
     adminId = await crearUsuario(ADMIN, 'ADMINISTRADOR', `A${sufijo}`);
     await crearUsuario(RECEPCION, 'RECEPCIONISTA', `R${sufijo}`);
@@ -285,6 +300,78 @@ describe('Tarifas (e2e)', () => {
         cookieRecepcion,
       ).expect(403);
       await expect(tarifasDe(canchaId)).resolves.toHaveLength(0);
+    });
+  });
+
+  describe('GET /api/canchas/:id/tarifas', () => {
+    it('devuelve las vigentes y el historial del más reciente al más antiguo', async () => {
+      const canchaId = await crearCancha('Tarifa Historial');
+      await definir(canchaId, { franja: 'DIA', valor: 50 }).expect(200);
+      await definir(canchaId, { franja: 'NOCHE', valor: 80 }).expect(200);
+      await definir(canchaId, { franja: 'DIA', valor: 55.05 }).expect(200);
+
+      const res = await consultar(canchaId).expect(200);
+      const body = res.body as {
+        dia: { valor: number; vigenteDesde: string };
+        noche: { valor: number; vigenteDesde: string };
+        historial: Historial[];
+      };
+
+      expect(body.dia).toEqual({
+        valor: 55.05,
+        vigenteDesde: expect.any(String),
+      });
+      expect(body.noche).toEqual({
+        valor: 80,
+        vigenteDesde: expect.any(String),
+      });
+      expect(
+        body.historial.map(({ franja, valor, vigenteHasta }) => [
+          franja,
+          valor,
+          vigenteHasta === null,
+        ]),
+      ).toEqual([
+        ['DIA', 55.05, true],
+        ['NOCHE', 80, true],
+        ['DIA', 50, false],
+      ]);
+      expect(body.historial[2].vigenteHasta).toBe(body.dia.vigenteDesde);
+    });
+
+    it('una franja sin tarifa sale como null', async () => {
+      const canchaId = await crearCancha('Tarifa Vacia');
+
+      await expect(consultar(canchaId).expect(200)).resolves.toMatchObject({
+        body: { dia: null, noche: null, historial: [] },
+      });
+    });
+
+    it('responde 404 si la cancha no existe y 403 a la recepción', async () => {
+      const canchaId = await crearCancha('Tarifa Consulta Permisos');
+
+      await consultar(999999).expect(404);
+      await consultar(canchaId, cookieRecepcion).expect(403);
+    });
+  });
+
+  describe('calcularTurno', () => {
+    it('usa la tarifa vigente y calcula el adelanto del 50 %', async () => {
+      const canchaId = await crearCancha('Tarifa Turno');
+      await definir(canchaId, { franja: 'NOCHE', valor: 80 }).expect(200);
+      await definir(canchaId, { franja: 'NOCHE', valor: 55.05 }).expect(200);
+
+      const turno = await tarifas.calcularTurno(canchaId, 'NOCHE');
+
+      expect(turno?.valor.toFixed(2)).toBe('55.05');
+      expect(turno?.adelanto.toFixed(2)).toBe('27.53');
+    });
+
+    it('devuelve null si la franja no tiene tarifa', async () => {
+      const canchaId = await crearCancha('Tarifa Turno Vacia');
+      await definir(canchaId, { franja: 'NOCHE', valor: 80 }).expect(200);
+
+      await expect(tarifas.calcularTurno(canchaId, 'DIA')).resolves.toBeNull();
     });
   });
 });
