@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { RegistroHistorial } from "../api";
+import type { Franja, RegistroHistorial, TarifaVigente } from "../api";
 import { TablaHistorial } from "./tabla-historial";
-import { TarjetaFranja, type Franja, type TarifaVigente } from "./tarjeta-franja";
+import { TarjetaFranja } from "./tarjeta-franja";
 
 // ---------------------------------------------------------------------------
 // DATOS DE EJEMPLO (solo para validar el diseño).
@@ -15,8 +15,8 @@ const CANCHAS_EJEMPLO = [
   { id: 3, nombre: "Cancha 3" },
 ];
 const VIGENTES_EJEMPLO: Record<Franja, TarifaVigente | null> = {
-  DIA: { valor: 60, desde: "01/09/2026" },
-  NOCHE: { valor: 80, desde: "15/09/2026" },
+  DIA: { valor: 60, vigenteDesde: "2026-09-01T05:00:00Z" },
+  NOCHE: { valor: 80, vigenteDesde: "2026-09-15T05:00:00Z" },
 };
 const HISTORIAL_EJEMPLO: RegistroHistorial[] = [
   { id: 5, franja: "NOCHE", valor: 80, vigenteDesde: "2026-09-15T05:00:00Z", vigenteHasta: null },
@@ -27,22 +27,8 @@ const HISTORIAL_EJEMPLO: RegistroHistorial[] = [
 ];
 // ---------------------------------------------------------------------------
 
-type ErroresFranja = Partial<Record<Franja, string>>;
-
 export function PantallaTarifas() {
   const [canchaId, setCanchaId] = useState(CANCHAS_EJEMPLO[0].id);
-  const [errores, setErrores] = useState<ErroresFranja>({});
-
-  // Solo para ver el estado de error. La validación real (Zod) y el guardado
-  // se hacen en "Implementar la pantalla de tarifas".
-  const guardar = (franja: Franja, texto: string) => {
-    const valor = Number(texto.replace(",", "."));
-    setErrores((previos) => ({
-      ...previos,
-      [franja]: valor > 0 ? undefined : "El valor debe ser mayor que 0",
-    }));
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -70,16 +56,14 @@ export function PantallaTarifas() {
         <TarjetaFranja
           key={`${canchaId}-DIA`}
           franja="DIA"
+          canchaId={canchaId}
           vigente={VIGENTES_EJEMPLO.DIA}
-          error={errores.DIA}
-          onGuardar={(texto) => guardar("DIA", texto)}
         />
         <TarjetaFranja
           key={`${canchaId}-NOCHE`}
           franja="NOCHE"
+          canchaId={canchaId}
           vigente={VIGENTES_EJEMPLO.NOCHE}
-          error={errores.NOCHE}
-          onGuardar={(texto) => guardar("NOCHE", texto)}
         />
       </div>
 
