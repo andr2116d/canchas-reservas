@@ -1,6 +1,4 @@
 import { api } from "@/lib/api";
-import { hoyEnLima } from "@/lib/formato";
-
 
 export type TamanoCancha = "FUTBOL_5" | "FUTBOL_7";
 
@@ -41,10 +39,5 @@ export function obtenerAgenda(
   canchaId?: string,
   estado?: string,
 ): Promise<TurnoAgenda[]> {
-  if (process.env.NODE_ENV === "development") {
-    if (fecha !== hoyEnLima()) {
-      return Promise.resolve([]);
-    }
-  }
   return api<TurnoAgenda[]>(construirQuery(fecha, canchaId, estado));
 }

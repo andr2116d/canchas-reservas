@@ -10,6 +10,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   check:
     name: ${{ matrix.workspace }}
@@ -28,3 +31,42 @@ jobs:
       - run: npm run lint -w ${{ matrix.workspace }}
       - run: npm test -w ${{ matrix.workspace }}
       - run: npm run build -w ${{ matrix.workspace }}
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: laprevia
+          POSTGRES_PASSWORD: laprevia
+          POSTGRES_DB: laprevia
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U laprevia"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://laprevia:laprevia@localhost:5432/laprevia
+      JWT_SECRET: secreto-solo-para-ci
+      CLIENT_URL: http://localhost:3000
+      ADMIN_CORREO: admin@laprevia.pe
+      ADMIN_CONTRASENA: Admin12345
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Aplicar migraciones en una base vacía
+        run: npm run db:deploy -w server
+      - name: Verificar que schema.prisma y las migraciones coinciden
+        run: node scripts/ci/verificar-migraciones.mjs
+      - name: Cargar el seed dos veces (debe ser idempotente)
+        run: npm run db:seed -w server && npm run db:seed -w server
+      - name: Pruebas e2e
+        run: npm run test:e2e -w server

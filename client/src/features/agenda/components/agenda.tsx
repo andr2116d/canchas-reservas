@@ -54,6 +54,15 @@ function tonoEstado(estado: EstadoReserva) {
   }
 }
 
+const ETIQUETA_ACCION: Record<string, string> = {
+  CHECK_IN: "Check-in",
+  MARCAR_AUSENTE: "Marcar ausente",
+  CANCELAR: "Cancelar",
+  REUBICAR: "Reubicar",
+  REGISTRAR_ADICIONALES: "Adicionales",
+  FINALIZAR: "Finalizar",
+};
+
 function moverFecha(fecha: string, delta: number): string {
   const [anio, mes, dia] = fecha.split("-").map(Number);
   const fechaUtc = new Date(Date.UTC(anio, mes - 1, dia + delta));
@@ -63,16 +72,10 @@ function moverFecha(fecha: string, delta: number): string {
   return `${y}-${m}-${d}`;
 }
 
-function contieneFecha(payload: unknown, fecha: string): boolean {
-  if (typeof payload === "string") return payload === fecha;
-  if (payload && typeof payload === "object") {
-    const objeto = payload as Record<string, unknown>;
-    if (typeof objeto.fecha === "string") return objeto.fecha === fecha;
-    if (typeof objeto.fecha === "object" && objeto.fecha !== null) {
-      return (objeto.fecha as Record<string, unknown>).start === fecha;
-    }
-  }
-  return false;
+function afectaFecha(payload: unknown, fecha: string): boolean {
+  if (!payload || typeof payload !== "object") return true;
+  const valor = (payload as { fecha?: unknown }).fecha;
+  return valor === null || valor === undefined || valor === fecha;
 }
 
 function FilaTurno({ turno }: { turno: TurnoAgenda }) {
@@ -111,10 +114,10 @@ function FilaTurno({ turno }: { turno: TurnoAgenda }) {
               key={accion}
               variante="secundario"
               disabled
-              title={accion}
+              title="Disponible en el próximo sprint"
               className="h-8 px-2 text-xs"
             >
-              Disponible en el próximo sprint
+              {ETIQUETA_ACCION[accion] ?? accion}
             </Button>
           ))}
         </div>
@@ -164,10 +167,10 @@ function TarjetaTurno({ turno }: { turno: TurnoAgenda }) {
             key={accion}
             variante="secundario"
             disabled
-            title={accion}
+            title="Disponible en el próximo sprint"
             className="h-8 px-2 text-xs"
           >
-            Disponible en el próximo sprint
+            {ETIQUETA_ACCION[accion] ?? accion}
           </Button>
         ))}
       </div>
@@ -221,7 +224,7 @@ export function PantallaAgenda() {
     if (!fecha) return;
     const socket = obtenerSocket();
     const manejar = (payload: unknown) => {
-      if (contieneFecha(payload, fecha)) {
+      if (afectaFecha(payload, fecha)) {
         consulta.invalidateQueries({ queryKey: ["agenda", fecha] });
       }
     };
@@ -232,7 +235,7 @@ export function PantallaAgenda() {
   }, [fecha, consulta]);
 
   return (
-    <main className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 py-6">
+    <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="font-display text-[32px] font-bold leading-9 text-noche-900">
           Agenda de turnos
@@ -367,7 +370,7 @@ export function PantallaAgenda() {
           </ul>
         </>
       )}
-    </main>
+    </div>
   );
 }
 
