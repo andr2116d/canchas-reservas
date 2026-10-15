@@ -20,8 +20,10 @@ const CAMPOS = [
   { etiqueta: "Confirmar contraseña", valor: "Cancha2026" },
 ] as const;
 
+type LlamadaFetch = [string, RequestInit];
+
 function responder(status: number, cuerpo?: unknown) {
-  const fetchMock = vi.fn(async (_url: string, _opciones?: RequestInit) =>
+  const fetchMock = vi.fn<(...args: LlamadaFetch) => Promise<Response>>(async () =>
     new Response(cuerpo === undefined ? null : JSON.stringify(cuerpo), { status }),
   );
   vi.stubGlobal("fetch", fetchMock);

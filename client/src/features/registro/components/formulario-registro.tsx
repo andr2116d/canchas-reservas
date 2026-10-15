@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { Logo } from "@/components/layout/logo";
 import { Button, Card, Input, Select } from "@/components/ui";
-import { ErrorApi } from "@/lib/api";
+import { aplicarErroresServidor } from "@/lib/errores-formulario";
 import { useRegistro } from "../hooks";
 import type { DatosRegistro } from "../api";
 import { esquemaRegistro, type DatosValidados, type ValoresRegistro } from "../schemas";
@@ -20,23 +19,6 @@ const CAMPOS_SERVIDOR = [
   "telefono",
   "contrasena",
 ] as const;
-
-function aplicarErroresServidor<T extends FieldValues>(
-  error: unknown,
-  setError: UseFormSetError<T>,
-  campos: Path<T>[],
-) {
-  const errorApi = error instanceof ErrorApi ? error : null;
-  let asignado = false;
-  for (const [campo, mensaje] of Object.entries(errorApi?.errores ?? {})) {
-    if (!(campos as string[]).includes(campo)) continue;
-    setError(campo as Path<T>, { type: "server", message: mensaje }, { shouldFocus: !asignado });
-    asignado = true;
-  }
-  if (!asignado) {
-    setError("root.servidor", { type: "server", message: errorApi?.message ?? "Ocurrió un error" });
-  }
-}
 
 function quitarConfirmacion(datos: DatosValidados): DatosRegistro {
   return {
