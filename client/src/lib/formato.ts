@@ -22,6 +22,32 @@ export function horaEnLima(instante: Date | string) {
   }).format(new Date(instante));
 }
 
+function partesEnLima(instante: Date | string) {
+  return Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: ZONA,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date(instante))
+      .map((parte) => [parte.type, parte.value]),
+  );
+}
+
+export function fechaEnLima(instante: Date | string) {
+  const { day, month, year } = partesEnLima(instante);
+  return `${day}/${month}/${year}`;
+}
+
+export function fechaHoraEnLima(instante: Date | string) {
+  const { day, month, year, hour, minute } = partesEnLima(instante);
+  return `${day}/${month}/${year} ${hour}:${minute}`;
+}
+
 export function diaYHoraEnLima(instante: Date | string) {
   const partes = Object.fromEntries(
     new Intl.DateTimeFormat("es-PE", {

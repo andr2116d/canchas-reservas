@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diaYHoraEnLima, fecha, horaEnLima, moneda } from "./formato";
+import { diaYHoraEnLima, fecha, fechaEnLima, fechaHoraEnLima, horaEnLima, moneda } from "./formato";
 
 describe("formato", () => {
   it("moneda", () => {
@@ -17,5 +17,13 @@ describe("formato", () => {
 
   it("día y hora en Lima", () => {
     expect(diaYHoraEnLima("2026-10-18T00:00:00Z")).toBe("sábado 17/10 a las 19:00");
+  });
+
+  it("fecha en Lima", () => {
+    expect(fechaEnLima("2026-10-16T01:30:00Z")).toBe("15/10/2026");
+  });
+
+  it("fecha y hora en Lima", () => {
+    expect(fechaHoraEnLima("2026-10-16T01:30:00Z")).toBe("15/10/2026 20:30");
   });
 });
