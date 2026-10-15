@@ -1,0 +1,311 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '../../generated/prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
+import { AuditoriaService } from '../auditoria/auditoria.service';
+import {
+  MENSAJE_CANCHA_NO_ENCONTRADA,
+  MENSAJE_TARIFA_CONCURRENTE,
+  TarifasService,
+} from './tarifas.service';
+
+const ADMIN_ID = 7;
+const CANCHA_ID = 3;
+
+const DESDE = new Date('2026-10-01T15:00:00.000Z');
+const HASTA = new Date('2026-10-10T15:00:00.000Z');
+
+const tarifa = (
+  id: number,
+  franja: 'DIA' | 'NOCHE',
+  valor: string,
+  vigenteDesde = DESDE,
+  vigenteHasta: Date | null = null,
+) => ({
+  id,
+  franja,
+  valor: new Prisma.Decimal(valor),
+  vigenteDesde,
+  vigenteHasta,
+});
+
+describe('TarifasService', () => {
+  const prisma = {
+    cancha: { findUnique: jest.fn() },
+    tarifa: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  };
+  const auditoria = { registrar: jest.fn() };
+  const servicio = new TarifasService(
+    prisma as unknown as PrismaService,
+    auditoria as unknown as AuditoriaService,
+  );
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+    prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+      fn(prisma),
+    );
+    prisma.cancha.findUnique.mockResolvedValue({ id: CANCHA_ID });
+  });
+
+  const errorDe = (promesa: Promise<unknown>) =>
+    promesa.catch((e: unknown) => e);
+
+  describe('obtener', () => {
+    it('devuelve las vigentes por franja y el historial completo', async () => {
+      prisma.tarifa.findMany.mockResolvedValue([
+        tarifa(5, 'NOCHE', '90.00', HASTA),
+        tarifa(4, 'NOCHE', '80.00', DESDE, HASTA),
+        tarifa(3, 'DIA', '55.05'),
+      ]);
+
+      const respuesta = await servicio.obtener(CANCHA_ID);
+
+      expect(prisma.tarifa.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { canchaId: CANCHA_ID },
+          orderBy: [{ vigenteDesde: 'desc' }, { id: 'desc' }],
+        }),
+      );
+      expect(respuesta).toEqual({
+        dia: { valor: 55.05, vigenteDesde: DESDE },
+        noche: { valor: 90, vigenteDesde: HASTA },
+        historial: [
+          {
+            id: 5,
+            franja: 'NOCHE',
+            valor: 90,
+            vigenteDesde: HASTA,
+            vigenteHasta: null,
+          },
+          {
+            id: 4,
+            franja: 'NOCHE',
+            valor: 80,
+            vigenteDesde: DESDE,
+            vigenteHasta: HASTA,
+          },
+          {
+            id: 3,
+            franja: 'DIA',
+            valor: 55.05,
+            vigenteDesde: DESDE,
+            vigenteHasta: null,
+          },
+        ],
+      });
+    });
+
+    it('una franja sin tarifa vigente sale como null', async () => {
+      prisma.tarifa.findMany.mockResolvedValue([]);
+
+      await expect(servicio.obtener(CANCHA_ID)).resolves.toEqual({
+        dia: null,
+        noche: null,
+        historial: [],
+      });
+    });
+
+    it('lanza 404 si la cancha no existe', async () => {
+      prisma.cancha.findUnique.mockResolvedValue(null);
+
+      const error = await errorDe(servicio.obtener(99));
+
+      expect(error).toBeInstanceOf(NotFoundException);
+      expect((error as NotFoundException).getResponse()).toEqual({
+        statusCode: 404,
+        message: MENSAJE_CANCHA_NO_ENCONTRADA,
+        errores: {},
+      });
+      expect(prisma.tarifa.findMany).not.toHaveBeenCalled();
+    });
+
+    it('lanza 404 sin consultar la base si el id está fuera de rango', async () => {
+      await expect(servicio.obtener(2147483648)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(prisma.cancha.findUnique).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('definir', () => {
+    it('cierra la vigente, crea la nueva con la misma fecha y audita EDITAR', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(tarifa(4, 'NOCHE', '80.00'));
+      prisma.tarifa.create.mockImplementation(
+        ({ data }: { data: { valor: Prisma.Decimal; vigenteDesde: Date } }) =>
+          Promise.resolve(
+            tarifa(5, 'NOCHE', data.valor.toFixed(2), data.vigenteDesde),
+          ),
+      );
+
+      const respuesta = await servicio.definir(
+        CANCHA_ID,
+        { franja: 'NOCHE', valor: 90.5 },
+        ADMIN_ID,
+      );
+
+      const cierre = prisma.tarifa.update.mock.calls[0][0] as {
+        where: { id: number };
+        data: { vigenteHasta: Date };
+      };
+      const creacion = prisma.tarifa.create.mock.calls[0][0] as {
+        data: Record<string, unknown>;
+      };
+      expect(cierre.where).toEqual({ id: 4 });
+      expect(creacion.data).toEqual({
+        canchaId: CANCHA_ID,
+        franja: 'NOCHE',
+        valor: new Prisma.Decimal('90.50'),
+        vigenteDesde: cierre.data.vigenteHasta,
+        creadoPorId: ADMIN_ID,
+      });
+      expect(auditoria.registrar).toHaveBeenCalledWith(
+        {
+          usuarioId: ADMIN_ID,
+          accion: 'EDITAR',
+          entidad: 'TARIFA',
+          entidadId: 5,
+          detalle: {
+            canchaId: CANCHA_ID,
+            franja: 'NOCHE',
+            anterior: { valor: 80 },
+            nuevo: { valor: 90.5 },
+          },
+        },
+        prisma,
+      );
+      expect(respuesta).toEqual({
+        franja: 'NOCHE',
+        valor: 90.5,
+        vigenteDesde: cierre.data.vigenteHasta,
+      });
+    });
+
+    it('la primera tarifa de la franja no cierra nada y audita CREAR', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(null);
+      prisma.tarifa.create.mockResolvedValue(tarifa(6, 'DIA', '60.00'));
+
+      await servicio.definir(CANCHA_ID, { franja: 'DIA', valor: 60 }, ADMIN_ID);
+
+      expect(prisma.tarifa.update).not.toHaveBeenCalled();
+      expect(auditoria.registrar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accion: 'CREAR',
+          entidadId: 6,
+          detalle: {
+            canchaId: CANCHA_ID,
+            franja: 'DIA',
+            anterior: { valor: null },
+            nuevo: { valor: 60 },
+          },
+        }),
+        prisma,
+      );
+    });
+
+    it('con el mismo valor no crea registro ni auditoría', async () => {
+      const vigente = tarifa(4, 'NOCHE', '80.00');
+      prisma.tarifa.findFirst.mockResolvedValue(vigente);
+
+      const respuesta = await servicio.definir(
+        CANCHA_ID,
+        { franja: 'NOCHE', valor: 80 },
+        ADMIN_ID,
+      );
+
+      expect(respuesta).toEqual({
+        franja: 'NOCHE',
+        valor: 80,
+        vigenteDesde: DESDE,
+      });
+      expect(prisma.tarifa.update).not.toHaveBeenCalled();
+      expect(prisma.tarifa.create).not.toHaveBeenCalled();
+      expect(auditoria.registrar).not.toHaveBeenCalled();
+    });
+
+    it('lanza 404 si la cancha no existe', async () => {
+      prisma.cancha.findUnique.mockResolvedValue(null);
+
+      await expect(
+        servicio.definir(99, { franja: 'DIA', valor: 50 }, ADMIN_ID),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('si otra vigente se creó al mismo tiempo responde 409', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(null);
+      prisma.tarifa.create.mockRejectedValue({ code: 'P2002' });
+
+      const error = await errorDe(
+        servicio.definir(CANCHA_ID, { franja: 'DIA', valor: 50 }, ADMIN_ID),
+      );
+
+      expect(error).toBeInstanceOf(ConflictException);
+      expect((error as ConflictException).getResponse()).toEqual({
+        statusCode: 409,
+        message: MENSAJE_TARIFA_CONCURRENTE,
+        errores: {},
+      });
+    });
+
+    it('propaga los demás errores', async () => {
+      const falla = new Error('sin conexión');
+      prisma.tarifa.findFirst.mockRejectedValue(falla);
+
+      await expect(
+        servicio.definir(CANCHA_ID, { franja: 'DIA', valor: 50 }, ADMIN_ID),
+      ).rejects.toBe(falla);
+    });
+  });
+
+  describe('calcularTurno', () => {
+    it.each([
+      ['80.00', '80.00', '40.00'],
+      ['55.05', '55.05', '27.53'],
+    ])(
+      'con valor %s devuelve valor %s y adelanto %s',
+      async (valor, esperado, adelanto) => {
+        prisma.tarifa.findFirst.mockResolvedValue({
+          valor: new Prisma.Decimal(valor),
+        });
+
+        const turno = await servicio.calcularTurno(CANCHA_ID, 'NOCHE');
+
+        expect(prisma.tarifa.findFirst).toHaveBeenCalledWith({
+          where: { canchaId: CANCHA_ID, franja: 'NOCHE', vigenteHasta: null },
+          select: { valor: true },
+        });
+        expect(turno?.valor).toBeInstanceOf(Prisma.Decimal);
+        expect(turno?.valor.toFixed(2)).toBe(esperado);
+        expect(turno?.adelanto).toBeInstanceOf(Prisma.Decimal);
+        expect(turno?.adelanto.toFixed(2)).toBe(adelanto);
+      },
+    );
+
+    it('devuelve null si la cancha no tiene tarifa vigente en la franja', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(null);
+
+      await expect(
+        servicio.calcularTurno(CANCHA_ID, 'DIA'),
+      ).resolves.toBeNull();
+    });
+
+    it('usa el cliente de transacción que recibe', async () => {
+      const tx = { tarifa: { findFirst: jest.fn().mockResolvedValue(null) } };
+
+      await servicio.calcularTurno(
+        CANCHA_ID,
+        'DIA',
+        tx as unknown as Prisma.TransactionClient,
+      );
+
+      expect(tx.tarifa.findFirst).toHaveBeenCalled();
+      expect(prisma.tarifa.findFirst).not.toHaveBeenCalled();
+    });
+  });
+});
