@@ -126,4 +126,18 @@ describe('Tabla regla_cancelacion (e2e)', () => {
       tipoCompensacion: original.tipoCompensacion,
     });
   });
+
+  it('el seed deja una sola regla con id 1', async () => {
+    const reglas = await prisma.reglaCancelacion.findMany();
+
+    expect(reglas).toHaveLength(1);
+    expect(reglas[0].id).toBe(1);
+  });
+
+  it('rechaza una segunda regla con id 1', async () => {
+    await expect(
+      prisma.reglaCancelacion.create({ data: {} }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+    await expect(prisma.reglaCancelacion.count()).resolves.toBe(1);
+  });
 });
