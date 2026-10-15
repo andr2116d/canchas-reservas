@@ -46,4 +46,22 @@ describe('Tabla adicional (e2e)', () => {
       prisma.adicional.count({ where: { nombre: { endsWith: sufijo } } }),
     ).resolves.toBe(2);
   });
+
+  it.each(['agua', 'AGUA'])(
+    'rechaza %s cuando ya existe Agua',
+    async (variante) => {
+      await crearAdicional(`Agua ${sufijo}`, 2.5);
+
+      await expect(
+        crearAdicional(`${variante} ${sufijo}`, 3),
+      ).rejects.toMatchObject({ code: 'P2002' });
+      await expect(
+        prisma.adicional.count({
+          where: {
+            nombre: { equals: `agua ${sufijo}`, mode: 'insensitive' },
+          },
+        }),
+      ).resolves.toBe(1);
+    },
+  );
 });
