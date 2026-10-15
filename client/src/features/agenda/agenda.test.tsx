@@ -64,8 +64,15 @@ describe("PantallaAgenda", () => {
 
     const badges = await screen.findAllByText("Saldo S/ 40.00");
     expect(badges.length).toBeGreaterThan(0);
-    const botones = screen.getAllByText("Disponible en el próximo sprint");
-    expect(botones).toHaveLength(8);
+    for (const accion of ["Check-in", "Marcar ausente", "Cancelar", "Reubicar"]) {
+      const botones = screen.getAllByRole("button", { name: accion });
+      expect(botones.length).toBeGreaterThan(0);
+      for (const boton of botones) {
+        expect((boton as HTMLButtonElement).disabled).toBe(true);
+        expect(boton.getAttribute("title")).toBe("Disponible en el próximo sprint");
+      }
+    }
+    expect(screen.queryByRole("button", { name: "Finalizar" })).toBeNull();
   });
 
   it("vuelve a pedir la agenda al recibir turnos:actualizados de la fecha mostrada", async () => {
@@ -79,10 +86,26 @@ describe("PantallaAgenda", () => {
 
     const socketModulo = await import("@/lib/socket");
     const handler = (socketModulo as unknown as { __obtenerHandler: () => ((payload: unknown) => void) | undefined }).__obtenerHandler();
-    handler?.(fecha ?? undefined);
+    handler?.({ fecha, canchaId: 2 });
 
     await waitFor(() => {
       expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(1);
+    });
+  });
+
+  it("también refresca cuando el cambio afecta a todas las fechas (fecha: null)", async () => {
+    responderTurnos([TURNO_CON_SALDO]);
+
+    renderAgenda();
+
+    await screen.findAllByText("Saldo S/ 40.00");
+    const socketModulo = await import("@/lib/socket");
+    const handler = (socketModulo as unknown as { __obtenerHandler: () => ((payload: unknown) => void) | undefined }).__obtenerHandler();
+    const llamadas = vi.mocked(fetch).mock.calls.length;
+    handler?.({ fecha: null, canchaId: 2 });
+
+    await waitFor(() => {
+      expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(llamadas);
     });
   });
 });
