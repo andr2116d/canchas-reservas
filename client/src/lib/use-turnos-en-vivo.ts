@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { EVENTO_TURNOS_ACTUALIZADOS } from "./eventos-tiempo-real";
 import { obtenerSocket } from "./socket";
 
 /**
@@ -18,9 +19,9 @@ export function useTurnosEnVivo(fecha: string) {
       if (!afectaFecha(payload, fecha)) return;
       cliente.invalidateQueries({ queryKey: ["disponibilidad", fecha] });
     };
-    socket.on("turnos:actualizados", manejar);
+    socket.on(EVENTO_TURNOS_ACTUALIZADOS, manejar);
     return () => {
-      socket.off("turnos:actualizados", manejar);
+      socket.off(EVENTO_TURNOS_ACTUALIZADOS, manejar);
     };
   }, [fecha, cliente]);
 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/campo";
+import { EVENTO_TURNOS_ACTUALIZADOS } from "@/lib/eventos-tiempo-real";
 import { obtenerSocket } from "@/lib/socket";
 import { hoyEnLima, moneda } from "@/lib/formato";
 import { useAgenda } from "../hooks";
@@ -228,9 +229,9 @@ export function PantallaAgenda() {
         consulta.invalidateQueries({ queryKey: ["agenda", fecha] });
       }
     };
-    socket.on("turnos:actualizados", manejar);
+    socket.on(EVENTO_TURNOS_ACTUALIZADOS, manejar);
     return () => {
-      socket.off("turnos:actualizados", manejar);
+      socket.off(EVENTO_TURNOS_ACTUALIZADOS, manejar);
     };
   }, [fecha, consulta]);
 
