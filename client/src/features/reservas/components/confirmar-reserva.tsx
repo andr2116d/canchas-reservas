@@ -44,10 +44,21 @@ type Props = {
 };
 
 export function PantallaConfirmarReserva(props: Props = {}) {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const turno = leerParametros(searchParams, props);
+  return <ConfirmacionTurno key={`${turno.canchaId}|${turno.fecha}|${turno.horaInicio}`} {...turno} />;
+}
 
-  const { canchaId, fecha: fechaParam, horaInicio } = leerParametros(searchParams, props);
+function ConfirmacionTurno({
+  canchaId,
+  fecha: fechaParam,
+  horaInicio,
+}: {
+  canchaId: number;
+  fecha: string;
+  horaInicio: string;
+}) {
+  const router = useRouter();
 
   const paramsValidos = Boolean(canchaId && fechaParam && horaInicio);
 

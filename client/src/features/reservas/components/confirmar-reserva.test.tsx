@@ -22,13 +22,15 @@ const RESUMEN = {
   regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z" },
 };
 
+let cliente: QueryClient;
+
+function envolver(contenido: React.ReactNode) {
+  return <QueryClientProvider client={cliente}>{contenido}</QueryClientProvider>;
+}
+
 function renderPantalla() {
-  const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={cliente}>
-      <PantallaConfirmarReserva canchaId={2} fecha="2026-10-20" horaInicio="18:00" />
-    </QueryClientProvider>,
-  );
+  cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(envolver(<PantallaConfirmarReserva canchaId={2} fecha="2026-10-20" horaInicio="18:00" />));
 }
 
 afterEach(() => {
@@ -209,6 +211,29 @@ describe("PantallaConfirmarReserva", () => {
     expect(screen.getByRole("heading", { name: "Reserva creada" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "¡Reserva confirmada!" })).toBeNull();
     expect(screen.queryByText("Pagaste el adelanto con tu crédito.")).toBeNull();
+  });
+
+  it("al elegir otro turno reinicia la confirmación anterior", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(RESUMEN), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ id: 1, codigo: "LP7K2M9Q", estado: "CONFIRMADA", venceEn: null }), { status: 201 }))
+        .mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ ...RESUMEN, horaInicio: "19:00" }), { status: 200 }))),
+    );
+
+    const { rerender } = renderPantalla();
+    await screen.findByText(/Usar mi crédito/);
+    (screen.getByRole("checkbox") as HTMLInputElement).click();
+    (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
+    await screen.findByText("LP7K2M9Q");
+
+    rerender(envolver(<PantallaConfirmarReserva canchaId={2} fecha="2026-10-20" horaInicio="19:00" />));
+
+    await screen.findByRole("button", { name: "Confirmar reserva" });
+    expect(screen.queryByText("LP7K2M9Q")).toBeNull();
+    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
   });
 
   it("muestra el plazo de cancelación con el texto de la regla", async () => {
