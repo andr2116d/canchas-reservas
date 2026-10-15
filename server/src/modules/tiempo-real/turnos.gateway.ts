@@ -13,6 +13,12 @@ export class TurnosGateway {
   private readonly logger = new Logger(TurnosGateway.name);
 
   notificar(fecha: string | null, canchaId: number | null) {
+    if (!fechaValida(fecha) || !canchaIdValido(canchaId)) {
+      this.logger.warn(
+        `Notificación de turnos ignorada: fecha=${String(fecha)}, canchaId=${String(canchaId)}`,
+      );
+      return;
+    }
     if (!this.server) return;
     try {
       this.server.emit(EVENTO_TURNOS_ACTUALIZADOS, { fecha, canchaId });
@@ -22,4 +28,19 @@ export class TurnosGateway {
       );
     }
   }
+}
+
+function fechaValida(fecha: unknown) {
+  if (fecha === null) return true;
+  if (typeof fecha !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return false;
+  }
+  const dia = new Date(`${fecha}T00:00:00.000Z`);
+  return !Number.isNaN(dia.getTime()) && dia.toISOString().startsWith(fecha);
+}
+
+function canchaIdValido(canchaId: unknown) {
+  return (
+    canchaId === null || (Number.isInteger(canchaId) && Number(canchaId) > 0)
+  );
 }
