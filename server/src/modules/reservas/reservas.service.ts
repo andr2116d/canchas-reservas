@@ -181,6 +181,7 @@ export class ReservasService {
           horaInicio: turno.horaInicio,
           valorTurno: aNumero(turno.valor.valor),
           adelantoMinimo: aNumero(turno.valor.adelanto),
+          creditoAplicado: aNumero(credito.aplicado),
         },
       },
       tx,
