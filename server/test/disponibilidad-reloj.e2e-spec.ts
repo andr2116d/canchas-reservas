@@ -7,6 +7,7 @@ import { instanteEnLima } from '../src/common/fechas-lima';
 import { Reloj } from '../src/common/reloj/reloj';
 import { crearPayloadSesion } from '../src/common/sesion/cookie-sesion';
 import { configurarApp } from '../src/configurar-app';
+import type { EstadoReserva } from '../src/generated/prisma/client';
 import { type TurnoDisponibilidad } from '../src/modules/turnos/disponibilidad.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -49,6 +50,7 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
   let mantenimiento: number;
   let diasOriginales: Dia[];
   let inicioNocheOriginal: string | undefined;
+  let codigos = 0;
 
   const servidor = () => app.getHttpServer() as Parameters<typeof request>[0];
 
@@ -99,6 +101,34 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
         creadoPorId: jugadorId,
       },
     });
+
+  const crearReserva = (
+    canchaId: number,
+    fecha: string,
+    horaInicio: string,
+    estado: EstadoReserva,
+  ) => {
+    const horaFin = `${String(Number(horaInicio.slice(0, 2)) + 1).padStart(2, '0')}:00`;
+    return prisma.reserva.create({
+      data: {
+        codigo: `RL${sufijo}${++codigos}`,
+        jugadorId,
+        creadoPorId: jugadorId,
+        canchaId,
+        fecha: new Date(`${fecha}T00:00:00.000Z`),
+        horaInicio,
+        horaFin,
+        inicioEn: instanteEnLima(fecha, horaInicio),
+        finEn: instanteEnLima(fecha, horaFin),
+        franja: horaInicio >= '18:00' ? 'NOCHE' : 'DIA',
+        valorTurno: 60,
+        adelantoMinimo: 30,
+        estado,
+        reglaHorasAnticipacion: 24,
+        reglaTipoCompensacion: 'CREDITO',
+      },
+    });
+  };
 
   type Respuesta = {
     body: { canchas: { id: number; turnos: TurnoDisponibilidad[] }[] };
@@ -213,5 +243,103 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
         seleccionable: true,
       });
     });
+  });
+
+  describe('estados en una misma fecha', () => {
+    it('muestra disponible, pendiente, ocupado y en mantenimiento a la vez', async () => {
+      await crearReserva(principal, MANANA, '10:00', 'PENDIENTE_PAGO');
+      await crearReserva(principal, MANANA, '11:00', 'CONFIRMADA');
+
+      const res = await consultar(MANANA).expect(200);
+
+      expect(turno(res, principal, '09:00')).toMatchObject({
+        estado: 'DISPONIBLE',
+        seleccionable: true,
+      });
+      expect(turno(res, principal, '10:00')).toMatchObject({
+        estado: 'PENDIENTE',
+        seleccionable: false,
+      });
+      expect(turno(res, principal, '11:00')).toMatchObject({
+        estado: 'OCUPADO',
+        seleccionable: false,
+      });
+      expect(turno(res, mantenimiento, '09:00')).toMatchObject({
+        estado: 'EN_MANTENIMIENTO',
+        seleccionable: false,
+      });
+    });
+
+    it('el mantenimiento se impone a una reserva de la cancha', async () => {
+      await crearReserva(mantenimiento, MANANA, '10:00', 'CONFIRMADA');
+      await crearReserva(mantenimiento, MANANA, '11:00', 'PENDIENTE_PAGO');
+
+      const res = await consultar(MANANA).expect(200);
+
+      for (const hora of ['10:00', '11:00']) {
+        expect(turno(res, mantenimiento, hora)).toMatchObject({
+          estado: 'EN_MANTENIMIENTO',
+          seleccionable: false,
+        });
+      }
+    });
+
+    it('una reserva en un turno que ya pasó sale con su estado y sin PASADO', async () => {
+      await crearReserva(principal, HOY, '09:00', 'PENDIENTE_VALIDACION');
+      await crearReserva(principal, HOY, '10:00', 'EN_JUEGO');
+
+      const res = await consultar(HOY).expect(200);
+
+      expect(turno(res, principal, '09:00')).toEqual({
+        horaInicio: '09:00',
+        horaFin: '10:00',
+        franja: 'DIA',
+        estado: 'PENDIENTE',
+        seleccionable: false,
+      });
+      expect(turno(res, principal, '10:00')).toEqual({
+        horaInicio: '10:00',
+        horaFin: '11:00',
+        franja: 'DIA',
+        estado: 'OCUPADO',
+        seleccionable: false,
+      });
+    });
+
+    it('una reserva en un turno sin tarifa sale ocupada y sin SIN_TARIFA', async () => {
+      await crearReserva(sinNoche, MANANA, '19:00', 'CONFIRMADA');
+
+      const res = await consultar(MANANA).expect(200);
+
+      expect(turno(res, sinNoche, '19:00')).toEqual({
+        horaInicio: '19:00',
+        horaFin: '20:00',
+        franja: 'NOCHE',
+        estado: 'OCUPADO',
+        seleccionable: false,
+      });
+      expect(turno(res, sinNoche, '20:00')).toMatchObject({
+        motivo: 'SIN_TARIFA',
+      });
+    });
+
+    it.each(['EXPIRADA', 'AUSENTE'] as const)(
+      'una reserva %s deja el turno disponible',
+      async (estado) => {
+        await crearReserva(principal, MANANA, '12:00', estado);
+
+        const res = await consultar(MANANA).expect(200);
+
+        expect(turno(res, principal, '12:00')).toEqual({
+          horaInicio: '12:00',
+          horaFin: '13:00',
+          franja: 'DIA',
+          estado: 'DISPONIBLE',
+          seleccionable: true,
+          valor: 60,
+          adelanto: 30,
+        });
+      },
+    );
   });
 });
