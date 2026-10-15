@@ -352,4 +352,102 @@ describe('HorarioService', () => {
       );
     });
   });
+
+  describe('notificación de turnos', () => {
+    const conDia = (cambio: ReturnType<typeof abierto | typeof cerrado>) =>
+      SEMANA.map((dia) => (dia.diaSemana === cambio.diaSemana ? cambio : dia));
+
+    it('al guardar notifica todas las fechas y canchas', async () => {
+      await servicio.guardar(
+        { dias: conDia(cerrado(3)), inicioNoche: '18:00' },
+        ADMIN_ID,
+      );
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, null);
+    });
+
+    it('si solo cambia la noche también notifica', async () => {
+      await servicio.guardar({ dias: SEMANA, inicioNoche: '19:00' }, ADMIN_ID);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, null);
+    });
+
+    it('con confirmar y reservas fuera de horario notifica', async () => {
+      prisma.reserva.findMany.mockResolvedValue([
+        reserva(40, '2026-10-21', '08:00', '09:00'),
+      ]);
+      await servicio.guardar(
+        { dias: conDia(cerrado(3)), inicioNoche: '18:00', confirmar: true },
+        ADMIN_ID,
+      );
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith(null, null);
+    });
+
+    it('notifica recién cuando la transacción confirma', async () => {
+      let confirmar: () => void = () => undefined;
+      prisma.$transaction.mockImplementation(
+        (fn: (tx: unknown) => Promise<unknown>) =>
+          fn(prisma).then(
+            (resultado) =>
+              new Promise((resolve) => {
+                confirmar = () => resolve(resultado);
+              }),
+          ),
+      );
+      const guardando = servicio.guardar(
+        { dias: conDia(cerrado(3)), inicioNoche: '18:00' },
+        ADMIN_ID,
+      );
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(auditoria.registrar).toHaveBeenCalled();
+      expect(gateway.notificar).not.toHaveBeenCalled();
+      confirmar();
+      await guardando;
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+    });
+
+    describe('no notifica', () => {
+      afterEach(() => {
+        expect(gateway.notificar).not.toHaveBeenCalled();
+      });
+
+      it('sin cambios', async () => {
+        await expect(
+          servicio.guardar({ dias: SEMANA, inicioNoche: '18:00' }, ADMIN_ID),
+        ).resolves.toEqual({ dias: SEMANA, inicioNoche: '18:00' });
+      });
+
+      it('con reservas fuera del nuevo horario sin confirmar', async () => {
+        prisma.reserva.findMany.mockResolvedValue([
+          reserva(40, '2026-10-21', '08:00', '09:00'),
+        ]);
+        await expect(
+          servicio.guardar(
+            { dias: conDia(cerrado(3)), inicioNoche: '18:00' },
+            ADMIN_ID,
+          ),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+
+      it('si la transacción falla', async () => {
+        prisma.$transaction.mockRejectedValue(new Error('conexión perdida'));
+        await expect(
+          servicio.guardar(
+            { dias: conDia(cerrado(3)), inicioNoche: '18:00' },
+            ADMIN_ID,
+          ),
+        ).rejects.toThrow('conexión perdida');
+      });
+
+      it('si falla la auditoría dentro de la transacción', async () => {
+        auditoria.registrar.mockRejectedValue(new Error('fallo al auditar'));
+        await expect(
+          servicio.guardar(
+            { dias: conDia(cerrado(3)), inicioNoche: '18:00' },
+            ADMIN_ID,
+          ),
+        ).rejects.toThrow('fallo al auditar');
+      });
+    });
+  });
 });
