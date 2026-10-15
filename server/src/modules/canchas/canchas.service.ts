@@ -10,6 +10,7 @@ import type { EstadoReserva, Rol } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { detalleCambios } from '../auditoria/detalle-cambios';
+import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import { CambiarActivaDto } from './dto/cambiar-activa.dto';
 import { CrearCanchaDto } from './dto/crear-cancha.dto';
 import { EditarCanchaDto } from './dto/editar-cancha.dto';
@@ -84,6 +85,7 @@ export class CanchasService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
+    private readonly gateway: TurnosGateway,
   ) {}
 
   async listar(rol: Rol) {
@@ -101,8 +103,9 @@ export class CanchasService {
       tamano: datos.tamano,
       iluminacion: datos.iluminacion,
     };
+    let creada: ReturnType<typeof aRespuesta>;
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      creada = await this.prisma.$transaction(async (tx) => {
         const cancha = await tx.cancha.create({
           data: campos,
           select: CAMPOS_CANCHA,
@@ -129,6 +132,8 @@ export class CanchasService {
       if (codigoError(error) === 'P2002') throw nombreDuplicado();
       throw error;
     }
+    this.gateway.notificar(null, creada.id);
+    return creada;
   }
 
   async editar(id: number, datos: EditarCanchaDto, usuarioId: number) {

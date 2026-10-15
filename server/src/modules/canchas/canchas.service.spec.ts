@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { inicioDeHoyEnLima } from '../../common/fechas-lima';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
+import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import {
   CanchasService,
   MENSAJE_CON_HISTORIAL,
@@ -55,9 +56,11 @@ describe('CanchasService', () => {
     $transaction: jest.fn(),
   };
   const auditoria = { registrar: jest.fn() };
+  const gateway = { notificar: jest.fn() };
   const servicio = new CanchasService(
     prisma as unknown as PrismaService,
     auditoria as unknown as AuditoriaService,
+    gateway as unknown as TurnosGateway,
   );
 
   beforeEach(() => {
