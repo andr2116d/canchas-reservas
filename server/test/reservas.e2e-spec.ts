@@ -742,6 +742,251 @@ describe('Reservas (e2e)', () => {
     });
   });
 
+  describe('crédito al adelanto', () => {
+    let jugador: { id: number; cookie: string };
+    let canchas: number[];
+
+    const cancha = async (noche: number) => {
+      const id = await crearCancha({ DIA: noche, NOCHE: noche });
+      canchas.push(id);
+      return id;
+    };
+
+    const credito = (saldo: number, creadoEn = AHORA) =>
+      prisma.credito.create({
+        data: { jugadorId: jugador.id, monto: saldo, saldo, creadoEn },
+      });
+
+    const reservarConCredito = (
+      datos: { canchaId: number; fecha: string; horaInicio: string },
+      usarCredito = true,
+    ) =>
+      request(servidor())
+        .post('/api/reservas')
+        .set('Cookie', jugador.cookie)
+        .send({ ...datos, usarCredito });
+
+    const pagosDe = (reservaId: number) =>
+      prisma.pago.findMany({
+        where: { reservaId },
+        include: { creditoUsos: { orderBy: { id: 'asc' } } },
+      });
+
+    const saldoDe = async (id: number) =>
+      (await prisma.credito.findUniqueOrThrow({ where: { id } })).saldo.toFixed(
+        2,
+      );
+
+    beforeEach(async () => {
+      jugador = await crearUsuario();
+      canchas = [];
+    });
+
+    afterEach(async () => {
+      const canchaId = { in: canchas };
+      await prisma.creditoUso.deleteMany({
+        where: { credito: { jugadorId: jugador.id } },
+      });
+      await prisma.pago.deleteMany({ where: { reserva: { canchaId } } });
+      await prisma.reserva.deleteMany({ where: { canchaId } });
+      await prisma.tarifa.deleteMany({ where: { canchaId } });
+      await prisma.cancha.deleteMany({ where: { id: canchaId } });
+      await prisma.credito.deleteMany({ where: { jugadorId: jugador.id } });
+    });
+
+    it('crédito 10 con adelanto 30: paga 10 y quedan 20 pendientes', async () => {
+      const canchaId = await cancha(60);
+      const { id: creditoId } = await credito(10);
+      const res = await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const creada = res.body as Creada;
+      expect(creada).toMatchObject({
+        estado: 'PENDIENTE_PAGO',
+        venceEn: new Date(AHORA.getTime() + 15 * 60 * 1000).toISOString(),
+      });
+
+      const pagos = await pagosDe(creada.id);
+      expect(pagos).toHaveLength(1);
+      expect(pagos[0]).toMatchObject({
+        concepto: 'ADELANTO',
+        canal: 'ONLINE',
+        metodo: 'CREDITO',
+        estado: 'APROBADO',
+        registradoPorId: jugador.id,
+      });
+      expect(pagos[0].monto.toFixed(2)).toBe('10.00');
+      const reserva = await prisma.reserva.findUniqueOrThrow({
+        where: { id: creada.id },
+      });
+      expect(reserva.adelantoMinimo.minus(pagos[0].monto).toFixed(2)).toBe(
+        '20.00',
+      );
+      expect(reserva.confirmadaEn).toBeNull();
+      expect(await saldoDe(creditoId)).toBe('0.00');
+    });
+
+    it('crédito 50 con adelanto 30: paga 30, confirma y quedan 20 de crédito', async () => {
+      const canchaId = await cancha(60);
+      const { id: creditoId } = await credito(50);
+      const res = await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const creada = res.body as Creada;
+      expect(creada).toMatchObject({ estado: 'CONFIRMADA', venceEn: null });
+
+      const reserva = await prisma.reserva.findUniqueOrThrow({
+        where: { id: creada.id },
+      });
+      expect(reserva).toMatchObject({
+        estado: 'CONFIRMADA',
+        venceEn: null,
+        confirmadaEn: AHORA,
+      });
+      const pagos = await pagosDe(creada.id);
+      expect(pagos).toHaveLength(1);
+      expect(pagos[0].monto.toFixed(2)).toBe('30.00');
+      expect(pagos[0].creditoUsos).toHaveLength(1);
+      expect(await saldoDe(creditoId)).toBe('20.00');
+    });
+
+    it('usa primero el crédito más antiguo y deja un uso por crédito', async () => {
+      const canchaId = await cancha(24);
+      const nuevo = await credito(10);
+      const antiguo = await credito(5, new Date(AHORA.getTime() - 60_000));
+      const res = await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const creada = res.body as Creada;
+      expect(creada.estado).toBe('CONFIRMADA');
+
+      const [pago] = await pagosDe(creada.id);
+      expect(pago.monto.toFixed(2)).toBe('12.00');
+      expect(
+        pago.creditoUsos.map((u) => [u.creditoId, u.monto.toFixed(2)]),
+      ).toEqual([
+        [antiguo.id, '5.00'],
+        [nuevo.id, '7.00'],
+      ]);
+      expect(await saldoDe(antiguo.id)).toBe('0.00');
+      expect(await saldoDe(nuevo.id)).toBe('3.00');
+    });
+
+    it('sin usarCredito no crea pago ni toca el crédito', async () => {
+      const canchaId = await cancha(60);
+      const { id: creditoId } = await credito(50);
+      const res = await reservarConCredito(
+        { canchaId, fecha: MANANA, horaInicio: '18:00' },
+        false,
+      ).expect(201);
+      const creada = res.body as Creada;
+      expect(creada.estado).toBe('PENDIENTE_PAGO');
+      expect(await pagosDe(creada.id)).toHaveLength(0);
+      expect(await saldoDe(creditoId)).toBe('50.00');
+    });
+
+    it('con usarCredito y crédito 0 no crea pago', async () => {
+      const canchaId = await cancha(60);
+      await credito(0);
+      const res = await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const creada = res.body as Creada;
+      expect(creada.estado).toBe('PENDIENTE_PAGO');
+      expect(await pagosDe(creada.id)).toHaveLength(0);
+    });
+
+    it('el resumen muestra el crédito que queda después de usarlo', async () => {
+      const canchaId = await cancha(60);
+      await credito(50);
+      const antes = await resumen(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(200);
+      expect((antes.body as Resumen).creditoDisponible).toBe(50);
+      await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const despues = await resumen(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '19:00',
+      }).expect(200);
+      expect((despues.body as Resumen).creditoDisponible).toBe(20);
+    });
+
+    it('una reserva confirmada con crédito no cuenta para el límite de pendientes', async () => {
+      const canchaId = await cancha(60);
+      await credito(30);
+      await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      for (const horaInicio of ['19:00', '20:00']) {
+        await reservarConCredito(
+          { canchaId, fecha: MANANA, horaInicio },
+          false,
+        ).expect(201);
+      }
+      expect(
+        await prisma.reserva.count({
+          where: { jugadorId: jugador.id, estado: 'PENDIENTE_PAGO' },
+        }),
+      ).toBe(2);
+    });
+
+    it('la auditoría registra el crédito aplicado', async () => {
+      const canchaId = await cancha(60);
+      await credito(12.5);
+      const res = await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(201);
+      const registro = await prisma.auditoria.findFirstOrThrow({
+        where: { entidad: 'RESERVA', entidadId: (res.body as Creada).id },
+      });
+      expect(registro.detalle).toMatchObject({
+        adelantoMinimo: 30,
+        creditoAplicado: 12.5,
+      });
+    });
+
+    it('si el turno ya está tomado no usa el crédito', async () => {
+      const canchaId = await cancha(60);
+      const otro = await crearUsuario();
+      await insertarReserva(
+        otro.id,
+        canchaId,
+        MANANA,
+        '18:00',
+        'PENDIENTE_PAGO',
+      );
+      const { id: creditoId } = await credito(50);
+      await reservarConCredito({
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '18:00',
+      }).expect(409);
+      expect(await saldoDe(creditoId)).toBe('50.00');
+      expect(
+        await prisma.pago.count({ where: { reserva: { canchaId } } }),
+      ).toBe(0);
+    });
+  });
+
   describe('GET /api/reservas/mias', () => {
     it('devuelve solo las del jugador, las próximas primero', async () => {
       const jugador = await crearUsuario();
