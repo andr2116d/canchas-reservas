@@ -9,6 +9,7 @@ import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { detalleCambios } from '../auditoria/detalle-cambios';
+import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import { aNumero, calcularAdelanto } from './calculo-tarifa';
 import { DefinirTarifaDto } from './dto/definir-tarifa.dto';
 
@@ -69,6 +70,7 @@ export class TarifasService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
+    private readonly gateway: TurnosGateway,
   ) {}
 
   async obtener(canchaId: number) {
@@ -95,13 +97,16 @@ export class TarifasService {
     await this.verificarCancha(canchaId);
     const nuevoValor = new Prisma.Decimal(valor).toDecimalPlaces(2);
 
+    let guardada: { respuesta: ReturnType<typeof aRespuesta>; cambio: boolean };
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      guardada = await this.prisma.$transaction(async (tx) => {
         const vigente = await tx.tarifa.findFirst({
           where: { canchaId, franja, vigenteHasta: null },
           select: CAMPOS_TARIFA,
         });
-        if (vigente?.valor.equals(nuevoValor)) return aRespuesta(vigente);
+        if (vigente?.valor.equals(nuevoValor)) {
+          return { respuesta: aRespuesta(vigente), cambio: false };
+        }
 
         const ahora = new Date();
         if (vigente) {
@@ -137,7 +142,7 @@ export class TarifasService {
           },
           tx,
         );
-        return aRespuesta(nueva);
+        return { respuesta: aRespuesta(nueva), cambio: true };
       });
     } catch (error) {
       if (esDuplicado(error)) {
@@ -147,6 +152,8 @@ export class TarifasService {
       }
       throw error;
     }
+    if (guardada.cambio) this.gateway.notificar(null, canchaId);
+    return guardada.respuesta;
   }
 
   async calcularTurno(
