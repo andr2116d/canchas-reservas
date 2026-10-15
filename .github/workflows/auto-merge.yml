@@ -15,11 +15,11 @@ jobs:
     if: ${{ !github.event.pull_request.draft && github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Mergear con squash cuando pasen todos los checks
+      - name: Mergear con rebase cuando pasen todos los checks
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: gh pr merge --auto --rebase "$PR_URL"
 
   dependabot:
     name: auto-merge dependabot
