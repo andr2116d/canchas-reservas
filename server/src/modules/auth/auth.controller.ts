@@ -10,10 +10,15 @@ import {
 import type { UsuarioSesion } from '../../common/sesion/usuario-sesion';
 import { AuthService } from './auth.service';
 import { IniciarSesionDto } from './dto/iniciar-sesion.dto';
+import { RegistrarJugadorDto } from '../usuarios/dto/registrar-jugador.dto';
+import { UsuariosService } from '../usuarios/usuarios.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+    constructor(
+    private readonly auth: AuthService,
+    private readonly usuarios: UsuariosService,
+  ) {}
 
   @Publico()
   @Post('login')
@@ -37,6 +42,12 @@ export class AuthController {
   @HttpCode(204)
   logout(@Res({ passthrough: true }) respuesta: Response) {
     respuesta.clearCookie(COOKIE_SESION, opcionesCookieSesion());
+  }
+
+  @Publico()
+  @Post('registro')
+  registro(@Body() dto: RegistrarJugadorDto) {
+    return this.usuarios.registrarJugador(dto);
   }
 
   @Get('me')
