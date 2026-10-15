@@ -52,8 +52,3 @@ export function obtenerDisponibilidad(fecha: string, canchaId?: number): Promise
   if (canchaId !== undefined) parametros.set("canchaId", String(canchaId));
   return api<Disponibilidad>(`/disponibilidad?${parametros}`);
 }
-
-/** Franja de un turno a partir de la hora de inicio, para la marca visual de la noche. */
-export function esNoche(turno: Pick<Turno, "franja" | "horaInicio">) {
-  return turno.franja === "NOCHE" || turno.horaInicio >= "18:00";
-}
