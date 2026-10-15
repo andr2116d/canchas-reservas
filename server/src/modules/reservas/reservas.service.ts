@@ -14,12 +14,16 @@ import type { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ESTADOS_RESERVA_FUTURA } from '../canchas/canchas.service';
+import { ReglaCancelacionService } from '../regla-cancelacion/regla-cancelacion.service';
+import { aNumero } from '../tarifas/calculo-tarifa';
 import { TarifasService } from '../tarifas/tarifas.service';
 import { TurnosService } from '../turnos/turnos.service';
 import { TurnoReservaDto } from './dto/turno-reserva.dto';
+import { minutosParaPagar } from './vencimiento-reserva';
 
 export const DIAS_MAXIMOS_ANTICIPACION = 30;
 export const LIMITE_PENDIENTES = 2;
+const ID_CONFIGURACION = 1;
 
 export const MENSAJES_RESERVA = {
   jugadorInactivo: 'Solo un jugador activo puede reservar',
@@ -57,7 +61,54 @@ export class ReservasService {
     private readonly reloj: Reloj,
     private readonly turnos: TurnosService,
     private readonly tarifas: TarifasService,
+    private readonly regla: ReglaCancelacionService,
   ) {}
+
+  async resumen(jugadorId: number, datos: TurnoReservaDto) {
+    const ahora = this.reloj.ahora();
+    const turno = await this.validar(jugadorId, datos, ahora);
+    const { tiempoLimitePagoMin } = await this.configuracion(this.prisma);
+    const regla = await this.regla.obtenerVigente();
+    const credito = await this.creditoDisponible(jugadorId, this.prisma);
+    return {
+      cancha: turno.cancha,
+      fecha: turno.fecha,
+      horaInicio: turno.horaInicio,
+      horaFin: turno.horaFin,
+      franja: turno.franja,
+      valorTurno: aNumero(turno.valor.valor),
+      adelanto: aNumero(turno.valor.adelanto),
+      saldo: aNumero(turno.valor.valor.minus(turno.valor.adelanto)),
+      creditoDisponible: aNumero(credito),
+      minutosParaPagar: minutosParaPagar(
+        ahora,
+        tiempoLimitePagoMin,
+        turno.inicioEn,
+      ),
+      regla: {
+        horasAnticipacion: regla.horasAnticipacion,
+        tipoCompensacion: regla.tipoCompensacion,
+        plazoLimite: this.regla
+          .plazoLimite(turno.fecha, turno.horaInicio, regla.horasAnticipacion)
+          .toISOString(),
+      },
+    };
+  }
+
+  async creditoDisponible(jugadorId: number, cliente: Cliente) {
+    const { _sum } = await cliente.credito.aggregate({
+      where: { jugadorId, saldo: { gt: 0 } },
+      _sum: { saldo: true },
+    });
+    return _sum.saldo ?? 0;
+  }
+
+  private configuracion(cliente: Cliente) {
+    return cliente.configuracion.findUniqueOrThrow({
+      where: { id: ID_CONFIGURACION },
+      select: { tiempoLimitePagoMin: true },
+    });
+  }
 
   async validar(
     jugadorId: number,
