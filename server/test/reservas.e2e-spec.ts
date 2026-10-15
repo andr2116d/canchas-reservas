@@ -210,6 +210,10 @@ describe('Reservas (e2e)', () => {
   afterAll(async () => {
     const canchaId = { in: canchasCreadas };
     const usuarioId = { in: usuariosCreados };
+    await prisma.creditoUso.deleteMany({
+      where: { pago: { reserva: { canchaId } } },
+    });
+    await prisma.pago.deleteMany({ where: { reserva: { canchaId } } });
     await prisma.reserva.deleteMany({ where: { canchaId } });
     await prisma.tarifa.deleteMany({ where: { canchaId } });
     await prisma.cancha.deleteMany({ where: { id: canchaId } });
