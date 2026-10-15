@@ -80,7 +80,7 @@ async function demo(adminId: number) {
     contrasena: 'Jugador123',
     rol: 'JUGADOR',
   });
-  await usuario({
+  const jugador2 = await usuario({
     nombres: 'Carla',
     apellidos: 'Vega Salazar',
     numeroDocumento: '70000002',
@@ -89,6 +89,15 @@ async function demo(adminId: number) {
     contrasena: 'Jugador123',
     rol: 'JUGADOR',
   });
+
+  const creditoDemo = await prisma.credito.findFirst({
+    where: { jugadorId: jugador2.id, cancelacionId: null },
+  });
+  if (!creditoDemo) {
+    await prisma.credito.create({
+      data: { jugadorId: jugador2.id, monto: 50, saldo: 50 },
+    });
+  }
 
   const canchas = [
     { nombre: 'Cancha 1', tamano: 'FUTBOL_5', iluminacion: true, dia: 60, noche: 80 },
@@ -143,7 +152,7 @@ async function main() {
   if (modo === 'demo') {
     console.log('  Recepcionista   recepcion@laprevia.pe / Recepcion123');
     console.log('  Jugador         jugador1@laprevia.pe / Jugador123');
-    console.log('  Jugador         jugador2@laprevia.pe / Jugador123\n');
+    console.log('  Jugador         jugador2@laprevia.pe / Jugador123 (crédito S/ 50.00)\n');
   }
 }
 
