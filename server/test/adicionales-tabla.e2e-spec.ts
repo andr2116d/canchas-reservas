@@ -99,4 +99,32 @@ describe('Tabla adicional (e2e)', () => {
     expect(adicional.precio.toFixed(2)).toBe(guardado);
     expect(adicional.precio.decimalPlaces()).toBeLessThanOrEqual(2);
   });
+
+  it('activa el adicional y llena sus fechas al crearlo', async () => {
+    const antes = new Date();
+    const adicional = await crearAdicional(`Hielo ${sufijo}`, 1.5);
+
+    expect(adicional.activo).toBe(true);
+    expect(adicional.creadoEn).toBeInstanceOf(Date);
+    expect(adicional.actualizadoEn).toBeInstanceOf(Date);
+    expect(adicional.creadoEn.getTime()).toBeGreaterThanOrEqual(
+      antes.getTime() - 1000,
+    );
+  });
+
+  it('cambia actualizadoEn al editar y conserva creadoEn', async () => {
+    const creado = await crearAdicional(`Pelota ${sufijo}`, 5);
+    await new Promise((resolver) => setTimeout(resolver, 20));
+
+    const editado = await prisma.adicional.update({
+      where: { id: creado.id },
+      data: { precio: 6, activo: false },
+    });
+
+    expect(editado.activo).toBe(false);
+    expect(editado.creadoEn).toEqual(creado.creadoEn);
+    expect(editado.actualizadoEn.getTime()).toBeGreaterThan(
+      creado.actualizadoEn.getTime(),
+    );
+  });
 });
