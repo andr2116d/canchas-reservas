@@ -7,7 +7,7 @@ import { obtenerSocket } from "./socket";
 
 /**
  * Escucha `turnos:actualizados` y vuelve a pedir la disponibilidad de `fecha`.
- * Un `null` en `fecha` o en `canchaId` significa "todas", así que alcanza.
+ * Un `null` en `fecha` significa "todas". Un evento con otra forma se ignora.
  */
 export function useTurnosEnVivo(fecha: string) {
   const cliente = useQueryClient();
@@ -26,8 +26,17 @@ export function useTurnosEnVivo(fecha: string) {
   }, [fecha, cliente]);
 }
 
+type CambioTurnos = { fecha: string | null; canchaId: number | null };
+
+function esCambioTurnos(payload: unknown): payload is CambioTurnos {
+  if (!payload || typeof payload !== "object") return false;
+  const { fecha, canchaId } = payload as Record<string, unknown>;
+  return (
+    (fecha === null || typeof fecha === "string") &&
+    (canchaId === null || typeof canchaId === "number")
+  );
+}
+
 function afectaFecha(payload: unknown, fecha: string) {
-  if (!payload || typeof payload !== "object") return true;
-  const valor = (payload as { fecha?: unknown }).fecha;
-  return valor === null || valor === undefined || valor === fecha;
+  return esCambioTurnos(payload) && (payload.fecha === null || payload.fecha === fecha);
 }
