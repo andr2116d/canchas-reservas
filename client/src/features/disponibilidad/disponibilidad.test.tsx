@@ -59,6 +59,53 @@ const CANCHA_2 = {
 
 const DIA_LLENO: Disponibilidad = { fecha: FECHA, abierto: true, canchas: [CANCHA_1, CANCHA_2] };
 
+const DIA_ESTADOS: Disponibilidad = {
+  fecha: FECHA,
+  abierto: true,
+  canchas: [
+    {
+      ...CANCHA_1,
+      turnos: [
+        CANCHA_1.turnos[0],
+        { horaInicio: "18:00", horaFin: "19:00", franja: "NOCHE", estado: "PENDIENTE", seleccionable: false },
+        { horaInicio: "19:00", horaFin: "20:00", franja: "NOCHE", estado: "OCUPADO", seleccionable: false },
+      ],
+    },
+    {
+      id: 3,
+      nombre: "Cancha 3",
+      tamano: "FUTBOL_7",
+      iluminacion: false,
+      turnos: [
+        { horaInicio: "17:00", horaFin: "18:00", franja: "DIA", estado: "EN_MANTENIMIENTO", seleccionable: false },
+        { horaInicio: "18:00", horaFin: "19:00", franja: "NOCHE", estado: "EN_MANTENIMIENTO", seleccionable: false },
+        { horaInicio: "19:00", horaFin: "20:00", franja: "NOCHE", estado: "EN_MANTENIMIENTO", seleccionable: false },
+      ],
+    },
+  ],
+};
+
+/** El turno de la grilla de escritorio para una cancha (por su posición) y una hora. */
+function celda(tabla: HTMLElement, cancha: number, hora: string) {
+  const fila = (within(tabla).getAllByRole("row") as HTMLTableRowElement[]).find(
+    (f) => f.cells[0]?.textContent === hora,
+  );
+  const turno = fila?.cells[cancha + 1]?.firstElementChild;
+  if (!turno) throw new Error(`No hay turno de ${hora} en la columna ${cancha}`);
+  return turno as HTMLElement;
+}
+
+function muestraDe(etiqueta: string) {
+  const item = Array.from(document.querySelectorAll("li")).find((li) => li.textContent === etiqueta);
+  const muestra = item?.querySelector("span[aria-hidden]");
+  if (!muestra) throw new Error(`La leyenda no tiene "${etiqueta}"`);
+  return muestra;
+}
+
+function clasesDeFondo(elemento: Element) {
+  return Array.from(elemento.classList).filter((clase) => clase.startsWith("bg-"));
+}
+
 function responder(respuestas: Disponibilidad[]) {
   const cola = [...respuestas];
   const fetchMock = vi.fn(async () => {
@@ -168,28 +215,35 @@ describe("PantallaDisponibilidad", () => {
   });
 
   it("una cancha en mantenimiento muestra todos sus turnos en mantenimiento", async () => {
-    responder([
-      {
-        fecha: FECHA,
-        abierto: true,
-        canchas: [
-          {
-            id: 3,
-            nombre: "Cancha 3",
-            tamano: "FUTBOL_7",
-            iluminacion: false,
-            turnos: [
-              { horaInicio: "17:00", horaFin: "18:00", franja: "DIA", estado: "DISPONIBLE", seleccionable: true, valor: 90, adelanto: 45 },
-              { horaInicio: "18:00", horaFin: "19:00", franja: "NOCHE", estado: "DISPONIBLE", seleccionable: true, valor: 90, adelanto: 45 },
-            ],
-          },
-        ],
-      },
-    ]);
+    responder([DIA_ESTADOS]);
     renderPantalla();
 
-    expect((await screen.findAllByText("En mantenimiento")).length).toBeGreaterThan(0);
-    expect(screen.queryByRole("button", { name: /17:00/ })).toBeNull();
+    const tabla = await screen.findByRole("table");
+    for (const hora of ["17:00", "18:00", "19:00"]) {
+      const turno = celda(tabla, 1, hora);
+      expect(turno.tagName).toBe("DIV");
+      expect(turno.textContent).toContain("En mantenimiento");
+    }
+  });
+
+  it("cada estado se ve con su etiqueta y el color de su muestra en la leyenda", async () => {
+    responder([DIA_ESTADOS]);
+    renderPantalla();
+
+    const tabla = await screen.findByRole("table");
+    const casos = [
+      { etiqueta: "Disponible", turno: celda(tabla, 0, "17:00"), texto: "S/ 60.00" },
+      { etiqueta: "Pendiente", turno: celda(tabla, 0, "18:00"), texto: "Pendiente" },
+      { etiqueta: "Ocupado", turno: celda(tabla, 0, "19:00"), texto: "Ocupado" },
+      { etiqueta: "En mantenimiento", turno: celda(tabla, 1, "17:00"), texto: "En mantenimiento" },
+    ];
+
+    for (const { etiqueta, turno, texto } of casos) {
+      expect(turno.textContent).toContain(texto);
+      const fondos = clasesDeFondo(muestraDe(etiqueta));
+      expect(fondos.length).toBeGreaterThan(0);
+      for (const clase of fondos) expect(turno.classList.contains(clase)).toBe(true);
+    }
   });
 
   it("deshabilita la flecha del día anterior en el límite inferior", async () => {
