@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { cuerpoError } from '../../common/errores';
 import { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
@@ -9,6 +13,8 @@ import { aNumero } from './calculo-tarifa';
 import { DefinirTarifaDto } from './dto/definir-tarifa.dto';
 
 export const MENSAJE_CANCHA_NO_ENCONTRADA = 'No se encontró la cancha';
+export const MENSAJE_TARIFA_CONCURRENTE =
+  'La tarifa cambió mientras se guardaba, vuelve a intentarlo';
 
 const ENTIDAD = 'TARIFA';
 const ID_MAXIMO = 2147483647;
@@ -36,6 +42,15 @@ function aRespuesta(tarifa: TarifaGuardada) {
 
 function aHistorial(tarifa: TarifaGuardada) {
   return { ...tarifa, valor: aNumero(tarifa.valor) };
+}
+
+function esDuplicado(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'P2002'
+  );
 }
 
 function canchaNoEncontrada() {
@@ -73,49 +88,58 @@ export class TarifasService {
     await this.verificarCancha(canchaId);
     const nuevoValor = new Prisma.Decimal(valor).toDecimalPlaces(2);
 
-    return this.prisma.$transaction(async (tx) => {
-      const vigente = await tx.tarifa.findFirst({
-        where: { canchaId, franja, vigenteHasta: null },
-        select: CAMPOS_TARIFA,
-      });
-      if (vigente?.valor.equals(nuevoValor)) return aRespuesta(vigente);
-
-      const ahora = new Date();
-      if (vigente) {
-        await tx.tarifa.update({
-          where: { id: vigente.id },
-          data: { vigenteHasta: ahora },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const vigente = await tx.tarifa.findFirst({
+          where: { canchaId, franja, vigenteHasta: null },
+          select: CAMPOS_TARIFA,
         });
-      }
-      const nueva = await tx.tarifa.create({
-        data: {
-          canchaId,
-          franja,
-          valor: nuevoValor,
-          vigenteDesde: ahora,
-          creadoPorId: usuarioId,
-        },
-        select: CAMPOS_TARIFA,
-      });
-      await this.auditoria.registrar(
-        {
-          usuarioId,
-          accion: vigente ? 'EDITAR' : 'CREAR',
-          entidad: ENTIDAD,
-          entidadId: nueva.id,
-          detalle: {
+        if (vigente?.valor.equals(nuevoValor)) return aRespuesta(vigente);
+
+        const ahora = new Date();
+        if (vigente) {
+          await tx.tarifa.update({
+            where: { id: vigente.id },
+            data: { vigenteHasta: ahora },
+          });
+        }
+        const nueva = await tx.tarifa.create({
+          data: {
             canchaId,
             franja,
-            ...detalleCambios(
-              { valor: vigente ? aNumero(vigente.valor) : null },
-              { valor: aNumero(nueva.valor) },
-            ),
+            valor: nuevoValor,
+            vigenteDesde: ahora,
+            creadoPorId: usuarioId,
           },
-        },
-        tx,
-      );
-      return aRespuesta(nueva);
-    });
+          select: CAMPOS_TARIFA,
+        });
+        await this.auditoria.registrar(
+          {
+            usuarioId,
+            accion: vigente ? 'EDITAR' : 'CREAR',
+            entidad: ENTIDAD,
+            entidadId: nueva.id,
+            detalle: {
+              canchaId,
+              franja,
+              ...detalleCambios(
+                { valor: vigente ? aNumero(vigente.valor) : null },
+                { valor: aNumero(nueva.valor) },
+              ),
+            },
+          },
+          tx,
+        );
+        return aRespuesta(nueva);
+      });
+    } catch (error) {
+      if (esDuplicado(error)) {
+        throw new ConflictException(
+          cuerpoError(409, MENSAJE_TARIFA_CONCURRENTE),
+        );
+      }
+      throw error;
+    }
   }
 
   private async verificarCancha(id: number) {
