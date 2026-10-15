@@ -323,4 +323,12 @@ describe("PantallaAgenda con fecha fija", () => {
       expect(within(filaDe(hora)).queryByText(/^Saldo S\/|^Pagada$/)).toBeNull();
     }
   });
+
+  it("un día sin reservas muestra el mensaje de vacío", async () => {
+    responderSiempre([]);
+    renderAgenda();
+
+    expect(await screen.findByText("No hay reservas para este día")).toBeTruthy();
+    expect(screen.queryByRole("table")).toBeNull();
+  });
 });
