@@ -14,6 +14,14 @@ const ACTIVOS: EstadoReserva[] = [
 ];
 const INACTIVOS: EstadoReserva[] = ['CANCELADA', 'EXPIRADA', 'AUSENTE'];
 
+const violaCheck = (restriccion: string) => ({
+  meta: {
+    driverAdapterError: {
+      cause: { code: '23514', message: expect.stringContaining(restriccion) },
+    },
+  },
+});
+
 describe('Tabla reserva (e2e)', () => {
   const sufijo = String(Date.now()).slice(-11);
 
@@ -29,11 +37,13 @@ describe('Tabla reserva (e2e)', () => {
     fecha = '2026-11-20',
     hora = '18:00',
     estado,
+    finEn,
   }: {
     cancha?: number;
     fecha?: string;
     hora?: string;
     estado?: EstadoReserva;
+    finEn?: Date;
   } = {}) => {
     reservas += 1;
     const fin = `${String(Number(hora.slice(0, 2)) + 1).padStart(2, '0')}:00`;
@@ -47,7 +57,7 @@ describe('Tabla reserva (e2e)', () => {
         horaInicio: hora,
         horaFin: fin,
         inicioEn: new Date(`${fecha}T${hora}:00-05:00`),
-        finEn: new Date(`${fecha}T${fin}:00-05:00`),
+        finEn: finEn ?? new Date(`${fecha}T${fin}:00-05:00`),
         franja: 'NOCHE',
         valorTurno: 80,
         adelantoMinimo: 40,
@@ -177,5 +187,15 @@ describe('Tabla reserva (e2e)', () => {
     await expect(crearReserva({ hora: '19:00' })).resolves.toMatchObject({
       horaInicio: '19:00',
     });
+  });
+
+  it.each([
+    ['igual al', '2026-11-20T18:00:00-05:00'],
+    ['anterior al', '2026-11-20T17:00:00-05:00'],
+  ])('rechaza una reserva con fin %s inicio', async (_, fin) => {
+    await expect(crearReserva({ finEn: new Date(fin) })).rejects.toMatchObject(
+      violaCheck('reserva_horario_valido'),
+    );
+    await expect(contarTurno()).resolves.toBe(0);
   });
 });
