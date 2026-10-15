@@ -1,10 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ProveedorToast } from "@/components/ui/toast";
 import { PantallaConfirmarReserva } from "./confirmar-reserva";
 
+const push = vi.fn();
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push }),
   useSearchParams: () => new URLSearchParams(""),
 }));
 
@@ -25,7 +28,11 @@ const RESUMEN = {
 let cliente: QueryClient;
 
 function envolver(contenido: React.ReactNode) {
-  return <QueryClientProvider client={cliente}>{contenido}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={cliente}>
+      <ProveedorToast>{contenido}</ProveedorToast>
+    </QueryClientProvider>
+  );
 }
 
 function renderPantalla() {
@@ -35,6 +42,7 @@ function renderPantalla() {
 
 afterEach(() => {
   cleanup();
+  push.mockReset();
   vi.unstubAllGlobals();
 });
 
@@ -234,6 +242,28 @@ describe("PantallaConfirmarReserva", () => {
     await screen.findByRole("button", { name: "Confirmar reserva" });
     expect(screen.queryByText("LP7K2M9Q")).toBeNull();
     expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
+  });
+
+  it("con el límite de pendientes mantiene el mensaje visible al volver a la grilla", async () => {
+    const mensaje = "Ya tienes 2 reservas pendientes de pago";
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(RESUMEN), { status: 200 }))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ statusCode: 409, message: mensaje, errores: {} }), { status: 409 }),
+        ),
+    );
+
+    const { rerender } = renderPantalla();
+    (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
+
+    expect((await screen.findByRole("alert")).textContent).toBe(mensaje);
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/jugador/disponibilidad"));
+
+    rerender(envolver(<p>Grilla</p>));
+    expect(screen.getByRole("alert").textContent).toBe(mensaje);
   });
 
   it("muestra el plazo de cancelación con el texto de la regla", async () => {
