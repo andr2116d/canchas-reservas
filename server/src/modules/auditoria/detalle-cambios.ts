@@ -4,10 +4,10 @@ const CAMPOS_SENSIBLES = new Set(['passwordHash', 'contrasena']);
 
 type ValorJson = Prisma.InputJsonValue | null;
 
-export interface DetalleCambios {
+export type DetalleCambios = {
   anterior: Record<string, ValorJson>;
   nuevo: Record<string, ValorJson>;
-}
+};
 
 export function quitarCamposSensibles(valor: ValorJson): ValorJson {
   if (Array.isArray(valor)) {
