@@ -69,9 +69,8 @@ export function PantallaConfirmarReserva(props: Props = {}) {
 
   const adelantoAPagar = useMemo(() => {
     if (!resumen) return 0;
-    if (!usarCredito) return resumen.adelanto;
-    return resumen.adelanto - creditoAplicado;
-  }, [resumen, usarCredito, creditoAplicado]);
+    return (Math.round(resumen.adelanto * 100) - Math.round(creditoAplicado * 100)) / 100;
+  }, [resumen, creditoAplicado]);
 
   useEffect(() => {
     if (!creada?.venceEn) return;
@@ -193,7 +192,7 @@ export function PantallaConfirmarReserva(props: Props = {}) {
                   checked={usarCredito}
                   onChange={(e) => setUsarCredito(e.target.checked)}
                 />
-                Usar mi crédito (S/ {resumen.creditoDisponible.toFixed(2)} disponible)
+                Usar mi crédito ({moneda(resumen.creditoDisponible)} disponible)
               </label>
               {usarCredito && (
                 <p className="text-sm text-texto-suave">
