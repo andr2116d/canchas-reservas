@@ -22,6 +22,16 @@ const ESTADOS: EstadoReserva[] = [
   "AUSENTE",
 ];
 
+const ESTADOS_DEL_DIA: EstadoReserva[] = [
+  "PENDIENTE_PAGO",
+  "PENDIENTE_VALIDACION",
+  "CONFIRMADA",
+  "EN_JUEGO",
+  "FINALIZADA",
+];
+
+const ESTADOS_CON_SALDO: EstadoReserva[] = ["CONFIRMADA", "EN_JUEGO"];
+
 const ETIQUETA_ESTADO: Record<EstadoReserva, string> = {
   PENDIENTE_PAGO: "Pendiente de pago",
   PENDIENTE_VALIDACION: "Pendiente de validación",
@@ -208,8 +218,10 @@ export function PantallaAgenda() {
     if (a.horaInicio !== b.horaInicio) return a.horaInicio.localeCompare(b.horaInicio);
     return a.cancha.nombre.localeCompare(b.cancha.nombre);
   });
-  const totalTurnos = lista.length;
-  const conSaldo = lista.filter((turno) => turno.saldoPendiente > 0).length;
+  const totalTurnos = lista.filter((turno) => ESTADOS_DEL_DIA.includes(turno.estado)).length;
+  const conSaldo = lista.filter(
+    (turno) => ESTADOS_CON_SALDO.includes(turno.estado) && turno.saldoPendiente > 0,
+  ).length;
   const pendientesPago = lista.filter(
     (turno) => turno.estado === "PENDIENTE_PAGO",
   ).length;

@@ -122,6 +122,11 @@ function botonesDe(elemento: HTMLElement) {
     .map((boton) => boton.textContent);
 }
 
+/** El número de una tarjeta del resumen. */
+function contador(etiqueta: string) {
+  return screen.getByText(etiqueta).nextElementSibling?.textContent;
+}
+
 function listenersActivos(socket: { on: unknown; off: unknown }, evento: string) {
   const contar = (fn: unknown) =>
     (fn as { mock: { calls: [string, unknown][] } }).mock.calls.filter(([e]) => e === evento).length;
@@ -322,6 +327,28 @@ describe("PantallaAgenda con fecha fija", () => {
     for (const hora of ["08:00", "12:00", "14:00"]) {
       expect(within(filaDe(hora)).queryByText(/^Saldo S\/|^Pagada$/)).toBeNull();
     }
+  });
+
+  it("los contadores cuentan solo los turnos que corresponden a cada resumen", async () => {
+    responderSiempre(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+
+    expect(contador("Turnos del día")).toBe("6");
+    expect(contador("Con saldo pendiente")).toBe("2");
+    expect(contador("Pendientes de pago")).toBe("1");
+  });
+
+  it("los contadores se calculan sobre la lista mostrada", async () => {
+    responderSiempre([DIA_COMPLETO[2], DIA_COMPLETO[3], DIA_COMPLETO[6]]);
+    renderAgenda();
+
+    await screen.findByRole("table");
+
+    expect(contador("Turnos del día")).toBe("2");
+    expect(contador("Con saldo pendiente")).toBe("1");
+    expect(contador("Pendientes de pago")).toBe("0");
   });
 
   it("un día sin reservas muestra el mensaje de vacío", async () => {
