@@ -2,7 +2,11 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
-import { ReglaCancelacion } from '../src/generated/prisma/client';
+import {
+  Prisma,
+  ReglaCancelacion,
+  TipoCompensacion,
+} from '../src/generated/prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const violaCheck = (restriccion: string) => ({
@@ -87,6 +91,38 @@ describe('Tabla regla_cancelacion (e2e)', () => {
     expect(creada?.actualizadoEn).toBeInstanceOf(Date);
     await expect(leerRegla()).resolves.toMatchObject({
       horasAnticipacion: original.horasAnticipacion,
+      tipoCompensacion: original.tipoCompensacion,
+    });
+  });
+
+  it.each(['DEVOLUCION', 'CREDITO'] as const)(
+    'guarda %s como tipo de compensacion',
+    async (tipoCompensacion) => {
+      await prisma.reglaCancelacion.update({
+        where: { id: 1 },
+        data: { tipoCompensacion },
+      });
+
+      await expect(leerRegla()).resolves.toMatchObject({ tipoCompensacion });
+    },
+  );
+
+  it('Prisma rechaza un tipo de compensacion fuera del enum', async () => {
+    await expect(
+      prisma.reglaCancelacion.update({
+        where: { id: 1 },
+        data: { tipoCompensacion: 'RETENCION' as TipoCompensacion },
+      }),
+    ).rejects.toBeInstanceOf(Prisma.PrismaClientValidationError);
+  });
+
+  it('la base rechaza un tipo de compensacion fuera del enum', async () => {
+    await expect(
+      prisma.$executeRaw`UPDATE regla_cancelacion SET tipo_compensacion = 'RETENCION' WHERE id = 1`,
+    ).rejects.toMatchObject({
+      meta: { driverAdapterError: { cause: { originalCode: '22P02' } } },
+    });
+    await expect(leerRegla()).resolves.toMatchObject({
       tipoCompensacion: original.tipoCompensacion,
     });
   });
