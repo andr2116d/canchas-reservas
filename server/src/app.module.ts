@@ -13,12 +13,14 @@ import { TurnosModule } from './modules/turnos/turnos.module';
 import { ReservasModule } from './modules/reservas/reservas.module';
 import { ReglaCancelacionModule } from './modules/regla-cancelacion/regla-cancelacion.module';
 import { AdicionalesModule } from './modules/adicionales/adicionales.module';
+import { TiempoRealModule } from './modules/tiempo-real/tiempo-real.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     RelojModule,
+    TiempoRealModule,
     SaludModule,
     AuthModule,
     UsuariosModule,
