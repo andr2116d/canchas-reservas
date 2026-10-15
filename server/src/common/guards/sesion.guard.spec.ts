@@ -71,7 +71,10 @@ describe('SesionGuard', () => {
       correo: 'ana@laprevia.pe',
       rol: 'ADMINISTRADOR',
     });
-    expect(jwt.signAsync).toHaveBeenCalledWith({ sub: '3', rol: 'ADMINISTRADOR' });
+    expect(jwt.signAsync).toHaveBeenCalledWith({
+      sub: '3',
+      rol: 'ADMINISTRADOR',
+    });
     expect(respuesta.cookie).toHaveBeenCalledWith(
       'sesion',
       'token-nuevo',
@@ -85,29 +88,35 @@ describe('SesionGuard', () => {
 
   it('con token vencido responde 401 y borra la cookie', async () => {
     jwt.verifyAsync.mockRejectedValue(new Error('jwt expired'));
-    await expect(guard.canActivate(contexto({ sesion: 'viejo' }).ctx)).rejects.toBeInstanceOf(
-      UnauthorizedException,
+    await expect(
+      guard.canActivate(contexto({ sesion: 'viejo' }).ctx),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(respuesta.clearCookie).toHaveBeenCalledWith(
+      'sesion',
+      expect.any(Object),
     );
-    expect(respuesta.clearCookie).toHaveBeenCalledWith('sesion', expect.any(Object));
     expect(respuesta.cookie).not.toHaveBeenCalled();
   });
 
   it('con usuario inactivo responde 401 y borra la cookie', async () => {
     jwt.verifyAsync.mockResolvedValue({ sub: '3' });
     prisma.usuario.findUnique.mockResolvedValue(fila('INACTIVO'));
-    await expect(guard.canActivate(contexto({ sesion: 'token' }).ctx)).rejects.toBeInstanceOf(
-      UnauthorizedException,
+    await expect(
+      guard.canActivate(contexto({ sesion: 'token' }).ctx),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(respuesta.clearCookie).toHaveBeenCalledWith(
+      'sesion',
+      expect.any(Object),
     );
-    expect(respuesta.clearCookie).toHaveBeenCalledWith('sesion', expect.any(Object));
     expect(respuesta.cookie).not.toHaveBeenCalled();
   });
 
   it('con usuario que ya no existe responde 401 y borra la cookie', async () => {
     jwt.verifyAsync.mockResolvedValue({ sub: '99' });
     prisma.usuario.findUnique.mockResolvedValue(null);
-    await expect(guard.canActivate(contexto({ sesion: 'token' }).ctx)).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      guard.canActivate(contexto({ sesion: 'token' }).ctx),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(respuesta.clearCookie).toHaveBeenCalled();
   });
 });

@@ -23,11 +23,16 @@ describe('SaludController', () => {
 
   it('responde ok cuando la base responde', async () => {
     prisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
-    await expect(controller.listo()).resolves.toEqual({ estado: 'ok', baseDeDatos: 'ok' });
+    await expect(controller.listo()).resolves.toEqual({
+      estado: 'ok',
+      baseDeDatos: 'ok',
+    });
   });
 
   it('responde 503 cuando la base no responde', async () => {
     prisma.$queryRaw.mockRejectedValue(new Error('sin conexion'));
-    await expect(controller.listo()).rejects.toBeInstanceOf(ServiceUnavailableException);
+    await expect(controller.listo()).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
   });
 });

@@ -45,7 +45,11 @@ describe('AuthService', () => {
 
   it('con credenciales correctas devuelve el usuario y el token, y registra OK', async () => {
     prisma.usuario.findUnique.mockResolvedValue(usuario());
-    const resultado = await service.iniciarSesion('a@b.pe', 'Jugador123', '1.1.1.1');
+    const resultado = await service.iniciarSesion(
+      'a@b.pe',
+      'Jugador123',
+      '1.1.1.1',
+    );
     expect(resultado).toEqual({
       token: 'token-firmado',
       usuario: { id: 7, nombres: 'Luis', rol: 'JUGADOR' },
@@ -74,14 +78,20 @@ describe('AuthService', () => {
       errores: {},
     });
     expect(prisma.registroAcceso.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ usuarioId: 7, exito: false, motivo: 'CREDENCIALES' }),
+      data: expect.objectContaining({
+        usuarioId: 7,
+        exito: false,
+        motivo: 'CREDENCIALES',
+      }),
     });
     expect(jwt.signAsync).not.toHaveBeenCalled();
   });
 
   it('con correo inexistente responde el mismo 401 y registra sin usuario', async () => {
     prisma.usuario.findUnique.mockResolvedValue(null);
-    await expect(service.iniciarSesion('x@b.pe', 'cualquiera')).rejects.toMatchObject({
+    await expect(
+      service.iniciarSesion('x@b.pe', 'cualquiera'),
+    ).rejects.toMatchObject({
       response: { message: MENSAJE_CREDENCIALES },
     });
     expect(prisma.registroAcceso.create).toHaveBeenCalledWith({
@@ -104,14 +114,18 @@ describe('AuthService', () => {
       message: MENSAJE_CUENTA_INACTIVA,
     });
     expect(prisma.registroAcceso.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ usuarioId: 7, exito: false, motivo: 'INACTIVO' }),
+      data: expect.objectContaining({
+        usuarioId: 7,
+        exito: false,
+        motivo: 'INACTIVO',
+      }),
     });
   });
 
   it('con usuario inactivo y contraseña incorrecta no revela que está inactivo', async () => {
     prisma.usuario.findUnique.mockResolvedValue(usuario('INACTIVO'));
-    await expect(service.iniciarSesion('a@b.pe', 'mala')).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      service.iniciarSesion('a@b.pe', 'mala'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

@@ -31,8 +31,10 @@ describe('Auth (e2e)', () => {
     (res.headers['set-cookie'] as unknown as string[] | undefined) ?? [];
   const cookieSesion = (res: request.Response) =>
     cookiesDe(res).find((c) => c.startsWith('sesion='));
-  const iniciarSesion = (credenciales: { correo: string; contrasena: string }) =>
-    request(servidor()).post('/api/auth/login').send(credenciales);
+  const iniciarSesion = (credenciales: {
+    correo: string;
+    contrasena: string;
+  }) => request(servidor()).post('/api/auth/login').send(credenciales);
 
   beforeAll(async () => {
     const modulo = await Test.createTestingModule({
@@ -64,7 +66,10 @@ describe('Auth (e2e)', () => {
       where: {
         OR: [
           { correo: correoInactivo },
-          { correo: { in: [JUGADOR.correo, ADMIN.correo] }, fecha: { gte: inicio } },
+          {
+            correo: { in: [JUGADOR.correo, ADMIN.correo] },
+            fecha: { gte: inicio },
+          },
         ],
       },
     });
@@ -95,7 +100,10 @@ describe('Auth (e2e)', () => {
 
     it('con contraseña incorrecta responde 401 y registra CREDENCIALES', async () => {
       const antes = new Date();
-      const res = await iniciarSesion({ ...JUGADOR, contrasena: 'incorrecta' }).expect(401);
+      const res = await iniciarSesion({
+        ...JUGADOR,
+        contrasena: 'incorrecta',
+      }).expect(401);
       expect(res.body).toEqual({
         statusCode: 401,
         message: 'Correo o contraseña incorrectos',
@@ -155,9 +163,9 @@ describe('Auth (e2e)', () => {
     });
 
     it('un token vencido responde 401 y borra la cookie', async () => {
-      const { id } = (await prisma.usuario.findUniqueOrThrow({
+      const { id } = await prisma.usuario.findUniqueOrThrow({
         where: { correo: JUGADOR.correo },
-      }));
+      });
       const vencido = await jwt.signAsync(
         { sub: String(id), rol: 'JUGADOR' },
         { expiresIn: -10 },
