@@ -214,6 +214,7 @@ describe('ReservasService', () => {
         ).resolves.toBe(mensaje);
         expect(siguiente()).not.toHaveBeenCalled();
         expect(prisma.reserva.create).not.toHaveBeenCalled();
+        expect(gateway.notificar).not.toHaveBeenCalled();
       },
     );
 
@@ -351,6 +352,80 @@ describe('ReservasService', () => {
         });
         expect(prisma.$transaction).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  describe('notificación de turnos', () => {
+    it('notifica la fecha y la cancha de la reserva creada', async () => {
+      await servicio.crear(JUGADOR_ID, DATOS);
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith('2026-10-20', 2);
+    });
+
+    it('notifica recién cuando la transacción confirma', async () => {
+      let confirmar: (valor: unknown) => void = () => undefined;
+      prisma.$transaction.mockImplementation(
+        (fn: (tx: unknown) => Promise<unknown>) =>
+          fn(prisma).then(
+            (reserva) =>
+              new Promise((resolve) => {
+                confirmar = () => resolve(reserva);
+              }),
+          ),
+      );
+      const creando = servicio.crear(JUGADOR_ID, DATOS);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(auditoria.registrar).toHaveBeenCalled();
+      expect(gateway.notificar).not.toHaveBeenCalled();
+      confirmar(undefined);
+      await creando;
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+    });
+
+    it('no notifica si la transacción falla', async () => {
+      prisma.$transaction.mockRejectedValue(new Error('conexión perdida'));
+      await expect(servicio.crear(JUGADOR_ID, DATOS)).rejects.toThrow(
+        'conexión perdida',
+      );
+      expect(gateway.notificar).not.toHaveBeenCalled();
+    });
+
+    it('no notifica si falla al guardar dentro de la transacción', async () => {
+      prisma.reserva.create.mockRejectedValue(new Error('fallo al guardar'));
+      await expect(servicio.crear(JUGADOR_ID, DATOS)).rejects.toThrow(
+        'fallo al guardar',
+      );
+      expect(gateway.notificar).not.toHaveBeenCalled();
+    });
+
+    it('notifica una sola vez aunque reintente por código repetido', async () => {
+      prisma.$transaction
+        .mockRejectedValueOnce(violaUnico('reserva_codigo_key'))
+        .mockRejectedValueOnce(violaUnico('reserva_codigo_key'))
+        .mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma));
+      await servicio.crear(JUGADOR_ID, DATOS);
+      expect(prisma.$transaction).toHaveBeenCalledTimes(3);
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledWith('2026-10-20', 2);
+    });
+
+    it('no notifica si se agotan los reintentos por código', async () => {
+      prisma.$transaction.mockRejectedValue(violaUnico('reserva_codigo_key'));
+      await errorDe(servicio.crear(JUGADOR_ID, DATOS));
+      expect(gateway.notificar).not.toHaveBeenCalled();
+    });
+
+    it('no notifica si el turno ya fue tomado', async () => {
+      prisma.$transaction.mockRejectedValue(violaUnico('reserva_turno_unico'));
+      await expect(
+        errorDe(servicio.crear(JUGADOR_ID, DATOS)),
+      ).resolves.toBeInstanceOf(ConflictException);
+      expect(gateway.notificar).not.toHaveBeenCalled();
+    });
+
+    it('no notifica al calcular el resumen', async () => {
+      await servicio.resumen(JUGADOR_ID, DATOS);
+      expect(gateway.notificar).not.toHaveBeenCalled();
     });
   });
 
