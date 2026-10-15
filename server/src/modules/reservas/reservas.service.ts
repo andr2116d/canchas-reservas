@@ -13,17 +13,22 @@ import { Reloj } from '../../common/reloj/reloj';
 import type { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditoriaService } from '../auditoria/auditoria.service';
 import { ESTADOS_RESERVA_FUTURA } from '../canchas/canchas.service';
 import { ReglaCancelacionService } from '../regla-cancelacion/regla-cancelacion.service';
 import { aNumero } from '../tarifas/calculo-tarifa';
 import { TarifasService } from '../tarifas/tarifas.service';
 import { TurnosService } from '../turnos/turnos.service';
+import { generarCodigo } from './codigo-reserva';
+import { CrearReservaDto } from './dto/crear-reserva.dto';
 import { TurnoReservaDto } from './dto/turno-reserva.dto';
-import { minutosParaPagar } from './vencimiento-reserva';
+import { calcularVenceEn, minutosParaPagar } from './vencimiento-reserva';
 
 export const DIAS_MAXIMOS_ANTICIPACION = 30;
 export const LIMITE_PENDIENTES = 2;
 const ID_CONFIGURACION = 1;
+const ENTIDAD = 'RESERVA';
+const OPCIONES_TRANSACCION = { maxWait: 15000, timeout: 15000 };
 
 export const MENSAJES_RESERVA = {
   jugadorInactivo: 'Solo un jugador activo puede reservar',
@@ -62,7 +67,68 @@ export class ReservasService {
     private readonly turnos: TurnosService,
     private readonly tarifas: TarifasService,
     private readonly regla: ReglaCancelacionService,
+    private readonly auditoria: AuditoriaService,
   ) {}
+
+  crear(jugadorId: number, datos: CrearReservaDto) {
+    return this.prisma.$transaction(
+      (tx) => this.crearEn(tx, jugadorId, datos),
+      OPCIONES_TRANSACCION,
+    );
+  }
+
+  private async crearEn(
+    tx: Prisma.TransactionClient,
+    jugadorId: number,
+    datos: CrearReservaDto,
+  ) {
+    await tx.$queryRaw`SELECT id FROM usuario WHERE id = ${jugadorId} FOR UPDATE`;
+    const ahora = this.reloj.ahora();
+    const turno = await this.validar(jugadorId, datos, ahora, tx);
+    const { tiempoLimitePagoMin } = await this.configuracion(tx);
+    const regla = await this.regla.obtenerVigente(tx);
+    const reserva = await tx.reserva.create({
+      data: {
+        codigo: generarCodigo(),
+        jugadorId,
+        creadoPorId: jugadorId,
+        origen: 'PLATAFORMA',
+        canchaId: turno.cancha.id,
+        fecha: new Date(`${turno.fecha}T00:00:00.000Z`),
+        horaInicio: turno.horaInicio,
+        horaFin: turno.horaFin,
+        franja: turno.franja,
+        inicioEn: turno.inicioEn,
+        finEn: turno.finEn,
+        valorTurno: turno.valor.valor,
+        adelantoMinimo: turno.valor.adelanto,
+        estado: 'PENDIENTE_PAGO',
+        venceEn: calcularVenceEn(ahora, tiempoLimitePagoMin, turno.inicioEn),
+        reglaHorasAnticipacion: regla.horasAnticipacion,
+        reglaTipoCompensacion: regla.tipoCompensacion,
+        creadoEn: ahora,
+      },
+      select: { id: true, codigo: true, estado: true, venceEn: true },
+    });
+    await this.auditoria.registrar(
+      {
+        usuarioId: jugadorId,
+        accion: 'CREAR',
+        entidad: ENTIDAD,
+        entidadId: reserva.id,
+        detalle: {
+          codigo: reserva.codigo,
+          canchaId: turno.cancha.id,
+          fecha: turno.fecha,
+          horaInicio: turno.horaInicio,
+          valorTurno: aNumero(turno.valor.valor),
+          adelantoMinimo: aNumero(turno.valor.adelanto),
+        },
+      },
+      tx,
+    );
+    return reserva;
+  }
 
   async resumen(jugadorId: number, datos: TurnoReservaDto) {
     const ahora = this.reloj.ahora();
