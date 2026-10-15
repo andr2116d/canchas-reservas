@@ -377,6 +377,24 @@ describe("PantallaDisponibilidad", () => {
     expect(await screen.findByText(/No hay horario de reservas el 20\/10\/2026/)).toBeTruthy();
   });
 
+  it("mientras carga muestra el esqueleto de la grilla", async () => {
+    let responderAhora: (respuesta: Response) => void = () => {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<Response>((resolver) => (responderAhora = resolver))),
+    );
+    const { container } = renderPantalla();
+
+    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Reintentar" })).toBeNull();
+
+    responderAhora(new Response(JSON.stringify(DIA_LLENO), { status: 200 }));
+
+    await screen.findByRole("table");
+    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(0);
+  });
+
   it("ante un error de red muestra el mensaje y Reintentar vuelve a pedir los datos", async () => {
     const fetchMock = responderError();
     renderPantalla();
