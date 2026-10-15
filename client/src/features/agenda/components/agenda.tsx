@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/campo";
-import { EVENTO_TURNOS_ACTUALIZADOS } from "@/lib/eventos-tiempo-real";
-import { obtenerSocket } from "@/lib/socket";
 import { hoyEnLima, moneda } from "@/lib/formato";
+import { useTurnosEnVivo } from "@/lib/use-turnos-en-vivo";
 import { useAgenda } from "../hooks";
 import type { EstadoReserva, TurnoAgenda } from "../api";
 
@@ -71,12 +69,6 @@ function moverFecha(fecha: string, delta: number): string {
   const m = String(fechaUtc.getUTCMonth() + 1).padStart(2, "0");
   const d = String(fechaUtc.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
-}
-
-function afectaFecha(payload: unknown, fecha: string): boolean {
-  if (!payload || typeof payload !== "object") return true;
-  const valor = (payload as { fecha?: unknown }).fecha;
-  return valor === null || valor === undefined || valor === fecha;
 }
 
 function FilaTurno({ turno }: { turno: TurnoAgenda }) {
@@ -180,7 +172,6 @@ function TarjetaTurno({ turno }: { turno: TurnoAgenda }) {
 }
 
 export function PantallaAgenda() {
-  const consulta = useQueryClient();
   const [fecha, setFecha] = useState<string | null>(null);
   const [canchaId, setCanchaId] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
@@ -189,6 +180,8 @@ export function PantallaAgenda() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFecha((actual) => actual ?? hoyEnLima());
   }, []);
+
+  useTurnosEnVivo(fecha ?? "", [["agenda", fecha]]);
 
   const { data: turnos, isLoading, isError, error } = useAgenda(
     fecha ?? "",
@@ -220,20 +213,6 @@ export function PantallaAgenda() {
   const pendientesPago = lista.filter(
     (turno) => turno.estado === "PENDIENTE_PAGO",
   ).length;
-
-  useEffect(() => {
-    if (!fecha) return;
-    const socket = obtenerSocket();
-    const manejar = (payload: unknown) => {
-      if (afectaFecha(payload, fecha)) {
-        consulta.invalidateQueries({ queryKey: ["agenda", fecha] });
-      }
-    };
-    socket.on(EVENTO_TURNOS_ACTUALIZADOS, manejar);
-    return () => {
-      socket.off(EVENTO_TURNOS_ACTUALIZADOS, manejar);
-    };
-  }, [fecha, consulta]);
 
   return (
     <div className="flex flex-col gap-6">
