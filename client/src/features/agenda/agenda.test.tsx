@@ -331,4 +331,35 @@ describe("PantallaAgenda con fecha fija", () => {
     expect(await screen.findByText("No hay reservas para este día")).toBeTruthy();
     expect(screen.queryByRole("table")).toBeNull();
   });
+
+  it("las flechas mueven la fecha consultada y Hoy vuelve al día actual", async () => {
+    const fetchMock = responderSiempre(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    expect(ultimaConsulta(fetchMock).get("fecha")).toBe(HOY);
+
+    fireEvent.click(screen.getByRole("button", { name: "Día siguiente" }));
+    await waitFor(() => expect(ultimaConsulta(fetchMock).get("fecha")).toBe("2026-10-21"));
+    expect(screen.getByText("Turnos del día 21/10/2026")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Día anterior" }));
+    fireEvent.click(screen.getByRole("button", { name: "Día anterior" }));
+    await waitFor(() => expect(screen.getByText("Turnos del día 19/10/2026")).toBeTruthy());
+    expect(parametrosPedidos(fetchMock).map((p) => p.get("fecha"))).toContain("2026-10-19");
+
+    fireEvent.click(screen.getByRole("button", { name: "Hoy" }));
+    expect(screen.getByText("Turnos del día 20/10/2026")).toBeTruthy();
+  });
+
+  it("cruza bien el cambio de mes y de año", async () => {
+    vi.setSystemTime(new Date("2026-12-31T15:00:00-05:00"));
+    const fetchMock = responderSiempre([]);
+    renderAgenda();
+
+    await screen.findByText("No hay reservas para este día");
+    fireEvent.click(screen.getByRole("button", { name: "Día siguiente" }));
+
+    await waitFor(() => expect(ultimaConsulta(fetchMock).get("fecha")).toBe("2027-01-01"));
+  });
 });
