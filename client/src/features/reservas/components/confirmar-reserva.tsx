@@ -236,8 +236,3 @@ function Toast({ mensaje }: { mensaje: string }) {
     </div>
   );
 }
-
-export const PantallaConfirmacionReserva = PantallaConfirmarReserva;
-export const ConfirmarReserva = PantallaConfirmarReserva;
-export const ConfirmacionReserva = PantallaConfirmarReserva;
-export default PantallaConfirmarReserva;
