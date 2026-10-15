@@ -5,6 +5,9 @@ const apiUrl = process.env.API_URL ?? "http://localhost:3001";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    instantInsights: { validationLevel: "manual-warning" },
+  },
   turbopack: {
     rules: {
       "*.css": {
