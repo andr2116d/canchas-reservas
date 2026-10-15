@@ -216,4 +216,26 @@ describe('Tabla reserva (e2e)', () => {
     );
     await expect(prisma.reserva.count({ where: { codigo } })).resolves.toBe(1);
   });
+
+  it('crea la reserva en PENDIENTE_PAGO, desde la plataforma y con sus fechas', async () => {
+    const antes = new Date();
+    const reserva = await crearReserva();
+
+    expect(reserva).toMatchObject({
+      estado: 'PENDIENTE_PAGO',
+      origen: 'PLATAFORMA',
+      venceEn: null,
+      confirmadaEn: null,
+      checkInEn: null,
+      finalizadaEn: null,
+      ausenteEn: null,
+      canceladaEn: null,
+      expiradaEn: null,
+    });
+    expect(reserva.creadoEn).toBeInstanceOf(Date);
+    expect(reserva.actualizadoEn).toBeInstanceOf(Date);
+    expect(reserva.creadoEn.getTime()).toBeGreaterThanOrEqual(
+      antes.getTime() - 1000,
+    );
+  });
 });
