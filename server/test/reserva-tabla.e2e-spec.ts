@@ -139,7 +139,9 @@ describe('Tabla reserva (e2e)', () => {
     async (estado) => {
       await crearReserva({ estado });
 
-      await expect(crearReserva()).rejects.toMatchObject({ code: 'P2002' });
+      await expect(crearReserva()).rejects.toMatchObject(
+        violaUnico('reserva_turno_unico'),
+      );
       await expect(contarTurno()).resolves.toBe(1);
     },
   );
