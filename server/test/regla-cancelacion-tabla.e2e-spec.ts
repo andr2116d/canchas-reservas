@@ -235,4 +235,16 @@ describe('Tabla regla_cancelacion (e2e)', () => {
       prisma.reserva.count({ where: { codigo: `G${sufijo}${reservas}` } }),
     ).resolves.toBe(0);
   });
+
+  it('rechaza una copia de la regla con horas negativas', async () => {
+    await expect(
+      crearReserva({
+        reglaHorasAnticipacion: -1,
+        reglaTipoCompensacion: 'CREDITO',
+      }),
+    ).rejects.toMatchObject(violaCheck('reserva_regla_horas_validas'));
+    await expect(
+      prisma.reserva.count({ where: { codigo: `G${sufijo}${reservas}` } }),
+    ).resolves.toBe(0);
+  });
 });
