@@ -1,71 +1,50 @@
 import { ConflictException } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { EstadoCancha, TamanoCancha } from '../../generated/prisma/enums';
-
-import { CanchasService } from './canchas.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CanchasService, MENSAJE_NOMBRE_DUPLICADO } from './canchas.service';
 
-describe('CanchasService', () => {
-  let service: CanchasService;
-  const prisma = {
-    cancha: {
-      create: jest.fn(),
-    },
-  };
+describe('CanchasService.crear', () => {
+  const prisma = { cancha: { create: jest.fn() } };
+  const servicio = new CanchasService(prisma as unknown as PrismaService);
 
-  beforeEach(async () => {
-    prisma.cancha.create.mockReset();
+  beforeEach(() => prisma.cancha.create.mockReset());
 
-    const modulo = await Test.createTestingModule({
-      providers: [CanchasService, { provide: PrismaService, useValue: prisma }],
-    }).compile();
+  it('crea la cancha sin enviar estado ni activa (la base pone OPERATIVA y activa)', async () => {
+    prisma.cancha.create.mockResolvedValue({ id: 1 });
 
-    service = modulo.get(CanchasService);
-  });
-
-  it('crea una cancha nueva OPERATIVA y activa', async () => {
-    const cancha = {
-      id: 1,
+    await servicio.crear({
       nombre: 'Cancha 1',
-      tamano: TamanoCancha.FUTBOL_5,
+      tamano: 'FUTBOL_5',
       iluminacion: true,
-      estado: EstadoCancha.OPERATIVA,
-      activa: true,
-      creadoEn: new Date(),
-      actualizadoEn: new Date(),
-    };
-    prisma.cancha.create.mockResolvedValue(cancha);
-
-    await expect(
-      service.crear({
-        nombre: 'Cancha 1',
-        tamano: TamanoCancha.FUTBOL_5,
-        iluminacion: true,
-      }),
-    ).resolves.toEqual(cancha);
+    });
 
     expect(prisma.cancha.create).toHaveBeenCalledWith({
-      data: {
-        nombre: 'Cancha 1',
-        tamano: TamanoCancha.FUTBOL_5,
-        iluminacion: true,
-        estado: EstadoCancha.OPERATIVA,
-        activa: true,
-      },
+      data: { nombre: 'Cancha 1', tamano: 'FUTBOL_5', iluminacion: true },
     });
   });
 
-  it('lanza ConflictException cuando el nombre ya existe (sin importar mayúsculas)', async () => {
+  it('convierte el duplicado de la base en 409 con el error en nombre', async () => {
     prisma.cancha.create.mockRejectedValue(
       Object.assign(new Error('Unique constraint failed'), { code: 'P2002' }),
     );
 
+    const error = await servicio
+      .crear({ nombre: 'cancha 1', tamano: 'FUTBOL_5', iluminacion: true })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ConflictException);
+    expect((error as ConflictException).getResponse()).toMatchObject({
+      errores: { nombre: MENSAJE_NOMBRE_DUPLICADO },
+    });
+  });
+
+  it('deja pasar cualquier otro error', async () => {
+    prisma.cancha.create.mockRejectedValue(new Error('se cayó la base'));
     await expect(
-      service.crear({
-        nombre: 'cancha 1',
-        tamano: TamanoCancha.FUTBOL_5,
-        iluminacion: true,
+      servicio.crear({
+        nombre: 'Cancha 9',
+        tamano: 'FUTBOL_7',
+        iluminacion: false,
       }),
-    ).rejects.toBeInstanceOf(ConflictException);
+    ).rejects.toThrow('se cayó la base');
   });
 });
