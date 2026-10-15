@@ -183,7 +183,7 @@ export class CanchasService {
     const actual = await this.buscar(id);
     if (actual.activa === activa) return aRespuesta(actual);
 
-    return this.prisma.$transaction(async (tx) => {
+    const cambiada = await this.prisma.$transaction(async (tx) => {
       if (!activa && confirmar !== true) {
         const reservasFuturas = await this.reservasFuturas(id, tx);
         if (reservasFuturas.length > 0) {
@@ -210,6 +210,8 @@ export class CanchasService {
       );
       return aRespuesta(cancha);
     });
+    this.gateway.notificar(null, id);
+    return cambiada;
   }
 
   async eliminar(id: number, usuarioId: number) {
