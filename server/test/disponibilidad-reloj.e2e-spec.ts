@@ -8,13 +8,18 @@ import { Reloj } from '../src/common/reloj/reloj';
 import { crearPayloadSesion } from '../src/common/sesion/cookie-sesion';
 import { configurarApp } from '../src/configurar-app';
 import type { EstadoReserva } from '../src/generated/prisma/client';
-import { type TurnoDisponibilidad } from '../src/modules/turnos/disponibilidad.service';
+import {
+  MENSAJE_FUERA_DE_RANGO,
+  type TurnoDisponibilidad,
+} from '../src/modules/turnos/disponibilidad.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const HOY = '2031-03-10';
 const MANANA = '2031-03-11';
 /** 15:20 en Lima: el turno de las 15:00 ya pasó y el de las 16:00 no. */
 const A_LAS_15_20 = instanteEnLima(HOY, '15:20');
+/** 23:30 en Lima ya es el 11 de marzo en UTC. */
+const A_LAS_23_30 = instanteEnLima(HOY, '23:30');
 
 class RelojFijo {
   instante = A_LAS_15_20;
@@ -341,5 +346,39 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
         });
       },
     );
+  });
+
+  describe('límites de fecha en Lima', () => {
+    beforeEach(() => {
+      reloj.instante = A_LAS_23_30;
+    });
+
+    it.each([
+      ['hoy', HOY],
+      ['hoy más 30 días', '2031-04-09'],
+    ])('a las 23:30 acepta %s según Lima', async (_caso, fecha) => {
+      const res = await consultar(fecha).expect(200);
+
+      expect(res.body.fecha).toBe(fecha);
+    });
+
+    it.each([
+      ['ayer', '2031-03-09'],
+      ['hoy más 31 días, que en UTC sería hoy más 30', '2031-04-10'],
+    ])('a las 23:30 rechaza %s', async (_caso, fecha) => {
+      const res = await consultar(fecha).expect(400);
+
+      expect(res.body.message).toBe(MENSAJE_FUERA_DE_RANGO);
+    });
+
+    it('a las 23:30 todos los turnos de hoy salen con PASADO', async () => {
+      const res = await consultar(HOY).expect(200);
+      const turnos =
+        (res as Respuesta).body.canchas.find((c) => c.id === principal)
+          ?.turnos ?? [];
+
+      expect(turnos).toHaveLength(15);
+      for (const t of turnos) expect(t.motivo).toBe('PASADO');
+    });
   });
 });
