@@ -292,6 +292,43 @@ describe("PantallaDisponibilidad", () => {
     }
   });
 
+  it("en celular muestra una pestaña por cancha y las tarjetas de la cancha elegida", async () => {
+    responder([DIA_LLENO]);
+    renderPantalla();
+
+    await screen.findByRole("table");
+    const celular = within(listaCelular());
+    const pestanas = celular.getAllByRole("tab");
+    expect(pestanas.map((p) => p.textContent)).toEqual([
+      expect.stringMatching(/^Cancha 1/),
+      expect.stringMatching(/^Cancha 2/),
+    ]);
+    expect(pestanas[0].getAttribute("aria-selected")).toBe("true");
+    expect(celular.getByText("Fútbol 5")).toBeTruthy();
+    expect(celular.getByText("S/ 60.00")).toBeTruthy();
+    expect(celular.getByText("Sin tarifa")).toBeTruthy();
+
+    fireEvent.click(pestanas[1]);
+
+    expect(celular.getByRole("tab", { name: /Cancha 2/ }).getAttribute("aria-selected")).toBe("true");
+    expect(celular.getByText("Fútbol 7")).toBeTruthy();
+    expect(celular.getByText("Pendiente")).toBeTruthy();
+    expect(celular.getByText("Ocupado")).toBeTruthy();
+    expect(celular.queryByText("S/ 60.00")).toBeNull();
+  });
+
+  it("en celular un turno disponible lleva a la confirmación con su cancha", async () => {
+    responder([DIA_LLENO]);
+    renderPantalla();
+
+    await screen.findByRole("table");
+    fireEvent.click(within(listaCelular()).getByRole("button", { name: /17:00/ }));
+
+    expect(push).toHaveBeenCalledWith(
+      `/jugador/reservas/confirmar?canchaId=1&fecha=${FECHA}&horaInicio=17%3A00`,
+    );
+  });
+
   it("deshabilita la flecha del día anterior en el límite inferior", async () => {
     responder([DIA_LLENO]);
     renderEnFecha(limiteInferior());
