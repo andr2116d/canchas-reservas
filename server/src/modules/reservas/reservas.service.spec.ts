@@ -40,7 +40,9 @@ describe('ReservasService', () => {
     },
     configuracion: { findUniqueOrThrow: jest.fn() },
     reglaCancelacion: { findUniqueOrThrow: jest.fn() },
-    credito: { aggregate: jest.fn() },
+    credito: { aggregate: jest.fn(), findMany: jest.fn(), update: jest.fn() },
+    pago: { create: jest.fn() },
+    creditoUso: { create: jest.fn() },
     $queryRaw: jest.fn(),
     $transaction: jest.fn(),
   };
@@ -94,14 +96,20 @@ describe('ReservasService', () => {
     });
     prisma.credito.aggregate.mockResolvedValue({ _sum: { saldo: null } });
     prisma.reserva.create.mockImplementation(
-      ({ data }: { data: { codigo: string; venceEn: Date } }) =>
+      ({
+        data,
+      }: {
+        data: { codigo: string; estado: string; venceEn: Date | null };
+      }) =>
         Promise.resolve({
           id: 10,
           codigo: data.codigo,
-          estado: 'PENDIENTE_PAGO',
+          estado: data.estado,
           venceEn: data.venceEn,
         }),
     );
+    prisma.credito.findMany.mockResolvedValue([]);
+    prisma.pago.create.mockResolvedValue({ id: 30 });
   });
 
   const errorDe = (promesa: Promise<unknown>) =>
@@ -340,6 +348,118 @@ describe('ReservasService', () => {
         });
         expect(prisma.$transaction).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  describe('crédito al adelanto', () => {
+    const conCredito = { ...DATOS, usarCredito: true };
+    const creditos = (...saldos: string[]) =>
+      prisma.credito.findMany.mockResolvedValue(
+        saldos.map((saldo, i) => ({
+          id: i + 1,
+          saldo: new Prisma.Decimal(saldo),
+        })),
+      );
+    const textos = (mock: jest.Mock) =>
+      mock.mock.calls.map(([{ data }]: [{ data: Record<string, unknown> }]) =>
+        JSON.parse(JSON.stringify(data)),
+      );
+
+    it('sin usarCredito no lee créditos ni crea pago', async () => {
+      creditos('50');
+      const creada = await servicio.crear(JUGADOR_ID, DATOS);
+      expect(prisma.credito.findMany).not.toHaveBeenCalled();
+      expect(prisma.pago.create).not.toHaveBeenCalled();
+      expect(creada.estado).toBe('PENDIENTE_PAGO');
+    });
+
+    it('bloquea los créditos vigentes del jugador, los más antiguos primero', async () => {
+      creditos('10');
+      await servicio.crear(JUGADOR_ID, conCredito);
+      const [partes, id] = prisma.$queryRaw.mock.calls[1] as [string[], number];
+      expect(partes.join('$1')).toBe(
+        'SELECT id FROM credito WHERE jugador_id = $1 AND saldo > 0 ORDER BY creado_en, id FOR UPDATE',
+      );
+      expect(id).toBe(JUGADOR_ID);
+      expect(prisma.credito.findMany).toHaveBeenCalledWith({
+        where: { jugadorId: JUGADOR_ID, saldo: { gt: 0 } },
+        orderBy: [{ creadoEn: 'asc' }, { id: 'asc' }],
+        select: { id: true, saldo: true },
+      });
+    });
+
+    it('con crédito menor al adelanto paga una parte y queda pendiente', async () => {
+      creditos('10');
+      const creada = await servicio.crear(JUGADOR_ID, conCredito);
+      expect(textos(prisma.pago.create)).toEqual([
+        {
+          reservaId: 10,
+          concepto: 'ADELANTO',
+          canal: 'ONLINE',
+          metodo: 'CREDITO',
+          estado: 'APROBADO',
+          monto: '10',
+          registradoPorId: JUGADOR_ID,
+          creadoEn: AHORA.toISOString(),
+        },
+      ]);
+      expect(creada).toMatchObject({
+        estado: 'PENDIENTE_PAGO',
+        venceEn: new Date('2026-10-15T15:15:00.000Z'),
+      });
+      expect(datosCreados()).toMatchObject({ confirmadaEn: null });
+    });
+
+    it('con crédito que cubre el adelanto confirma sin vencimiento', async () => {
+      creditos('50');
+      const creada = await servicio.crear(JUGADOR_ID, conCredito);
+      expect(textos(prisma.pago.create)[0]).toMatchObject({ monto: '40' });
+      expect(creada).toMatchObject({ estado: 'CONFIRMADA', venceEn: null });
+      expect(datosCreados()).toMatchObject({ confirmadaEn: AHORA });
+    });
+
+    it('registra un uso por crédito y descuenta cada saldo', async () => {
+      creditos('5', '10', '30');
+      tarifas.calcularTurno.mockResolvedValue({
+        valor: new Prisma.Decimal('24.00'),
+        adelanto: new Prisma.Decimal('12.00'),
+      });
+      await servicio.crear(JUGADOR_ID, conCredito);
+      expect(textos(prisma.creditoUso.create)).toEqual([
+        { creditoId: 1, pagoId: 30, monto: '5' },
+        { creditoId: 2, pagoId: 30, monto: '7' },
+      ]);
+      expect(
+        prisma.credito.update.mock.calls.map(
+          ([arg]: [
+            {
+              where: { id: number };
+              data: { saldo: { decrement: Prisma.Decimal } };
+            },
+          ]) => [arg.where.id, arg.data.saldo.decrement.toFixed(2)],
+        ),
+      ).toEqual([
+        [1, '5.00'],
+        [2, '7.00'],
+      ]);
+    });
+
+    it('con usarCredito y sin créditos no crea pago', async () => {
+      const creada = await servicio.crear(JUGADOR_ID, conCredito);
+      expect(prisma.pago.create).not.toHaveBeenCalled();
+      expect(prisma.creditoUso.create).not.toHaveBeenCalled();
+      expect(creada.estado).toBe('PENDIENTE_PAGO');
+    });
+
+    it('la auditoría registra el crédito aplicado', async () => {
+      creditos('12.5');
+      await servicio.crear(JUGADOR_ID, conCredito);
+      expect(auditoria.registrar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detalle: expect.objectContaining({ creditoAplicado: 12.5 }) as object,
+        }),
+        prisma,
+      );
     });
   });
 
