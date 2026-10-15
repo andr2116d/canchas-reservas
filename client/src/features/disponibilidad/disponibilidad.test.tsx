@@ -85,6 +85,27 @@ const DIA_ESTADOS: Disponibilidad = {
   ],
 };
 
+const DIA_CON_MOTIVOS: Disponibilidad = {
+  fecha: FECHA,
+  abierto: true,
+  canchas: [
+    {
+      ...CANCHA_1,
+      turnos: [
+        { horaInicio: "15:00", horaFin: "16:00", franja: "DIA", estado: "DISPONIBLE", seleccionable: false, motivo: "PASADO" },
+        { horaInicio: "16:00", horaFin: "17:00", franja: "DIA", estado: "DISPONIBLE", seleccionable: true, valor: 60, adelanto: 30 },
+        { horaInicio: "19:00", horaFin: "20:00", franja: "NOCHE", estado: "DISPONIBLE", seleccionable: false, motivo: "SIN_TARIFA" },
+      ],
+    },
+  ],
+};
+
+/** La vista de celular: las pestañas por cancha y la lista de tarjetas. */
+function listaCelular() {
+  const pestanas = screen.getByRole("tablist", { name: "Canchas" });
+  return pestanas.parentElement as HTMLElement;
+}
+
 /** El turno de la grilla de escritorio para una cancha (por su posición) y una hora. */
 function celda(tabla: HTMLElement, cancha: number, hora: string) {
   const fila = (within(tabla).getAllByRole("row") as HTMLTableRowElement[]).find(
@@ -190,6 +211,31 @@ describe("PantallaDisponibilidad", () => {
     expect((await screen.findAllByText("Sin tarifa")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Pendiente").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ocupado").length).toBeGreaterThan(0);
+  });
+
+  it("un turno no seleccionable dice su motivo al pasar el mouse y al tocarlo no navega", async () => {
+    responder([DIA_CON_MOTIVOS]);
+    renderPantalla();
+
+    const tabla = await screen.findByRole("table");
+    const tarjetas = within(listaCelular());
+    const casos = [
+      { hora: "15:00", motivo: "Ya pasó" },
+      { hora: "19:00", motivo: "Sin tarifa" },
+    ];
+
+    for (const { hora, motivo } of casos) {
+      const enGrilla = celda(tabla, 0, hora);
+      const enCelular = tarjetas.getByText(hora).closest("[title]") as HTMLElement;
+      for (const turno of [enGrilla, enCelular]) {
+        expect(turno.tagName).toBe("DIV");
+        expect(turno.getAttribute("title")).toBe(motivo);
+        expect(turno.textContent).toContain(motivo);
+        fireEvent.click(turno);
+      }
+    }
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /15:00|19:00/ })).toBeNull();
   });
 
   it("al tocar un turno disponible lleva a la pantalla de confirmación", async () => {
