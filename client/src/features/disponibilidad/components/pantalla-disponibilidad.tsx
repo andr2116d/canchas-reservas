@@ -42,7 +42,7 @@ export function PantallaDisponibilidad({ rol, fechaInicial }: Props) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(fechaInicial ?? min);
   const [canchaId, setCanchaId] = useState<number | undefined>(undefined);
 
-  useTurnosEnVivo(fechaSeleccionada);
+  useTurnosEnVivo(fechaSeleccionada, [["disponibilidad", fechaSeleccionada]]);
 
   const consulta = useDisponibilidad(fechaSeleccionada);
   const todas: Cancha[] = consulta.data?.canchas ?? [];
