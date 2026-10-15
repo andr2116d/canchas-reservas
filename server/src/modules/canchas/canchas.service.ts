@@ -147,8 +147,9 @@ export class CanchasService {
     const detalle = detalleCambios(actual, cambios);
     if (!detalle) return aRespuesta(actual);
 
+    let editada: ReturnType<typeof aRespuesta>;
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      editada = await this.prisma.$transaction(async (tx) => {
         const cancha = await tx.cancha.update({
           where: { id },
           data: cambios,
@@ -170,6 +171,8 @@ export class CanchasService {
       if (codigoError(error) === 'P2002') throw nombreDuplicado();
       throw error;
     }
+    this.gateway.notificar(null, id);
+    return editada;
   }
 
   async cambiarActiva(
