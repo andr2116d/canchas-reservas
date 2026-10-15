@@ -2,14 +2,19 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditoriaService } from '../auditoria/auditoria.service';
+import { detalleCambios } from '../auditoria/detalle-cambios';
 import {
   aMinutos,
   type DiaHorario,
   diaSemanaDe,
   generarTurnos,
 } from '../turnos/generar-turnos';
+import { DiaHorarioDto } from './dto/dia-horario.dto';
+import { GuardarHorarioDto } from './dto/guardar-horario.dto';
 
 export const INICIO_NOCHE_POR_DEFECTO = '18:00';
+const ENTIDAD = 'HORARIO';
 const ID_CONFIGURACION = 1;
 const DIAS_SEMANA = [1, 2, 3, 4, 5, 6, 7];
 
@@ -31,9 +36,31 @@ const diaCerrado = (diaSemana: number): DiaDeHorario => ({
   cierre: null,
 });
 
+function aDiaDeHorario({
+  diaSemana,
+  abierto,
+  apertura,
+  cierre,
+}: DiaHorarioDto): DiaDeHorario {
+  return abierto
+    ? { diaSemana, abierto, apertura: apertura ?? null, cierre: cierre ?? null }
+    : diaCerrado(diaSemana);
+}
+
+function mismoDia(a: DiaDeHorario, b: DiaDeHorario) {
+  return (
+    a.abierto === b.abierto &&
+    a.apertura === b.apertura &&
+    a.cierre === b.cierre
+  );
+}
+
 @Injectable()
 export class HorarioService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditoria: AuditoriaService,
+  ) {}
 
   async obtener(cliente: Cliente = this.prisma): Promise<Horario> {
     const guardados = await cliente.horarioDia.findMany({
@@ -46,6 +73,51 @@ export class HorarioService {
         diaCerrado(diaSemana),
     );
     return { dias, inicioNoche };
+  }
+
+  async guardar(
+    { dias, inicioNoche }: GuardarHorarioDto,
+    usuarioId: number,
+  ): Promise<Horario> {
+    const nuevos = DIAS_SEMANA.map((diaSemana) =>
+      aDiaDeHorario(dias.find((dia) => dia.diaSemana === diaSemana)!),
+    );
+    const nuevo: Horario = { dias: nuevos, inicioNoche };
+
+    return this.prisma.$transaction(async (tx) => {
+      const actual = await this.obtener(tx);
+      const cambiados = nuevos.filter(
+        (dia, i) => !mismoDia(dia, actual.dias[i]),
+      );
+      const detalle = detalleCambios(
+        {
+          dias: cambiados.map((dia) => actual.dias[dia.diaSemana - 1]),
+          inicioNoche: actual.inicioNoche,
+        },
+        { dias: cambiados, inicioNoche },
+      );
+      if (!detalle) return actual;
+
+      for (const { diaSemana, ...dia } of cambiados) {
+        await tx.horarioDia.upsert({
+          where: { diaSemana },
+          update: dia,
+          create: { diaSemana, ...dia },
+        });
+      }
+      if (inicioNoche !== actual.inicioNoche) {
+        await tx.configuracion.upsert({
+          where: { id: ID_CONFIGURACION },
+          update: { inicioNoche },
+          create: { id: ID_CONFIGURACION, inicioNoche },
+        });
+      }
+      await this.auditoria.registrar(
+        { usuarioId, accion: 'EDITAR', entidad: ENTIDAD, detalle },
+        tx,
+      );
+      return nuevo;
+    });
   }
 
   async diaDe(fecha: string) {
