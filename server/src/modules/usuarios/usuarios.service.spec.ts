@@ -159,8 +159,7 @@ describe('UsuariosService', () => {
     });
   });
 
-
-    describe('registrarJugador', () => {
+  describe('registrarJugador', () => {
     const JUGADOR = {
       nombres: 'Lucía',
       apellidos: 'Ramírez Torres',

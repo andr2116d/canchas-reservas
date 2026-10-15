@@ -76,7 +76,8 @@ export class SesionGuard implements CanActivate {
   }
 
   private rechazar(respuesta: Response, borrarCookie: boolean) {
-    if (borrarCookie) respuesta.clearCookie(COOKIE_SESION, opcionesCookieSesion());
+    if (borrarCookie)
+      respuesta.clearCookie(COOKIE_SESION, opcionesCookieSesion());
     return new UnauthorizedException(cuerpoError(401, MENSAJE_SIN_SESION));
   }
 }

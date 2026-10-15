@@ -1,4 +1,12 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { Publico } from '../../common/decorators/publico.decorator';
 import { UsuarioActual } from '../../common/decorators/usuario-actual.decorator';
@@ -15,7 +23,7 @@ import { UsuariosService } from '../usuarios/usuarios.service';
 
 @Controller('auth')
 export class AuthController {
-    constructor(
+  constructor(
     private readonly auth: AuthService,
     private readonly usuarios: UsuariosService,
   ) {}

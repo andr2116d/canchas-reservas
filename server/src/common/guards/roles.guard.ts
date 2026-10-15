@@ -21,7 +21,9 @@ export class RolesGuard implements CanActivate {
     ]);
     if (!roles?.length) return true;
 
-    const usuario = contexto.switchToHttp().getRequest<PeticionConUsuario>().usuario;
+    const usuario = contexto
+      .switchToHttp()
+      .getRequest<PeticionConUsuario>().usuario;
     if (!usuario || !roles.includes(usuario.rol)) {
       throw new ForbiddenException(cuerpoError(403, 'Acceso no autorizado'));
     }
