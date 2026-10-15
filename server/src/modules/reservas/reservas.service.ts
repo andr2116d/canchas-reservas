@@ -18,6 +18,7 @@ import { ESTADOS_RESERVA_FUTURA } from '../canchas/canchas.service';
 import { ReglaCancelacionService } from '../regla-cancelacion/regla-cancelacion.service';
 import { aNumero } from '../tarifas/calculo-tarifa';
 import { TarifasService } from '../tarifas/tarifas.service';
+import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import { TurnosService } from '../turnos/turnos.service';
 import { repartirCredito } from './aplicacion-credito';
 import { generarCodigo } from './codigo-reserva';
@@ -85,9 +86,16 @@ export class ReservasService {
     private readonly tarifas: TarifasService,
     private readonly regla: ReglaCancelacionService,
     private readonly auditoria: AuditoriaService,
+    private readonly gateway: TurnosGateway,
   ) {}
 
   async crear(jugadorId: number, datos: CrearReservaDto) {
+    const reserva = await this.crearConReintentos(jugadorId, datos);
+    this.gateway.notificar(datos.fecha, datos.canchaId);
+    return reserva;
+  }
+
+  private async crearConReintentos(jugadorId: number, datos: CrearReservaDto) {
     for (let intento = 1; ; intento++) {
       try {
         return await this.prisma.$transaction(
