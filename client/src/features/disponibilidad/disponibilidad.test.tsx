@@ -329,6 +329,25 @@ describe("PantallaDisponibilidad", () => {
     );
   });
 
+  it("el filtro de cancha deja solo esa cancha en la grilla y en celular", async () => {
+    responder([DIA_LLENO]);
+    renderPantalla();
+
+    await screen.findByRole("table");
+    fireEvent.change(screen.getByLabelText("Cancha"), { target: { value: "2" } });
+
+    const tabla = screen.getByRole("table");
+    const encabezados = within(tabla).getAllByRole("columnheader").map((c) => c.textContent ?? "");
+    expect(encabezados.some((t) => t.includes("Cancha 2"))).toBe(true);
+    expect(encabezados.some((t) => t.includes("Cancha 1"))).toBe(false);
+    expect(within(listaCelular()).getAllByRole("tab")).toHaveLength(1);
+    expect(screen.queryByText("S/ 60.00")).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Cancha"), { target: { value: "" } });
+
+    expect(within(screen.getByRole("table")).getAllByRole("columnheader")).toHaveLength(3);
+  });
+
   it("deshabilita la flecha del día anterior en el límite inferior", async () => {
     responder([DIA_LLENO]);
     renderEnFecha(limiteInferior());
