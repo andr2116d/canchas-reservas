@@ -217,6 +217,27 @@ describe('API de regla de cancelación (e2e)', () => {
     expect(nuevas[0].fecha).toBeInstanceOf(Date);
   });
 
+  it('la auditoría del cambio queda con la fecha y hora en que se hizo', async () => {
+    const toleranciaMs = 2000;
+    const previas = (await registros()).map((registro) => registro.id);
+    const antes = Date.now();
+    await guardar({
+      horasAnticipacion: original.horasAnticipacion + 2,
+      tipoCompensacion: 'DEVOLUCION',
+    }).expect(200);
+    const despues = Date.now();
+    const [registro] = (await registros()).filter(
+      (nuevo) => !previas.includes(nuevo.id),
+    );
+    expect(registro.usuarioId).toBe(usuarios[0]);
+    expect(registro.fecha.getTime()).toBeGreaterThanOrEqual(
+      antes - toleranciaMs,
+    );
+    expect(registro.fecha.getTime()).toBeLessThanOrEqual(
+      despues + toleranciaMs,
+    );
+  });
+
   it.each([
     undefined,
     null,
