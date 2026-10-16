@@ -1,7 +1,7 @@
 import type { Prisma } from '../../generated/prisma/client';
 import {
+  MotivoCancelacion,
   ResultadoCancelacion,
-  type MotivoCancelacion,
   type TipoCompensacion,
 } from '../../generated/prisma/enums';
 import { aCentimos, aNumero, deCentimos } from '../tarifas/calculo-tarifa';
@@ -39,6 +39,15 @@ function compensacion(
 }
 
 export function calcularCompensacion(datos: DatosCompensacion): Compensacion {
+  // Incidencia del complejo: se devuelve lo pagado del turno (adelanto y saldo,
+  // sin adicionales) sin mirar el plazo y nada queda retenido. Sin nada pagado
+  // no hay compensacion.
+  if (datos.motivo === MotivoCancelacion.INCIDENCIA) {
+    const pagado = aCentimos(datos.pagadoTurno);
+    return pagado === 0
+      ? compensacion(ResultadoCancelacion.SIN_COMPENSACION, 0, 0)
+      : compensacion(ResultadoCancelacion.DEVOLUCION, pagado, 0);
+  }
   const adelanto = aCentimos(datos.adelantoPagado);
   if (adelanto === 0) {
     return compensacion(ResultadoCancelacion.SIN_COMPENSACION, 0, 0);
