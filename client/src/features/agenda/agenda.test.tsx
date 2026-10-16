@@ -91,6 +91,7 @@ function cancha(id: number, tamano = "FUTBOL_5") {
     estado: "OPERATIVA",
     activa: true,
     tieneTarifas: true,
+    franjasSinTarifa: [],
   };
 }
 
