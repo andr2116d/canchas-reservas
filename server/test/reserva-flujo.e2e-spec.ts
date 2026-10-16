@@ -416,4 +416,38 @@ describe('Flujo de reserva (e2e)', () => {
     }).expect(200);
     expect(siguiente.body).toMatchObject({ creditoDisponible: 10 });
   });
+
+  it('con dos pendientes la tercera da 409 y al expirar una ya pasa', async () => {
+    const jugador = await crearUsuario();
+    const canchaId = await crearCancha();
+    const turno = (horaInicio: string) => ({
+      canchaId,
+      fecha: MANANA,
+      horaInicio,
+    });
+    const primera = (await reservar(jugador.cookie, turno('18:00')).expect(201))
+      .body as Creada;
+    await reservar(jugador.cookie, turno('19:00')).expect(201);
+
+    const rechazo = await reservar(jugador.cookie, turno('20:00')).expect(409);
+    expect((rechazo.body as { message: string }).message).toBe(
+      LIMITE_PENDIENTES,
+    );
+    expect(await disponibilidad(jugador.cookie, turno('20:00'))).toMatchObject({
+      estado: 'DISPONIBLE',
+    });
+
+    await cambiarEstado(primera.id, 'EXPIRADA');
+
+    const tercera = (await reservar(jugador.cookie, turno('20:00')).expect(201))
+      .body as Creada;
+    expect(tercera.estado).toBe('PENDIENTE_PAGO');
+    expect(
+      (await mias(jugador.cookie)).map((r) => [r.horaInicio, r.estado]),
+    ).toEqual([
+      ['18:00', 'EXPIRADA'],
+      ['19:00', 'PENDIENTE_PAGO'],
+      ['20:00', 'PENDIENTE_PAGO'],
+    ]);
+  });
 });
