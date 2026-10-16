@@ -155,6 +155,62 @@ describe("Pantalla de tarifas", () => {
     ]);
   });
 
+  it("el historial muestra valor anterior, valor nuevo y quién lo cambió", async () => {
+    responder(rutasBase());
+    renderPantalla();
+
+    const tabla = await screen.findByRole("table", { name: "Historial de tarifas" });
+    expect(within(tabla).getAllByRole("columnheader").map((celda) => celda.textContent)).toEqual([
+      "Franja",
+      "Valor anterior",
+      "Valor nuevo",
+      "Cambiado por",
+      "Desde",
+      "Hasta",
+    ]);
+    const [cambio, primeraDia, primeraNoche] = within(tabla).getAllByRole("row").slice(1);
+    expect(within(cambio).getByText("S/ 70.00")).toBeTruthy();
+    expect(within(cambio).getByText("S/ 80.00")).toBeTruthy();
+    expect(within(cambio).getByText("Luis Quispe")).toBeTruthy();
+    expect(within(primeraDia).getByText("—")).toBeTruthy();
+    expect(within(primeraNoche).getByText("—")).toBeTruthy();
+  });
+
+  it("en celular cada tarjeta del historial lee las seis columnas", async () => {
+    responder(rutasBase());
+    renderPantalla();
+
+    const lista = await screen.findByRole("list", { name: "Historial de tarifas" });
+    const tarjetaCambio = within(lista).getAllByRole("listitem")[0];
+    const pares = within(tarjetaCambio)
+      .getAllByRole("term")
+      .map((termino) => [termino.textContent, termino.nextElementSibling?.textContent]);
+    expect(pares).toEqual([
+      ["Franja", "Noche"],
+      ["Valor anterior", "S/ 70.00"],
+      ["Valor nuevo", "S/ 80.00"],
+      ["Cambiado por", "Luis Quispe"],
+      ["Desde", "15/10/2026 20:30"],
+      ["Hasta", "Vigente"],
+    ]);
+  });
+
+  it("sin autor registrado la columna Cambiado por muestra un guion", async () => {
+    responder(
+      rutasBase({
+        "GET /api/canchas/1/tarifas": {
+          status: 200,
+          body: { ...TARIFAS_CANCHA_1, historial: [{ ...TARIFAS_CANCHA_1.historial[1], creadoPor: null }] },
+        },
+      }),
+    );
+    renderPantalla();
+
+    const tabla = await screen.findByRole("table", { name: "Historial de tarifas" });
+    const [fila] = within(tabla).getAllByRole("row").slice(1) as HTMLTableRowElement[];
+    expect(fila.cells[3].textContent).toBe("—");
+  });
+
   it("al cambiar de cancha vuelve a pedir sus tarifas y muestra Sin tarifa en la franja vacía", async () => {
     const fetchMock = responder(rutasBase());
     renderPantalla();
