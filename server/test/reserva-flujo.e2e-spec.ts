@@ -461,6 +461,10 @@ describe('Flujo de reserva (e2e)', () => {
     const creada = (await reservar(jugador.cookie, turno).expect(201))
       .body as Creada;
     const miasAntes = await mias(jugador.cookie);
+    const reglaAntes = await prisma.reglaCancelacion.findUniqueOrThrow({
+      where: { id: 1 },
+      select: { horasAnticipacion: true, tipoCompensacion: true },
+    });
 
     await request(servidor())
       .put(`/api/canchas/${turno.canchaId}/tarifas`)
@@ -496,7 +500,7 @@ describe('Flujo de reserva (e2e)', () => {
     } finally {
       await prisma.reglaCancelacion.update({
         where: { id: 1 },
-        data: { horasAnticipacion: 24, tipoCompensacion: 'CREDITO' },
+        data: reglaAntes,
       });
     }
   });

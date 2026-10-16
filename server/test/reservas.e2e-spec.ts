@@ -363,6 +363,10 @@ describe('Reservas (e2e)', () => {
         fecha: MANANA,
         horaInicio: '20:00',
       }).expect(201);
+      const reglaAntes = await prisma.reglaCancelacion.findUniqueOrThrow({
+        where: { id: 1 },
+        select: { horasAnticipacion: true, tipoCompensacion: true },
+      });
       await prisma.reglaCancelacion.update({
         where: { id: 1 },
         data: { horasAnticipacion: 6, tipoCompensacion: 'DEVOLUCION' },
@@ -391,7 +395,7 @@ describe('Reservas (e2e)', () => {
       } finally {
         await prisma.reglaCancelacion.update({
           where: { id: 1 },
-          data: { horasAnticipacion: 24, tipoCompensacion: 'CREDITO' },
+          data: reglaAntes,
         });
       }
     });
