@@ -4,7 +4,13 @@ import { ETIQUETA_FRANJA, type RegistroHistorial } from "../api";
 
 const COLUMNAS: ColumnaTabla<RegistroHistorial>[] = [
   { titulo: "Franja", celda: (registro) => ETIQUETA_FRANJA[registro.franja] },
-  { titulo: "Valor", celda: (registro) => moneda(registro.valor), className: "tabular-nums" },
+  {
+    titulo: "Valor anterior",
+    celda: (registro) => (registro.valorAnterior === null ? "—" : moneda(registro.valorAnterior)),
+    className: "tabular-nums",
+  },
+  { titulo: "Valor nuevo", celda: (registro) => moneda(registro.valor), className: "tabular-nums" },
+  { titulo: "Cambiado por", celda: (registro) => registro.creadoPor?.nombre ?? "—" },
   { titulo: "Desde", celda: (registro) => fechaHoraEnLima(registro.vigenteDesde), className: "tabular-nums" },
   {
     titulo: "Hasta",
