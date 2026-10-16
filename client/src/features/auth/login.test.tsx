@@ -39,6 +39,7 @@ beforeEach(() => {
   router.replace.mockReset();
   router.push.mockReset();
   url.parametros = new URLSearchParams();
+  localStorage.clear();
 });
 afterEach(() => {
   cleanup();
