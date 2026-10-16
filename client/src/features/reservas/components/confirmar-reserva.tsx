@@ -131,7 +131,8 @@ function ConfirmacionTurno({
           ) : (
             <p className="text-sm text-texto-suave">
               Tiempo para pagar el adelanto: {tiempoRestante} <br />
-              Debes enviar el comprobante de pago al número de WhatsApp +51 987 654 321 para que tu reserva sea confirmada.
+              Yapea al +51 987 654 321 <br />
+              Debes enviar el comprobante de pago al número de WhatsApp +51 987 654 321 para que tu reserva sea confirmada. En el caso desees acercarte, envianos un mensaje con esa solicitud.
             </p>
           )}
           <Button variante="secundario" onClick={() => router.push("/jugador/disponibilidad")}>
