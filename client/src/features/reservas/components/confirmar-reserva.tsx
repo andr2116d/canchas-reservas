@@ -9,19 +9,11 @@ import { useToast } from "@/components/ui/toast";
 import { diaYHoraEnLima, moneda, fecha } from "@/lib/formato";
 import { useCrearReserva, useResumenReserva } from "../hooks";
 import { ErrorApi } from "@/lib/api";
+import { textoReglaCancelacion } from "@/features/regla-cancelacion/texto-regla";
 import type { ReservaCreada, ResumenReserva } from "../api";
 
-const DESTINO_ADELANTO: Record<ResumenReserva["regla"]["tipoCompensacion"], string> = {
-  DEVOLUCION: "en recepción",
-  CREDITO: "como crédito",
-};
-
-function textoReglaCancelacion({ horasAnticipacion, tipoCompensacion, plazoLimite }: ResumenReserva["regla"]) {
-  const hasta =
-    horasAnticipacion === 0
-      ? "hasta el inicio del turno"
-      : `hasta el ${diaYHoraEnLima(plazoLimite)} (${horasAnticipacion} h antes)`;
-  return `Puedes cancelar ${hasta} y se te devolverá tu adelanto ${DESTINO_ADELANTO[tipoCompensacion]}. Si cancelas después, el adelanto queda retenido.`;
+function textoRegla({ horasAnticipacion, tipoCompensacion, plazoLimite }: ResumenReserva["regla"]) {
+  return textoReglaCancelacion({ horasAnticipacion, tipoCompensacion, plazo: diaYHoraEnLima(plazoLimite) });
 }
 
 function formatearTiempo(restanteMs: number) {
@@ -216,7 +208,7 @@ function ConfirmacionTurno({
 
           <div className="rounded-lg border border-linea bg-fondo px-3 py-2 text-sm">
             <p className="font-medium">Regla de cancelación</p>
-            <p className="text-texto-suave">{textoReglaCancelacion(resumen.regla)}</p>
+            <p className="text-texto-suave">{textoRegla(resumen.regla)}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
