@@ -145,5 +145,45 @@ describe("useTurnosEnVivo", () => {
 
     expect(socket.on.mock.calls.length).toBe(suscripciones);
   });
+
+  describe("con varias fechas", () => {
+    function montarVarias(fechas: string[]) {
+      const cliente = new QueryClient();
+      const invalidar = vi.spyOn(cliente, "invalidateQueries").mockResolvedValue();
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={cliente}>{children}</QueryClientProvider>
+      );
+      const hook = renderHook(({ lista }: { lista: string[] }) => useTurnosEnVivo(lista, [["mis-reservas"]]), {
+        wrapper,
+        initialProps: { lista: fechas },
+      });
+      return { ...hook, invalidar };
+    }
+
+    it("invalida cuando el evento es de cualquiera de las fechas", () => {
+      const { invalidar } = montarVarias([FECHA, "2026-10-25", FECHA]);
+
+      socket.emitir("turnos:actualizados", { fecha: "2026-10-25", canchaId: 1 });
+      socket.emitir("turnos:actualizados", { fecha: "2026-10-22", canchaId: 1 });
+
+      expect(invalidar).toHaveBeenCalledTimes(1);
+      expect(invalidar).toHaveBeenCalledWith({ queryKey: ["mis-reservas"] });
+    });
+
+    it("sin fechas no se suscribe", () => {
+      montarVarias([]);
+
+      expect(socket.cantidad("turnos:actualizados")).toBe(0);
+    });
+
+    it("no vuelve a suscribirse si llegan las mismas fechas en otro orden", () => {
+      const { rerender } = montarVarias([FECHA, "2026-10-25"]);
+      const suscripciones = socket.on.mock.calls.length;
+
+      rerender({ lista: ["2026-10-25", FECHA] });
+
+      expect(socket.on.mock.calls.length).toBe(suscripciones);
+    });
+  });
 });
 

@@ -1,8 +1,26 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EstadoReserva, ReservaJugador } from "./api";
 import { PantallaReservas } from "./components/mis-reservas";
+
+const socket = vi.hoisted(() => {
+  const listeners = new Map<string, Set<(payload?: unknown) => void>>();
+  return {
+    on: vi.fn((evento: string, cb: (payload?: unknown) => void) => {
+      if (!listeners.has(evento)) listeners.set(evento, new Set());
+      listeners.get(evento)!.add(cb);
+    }),
+    off: vi.fn((evento: string, cb: (payload?: unknown) => void) => {
+      listeners.get(evento)?.delete(cb);
+    }),
+    emitir(evento: string, payload?: unknown) {
+      listeners.get(evento)?.forEach((cb) => cb(payload));
+    },
+  };
+});
+
+vi.mock("@/lib/socket", () => ({ obtenerSocket: () => socket }));
 
 function reserva(id: number, estado: EstadoReserva, extra: Partial<ReservaJugador> = {}): ReservaJugador {
   return {
@@ -202,5 +220,23 @@ describe("PantallaReservas", () => {
       "LPSEGUND0",
       "LPTERCER0",
     ]);
+  });
+
+  it("cuando recepción confirma el pago la reserva pasa a confirmada sin recargar", async () => {
+    const pendiente = reserva(1, "PENDIENTE_PAGO");
+    const confirmada = reserva(1, "CONFIRMADA", { adelantoPagado: 40, saldoPendiente: 40 });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([pendiente]), { status: 200 }))
+      .mockResolvedValue(new Response(JSON.stringify([confirmada]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPantalla();
+
+    expect(await screen.findByText("Pendiente de pago")).toBeTruthy();
+    act(() => socket.emitir("turnos:actualizados", { fecha: "2026-10-20", canchaId: 2 }));
+
+    expect(await screen.findByText("Confirmada")).toBeTruthy();
+    await waitFor(() => expect(montos(tarjetas()[0])["Adelanto pagado"]).toBe("S/ 40.00"));
+    expect(screen.queryByText(/Falta para el adelanto/)).toBeNull();
   });
 });
