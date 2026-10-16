@@ -6,7 +6,8 @@ import { CanchasService } from '../canchas/canchas.service';
 import { aNumero } from '../tarifas/calculo-tarifa';
 import { accionesAgenda } from './acciones-agenda';
 import { ConsultarAgendaDto } from './dto/consultar-agenda.dto';
-import { calcularMontosReserva, type PagoAprobado } from './montos-reserva';
+import { calcularMontosReserva } from './montos-reserva';
+import { pagosAprobadosPorReserva } from './pagos-aprobados';
 
 @Injectable()
 export class AgendaService {
@@ -45,7 +46,10 @@ export class AgendaService {
         { id: 'asc' },
       ],
     });
-    const pagos = await this.pagosAprobados(reservas.map((r) => r.id));
+    const pagos = await pagosAprobadosPorReserva(
+      this.prisma,
+      reservas.map((r) => r.id),
+    );
 
     return reservas.map(({ jugador, valorTurno, ...reserva }) => {
       const { adelantoPagado, saldoPendiente } = calcularMontosReserva(
@@ -73,21 +77,5 @@ export class AgendaService {
         acciones: accionesAgenda(reserva.estado),
       };
     });
-  }
-
-  private async pagosAprobados(reservaIds: number[]) {
-    const porReserva = new Map<number, PagoAprobado[]>();
-    if (reservaIds.length === 0) return porReserva;
-    const sumas = await this.prisma.pago.groupBy({
-      by: ['reservaId', 'concepto'],
-      where: { reservaId: { in: reservaIds }, estado: 'APROBADO' },
-      _sum: { monto: true },
-    });
-    for (const { reservaId, concepto, _sum } of sumas) {
-      const lista = porReserva.get(reservaId) ?? [];
-      lista.push({ concepto, monto: _sum.monto ?? 0 });
-      porReserva.set(reservaId, lista);
-    }
-    return porReserva;
   }
 }
