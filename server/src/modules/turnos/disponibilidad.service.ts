@@ -13,6 +13,7 @@ import type {
   TamanoCancha,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ESTADOS_OCUPAN_TURNO } from '../reservas/estados-reserva';
 import { aNumero, calcularAdelanto } from '../tarifas/calculo-tarifa';
 import { ConsultarDisponibilidadDto } from './dto/consultar-disponibilidad.dto';
 import type { Turno } from './generar-turnos';
@@ -30,10 +31,6 @@ const ESTADOS_OCUPAN: EstadoReserva[] = [
   'CONFIRMADA',
   'EN_JUEGO',
   'FINALIZADA',
-];
-const ESTADOS_QUE_OCUPAN: EstadoReserva[] = [
-  ...ESTADOS_PENDIENTE,
-  ...ESTADOS_OCUPAN,
 ];
 
 export type EstadoTurno =
@@ -65,7 +62,7 @@ export interface Disponibilidad {
 interface EstadoCanchaTurno {
   estadoCancha: EstadoCancha;
   turno: Turno;
-  estadoReserva: EstadoReserva | undefined;
+  estadosReserva: EstadoReserva[];
   valor: Prisma.Decimal | undefined;
   fecha: string;
   ahora: Date;
@@ -123,9 +120,9 @@ export class DisponibilidadService {
       this.prisma.reserva.findMany({
         where: {
           fecha: new Date(`${fecha}T00:00:00.000Z`),
-          estado: { in: ESTADOS_QUE_OCUPAN },
+          estado: { in: ESTADOS_OCUPAN_TURNO },
         },
-        select: { canchaId: true, horaInicio: true, estado: true },
+        select: { canchaId: true, inicioEn: true, finEn: true, estado: true },
       }),
       this.prisma.tarifa.findMany({
         where: { vigenteHasta: null },
@@ -133,9 +130,17 @@ export class DisponibilidadService {
       }),
     ]);
 
-    const reservaPorTurno = new Map(
-      reservas.map((r) => [`${r.canchaId}-${r.horaInicio}`, r.estado]),
-    );
+    const reservasPorCancha = new Map<number, typeof reservas>();
+    for (const reserva of reservas) {
+      const lista = reservasPorCancha.get(reserva.canchaId) ?? [];
+      lista.push(reserva);
+      reservasPorCancha.set(reserva.canchaId, lista);
+    }
+    const rangos = turnosDelDia.map((turno) => ({
+      turno,
+      inicio: instanteEnLima(fecha, turno.horaInicio),
+      fin: instanteEnLima(fecha, turno.horaFin),
+    }));
     const tarifaPorCancha = new Map(
       tarifas.map((t) => [`${t.canchaId}-${t.franja}`, t.valor]),
     );
@@ -145,13 +150,13 @@ export class DisponibilidadService {
       abierto: true,
       canchas: canchas.map(({ estado, ...datos }) => ({
         ...datos,
-        turnos: turnosDelDia.map((turno) =>
+        turnos: rangos.map(({ turno, inicio, fin }) =>
           this.estadoDelTurno({
             estadoCancha: estado,
             turno,
-            estadoReserva: reservaPorTurno.get(
-              `${datos.id}-${turno.horaInicio}`,
-            ),
+            estadosReserva: (reservasPorCancha.get(datos.id) ?? [])
+              .filter((r) => r.inicioEn < fin && r.finEn > inicio)
+              .map((r) => r.estado),
             valor: tarifaPorCancha.get(`${datos.id}-${turno.franja}`),
             fecha,
             ahora,
@@ -164,7 +169,7 @@ export class DisponibilidadService {
   private estadoDelTurno({
     estadoCancha,
     turno,
-    estadoReserva,
+    estadosReserva,
     valor,
     fecha,
     ahora,
@@ -172,10 +177,10 @@ export class DisponibilidadService {
     if (estadoCancha === 'EN_MANTENIMIENTO') {
       return { ...turno, estado: 'EN_MANTENIMIENTO', seleccionable: false };
     }
-    if (estadoReserva && ESTADOS_PENDIENTE.includes(estadoReserva)) {
+    if (estadosReserva.some((e) => ESTADOS_PENDIENTE.includes(e))) {
       return { ...turno, estado: 'PENDIENTE', seleccionable: false };
     }
-    if (estadoReserva && ESTADOS_OCUPAN.includes(estadoReserva)) {
+    if (estadosReserva.some((e) => ESTADOS_OCUPAN.includes(e))) {
       return { ...turno, estado: 'OCUPADO', seleccionable: false };
     }
     if (

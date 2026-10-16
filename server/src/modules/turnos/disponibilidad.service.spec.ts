@@ -28,6 +28,18 @@ const TURNO_NOCHE: Turno = {
   franja: 'NOCHE',
 };
 
+const reserva = (
+  horaInicio: string,
+  horaFin: string,
+  estado: string,
+  { canchaId = 1, fecha = HOY } = {},
+) => ({
+  canchaId,
+  inicioEn: new Date(`${fecha}T${horaInicio}:00-05:00`),
+  finEn: new Date(`${fecha}T${horaFin}:00-05:00`),
+  estado,
+});
+
 describe('DisponibilidadService', () => {
   const prisma = {
     cancha: { findMany: jest.fn() },
@@ -136,7 +148,7 @@ describe('DisponibilidadService', () => {
       ['FINALIZADA', 'OCUPADO'],
     ])('una reserva %s deja el turno %s', async (estado, esperado) => {
       prisma.reserva.findMany.mockResolvedValue([
-        { canchaId: 1, horaInicio: TURNO_NOCHE.horaInicio, estado },
+        reserva(TURNO_NOCHE.horaInicio, TURNO_NOCHE.horaFin, estado),
       ]);
 
       const { canchas } = await servicio.consultar({ fecha: HOY });
@@ -220,17 +232,114 @@ describe('DisponibilidadService', () => {
 
     it('los turnos no seleccionables no traen valor ni adelanto', async () => {
       prisma.reserva.findMany.mockResolvedValue([
-        {
-          canchaId: 1,
-          horaInicio: TURNO_NOCHE.horaInicio,
-          estado: 'CONFIRMADA',
-        },
+        reserva(TURNO_NOCHE.horaInicio, TURNO_NOCHE.horaFin, 'CONFIRMADA'),
       ]);
 
       const { canchas } = await servicio.consultar({ fecha: HOY });
 
       expect(canchas[0].turnos[1]).not.toHaveProperty('valor');
       expect(canchas[0].turnos[1]).not.toHaveProperty('adelanto');
+    });
+  });
+
+  describe('reservas que no empiezan a la hora del turno', () => {
+    const MANANA = '2026-10-21';
+    const turnosDeLaManana: Turno[] = ['07:00', '08:00', '09:00', '10:00'].map(
+      (horaInicio) => ({
+        horaInicio,
+        horaFin: `${String(Number(horaInicio.slice(0, 2)) + 1).padStart(2, '0')}:00`,
+        franja: 'DIA',
+      }),
+    );
+    const estados = (turnos: { horaInicio: string; estado: string }[]) =>
+      turnos.map((t) => `${t.horaInicio} ${t.estado}`);
+
+    beforeEach(() => {
+      turnos.generar.mockResolvedValue(turnosDeLaManana);
+      prisma.cancha.findMany.mockResolvedValue([
+        cancha(),
+        cancha({ id: 2, nombre: 'Cancha 2' }),
+      ]);
+      prisma.tarifa.findMany.mockResolvedValue([
+        { canchaId: 1, franja: 'DIA', valor: 60 },
+        { canchaId: 2, franja: 'DIA', valor: 60 },
+      ]);
+    });
+
+    it('una reserva de 08:15 a 09:15 ocupa los turnos de 08:00 y de 09:00 de su cancha', async () => {
+      prisma.reserva.findMany.mockResolvedValue([
+        reserva('08:15', '09:15', 'CONFIRMADA', { fecha: MANANA }),
+      ]);
+
+      const { canchas } = await servicio.consultar({ fecha: MANANA });
+
+      expect(estados(canchas[0].turnos)).toEqual([
+        '07:00 DISPONIBLE',
+        '08:00 OCUPADO',
+        '09:00 OCUPADO',
+        '10:00 DISPONIBLE',
+      ]);
+      expect(canchas[0].turnos[0].seleccionable).toBe(true);
+      expect(canchas[0].turnos[3].seleccionable).toBe(true);
+      expect(estados(canchas[1].turnos)).toEqual([
+        '07:00 DISPONIBLE',
+        '08:00 DISPONIBLE',
+        '09:00 DISPONIBLE',
+        '10:00 DISPONIBLE',
+      ]);
+      expect(canchas[1].turnos.every((t) => t.seleccionable)).toBe(true);
+    });
+
+    it('una reserva que termina cuando empieza el turno no lo ocupa', async () => {
+      prisma.reserva.findMany.mockResolvedValue([
+        reserva('08:00', '09:00', 'CONFIRMADA', { fecha: MANANA }),
+      ]);
+
+      const { canchas } = await servicio.consultar({ fecha: MANANA });
+
+      expect(estados(canchas[0].turnos)).toEqual([
+        '07:00 DISPONIBLE',
+        '08:00 OCUPADO',
+        '09:00 DISPONIBLE',
+        '10:00 DISPONIBLE',
+      ]);
+    });
+
+    it('si el turno se solapa con una pendiente y una confirmada, sale pendiente', async () => {
+      prisma.reserva.findMany.mockResolvedValue([
+        reserva('07:30', '08:30', 'PENDIENTE_PAGO', { fecha: MANANA }),
+        reserva('08:30', '09:30', 'CONFIRMADA', { fecha: MANANA }),
+      ]);
+
+      const { canchas } = await servicio.consultar({ fecha: MANANA });
+
+      expect(estados(canchas[0].turnos)).toEqual([
+        '07:00 PENDIENTE',
+        '08:00 PENDIENTE',
+        '09:00 OCUPADO',
+        '10:00 DISPONIBLE',
+      ]);
+    });
+
+    it('lee las reservas de la fecha en una sola consulta', async () => {
+      await servicio.consultar({ fecha: MANANA });
+
+      expect(prisma.reserva.findMany).toHaveBeenCalledTimes(1);
+      expect(prisma.reserva.findMany).toHaveBeenCalledWith({
+        where: {
+          fecha: new Date(`${MANANA}T00:00:00.000Z`),
+          estado: {
+            in: [
+              'PENDIENTE_PAGO',
+              'PENDIENTE_VALIDACION',
+              'CONFIRMADA',
+              'EN_JUEGO',
+              'FINALIZADA',
+            ],
+          },
+        },
+        select: { canchaId: true, inicioEn: true, finEn: true, estado: true },
+      });
     });
   });
 
