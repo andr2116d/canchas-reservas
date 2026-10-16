@@ -356,3 +356,40 @@ describe("Recepcionistas: filtros al escribir", () => {
     expect(JSON.parse(llamadaDe(fetchMock, "PATCH")?.[1]?.body as string)).toMatchObject({ telefono: "912345678" });
   });
 });
+
+describe("Recepcionistas: modal de nuevo recepcionista", () => {
+  it("abre vacío tras cancelarlo con datos escritos", async () => {
+    responder({ status: 201, body: ACTIVA });
+    renderPantalla();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Nuevo recepcionista" }));
+    let dialogo = within(screen.getByRole("dialog"));
+    fireEvent.input(dialogo.getByLabelText("Nombres"), { target: { value: "Ana María" } });
+    fireEvent.input(dialogo.getByLabelText("Número de documento"), { target: { value: "71234567" } });
+    fireEvent.input(dialogo.getByLabelText("Teléfono"), { target: { value: "987654321" } });
+    fireEvent.click(dialogo.getByRole("button", { name: "Cancelar" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+    fireEvent.click(screen.getByRole("button", { name: "Nuevo recepcionista" }));
+    dialogo = within(screen.getByRole("dialog"));
+    expect(dialogo.getByLabelText("Nombres")).toHaveProperty("value", "");
+    expect(dialogo.getByLabelText("Número de documento")).toHaveProperty("value", "");
+    expect(dialogo.getByLabelText("Teléfono")).toHaveProperty("value", "");
+    expect(dialogo.getByLabelText("Tipo de documento")).toHaveProperty("value", "DNI");
+  });
+
+  it("abre vacío tras crear un recepcionista", async () => {
+    responder({ status: 201, body: ACTIVA });
+    renderPantalla();
+
+    await llenarYCrear();
+    await screen.findByRole("status");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+    fireEvent.click(screen.getByRole("button", { name: "Nuevo recepcionista" }));
+    const dialogo = within(screen.getByRole("dialog"));
+    expect(dialogo.getByLabelText("Nombres")).toHaveProperty("value", "");
+    expect(dialogo.getByLabelText("Correo")).toHaveProperty("value", "");
+    expect(dialogo.getByLabelText("Contraseña inicial")).toHaveProperty("value", "");
+  });
+});
