@@ -259,3 +259,100 @@ describe("Recepcionistas", () => {
     expect(JSON.parse(post?.[1]?.body as string)).toEqual({ contrasena: "NuevaClave2026" });
   });
 });
+
+describe("Recepcionistas: filtros al escribir", () => {
+  async function abrirNuevo() {
+    fireEvent.click(await screen.findByRole("button", { name: "Nuevo recepcionista" }));
+    return within(screen.getByRole("dialog"));
+  }
+
+  function pegar(control: HTMLInputElement, texto: string) {
+    fireEvent.paste(control, { clipboardData: { getData: () => texto } });
+    fireEvent.input(control, { target: { value: texto } });
+  }
+
+  it("con DNI el documento no acepta letras ni más de 8 dígitos", async () => {
+    responder({ status: 201, body: ACTIVA });
+    renderPantalla();
+
+    const dialogo = await abrirNuevo();
+    const documento = dialogo.getByLabelText("Número de documento") as HTMLInputElement;
+    expect(documento.type).toBe("text");
+    expect(documento.inputMode).toBe("numeric");
+
+    fireEvent.input(documento, { target: { value: "12a4b" } });
+    expect(documento.value).toBe("124");
+    pegar(documento, "12a4b56789");
+    expect(documento.value).toBe("12456789");
+  });
+
+  it("con CE el documento acepta letras y dígitos hasta 12", async () => {
+    responder({ status: 201, body: ACTIVA });
+    renderPantalla();
+
+    const dialogo = await abrirNuevo();
+    fireEvent.change(dialogo.getByLabelText("Tipo de documento"), { target: { value: "CE" } });
+    const documento = dialogo.getByLabelText("Número de documento") as HTMLInputElement;
+    expect(documento.inputMode).toBe("text");
+
+    pegar(documento, "ab-123 456 789 0");
+    expect(documento.value).toBe("ab1234567890");
+  });
+
+  it("al pasar de CE a DNI recorta lo que no cumple y crea con ese número", async () => {
+    const fetchMock = responder({ status: 201, body: ACTIVA });
+    renderPantalla();
+
+    const dialogo = await abrirNuevo();
+    const tipo = dialogo.getByLabelText("Tipo de documento");
+    const documento = dialogo.getByLabelText("Número de documento") as HTMLInputElement;
+    fireEvent.change(tipo, { target: { value: "CE" } });
+    fireEvent.input(documento, { target: { value: "AB712345678" } });
+    fireEvent.change(tipo, { target: { value: "DNI" } });
+    expect(documento.value).toBe("71234567");
+
+    fireEvent.input(dialogo.getByLabelText("Nombres"), { target: { value: "Ana María" } });
+    fireEvent.input(dialogo.getByLabelText("Apellidos"), { target: { value: "Pérez" } });
+    fireEvent.input(dialogo.getByLabelText("Correo"), { target: { value: "ana@laprevia.pe" } });
+    fireEvent.input(dialogo.getByLabelText("Teléfono"), { target: { value: "987654321" } });
+    fireEvent.input(dialogo.getByLabelText("Contraseña inicial"), { target: { value: "Recepcion123" } });
+    fireEvent.click(dialogo.getByRole("button", { name: "Crear recepcionista" }));
+
+    await waitFor(() => expect(llamadaDe(fetchMock, "POST")).toBeTruthy());
+    expect(JSON.parse(llamadaDe(fetchMock, "POST")?.[1]?.body as string)).toMatchObject({
+      tipoDocumento: "DNI",
+      numeroDocumento: "71234567",
+    });
+  });
+
+  it("al crear, el teléfono solo acepta dígitos al escribir y al pegar, hasta 9", async () => {
+    responder({ status: 201, body: ACTIVA });
+    renderPantalla();
+
+    const dialogo = await abrirNuevo();
+    const telefono = dialogo.getByLabelText("Teléfono") as HTMLInputElement;
+    fireEvent.input(telefono, { target: { value: "9a8b" } });
+    expect(telefono.value).toBe("98");
+    pegar(telefono, "9a8b7-654 321 00");
+    expect(telefono.value).toBe("987654321");
+  });
+
+  it("al editar, el teléfono solo acepta dígitos y guarda el valor limpio", async () => {
+    const fetchMock = responderConLista([ACTIVA], (_url, metodo) =>
+      metodo === "PATCH" ? { status: 200, body: { ...ACTIVA, telefono: "912345678" } } : undefined,
+    );
+    renderPantalla();
+
+    fireEvent.click(within(await filaDe("Ana María Pérez")).getByRole("button", { name: "Editar" }));
+    const dialogo = within(await screen.findByRole("dialog"));
+    const telefono = dialogo.getByLabelText("Teléfono") as HTMLInputElement;
+    expect(telefono.inputMode).toBe("numeric");
+
+    pegar(telefono, "912-345 678");
+    expect(telefono.value).toBe("912345678");
+    fireEvent.click(dialogo.getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() => expect(llamadaDe(fetchMock, "PATCH")).toBeTruthy());
+    expect(JSON.parse(llamadaDe(fetchMock, "PATCH")?.[1]?.body as string)).toMatchObject({ telefono: "912345678" });
+  });
+});
