@@ -10,6 +10,7 @@ export const MENU_ROL: Record<Rol, EnlaceMenu[]> = {
     { etiqueta: "Adicionales", href: "/admin/adicionales" },
     { etiqueta: "Cancelación", href: "/admin/regla-cancelacion" },
     { etiqueta: "Recepcionistas", href: "/admin/recepcionistas" },
+    { etiqueta: "Actividad", href: "/admin/actividad" },
   ],
   RECEPCIONISTA: [
     { etiqueta: "Disponibilidad", href: "/recepcion/disponibilidad" },
