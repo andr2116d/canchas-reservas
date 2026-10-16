@@ -52,6 +52,9 @@ type Cliente = Prisma.TransactionClient | PrismaService;
 const INDICE_TURNO = 'reserva_turno_unico';
 const INDICE_CODIGO = 'reserva_codigo_key';
 export const INTENTOS_CODIGO = 5;
+export const INTENTOS_CONFLICTO = 3;
+const CODIGO_SOLAPE = '23P01';
+const CODIGO_CONFLICTO = 'P2034';
 
 export function indiceUnicoViolado(error: unknown) {
   if (typeof error !== 'object' || error === null) return undefined;
@@ -63,6 +66,26 @@ export function indiceUnicoViolado(error: unknown) {
   };
   if (code !== 'P2002') return undefined;
   return meta?.driverAdapterError?.cause?.constraint?.index;
+}
+
+function codigoPostgres(error: unknown) {
+  if (typeof error !== 'object' || error === null) return undefined;
+  const { meta } = error as {
+    meta?: { driverAdapterError?: { cause?: { code?: string } } };
+  };
+  return meta?.driverAdapterError?.cause?.code;
+}
+
+function solapeComoConflicto(error: unknown) {
+  return codigoPostgres(error) === CODIGO_SOLAPE ? turnoNoDisponible() : error;
+}
+
+function conflictoDeEscritura(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as { code?: unknown }).code === CODIGO_CONFLICTO
+  );
 }
 
 export function turnoNoDisponible() {
@@ -114,6 +137,9 @@ export class ReservasService {
         const indice = indiceUnicoViolado(error);
         if (indice === INDICE_TURNO) throw turnoNoDisponible();
         if (indice === INDICE_CODIGO && intento < INTENTOS_CODIGO) continue;
+        if (conflictoDeEscritura(error) && intento < INTENTOS_CONFLICTO) {
+          continue;
+        }
         throw error;
       }
     }
@@ -138,32 +164,36 @@ export class ReservasService {
       throw limitePendientes();
     }
     await this.validarTurnoLibre(datos, tx);
-    const reserva = await tx.reserva.create({
-      data: {
-        codigo: generarCodigo(),
-        jugadorId,
-        creadoPorId: jugadorId,
-        origen: 'PLATAFORMA',
-        canchaId: turno.cancha.id,
-        fecha: new Date(`${turno.fecha}T00:00:00.000Z`),
-        horaInicio: turno.horaInicio,
-        horaFin: turno.horaFin,
-        franja: turno.franja,
-        inicioEn: turno.inicioEn,
-        finEn: turno.finEn,
-        valorTurno: turno.valor.valor,
-        adelantoMinimo: turno.valor.adelanto,
-        estado: confirmada ? 'CONFIRMADA' : 'PENDIENTE_PAGO',
-        venceEn: confirmada
-          ? null
-          : calcularVenceEn(ahora, tiempoLimitePagoMin, turno.inicioEn),
-        confirmadaEn: confirmada ? ahora : null,
-        reglaHorasAnticipacion: regla.horasAnticipacion,
-        reglaTipoCompensacion: regla.tipoCompensacion,
-        creadoEn: ahora,
-      },
-      select: { id: true, codigo: true, estado: true, venceEn: true },
-    });
+    const reserva = await tx.reserva
+      .create({
+        data: {
+          codigo: generarCodigo(),
+          jugadorId,
+          creadoPorId: jugadorId,
+          origen: 'PLATAFORMA',
+          canchaId: turno.cancha.id,
+          fecha: new Date(`${turno.fecha}T00:00:00.000Z`),
+          horaInicio: turno.horaInicio,
+          horaFin: turno.horaFin,
+          franja: turno.franja,
+          inicioEn: turno.inicioEn,
+          finEn: turno.finEn,
+          valorTurno: turno.valor.valor,
+          adelantoMinimo: turno.valor.adelanto,
+          estado: confirmada ? 'CONFIRMADA' : 'PENDIENTE_PAGO',
+          venceEn: confirmada
+            ? null
+            : calcularVenceEn(ahora, tiempoLimitePagoMin, turno.inicioEn),
+          confirmadaEn: confirmada ? ahora : null,
+          reglaHorasAnticipacion: regla.horasAnticipacion,
+          reglaTipoCompensacion: regla.tipoCompensacion,
+          creadoEn: ahora,
+        },
+        select: { id: true, codigo: true, estado: true, venceEn: true },
+      })
+      .catch((error: unknown) => {
+        throw solapeComoConflicto(error);
+      });
     if (credito.aplicado.gt(0)) {
       const pago = await tx.pago.create({
         data: {
