@@ -98,6 +98,34 @@ describe("FormularioLogin", () => {
     );
   });
 
+  it("tras iniciar sesión el formulario queda vacío", async () => {
+    responder({
+      "/api/auth/me": sinSesion,
+      "/api/auth/login": { status: 200, cuerpo: { id: 2, nombres: "Ana", rol: "JUGADOR" } },
+    });
+    renderizar(<FormularioLogin />);
+    llenarYEnviar("jugador1@laprevia.pe", "Jugador123");
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/jugador"));
+    await waitFor(() => expect((screen.getByLabelText("Correo") as HTMLInputElement).value).toBe(""));
+    expect((screen.getByLabelText("Contraseña") as HTMLInputElement).value).toBe("");
+  });
+
+  it("con credenciales incorrectas conserva lo escrito", async () => {
+    responder({
+      "/api/auth/me": sinSesion,
+      "/api/auth/login": {
+        status: 401,
+        cuerpo: { statusCode: 401, message: "Correo o contraseña incorrectos", errores: {} },
+      },
+    });
+    renderizar(<FormularioLogin />);
+    llenarYEnviar("admin@laprevia.pe", "mala1234");
+
+    await screen.findByRole("alert");
+    expect((screen.getByLabelText("Correo") as HTMLInputElement).value).toBe("admin@laprevia.pe");
+  });
+
   it("con sesión activa redirige al panel del rol", async () => {
     responder({
       "/api/auth/me": {
