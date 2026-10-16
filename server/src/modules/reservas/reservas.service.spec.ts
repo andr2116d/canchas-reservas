@@ -42,7 +42,7 @@ describe('ReservasService', () => {
     configuracion: { findUniqueOrThrow: jest.fn() },
     reglaCancelacion: { findUniqueOrThrow: jest.fn() },
     credito: { aggregate: jest.fn(), findMany: jest.fn(), update: jest.fn() },
-    pago: { create: jest.fn() },
+    pago: { create: jest.fn(), groupBy: jest.fn() },
     creditoUso: { create: jest.fn() },
     $queryRaw: jest.fn(),
     $transaction: jest.fn(),
@@ -591,7 +591,18 @@ describe('ReservasService', () => {
       venceEn: null,
       inicioEn: new Date(inicio),
       finEn: new Date(fin),
+      valorTurno: new Prisma.Decimal('80.00'),
+      adelantoMinimo: new Prisma.Decimal('40.00'),
       cancha: { id: 2, nombre: 'Cancha 2', tamano: 'FUTBOL_5' },
+    });
+    const suma = (reservaId: number, concepto: string, monto: string) => ({
+      reservaId,
+      concepto,
+      _sum: { monto: new Prisma.Decimal(monto) },
+    });
+
+    beforeEach(() => {
+      prisma.pago.groupBy.mockResolvedValue([]);
     });
 
     it('pone primero las próximas y luego las pasadas más recientes', async () => {
@@ -613,10 +624,101 @@ describe('ReservasService', () => {
         estado: 'PENDIENTE_PAGO',
         venceEn: null,
         cancha: { id: 2, nombre: 'Cancha 2', tamano: 'FUTBOL_5' },
+        valorTurno: 80,
+        adelantoMinimo: 40,
+        adelantoPagado: 0,
+        saldoPendiente: 80,
       });
       expect(prisma.reserva.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { jugadorId: JUGADOR_ID } }),
       );
+    });
+
+    it('arma los montos de cada reserva con sus pagos aprobados', async () => {
+      prisma.reserva.findMany.mockResolvedValue([
+        reserva(1, '2026-10-20T23:00:00.000Z', '2026-10-21T00:00:00.000Z'),
+        reserva(2, '2026-10-21T23:00:00.000Z', '2026-10-22T00:00:00.000Z'),
+        reserva(3, '2026-10-22T23:00:00.000Z', '2026-10-23T00:00:00.000Z'),
+      ]);
+      prisma.pago.groupBy.mockResolvedValue([
+        suma(1, 'ADELANTO', '40.00'),
+        suma(2, 'ADELANTO', '40.00'),
+        suma(2, 'SALDO', '40.00'),
+        suma(3, 'ADELANTO', '12.35'),
+        suma(3, 'ADICIONALES', '15.00'),
+      ]);
+      const mias = await servicio.mias(JUGADOR_ID);
+      expect(
+        mias.map(
+          ({
+            id,
+            valorTurno,
+            adelantoMinimo,
+            adelantoPagado,
+            saldoPendiente,
+          }) => ({
+            id,
+            valorTurno,
+            adelantoMinimo,
+            adelantoPagado,
+            saldoPendiente,
+          }),
+        ),
+      ).toEqual([
+        {
+          id: 1,
+          valorTurno: 80,
+          adelantoMinimo: 40,
+          adelantoPagado: 40,
+          saldoPendiente: 40,
+        },
+        {
+          id: 2,
+          valorTurno: 80,
+          adelantoMinimo: 40,
+          adelantoPagado: 40,
+          saldoPendiente: 0,
+        },
+        {
+          id: 3,
+          valorTurno: 80,
+          adelantoMinimo: 40,
+          adelantoPagado: 12.35,
+          saldoPendiente: 67.65,
+        },
+      ]);
+    });
+
+    it('solo cuenta los pagos aprobados, no los pendientes de validación ni los rechazados', async () => {
+      prisma.reserva.findMany.mockResolvedValue([
+        reserva(1, '2026-10-20T23:00:00.000Z', '2026-10-21T00:00:00.000Z'),
+      ]);
+      await servicio.mias(JUGADOR_ID);
+      const [consulta] = prisma.pago.groupBy.mock.calls[0] as [
+        { where: { estado: unknown } },
+      ];
+      expect(consulta.where.estado).toBe('APROBADO');
+    });
+
+    it('trae los pagos de todas sus reservas en una sola consulta', async () => {
+      prisma.reserva.findMany.mockResolvedValue([
+        reserva(1, '2026-10-20T23:00:00.000Z', '2026-10-21T00:00:00.000Z'),
+        reserva(2, '2026-10-21T23:00:00.000Z', '2026-10-22T00:00:00.000Z'),
+        reserva(3, '2026-10-10T23:00:00.000Z', '2026-10-11T00:00:00.000Z'),
+      ]);
+      await servicio.mias(JUGADOR_ID);
+      expect(prisma.pago.groupBy).toHaveBeenCalledTimes(1);
+      expect(prisma.pago.groupBy).toHaveBeenCalledWith({
+        by: ['reservaId', 'concepto'],
+        where: { reservaId: { in: [1, 2, 3] }, estado: 'APROBADO' },
+        _sum: { monto: true },
+      });
+    });
+
+    it('sin reservas no consulta los pagos', async () => {
+      prisma.reserva.findMany.mockResolvedValue([]);
+      await expect(servicio.mias(JUGADOR_ID)).resolves.toEqual([]);
+      expect(prisma.pago.groupBy).not.toHaveBeenCalled();
     });
   });
 });
