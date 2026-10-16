@@ -130,6 +130,65 @@ describe("Horario", () => {
     ]);
   });
 
+  it("los campos de hora son de texto de 24 horas con teclado numérico", async () => {
+    responder(rutasDeHorario());
+    renderPantalla();
+
+    const campos = [
+      await screen.findByLabelText("Apertura del lunes"),
+      screen.getByLabelText("Cierre del lunes"),
+      screen.getByLabelText("La noche empieza a las"),
+    ] as HTMLInputElement[];
+    for (const campo of campos) {
+      expect(campo.type).toBe("text");
+      expect(campo.inputMode).toBe("numeric");
+      expect(campo.placeholder).toBe("HH:MM");
+      expect(campo.maxLength).toBe(5);
+    }
+    expect(campos.map((campo) => campo.value)).toEqual(["08:00", "23:00", "18:00"]);
+  });
+
+  it("al escribir pone los dos puntos y al borrar con retroceso no se atasca", async () => {
+    const fetchMock = responder(
+      rutasDeHorario({ "PUT /api/horario": { status: 200, body: SEMANA } }),
+    );
+    renderPantalla();
+    const noche = (await screen.findByLabelText("La noche empieza a las")) as HTMLInputElement;
+    const escribir = (valor: string) => fireEvent.input(noche, { target: { value: valor }, inputType: "insertText" });
+    const asignarValor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    const borrar = (valor: string, cursor = valor.length) => {
+      asignarValor.call(noche, valor);
+      noche.setSelectionRange(cursor, cursor);
+      fireEvent.input(noche, { inputType: "deleteContentBackward" });
+    };
+
+    borrar("18:0");
+    expect(noche.value).toBe("18:0");
+    borrar("18:");
+    expect(noche.value).toBe("18:");
+    borrar("18");
+    expect(noche.value).toBe("18");
+    borrar("1");
+    expect(noche.value).toBe("1");
+    escribir("19");
+    escribir("193");
+    expect(noche.value).toBe("19:3");
+    escribir("19:30");
+    expect(noche.value).toBe("19:30");
+
+    borrar("1930", 2);
+    expect(noche.value).toBe("1930");
+    expect(noche.selectionStart).toBe(2);
+    borrar("130", 1);
+    expect(noche.value).toBe("130");
+    escribir("1830");
+    expect(noche.value).toBe("18:30");
+
+    fireEvent.click(screen.getByRole("button", { name: "Guardar horario" }));
+    expect((await screen.findByRole("status")).textContent).toBe("Horario guardado");
+    expect(cuerpos(fetchMock, "PUT")[0]).toMatchObject({ inicioNoche: "18:30" });
+  });
+
   it("no guarda cuando el cierre no es posterior a la apertura", async () => {
     const fetchMock = responder(rutasDeHorario());
     renderPantalla();
