@@ -1,27 +1,31 @@
 "use client";
 
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alerta, Button, Card, EmptyState, Input, Select, useToast } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
 import type { ReglaCancelacion, TipoCompensacion } from "../api";
 import { useActualizarRegla, useReglaCancelacion } from "../hooks";
 import { esquemaRegla, type DatosReglaFormulario, type ValoresRegla } from "../schemas";
+import { textoReglaCancelacion } from "../texto-regla";
 
-const DESTINO_ADELANTO: Record<TipoCompensacion, string> = {
-  DEVOLUCION: "en recepción",
-  CREDITO: "como crédito",
-};
+type ControlRegla = Control<ValoresRegla, unknown, DatosReglaFormulario>;
 
-function fraseDelJugador(horas: string, compensacion: TipoCompensacion) {
-  const valor = horas.trim() === "" ? null : Number(horas);
-  const cuando =
-    valor === null || Number.isNaN(valor)
-      ? "con la anticipación indicada"
-      : valor === 0
-        ? "hasta el inicio del turno"
-        : `hasta ${valor} h antes del inicio del turno`;
-  return `Puedes cancelar ${cuando} y se te devolverá tu adelanto ${DESTINO_ADELANTO[compensacion]}. Si cancelas después, el adelanto queda retenido.`;
+function VistaPrevia({ control, tipoInicial }: { control: ControlRegla; tipoInicial: TipoCompensacion }) {
+  const { horasAnticipacion, tipoCompensacion } = useWatch({ control });
+  const horas = esquemaRegla.shape.horasAnticipacion.safeParse(horasAnticipacion);
+  const tipo = esquemaRegla.shape.tipoCompensacion.safeParse(tipoCompensacion);
+  return (
+    <div className="rounded-lg border border-linea bg-fondo px-3 py-2 text-sm">
+      <p className="font-medium">Así lo verá el jugador</p>
+      <p className="text-texto-suave">
+        {textoReglaCancelacion({
+          horasAnticipacion: horas.success ? horas.data : null,
+          tipoCompensacion: tipo.success ? tipo.data : tipoInicial,
+        })}
+      </p>
+    </div>
+  );
 }
 
 function Titulo() {
@@ -74,7 +78,6 @@ function FormularioRegla({ regla }: { regla: ReglaCancelacion }) {
     resolver: zodResolver(esquemaRegla),
     defaultValues: aValores(regla),
   });
-  const { horasAnticipacion: horas, tipoCompensacion: compensacion } = useWatch({ control });
 
   const enviar = handleSubmit(async (datos) => {
     try {
@@ -122,10 +125,7 @@ function FormularioRegla({ regla }: { regla: ReglaCancelacion }) {
         </form>
       </Card>
 
-      <div className="rounded-lg border border-linea bg-fondo px-3 py-2 text-sm">
-        <p className="font-medium">Así lo verá el jugador</p>
-        <p className="text-texto-suave">{fraseDelJugador(horas ?? "", (compensacion ?? regla.tipoCompensacion) as TipoCompensacion)}</p>
-      </div>
+      <VistaPrevia control={control} tipoInicial={regla.tipoCompensacion} />
     </>
   );
 }
