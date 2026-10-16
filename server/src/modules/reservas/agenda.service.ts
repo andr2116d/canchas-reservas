@@ -47,23 +47,32 @@ export class AgendaService {
     });
     const pagos = await this.pagosAprobados(reservas.map((r) => r.id));
 
-    return reservas.map(({ jugador, valorTurno, ...reserva }) => ({
-      id: reserva.id,
-      codigo: reserva.codigo,
-      horaInicio: reserva.horaInicio,
-      horaFin: reserva.horaFin,
-      franja: reserva.franja,
-      cancha: reserva.cancha,
-      cliente: {
-        id: jugador.id,
-        nombre: [jugador.nombres, jugador.apellidos].filter(Boolean).join(' '),
-        telefono: jugador.telefono,
-      },
-      estado: reserva.estado,
-      valorTurno: aNumero(valorTurno),
-      ...calcularMontosReserva(valorTurno, pagos.get(reserva.id) ?? []),
-      acciones: accionesAgenda(reserva.estado),
-    }));
+    return reservas.map(({ jugador, valorTurno, ...reserva }) => {
+      const { adelantoPagado, saldoPendiente } = calcularMontosReserva(
+        valorTurno,
+        pagos.get(reserva.id) ?? [],
+      );
+      return {
+        id: reserva.id,
+        codigo: reserva.codigo,
+        horaInicio: reserva.horaInicio,
+        horaFin: reserva.horaFin,
+        franja: reserva.franja,
+        cancha: reserva.cancha,
+        cliente: {
+          id: jugador.id,
+          nombre: [jugador.nombres, jugador.apellidos]
+            .filter(Boolean)
+            .join(' '),
+          telefono: jugador.telefono,
+        },
+        estado: reserva.estado,
+        valorTurno: aNumero(valorTurno),
+        adelantoPagado,
+        saldoPendiente,
+        acciones: accionesAgenda(reserva.estado),
+      };
+    });
   }
 
   private async pagosAprobados(reservaIds: number[]) {

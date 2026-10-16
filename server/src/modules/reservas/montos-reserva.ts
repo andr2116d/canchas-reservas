@@ -27,5 +27,6 @@ export function calcularMontosReserva(
   return {
     adelantoPagado: aNumero(deCentimos(adelanto)),
     saldoPendiente: aNumero(deCentimos(saldo)),
+    pagadoTurno: aNumero(deCentimos(pagado)),
   };
 }
