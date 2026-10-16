@@ -12,12 +12,19 @@ export type TarifaVigente = {
   vigenteDesde: string;
 };
 
+export type AutorCambio = {
+  id: number;
+  nombre: string;
+};
+
 export type RegistroHistorial = {
   id: number;
   franja: Franja;
   valor: number;
+  valorAnterior: number | null;
   vigenteDesde: string;
   vigenteHasta: string | null;
+  creadoPor: AutorCambio | null;
 };
 
 export type Tarifas = {
