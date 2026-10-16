@@ -125,7 +125,7 @@ describe('Reservas (e2e)', () => {
     estado: EstadoReserva,
   ) => {
     codigos++;
-    const horaFin = `${String(Number(horaInicio.slice(0, 2)) + 1).padStart(2, '0')}:00`;
+    const horaFin = `${String(Number(horaInicio.slice(0, 2)) + 1).padStart(2, '0')}:${horaInicio.slice(3)}`;
     return prisma.reserva.create({
       data: {
         codigo: `E${sufijo}${codigos}`,
@@ -696,6 +696,79 @@ describe('Reservas (e2e)', () => {
           where: { usuarioId: jugador.id, entidad: 'RESERVA' },
         }),
       ).toBe(0);
+    });
+  });
+
+  describe('turno solapado', () => {
+    const activasEn = (canchaId: number) =>
+      prisma.reserva.count({
+        where: {
+          canchaId,
+          estado: {
+            in: [
+              'PENDIENTE_PAGO',
+              'PENDIENTE_VALIDACION',
+              'CONFIRMADA',
+              'EN_JUEGO',
+              'FINALIZADA',
+            ],
+          },
+        },
+      });
+
+    it('una reserva de 08:15 a 09:15 deja sin reservar los turnos de 08:00 y de 09:00', async () => {
+      const jugador = await crearUsuario();
+      const otro = await crearUsuario();
+      const canchaId = await crearCancha();
+      await insertarReserva(otro.id, canchaId, MANANA, '08:15', 'CONFIRMADA');
+
+      for (const horaInicio of ['08:00', '09:00']) {
+        const datos = { canchaId, fecha: MANANA, horaInicio };
+        const previa = await resumen(jugador.cookie, datos);
+        expect(previa.status).toBe(409);
+        expect(previa.body).toMatchObject({
+          statusCode: 409,
+          message: NO_DISPONIBLE,
+          errores: { horaInicio: NO_DISPONIBLE },
+        });
+        const creada = await reservar(jugador.cookie, datos);
+        expect(creada.status).toBe(409);
+        expect(creada.body).toMatchObject({ message: NO_DISPONIBLE });
+      }
+      expect(await activasEn(canchaId)).toBe(1);
+    });
+
+    it('el turno siguiente al solapado se puede reservar', async () => {
+      const jugador = await crearUsuario();
+      const otro = await crearUsuario();
+      const canchaId = await crearCancha();
+      await insertarReserva(otro.id, canchaId, MANANA, '08:15', 'CONFIRMADA');
+
+      const creada = await reservar(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '10:00',
+      });
+
+      expect(creada.status).toBe(201);
+      expect(await activasEn(canchaId)).toBe(2);
+    });
+
+    it('una reserva en juego bloquea el turno siguiente con el que se solapa', async () => {
+      reloj.instante = new Date(`${HOY}T08:30:00-05:00`);
+      const jugador = await crearUsuario();
+      const otro = await crearUsuario();
+      const canchaId = await crearCancha();
+      await insertarReserva(otro.id, canchaId, HOY, '08:15', 'EN_JUEGO');
+      const datos = { canchaId, fecha: HOY, horaInicio: '09:00' };
+
+      const previa = await resumen(jugador.cookie, datos);
+      expect(previa.status).toBe(409);
+      expect(previa.body).toMatchObject({ message: NO_DISPONIBLE });
+      const creada = await reservar(jugador.cookie, datos);
+      expect(creada.status).toBe(409);
+      expect(creada.body).toMatchObject({ message: NO_DISPONIBLE });
+      expect(await activasEn(canchaId)).toBe(1);
     });
   });
 
