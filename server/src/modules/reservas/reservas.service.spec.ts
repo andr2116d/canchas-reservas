@@ -9,6 +9,7 @@ import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import { TurnosService } from '../turnos/turnos.service';
 import {
   INTENTOS_CODIGO,
+  INTENTOS_CONFLICTO,
   MENSAJES_RESERVA,
   ReservasService,
 } from './reservas.service';
@@ -355,6 +356,63 @@ describe('ReservasService', () => {
         });
         expect(prisma.$transaction).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  describe('conflictos en la base', () => {
+    const solape = () =>
+      Object.assign(new Error('23P01'), {
+        meta: { driverAdapterError: { cause: { code: '23P01' } } },
+      });
+    const conflicto = () =>
+      Object.assign(new Error('P2034'), { code: 'P2034' });
+
+    it('un solape en el insert responde 409 sin reintentar', async () => {
+      prisma.reserva.create.mockRejectedValue(solape());
+      const error = (await errorDe(
+        servicio.crear(JUGADOR_ID, DATOS),
+      )) as ConflictException;
+      expect(error).toBeInstanceOf(ConflictException);
+      expect(error.getResponse()).toMatchObject({
+        statusCode: 409,
+        message: MENSAJES_RESERVA.turnoNoDisponible,
+        errores: { horaInicio: MENSAJES_RESERVA.turnoNoDisponible },
+      });
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).not.toHaveBeenCalled();
+    });
+
+    it('un conflicto de escritura repite la transacción completa', async () => {
+      prisma.credito.findMany.mockResolvedValue([
+        { id: 1, saldo: new Prisma.Decimal('10.00') },
+      ]);
+      prisma.reserva.create.mockRejectedValueOnce(conflicto());
+      await expect(
+        servicio.crear(JUGADOR_ID, { ...DATOS, usarCredito: true }),
+      ).resolves.toMatchObject({ id: 10 });
+      expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+      expect(prisma.usuario.findUnique).toHaveBeenCalledTimes(2);
+      expect(prisma.credito.findMany).toHaveBeenCalledTimes(2);
+      const bloqueos = prisma.$queryRaw.mock.calls.map((c) =>
+        (c[0] as string[]).join('?'),
+      );
+      expect(
+        bloqueos.filter((sql) => sql.includes('FROM usuario')),
+      ).toHaveLength(2);
+      expect(
+        bloqueos.filter((sql) => sql.includes('FROM credito')),
+      ).toHaveLength(2);
+      expect(prisma.pago.create).toHaveBeenCalledTimes(1);
+      expect(gateway.notificar).toHaveBeenCalledTimes(1);
+    });
+
+    it(`deja de reintentar después de ${INTENTOS_CONFLICTO} conflictos de escritura`, async () => {
+      prisma.reserva.create.mockRejectedValue(conflicto());
+      await expect(
+        errorDe(servicio.crear(JUGADOR_ID, DATOS)),
+      ).resolves.toMatchObject({ code: 'P2034' });
+      expect(prisma.$transaction).toHaveBeenCalledTimes(INTENTOS_CONFLICTO);
+      expect(gateway.notificar).not.toHaveBeenCalled();
     });
   });
 

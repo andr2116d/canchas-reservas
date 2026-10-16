@@ -19,6 +19,17 @@ const violaUnico = (indice: string) => ({
   meta: { driverAdapterError: { cause: { constraint: { index: indice } } } },
 });
 
+const violaExclusion = {
+  meta: {
+    driverAdapterError: {
+      cause: {
+        code: '23P01',
+        message: expect.stringContaining('reserva_sin_solape'),
+      },
+    },
+  },
+};
+
 const violaCheck = (restriccion: string) => ({
   meta: {
     driverAdapterError: {
@@ -53,7 +64,7 @@ describe('Tabla reserva (e2e)', () => {
     codigo?: string;
   } = {}) => {
     reservas += 1;
-    const fin = `${String(Number(hora.slice(0, 2)) + 1).padStart(2, '0')}:00`;
+    const fin = `${String(Number(hora.slice(0, 2)) + 1).padStart(2, '0')}:${hora.slice(3)}`;
     return prisma.reserva.create({
       data: {
         codigo: codigo ?? `R${sufijo}${reservas}`,
@@ -195,6 +206,76 @@ describe('Tabla reserva (e2e)', () => {
 
     await expect(crearReserva({ hora: '19:00' })).resolves.toMatchObject({
       horaInicio: '19:00',
+    });
+  });
+
+  describe('sin solape', () => {
+    const contarActivas = (cancha = canchaId) =>
+      prisma.reserva.count({
+        where: { canchaId: cancha, estado: { in: ACTIVOS } },
+      });
+
+    it.each(ACTIVOS)(
+      'una reserva %s de 08:15 a 09:15 impide los turnos de 08:00 y de 09:00',
+      async (estado) => {
+        await crearReserva({ hora: '08:15', estado });
+
+        await expect(crearReserva({ hora: '08:00' })).rejects.toMatchObject(
+          violaExclusion,
+        );
+        await expect(crearReserva({ hora: '09:00' })).rejects.toMatchObject(
+          violaExclusion,
+        );
+        await expect(contarActivas()).resolves.toBe(1);
+      },
+    );
+
+    it('admite turnos contiguos', async () => {
+      await crearReserva({ hora: '08:00' });
+
+      await expect(crearReserva({ hora: '09:00' })).resolves.toMatchObject({
+        horaInicio: '09:00',
+      });
+      await expect(crearReserva({ hora: '07:00' })).resolves.toMatchObject({
+        horaInicio: '07:00',
+      });
+      await expect(contarActivas()).resolves.toBe(3);
+    });
+
+    it.each(INACTIVOS)(
+      'una reserva %s solapada no bloquea el turno',
+      async (estado) => {
+        await crearReserva({ hora: '08:15', estado });
+
+        await expect(crearReserva({ hora: '08:00' })).resolves.toMatchObject({
+          estado: 'PENDIENTE_PAGO',
+        });
+        await expect(contarActivas()).resolves.toBe(1);
+      },
+    );
+
+    it('una reserva solapada en otra cancha no choca', async () => {
+      await crearReserva({ hora: '08:15' });
+
+      await expect(
+        crearReserva({ cancha: otraCanchaId, hora: '08:00' }),
+      ).resolves.toMatchObject({ canchaId: otraCanchaId });
+    });
+
+    it('no deja reactivar una reserva que se solapa con una activa', async () => {
+      const cancelada = await crearReserva({
+        hora: '08:15',
+        estado: 'CANCELADA',
+      });
+      await crearReserva({ hora: '08:00' });
+
+      await expect(
+        prisma.reserva.update({
+          where: { id: cancelada.id },
+          data: { estado: 'PENDIENTE_PAGO' },
+        }),
+      ).rejects.toMatchObject(violaExclusion);
+      await expect(contarActivas()).resolves.toBe(1);
     });
   });
 
