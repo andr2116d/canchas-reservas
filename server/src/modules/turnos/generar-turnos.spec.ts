@@ -293,6 +293,20 @@ describe('generarTurnos en un barrido de horarios', () => {
       ),
     ).toEqual([]);
   });
+
+  it('cada tramo tiene tantos turnos como horas completas caben en él', () => {
+    const horasCompletas = (desde: number, hasta: number) =>
+      Math.floor(Math.max(0, hasta - desde) / DURACION_TURNO_MIN);
+    expect(
+      fallosDe(
+        ({ apertura, cierre, noche, turnos }) =>
+          turnos.filter((t) => t.franja === 'DIA').length ===
+            horasCompletas(apertura, Math.min(noche, cierre)) &&
+          turnos.filter((t) => t.franja === 'NOCHE').length ===
+            horasCompletas(Math.max(noche, apertura), cierre),
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe('diaSemanaDe', () => {
