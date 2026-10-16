@@ -333,5 +333,18 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         retenido: 0,
       });
     });
+
+    it('sin adelanto pagado no hay compensación ni a tiempo ni fuera de plazo', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      const reserva = await reservar(jugador, turno);
+
+      for (const horas of [30, 24, 23]) {
+        await expect(calcular(reserva, horas)).resolves.toEqual({
+          resultado: 'SIN_COMPENSACION',
+          importe: 0,
+          retenido: 0,
+        });
+      }
+    });
   });
 });
