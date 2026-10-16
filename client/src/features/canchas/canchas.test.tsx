@@ -14,6 +14,7 @@ const OPERATIVA: Cancha = {
   estado: "OPERATIVA",
   activa: true,
   tieneTarifas: true,
+  franjasSinTarifa: [],
 };
 
 const EN_MANTENIMIENTO: Cancha = {
@@ -26,7 +27,15 @@ const EN_MANTENIMIENTO: Cancha = {
 };
 
 const DESACTIVADA: Cancha = { ...OPERATIVA, id: 3, nombre: "Cancha 3", activa: false };
-const SIN_TARIFA: Cancha = { ...OPERATIVA, id: 4, nombre: "Cancha 4", tieneTarifas: false };
+const SIN_TARIFA: Cancha = {
+  ...OPERATIVA,
+  id: 4,
+  nombre: "Cancha 4",
+  tieneTarifas: false,
+  franjasSinTarifa: ["DIA", "NOCHE"],
+};
+const SIN_TARIFA_NOCHE: Cancha = { ...OPERATIVA, id: 5, nombre: "Cancha 5", franjasSinTarifa: ["NOCHE"] };
+const SIN_TARIFA_DIA: Cancha = { ...OPERATIVA, id: 6, nombre: "Cancha 6", franjasSinTarifa: ["DIA"] };
 
 type Respuesta = { status: number; body?: unknown };
 type Rutas = Record<string, Respuesta | Respuesta[]>;
@@ -127,10 +136,10 @@ describe("Canchas", () => {
     expect(within(desactivada).queryByRole("button", { name: "Desactivar" })).toBeNull();
   });
 
-  it("avisa Sin tarifa solo cuando la cancha no tiene tarifas", () => {
+  it("avisa Sin tarifa cuando la cancha no tiene tarifas y nombra la franja que falta", () => {
     render(
       <TablaCanchas
-        canchas={[OPERATIVA, SIN_TARIFA]}
+        canchas={[OPERATIVA, SIN_TARIFA, SIN_TARIFA_NOCHE, SIN_TARIFA_DIA]}
         onEditar={sinAccion}
         onDesactivar={sinAccion}
         onActivar={sinAccion}
@@ -138,9 +147,12 @@ describe("Canchas", () => {
       />,
     );
 
-    const [, conTarifa, sinTarifa] = within(screen.getByRole("table")).getAllByRole("row");
-    expect(within(conTarifa).queryByText("Sin tarifa")).toBeNull();
+    const [, conTarifa, sinTarifa, sinNoche, sinDia] = within(screen.getByRole("table")).getAllByRole("row");
+    expect(within(conTarifa).queryByText(/Sin tarifa/)).toBeNull();
     expect(within(sinTarifa).getByText("Sin tarifa").className).toContain("bg-alerta-fondo");
+    expect(within(sinNoche).getByText("Sin tarifa de noche").className).toContain("bg-alerta-fondo");
+    expect(within(sinNoche).queryByText("Sin tarifa")).toBeNull();
+    expect(within(sinDia).getByText("Sin tarifa de día").className).toContain("bg-alerta-fondo");
   });
 
   it("al recibir 409 al desactivar muestra las reservas afectadas y Desactivar igual confirma", async () => {

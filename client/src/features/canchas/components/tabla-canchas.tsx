@@ -1,5 +1,5 @@
 import { Badge, Button, Table, type ColumnaTabla } from "@/components/ui";
-import { ETIQUETA_ESTADO, ETIQUETA_TAMANO, type Cancha } from "../api";
+import { avisoSinTarifa, ETIQUETA_ESTADO, ETIQUETA_TAMANO, type Cancha } from "../api";
 
 type Props = {
   canchas: Cancha[];
@@ -19,13 +19,16 @@ export function TablaCanchas({ canchas, activandoId, onEditar, onDesactivar, onA
     { titulo: "Iluminación", celda: (c) => (c.iluminacion ? "Sí" : "No") },
     {
       titulo: "Estado",
-      celda: (c) => (
-        <div className="flex flex-wrap gap-2">
-          <Badge tono={c.estado === "OPERATIVA" ? "exito" : "alerta"}>{ETIQUETA_ESTADO[c.estado]}</Badge>
-          {!c.activa && <Badge tono="neutro">Desactivada</Badge>}
-          {!c.tieneTarifas && <Badge tono="alerta">Sin tarifa</Badge>}
-        </div>
-      ),
+      celda: (c) => {
+        const aviso = avisoSinTarifa(c.franjasSinTarifa);
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Badge tono={c.estado === "OPERATIVA" ? "exito" : "alerta"}>{ETIQUETA_ESTADO[c.estado]}</Badge>
+            {!c.activa && <Badge tono="neutro">Desactivada</Badge>}
+            {aviso && <Badge tono="alerta">{aviso}</Badge>}
+          </div>
+        );
+      },
     },
     {
       titulo: "Acciones",
