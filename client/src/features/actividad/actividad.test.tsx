@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ItemCambio, Pagina } from "./api";
+import type { ItemAcceso, ItemCambio, Pagina } from "./api";
 import { PantallaActividad } from "./components/pantalla-actividad";
 
 type Respuesta = { status: number; body?: unknown } | "red";
@@ -342,5 +342,190 @@ describe("Actividad: filtros y paginación de cambios", () => {
     await waitFor(() => expect(hasta.getAttribute("aria-invalid")).toBe("true"));
     expect(document.getElementById(hasta.getAttribute("aria-describedby")!)?.textContent).toBe(MENSAJE_RANGO);
     expect(screen.queryByRole("button", { name: "Reintentar" })).toBeNull();
+  });
+});
+
+const ACCESOS: ItemAcceso[] = [
+  {
+    id: 3,
+    fecha: "2026-10-16T13:05:00.000Z",
+    correo: "luis@laprevia.pe",
+    usuario: { id: 9, nombre: "Luis Ramos", rol: "JUGADOR" },
+    exito: false,
+    motivo: "CREDENCIALES",
+    ip: "10.0.0.2",
+  },
+  {
+    id: 2,
+    fecha: "2026-10-16T13:00:00.000Z",
+    correo: "nadie@laprevia.pe",
+    usuario: null,
+    exito: false,
+    motivo: "CREDENCIALES",
+    ip: null,
+  },
+  {
+    id: 1,
+    fecha: "2026-10-16T12:59:00.000Z",
+    correo: "ana@laprevia.pe",
+    usuario: { id: 4, nombre: "Ana Pérez", rol: "RECEPCIONISTA" },
+    exito: false,
+    motivo: "INACTIVO",
+    ip: null,
+  },
+  {
+    id: 0,
+    fecha: "2026-10-16T05:01:00.000Z",
+    correo: "admin@laprevia.pe",
+    usuario: ADMIN,
+    exito: true,
+    motivo: "OK",
+    ip: "127.0.0.1",
+  },
+];
+
+describe("Actividad: pestaña Accesos", () => {
+  const rutas = (accesos: Respuesta | Respuesta[] = { status: 200, body: pagina(ACCESOS) }) =>
+    responder((ruta) => (ruta === "/api/accesos" ? accesos : { status: 200, body: pagina(CAMBIOS) }));
+
+  const abrirAccesos = async () => {
+    await tabla();
+    fireEvent.click(screen.getByRole("tab", { name: "Accesos" }));
+  };
+
+  const tablaAccesos = async () => within(await screen.findByRole("table", { name: "Accesos" }));
+  const filaAcceso = async (correo: string) =>
+    within((await (await tablaAccesos()).findByText(correo)).closest("tr") as HTMLElement);
+  const ultima = (fetchMock: ReturnType<typeof responder>) => consultas(fetchMock, "/api/accesos").at(-1);
+
+  it("la pestaña Cambios está activa al abrir y Accesos se pide solo al elegirla", async () => {
+    const fetchMock = rutas();
+    renderPantalla();
+    await tabla();
+
+    expect(screen.getByRole("tab", { name: "Cambios" }).getAttribute("aria-selected")).toBe("true");
+    expect(consultas(fetchMock, "/api/accesos")).toHaveLength(0);
+
+    await abrirAccesos();
+
+    expect(screen.getByRole("tab", { name: "Accesos" }).getAttribute("aria-selected")).toBe("true");
+    expect(await screen.findByRole("table", { name: "Accesos" })).toBeTruthy();
+    expect(screen.queryByRole("table", { name: "Cambios" })).toBeNull();
+    expect(consultas(fetchMock, "/api/accesos")).toEqual([{ pagina: "1", tamano: "20" }]);
+  });
+
+  it("muestra fecha y hora, correo, usuario, resultado y motivo legible", async () => {
+    rutas();
+    renderPantalla();
+    await abrirAccesos();
+
+    const fallido = await filaAcceso("luis@laprevia.pe");
+    expect(fallido.getByText("16/10/2026 08:05")).toBeTruthy();
+    expect(fallido.getByText("Luis Ramos")).toBeTruthy();
+    expect(fallido.getByText("Jugador")).toBeTruthy();
+    expect(fallido.getByText("Rechazado")).toBeTruthy();
+    expect(fallido.getByText("Credenciales incorrectas")).toBeTruthy();
+
+    const sinCuenta = await filaAcceso("nadie@laprevia.pe");
+    expect(sinCuenta.getByText("Sin cuenta")).toBeTruthy();
+
+    const inactiva = await filaAcceso("ana@laprevia.pe");
+    expect(inactiva.getByText("Cuenta desactivada")).toBeTruthy();
+    expect(inactiva.getByText("Recepcionista")).toBeTruthy();
+
+    const correcto = await filaAcceso("admin@laprevia.pe");
+    expect(correcto.getByText("16/10/2026 00:01")).toBeTruthy();
+    expect(correcto.getByText("Entró")).toBeTruthy();
+    expect(correcto.getByText("—")).toBeTruthy();
+  });
+
+  it("resultado, correo y fechas cambian la consulta y vuelven a la página 1", async () => {
+    const fetchMock = responder((ruta, query) =>
+      ruta === "/api/accesos"
+        ? { status: 200, body: pagina(ACCESOS, { total: 60, pagina: Number(query.get("pagina")) }) }
+        : { status: 200, body: pagina(CAMBIOS) },
+    );
+    renderPantalla();
+    await abrirAccesos();
+    await tablaAccesos();
+
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    await waitFor(() => expect(ultima(fetchMock)?.pagina).toBe("2"));
+
+    fireEvent.change(screen.getByLabelText("Resultado"), { target: { value: "false" } });
+    await waitFor(() => expect(ultima(fetchMock)).toEqual({ exito: "false", pagina: "1", tamano: "20" }));
+
+    fireEvent.change(screen.getByLabelText("Correo"), { target: { value: "  luis@ " } });
+    await waitFor(() =>
+      expect(ultima(fetchMock)).toEqual({ exito: "false", correo: "luis@", pagina: "1", tamano: "20" }),
+    );
+
+    fireEvent.change(screen.getByLabelText("Desde"), { target: { value: "2026-10-16" } });
+    fireEvent.change(screen.getByLabelText("Resultado"), { target: { value: "true" } });
+    await waitFor(() =>
+      expect(ultima(fetchMock)).toEqual({
+        exito: "true",
+        correo: "luis@",
+        desde: "2026-10-16",
+        pagina: "1",
+        tamano: "20",
+      }),
+    );
+
+    fireEvent.change(screen.getByLabelText("Resultado"), { target: { value: "" } });
+    await waitFor(() => expect(ultima(fetchMock)).not.toHaveProperty("exito"));
+  });
+
+  it("el correo espera a que termines de escribir antes de consultar", async () => {
+    const fetchMock = rutas();
+    renderPantalla();
+    await abrirAccesos();
+    await tablaAccesos();
+
+    for (const texto of ["l", "lu", "lui", "luis"]) {
+      fireEvent.change(screen.getByLabelText("Correo"), { target: { value: texto } });
+    }
+
+    await waitFor(() => expect(ultima(fetchMock)?.correo).toBe("luis"));
+    expect(consultas(fetchMock, "/api/accesos").map((q) => q.correo)).toEqual([undefined, "luis"]);
+  });
+
+  it("vacío sin filtros y con filtros", async () => {
+    responder((ruta, query) =>
+      ruta === "/api/accesos"
+        ? { status: 200, body: pagina(query.get("exito") ? [] : ACCESOS) }
+        : { status: 200, body: pagina(CAMBIOS) },
+    );
+    renderPantalla();
+    await abrirAccesos();
+    await tablaAccesos();
+
+    fireEvent.change(screen.getByLabelText("Resultado"), { target: { value: "true" } });
+
+    expect(await screen.findByText("No hay accesos con estos filtros")).toBeTruthy();
+  });
+
+  it("sin accesos muestra el vacío general", async () => {
+    rutas({ status: 200, body: pagina([]) });
+    renderPantalla();
+    await abrirAccesos();
+
+    expect(await screen.findByText("No hay accesos registrados")).toBeTruthy();
+  });
+
+  it("si falla muestra el error y Reintentar vuelve a pedir", async () => {
+    const fetchMock = rutas([
+      { status: 500, body: { statusCode: 500, message: "No se pudieron cargar los accesos", errores: {} } },
+      { status: 200, body: pagina(ACCESOS) },
+    ]);
+    renderPantalla();
+    await abrirAccesos();
+
+    const alerta = await screen.findByRole("alert");
+    expect(within(alerta).getByText("No se pudieron cargar los accesos")).toBeTruthy();
+    fireEvent.click(within(alerta).getByRole("button", { name: "Reintentar" }));
+
+    expect(await screen.findByRole("table", { name: "Accesos" })).toBeTruthy();
+    expect(consultas(fetchMock, "/api/accesos")).toHaveLength(2);
   });
 });
