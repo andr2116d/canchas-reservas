@@ -3,8 +3,11 @@
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { Input, Switch } from "@/components/ui";
 import { cn } from "@/lib/cn";
+import { conFiltro, hora } from "@/lib/filtros-entrada";
 import { ETIQUETA_DIA } from "../api";
 import type { ValoresHorario } from "../schemas";
+
+export const PROPS_HORA = { inputMode: "numeric", placeholder: "HH:MM", maxLength: 5, autoComplete: "off" } as const;
 
 const COLUMNAS = "md:grid-cols-[minmax(6rem,1fr)_7rem_minmax(0,1fr)_minmax(0,1fr)]";
 
@@ -46,18 +49,18 @@ export function TablaHorario({ dias, registro, errores }: Props) {
               <Input
                 etiqueta="Apertura"
                 aria-label={`Apertura del ${nombre.toLowerCase()}`}
-                type="time"
+                {...PROPS_HORA}
                 disabled={!dia.abierto}
                 error={errorApertura}
-                {...registro(`dias.${indice}.apertura`)}
+                {...conFiltro(registro(`dias.${indice}.apertura`), hora)}
               />
               <Input
                 etiqueta="Cierre"
                 aria-label={`Cierre del ${nombre.toLowerCase()}`}
-                type="time"
+                {...PROPS_HORA}
                 disabled={!dia.abierto}
                 error={errorCierre}
-                {...registro(`dias.${indice}.cierre`)}
+                {...conFiltro(registro(`dias.${indice}.cierre`), hora)}
               />
             </li>
           );

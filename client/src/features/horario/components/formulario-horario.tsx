@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch, type Path } from "react-hook-form";
 import { Alerta, Button, Card, Input, useToast } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { conFiltro, hora } from "@/lib/filtros-entrada";
 import {
   reservasFueraDeHorario,
   type DatosGuardarHorario,
@@ -14,7 +15,7 @@ import {
 import { useGuardarHorario } from "../hooks";
 import { esquemaHorario, valoresDeHorario, type DatosHorario, type ValoresHorario } from "../schemas";
 import { ConfirmarFueraHorario } from "./confirmar-fuera-horario";
-import { TablaHorario } from "./tabla-horario";
+import { PROPS_HORA, TablaHorario } from "./tabla-horario";
 
 const CAMPOS = [
   "inicioNoche",
@@ -96,9 +97,9 @@ export function FormularioHorario({ horario }: { horario: Horario }) {
         <div className="max-w-48">
           <Input
             etiqueta="La noche empieza a las"
-            type="time"
+            {...PROPS_HORA}
             error={errors.inicioNoche?.message}
-            {...register("inicioNoche")}
+            {...conFiltro(register("inicioNoche"), hora)}
           />
         </div>
         <div>
