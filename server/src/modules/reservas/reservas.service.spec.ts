@@ -359,6 +359,47 @@ describe('ReservasService', () => {
     });
   });
 
+  describe('turno libre', () => {
+    const consultaPorRango = {
+      where: {
+        canchaId: 2,
+        estado: {
+          in: [
+            'PENDIENTE_PAGO',
+            'PENDIENTE_VALIDACION',
+            'CONFIRMADA',
+            'EN_JUEGO',
+            'FINALIZADA',
+          ],
+        },
+        inicioEn: { lt: new Date('2026-10-21T00:00:00.000Z') },
+        finEn: { gt: INICIO_EN },
+      },
+      select: { id: true },
+    };
+
+    it('al crear busca reservas que ocupan y se solapan con el turno', async () => {
+      await servicio.crear(JUGADOR_ID, DATOS);
+      expect(prisma.reserva.findFirst).toHaveBeenCalledWith(consultaPorRango);
+    });
+
+    it('el resumen usa la misma comparación por rango', async () => {
+      await servicio.resumen(JUGADOR_ID, DATOS);
+      expect(prisma.reserva.findFirst).toHaveBeenCalledWith(consultaPorRango);
+    });
+
+    it('el resumen responde 409 si el turno se solapa con una reserva', async () => {
+      prisma.reserva.findFirst.mockResolvedValue({ id: 1 });
+      const error = (await errorDe(
+        servicio.resumen(JUGADOR_ID, DATOS),
+      )) as ConflictException;
+      expect(error).toBeInstanceOf(ConflictException);
+      expect(error.getResponse()).toMatchObject({
+        message: MENSAJES_RESERVA.turnoNoDisponible,
+      });
+    });
+  });
+
   describe('conflictos en la base', () => {
     const solape = () =>
       Object.assign(new Error('23P01'), {

@@ -14,7 +14,6 @@ import { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
-import { ESTADOS_RESERVA_FUTURA } from '../canchas/canchas.service';
 import { ReglaCancelacionService } from '../regla-cancelacion/regla-cancelacion.service';
 import { aNumero } from '../tarifas/calculo-tarifa';
 import { TarifasService } from '../tarifas/tarifas.service';
@@ -22,6 +21,7 @@ import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import { TurnosService } from '../turnos/turnos.service';
 import { repartirCredito } from './aplicacion-credito';
 import { generarCodigo } from './codigo-reserva';
+import { ESTADOS_OCUPAN_TURNO } from './estados-reserva';
 import { calcularMontosReserva } from './montos-reserva';
 import { pagosAprobadosPorReserva } from './pagos-aprobados';
 import { CrearReservaDto } from './dto/crear-reserva.dto';
@@ -163,7 +163,7 @@ export class ReservasService {
     if (!confirmada && (await this.alcanzoLimitePendientes(jugadorId, tx))) {
       throw limitePendientes();
     }
-    await this.validarTurnoLibre(datos, tx);
+    await this.validarTurnoLibre(turno, tx);
     const reserva = await tx.reserva
       .create({
         data: {
@@ -252,7 +252,7 @@ export class ReservasService {
     if (soloConCredito && credito.lt(turno.valor.adelanto)) {
       throw limitePendientes();
     }
-    await this.validarTurnoLibre(datos, this.prisma);
+    await this.validarTurnoLibre(turno, this.prisma);
     const plazoLimite = this.regla.plazoLimite(
       turno.fecha,
       turno.horaInicio,
@@ -456,15 +456,19 @@ export class ReservasService {
   }
 
   private async validarTurnoLibre(
-    { canchaId, fecha, horaInicio }: TurnoReservaDto,
+    {
+      cancha,
+      inicioEn,
+      finEn,
+    }: { cancha: { id: number }; inicioEn: Date; finEn: Date },
     cliente: Cliente,
   ) {
     const tomada = await cliente.reserva.findFirst({
       where: {
-        canchaId,
-        fecha: new Date(`${fecha}T00:00:00.000Z`),
-        horaInicio,
-        estado: { in: ESTADOS_RESERVA_FUTURA },
+        canchaId: cancha.id,
+        estado: { in: ESTADOS_OCUPAN_TURNO },
+        inicioEn: { lt: finEn },
+        finEn: { gt: inicioEn },
       },
       select: { id: true },
     });
