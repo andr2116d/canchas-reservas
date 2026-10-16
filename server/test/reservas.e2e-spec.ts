@@ -1056,6 +1056,10 @@ describe('Reservas (e2e)', () => {
           nombre: expect.any(String) as string,
           tamano: 'FUTBOL_5',
         },
+        valorTurno: 80,
+        adelantoMinimo: 40,
+        adelantoPagado: 0,
+        saldoPendiente: 80,
       });
     });
 

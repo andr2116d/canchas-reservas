@@ -22,6 +22,8 @@ import { TurnosGateway } from '../tiempo-real/turnos.gateway';
 import { TurnosService } from '../turnos/turnos.service';
 import { repartirCredito } from './aplicacion-credito';
 import { generarCodigo } from './codigo-reserva';
+import { calcularMontosReserva } from './montos-reserva';
+import { pagosAprobadosPorReserva } from './pagos-aprobados';
 import { CrearReservaDto } from './dto/crear-reserva.dto';
 import { TurnoReservaDto } from './dto/turno-reserva.dto';
 import { calcularVenceEn, minutosParaPagar } from './vencimiento-reserva';
@@ -243,17 +245,40 @@ export class ReservasService {
         venceEn: true,
         inicioEn: true,
         finEn: true,
+        valorTurno: true,
+        adelantoMinimo: true,
         cancha: { select: { id: true, nombre: true, tamano: true } },
       },
       orderBy: [{ inicioEn: 'asc' }, { id: 'asc' }],
     });
+    const pagos = await pagosAprobadosPorReserva(
+      this.prisma,
+      reservas.map((r) => r.id),
+    );
     const proximas = reservas.filter((r) => r.finEn > ahora);
     const pasadas = reservas.filter((r) => r.finEn <= ahora).reverse();
     return [...proximas, ...pasadas].map(
-      ({ fecha, inicioEn: _inicioEn, finEn: _finEn, ...reserva }) => ({
-        ...reserva,
-        fecha: fecha.toISOString().slice(0, 10),
-      }),
+      ({
+        fecha,
+        inicioEn: _inicioEn,
+        finEn: _finEn,
+        valorTurno,
+        adelantoMinimo,
+        ...reserva
+      }) => {
+        const { adelantoPagado, saldoPendiente } = calcularMontosReserva(
+          valorTurno,
+          pagos.get(reserva.id) ?? [],
+        );
+        return {
+          ...reserva,
+          fecha: fecha.toISOString().slice(0, 10),
+          valorTurno: aNumero(valorTurno),
+          adelantoMinimo: aNumero(adelantoMinimo),
+          adelantoPagado,
+          saldoPendiente,
+        };
+      },
     );
   }
 
