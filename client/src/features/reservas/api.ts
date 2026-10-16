@@ -46,6 +46,10 @@ export type ReservaJugador = {
   estado: EstadoReserva;
   venceEn?: string | null;
   cancha?: { id: number; nombre: string; tamano?: TamanoCancha };
+  valorTurno: number;
+  adelantoMinimo: number;
+  adelantoPagado: number;
+  saldoPendiente: number;
 };
 
 

@@ -13,6 +13,10 @@ function reserva(id: number, estado: EstadoReserva, extra: Partial<ReservaJugado
     horaFin: "19:00",
     estado,
     cancha: { id: 2, nombre: "Cancha 2" },
+    valorTurno: 80,
+    adelantoMinimo: 40,
+    adelantoPagado: 0,
+    saldoPendiente: 80,
     ...extra,
   };
 }
