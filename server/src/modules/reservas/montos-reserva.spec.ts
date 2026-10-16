@@ -52,6 +52,16 @@ describe('montos de la reserva', () => {
     ).toEqual({ adelantoPagado: 50, saldoPendiente: 0, pagadoTurno: 90 });
   });
 
+  it('lo pagado del turno no se recorta aunque supere el valor, a diferencia del saldo', () => {
+    expect(
+      calcularMontosReserva(80, [
+        { concepto: 'ADELANTO', monto: 60 },
+        { concepto: 'SALDO', monto: 40 },
+        { concepto: 'ADICIONALES', monto: 15 },
+      ]),
+    ).toEqual({ adelantoPagado: 60, saldoPendiente: 0, pagadoTurno: 100 });
+  });
+
   it('suma céntimos sin errores de redondeo', () => {
     expect(
       calcularMontosReserva('0.30', [
