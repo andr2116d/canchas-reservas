@@ -173,7 +173,10 @@ const ORDEN_RESERVA = [
 ];
 
 function reserva(detalle: Objeto, nombres: Nombres): Cambio[] {
-  if (tieneAnteriorONuevo(detalle)) return cambiosGenericos(detalle);
+  if (tieneAnteriorONuevo(detalle)) {
+    const { codigo: _codigo, ...cambios } = detalle;
+    return cambiosGenericos(cambios);
+  }
   const conocidos = ORDEN_RESERVA.filter((campo) => campo in detalle).map(
     (campo) =>
       campo === 'canchaId'

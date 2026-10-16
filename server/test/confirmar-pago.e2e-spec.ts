@@ -221,15 +221,17 @@ describe('Confirmar pago desde recepción (e2e)', () => {
       confirmar(id, { metodo: 'YAPE' }, recepcion.cookie),
     ]);
 
-    expect(respuestas.map((r) => r.status).sort()).toEqual([201, 409]);
+    expect(respuestas.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+      201, 409,
+    ]);
     expect(respuestas.find((r) => r.status === 409)?.body).toEqual({
       statusCode: 409,
       message: MENSAJES_PAGO.estadoNoPermite,
       errores: {},
     });
-    await expect(
-      prisma.pago.count({ where: { reservaId: id } }),
-    ).resolves.toBe(1);
+    await expect(prisma.pago.count({ where: { reservaId: id } })).resolves.toBe(
+      1,
+    );
   });
 
   it.each<EstadoReserva>(['CONFIRMADA', 'CANCELADA', 'EXPIRADA'])(

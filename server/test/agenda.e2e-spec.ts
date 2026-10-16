@@ -29,6 +29,7 @@ interface Turno {
   cliente: { id: number; nombre: string; telefono: string };
   estado: EstadoReserva;
   valorTurno: number;
+  adelantoMinimo: number;
   adelantoPagado: number;
   saldoPendiente: number;
   acciones: string[];
@@ -243,6 +244,7 @@ describe('Agenda (e2e)', () => {
         },
         estado: 'PENDIENTE_PAGO',
         valorTurno: 80,
+        adelantoMinimo: 40,
         adelantoPagado: 0,
         saldoPendiente: 80,
         acciones: ['CONFIRMAR_PAGO', 'CANCELAR', 'REUBICAR'],
