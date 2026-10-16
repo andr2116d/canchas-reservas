@@ -1,5 +1,6 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { inicioDeHoyEnLima } from '../../common/fechas-lima';
+import { Reloj } from '../../common/reloj/reloj';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { TurnosGateway } from '../tiempo-real/turnos.gateway';
@@ -57,10 +58,12 @@ describe('CanchasService', () => {
   };
   const auditoria = { registrar: jest.fn() };
   const gateway = { notificar: jest.fn() };
+  const reloj = { ahora: jest.fn() };
   const servicio = new CanchasService(
     prisma as unknown as PrismaService,
     auditoria as unknown as AuditoriaService,
     gateway as unknown as TurnosGateway,
+    reloj as unknown as Reloj,
   );
 
   beforeEach(() => {
@@ -272,6 +275,8 @@ describe('CanchasService', () => {
     });
 
     it('busca reservas futuras por estado y desde hoy en Lima', async () => {
+      const ahora = new Date('2026-10-16T03:30:00.000Z');
+      reloj.ahora.mockReturnValue(ahora);
       prisma.cancha.findUnique.mockResolvedValue(CANCHA);
       prisma.reserva.findMany.mockResolvedValue([]);
       prisma.cancha.update.mockResolvedValue({ ...CANCHA, activa: false });
@@ -285,7 +290,7 @@ describe('CanchasService', () => {
             estado: {
               in: ['PENDIENTE_PAGO', 'PENDIENTE_VALIDACION', 'CONFIRMADA'],
             },
-            fecha: { gte: inicioDeHoyEnLima() },
+            fecha: { gte: inicioDeHoyEnLima(ahora) },
           },
         }),
       );
