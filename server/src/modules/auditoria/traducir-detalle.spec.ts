@@ -396,4 +396,43 @@ describe('traducirDetalle', () => {
       expect(traducirDetalle('RESERVA', undefined)).toEqual([]);
     });
   });
+  describe('orden de los campos', () => {
+    it('ordena como el formulario aunque jsonb devuelva las claves por longitud', () => {
+      expect(
+        traducirDetalle('CANCHA', {
+          nuevo: {
+            activa: true,
+            estado: 'OPERATIVA',
+            nombre: 'Cancha 1',
+            tamano: 'FUTBOL_5',
+            iluminacion: true,
+          },
+        }).map(({ campo }) => campo),
+      ).toEqual(['nombre', 'tamano', 'iluminacion', 'estado', 'activa']);
+      expect(
+        traducirDetalle('REGLA_CANCELACION', {
+          anterior: { tipoCompensacion: 'CREDITO', horasAnticipacion: 24 },
+          nuevo: { tipoCompensacion: 'DEVOLUCION', horasAnticipacion: 12 },
+        }).map(({ campo }) => campo),
+      ).toEqual(['horasAnticipacion', 'tipoCompensacion']);
+      expect(
+        traducirDetalle('ADICIONAL', {
+          nuevo: { activo: true, nombre: 'Agua', precio: 2 },
+        }).map(({ campo }) => campo),
+      ).toEqual(['nombre', 'precio', 'activo']);
+    });
+
+    it('los campos desconocidos van al final en el orden en que llegan', () => {
+      expect(
+        traducirDetalle('RECEPCIONISTA', {
+          nuevo: {
+            zona: 'Norte',
+            correo: 'a@b.pe',
+            alias: 'Ana',
+            nombres: 'Ana',
+          },
+        }).map(({ campo }) => campo),
+      ).toEqual(['nombres', 'correo', 'zona', 'alias']);
+    });
+  });
 });
