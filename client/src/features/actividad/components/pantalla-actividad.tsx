@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/cn";
+import { PestanaAccesos } from "./pestana-accesos";
 import { PestanaCambios } from "./pestana-cambios";
 
-const PESTANAS = [{ id: "cambios", etiqueta: "Cambios" }] as const;
+const PESTANAS = [
+  { id: "cambios", etiqueta: "Cambios" },
+  { id: "accesos", etiqueta: "Accesos" },
+] as const;
 
 type Pestana = (typeof PESTANAS)[number]["id"];
 
@@ -40,7 +44,7 @@ export function PantallaActividad() {
       </div>
 
       <div role="tabpanel" id={`panel-${pestana}`} aria-labelledby={`pestana-${pestana}`}>
-        {pestana === "cambios" && <PestanaCambios />}
+        {pestana === "cambios" ? <PestanaCambios /> : <PestanaAccesos />}
       </div>
     </div>
   );
