@@ -112,7 +112,7 @@ export function PantallaTarifas() {
 
   const canchaId = canchas.data.some((cancha) => cancha.id === canchaElegida)
     ? (canchaElegida as number)
-    : canchas.data[0].id;
+    : (canchas.data.find((cancha) => cancha.activa) ?? canchas.data[0]).id;
 
   return (
     <div className="flex flex-col gap-6">
@@ -127,7 +127,7 @@ export function PantallaTarifas() {
           >
             {canchas.data.map((cancha) => (
               <option key={cancha.id} value={cancha.id}>
-                {cancha.nombre}
+                {cancha.activa ? cancha.nombre : `${cancha.nombre} (desactivada)`}
               </option>
             ))}
           </Select>

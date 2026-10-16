@@ -12,8 +12,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 const CANCHAS: CanchaOpcion[] = [
-  { id: 1, nombre: "Cancha 1" },
-  { id: 2, nombre: "Cancha 2" },
+  { id: 1, nombre: "Cancha 1", activa: true },
+  { id: 2, nombre: "Cancha 2", activa: true },
 ];
 
 const ANA = { id: 7, nombre: "Ana Torres" };
@@ -140,6 +140,42 @@ describe("Pantalla de tarifas", () => {
     expect(select.value).toBe("1");
     expect(within(select).getAllByRole("option").map((opcion) => opcion.textContent)).toEqual(["Cancha 1", "Cancha 2"]);
     expect(llamadas(fetchMock, "GET", "/api/canchas/1/tarifas")).toHaveLength(1);
+  });
+
+  it("abre en la primera cancha activa y marca las desactivadas en las opciones", async () => {
+    const fetchMock = responder(
+      rutasBase({
+        "GET /api/canchas": {
+          status: 200,
+          body: [{ ...CANCHAS[0], activa: false }, CANCHAS[1]],
+        },
+      }),
+    );
+    renderPantalla();
+
+    expect((await tarjeta("Noche")).getByText("S/ 90.00")).toBeTruthy();
+    const select = screen.getByLabelText("Cancha") as HTMLSelectElement;
+    expect(select.value).toBe("2");
+    expect(within(select).getAllByRole("option").map((opcion) => opcion.textContent)).toEqual([
+      "Cancha 1 (desactivada)",
+      "Cancha 2",
+    ]);
+    expect(llamadas(fetchMock, "GET", "/api/canchas/1/tarifas")).toHaveLength(0);
+  });
+
+  it("si todas las canchas están desactivadas abre en la primera", async () => {
+    responder(
+      rutasBase({
+        "GET /api/canchas": {
+          status: 200,
+          body: CANCHAS.map((cancha) => ({ ...cancha, activa: false })),
+        },
+      }),
+    );
+    renderPantalla();
+
+    expect((await tarjeta("Día")).getByText("S/ 55.05")).toBeTruthy();
+    expect((screen.getByLabelText("Cancha") as HTMLSelectElement).value).toBe("1");
   });
 
   it("muestra el historial con fecha y hora de Lima y la vigente con su badge", async () => {
