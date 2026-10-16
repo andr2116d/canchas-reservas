@@ -6,6 +6,7 @@ import { TarifasModule } from '../tarifas/tarifas.module';
 import { TurnosModule } from '../turnos/turnos.module';
 import { AgendaController } from './agenda.controller';
 import { AgendaService } from './agenda.service';
+import { PagosReservaService } from './pagos-reserva.service';
 import { ReservasController } from './reservas.controller';
 import { ReservasService } from './reservas.service';
 
@@ -18,7 +19,7 @@ import { ReservasService } from './reservas.service';
     ReglaCancelacionModule,
   ],
   controllers: [ReservasController, AgendaController],
-  providers: [ReservasService, AgendaService],
+  providers: [ReservasService, AgendaService, PagosReservaService],
   exports: [ReservasService],
 })
 export class ReservasModule {}

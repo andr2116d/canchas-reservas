@@ -1,6 +1,7 @@
 import type { EstadoReserva } from '../../generated/prisma/enums';
 
 export type AccionAgenda =
+  | 'CONFIRMAR_PAGO'
   | 'CHECK_IN'
   | 'MARCAR_AUSENTE'
   | 'CANCELAR'
@@ -9,8 +10,8 @@ export type AccionAgenda =
   | 'FINALIZAR';
 
 const ACCIONES_POR_ESTADO: Record<EstadoReserva, readonly AccionAgenda[]> = {
-  PENDIENTE_PAGO: ['CANCELAR', 'REUBICAR'],
-  PENDIENTE_VALIDACION: [],
+  PENDIENTE_PAGO: ['CONFIRMAR_PAGO', 'CANCELAR', 'REUBICAR'],
+  PENDIENTE_VALIDACION: ['CONFIRMAR_PAGO'],
   CONFIRMADA: ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
   EN_JUEGO: ['REGISTRAR_ADICIONALES', 'FINALIZAR'],
   FINALIZADA: [],

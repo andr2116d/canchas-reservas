@@ -7,11 +7,13 @@ import { Card } from "@/components/ui/card";
 import { CampoFecha } from "@/components/ui/campo-fecha";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/campo";
+import { useToast } from "@/components/ui/toast";
 import { fecha as fechaEnPantalla, hoyEnLima, moneda } from "@/lib/formato";
 import { useTurnosEnVivo } from "@/lib/use-turnos-en-vivo";
 import { useCanchas } from "@/features/canchas/hooks";
-import { useAgenda } from "../hooks";
+import { useAgenda, useConfirmarPago } from "../hooks";
 import type { EstadoReserva, TurnoAgenda } from "../api";
+import { ConfirmarPago } from "./confirmar-pago";
 
 const ESTADOS: EstadoReserva[] = [
   "PENDIENTE_PAGO",
@@ -66,6 +68,7 @@ function tonoEstado(estado: EstadoReserva) {
 }
 
 const ETIQUETA_ACCION: Record<string, string> = {
+  CONFIRMAR_PAGO: "Confirmar pago",
   CHECK_IN: "Check-in",
   MARCAR_AUSENTE: "Marcar ausente",
   CANCELAR: "Cancelar",
@@ -76,27 +79,44 @@ const ETIQUETA_ACCION: Record<string, string> = {
 
 const AVISO_ACCIONES = "Disponible en el próximo sprint";
 
-function AccionesTurno({ acciones }: { acciones: string[] }) {
+type PropsTurno = { turno: TurnoAgenda; onConfirmarPago: (turno: TurnoAgenda) => void };
+
+function AccionesTurno({ turno, onConfirmarPago }: PropsTurno) {
   const avisoId = useId();
+  const { acciones } = turno;
   if (acciones.length === 0) return null;
+  const hayPendientes = acciones.some((accion) => accion !== "CONFIRMAR_PAGO");
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-wrap gap-1">
-        {acciones.map((accion) => (
-          <Button
-            key={accion}
-            variante="secundario"
-            disabled
-            aria-describedby={avisoId}
-            className="h-8 px-2 text-xs"
-          >
-            {ETIQUETA_ACCION[accion] ?? accion}
-          </Button>
-        ))}
+        {acciones.map((accion) =>
+          accion === "CONFIRMAR_PAGO" ? (
+            <Button
+              key={accion}
+              variante="primario"
+              className="h-8 px-2 text-xs"
+              onClick={() => onConfirmarPago(turno)}
+            >
+              {ETIQUETA_ACCION[accion]}
+            </Button>
+          ) : (
+            <Button
+              key={accion}
+              variante="secundario"
+              disabled
+              aria-describedby={avisoId}
+              className="h-8 px-2 text-xs"
+            >
+              {ETIQUETA_ACCION[accion] ?? accion}
+            </Button>
+          ),
+        )}
       </div>
-      <p id={avisoId} className="text-xs text-texto-suave">
-        {AVISO_ACCIONES}
-      </p>
+      {hayPendientes && (
+        <p id={avisoId} className="text-xs text-texto-suave">
+          {AVISO_ACCIONES}
+        </p>
+      )}
     </div>
   );
 }
@@ -110,7 +130,7 @@ function moverFecha(fecha: string, delta: number): string {
   return `${y}-${m}-${d}`;
 }
 
-function FilaTurno({ turno }: { turno: TurnoAgenda }) {
+function FilaTurno({ turno, onConfirmarPago }: PropsTurno) {
   const confirmadaConSaldo = turno.estado === "CONFIRMADA" && turno.saldoPendiente > 0;
   const confirmadaPagada = turno.estado === "CONFIRMADA" && turno.saldoPendiente === 0;
 
@@ -140,13 +160,13 @@ function FilaTurno({ turno }: { turno: TurnoAgenda }) {
       <td className="px-3 py-2 tabular-nums">{moneda(turno.adelantoPagado)}</td>
       <td className="px-3 py-2 tabular-nums">{moneda(turno.saldoPendiente)}</td>
       <td className="px-3 py-2">
-        <AccionesTurno acciones={turno.acciones} />
+        <AccionesTurno turno={turno} onConfirmarPago={onConfirmarPago} />
       </td>
     </tr>
   );
 }
 
-function TarjetaTurno({ turno }: { turno: TurnoAgenda }) {
+function TarjetaTurno({ turno, onConfirmarPago }: PropsTurno) {
   const confirmadaConSaldo = turno.estado === "CONFIRMADA" && turno.saldoPendiente > 0;
   const confirmadaPagada = turno.estado === "CONFIRMADA" && turno.saldoPendiente === 0;
 
@@ -181,7 +201,7 @@ function TarjetaTurno({ turno }: { turno: TurnoAgenda }) {
           <dd className="tabular-nums">{moneda(turno.saldoPendiente)}</dd>
         </div>
       </dl>
-      <AccionesTurno acciones={turno.acciones} />
+      <AccionesTurno turno={turno} onConfirmarPago={onConfirmarPago} />
     </Card>
   );
 }
@@ -190,6 +210,9 @@ export function PantallaAgenda() {
   const [fecha, setFecha] = useState<string | null>(null);
   const [canchaId, setCanchaId] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
+  const [porConfirmar, setPorConfirmar] = useState<TurnoAgenda | null>(null);
+  const confirmarPago = useConfirmarPago();
+  const toast = useToast();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -347,7 +370,7 @@ export function PantallaAgenda() {
               </thead>
               <tbody>
                 {lista.map((turno) => (
-                  <FilaTurno key={turno.id} turno={turno} />
+                  <FilaTurno key={turno.id} turno={turno} onConfirmarPago={setPorConfirmar} />
                 ))}
               </tbody>
             </table>
@@ -356,11 +379,27 @@ export function PantallaAgenda() {
           <ul className="flex flex-col gap-4 md:hidden">
             {lista.map((turno) => (
               <li key={turno.id}>
-                <TarjetaTurno turno={turno} />
+                <TarjetaTurno turno={turno} onConfirmarPago={setPorConfirmar} />
               </li>
             ))}
           </ul>
         </>
+      )}
+
+      {porConfirmar && (
+        <ConfirmarPago
+          key={porConfirmar.id}
+          turno={porConfirmar}
+          onCerrar={() => setPorConfirmar(null)}
+          onEnviar={async ({ metodo, monto, numeroOperacion }) => {
+            const confirmada = await confirmarPago.mutateAsync({
+              id: porConfirmar.id,
+              datos: { metodo, pagoCompleto: monto === "TOTAL", numeroOperacion },
+            });
+            setPorConfirmar(null);
+            toast.exito(`Pago confirmado: la reserva ${confirmada.codigo} quedó confirmada`);
+          }}
+        />
       )}
     </div>
   );

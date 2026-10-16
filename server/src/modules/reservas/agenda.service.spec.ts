@@ -16,6 +16,7 @@ const reserva = (datos: Record<string, unknown> = {}) => ({
   franja: 'NOCHE',
   estado: 'CONFIRMADA',
   valorTurno: new Prisma.Decimal('80.00'),
+  adelantoMinimo: new Prisma.Decimal('40.00'),
   cancha: { id: 2, nombre: 'Cancha 2', tamano: 'FUTBOL_7' },
   jugador: {
     id: 7,
@@ -70,6 +71,7 @@ describe('AgendaService', () => {
         cliente: { id: 7, nombre: 'Lucía Ramírez', telefono: '987654321' },
         estado: 'CONFIRMADA',
         valorTurno: 80,
+        adelantoMinimo: 40,
         adelantoPagado: 40,
         saldoPendiente: 40,
         acciones: ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],

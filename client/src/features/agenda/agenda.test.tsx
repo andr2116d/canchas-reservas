@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { ProveedorToast } from "@/components/ui/toast";
 import { obtenerSocket } from "@/lib/socket";
 import { useTurnosEnVivo } from "@/lib/use-turnos-en-vivo";
 import { PantallaAgenda } from "./components/agenda";
@@ -15,6 +16,7 @@ const TURNO_CON_SALDO = {
   cliente: { id: 7, nombre: "Lucía Ramírez", telefono: "987654321" },
   estado: "CONFIRMADA",
   valorTurno: 80,
+  adelantoMinimo: 40,
   adelantoPagado: 40,
   saldoPendiente: 40,
   acciones: ["CHECK_IN", "MARCAR_AUSENTE", "CANCELAR", "REUBICAR"],
@@ -71,8 +73,8 @@ const CANCHA_2 = { id: 2, nombre: "Cancha 2", tamano: "FUTBOL_7" };
 
 /** Los 8 estados en un mismo día, con una CONFIRMADA con saldo y otra pagada. */
 const DIA_COMPLETO = [
-  turnoAgenda(1, "08:00", "PENDIENTE_PAGO", 80, ["CANCELAR", "REUBICAR"]),
-  turnoAgenda(2, "09:00", "PENDIENTE_VALIDACION", 80, []),
+  turnoAgenda(1, "08:00", "PENDIENTE_PAGO", 80, ["CONFIRMAR_PAGO", "CANCELAR", "REUBICAR"]),
+  turnoAgenda(2, "09:00", "PENDIENTE_VALIDACION", 80, ["CONFIRMAR_PAGO"]),
   turnoAgenda(3, "10:00", "CONFIRMADA", 40, ACCIONES_CONFIRMADA, CANCHA_2),
   turnoAgenda(4, "11:00", "CONFIRMADA", 0, ACCIONES_CONFIRMADA),
   turnoAgenda(5, "12:00", "EN_JUEGO", 30, ["REGISTRAR_ADICIONALES", "FINALIZAR"]),
@@ -184,10 +186,21 @@ function renderAgenda() {
   });
   return render(
     <QueryClientProvider client={cliente}>
-      <PantallaAgenda />
+      <ProveedorToast>
+        <PantallaAgenda />
+      </ProveedorToast>
     </QueryClientProvider>,
   );
 }
+
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+    this.open = false;
+  };
+});
 
 afterEach(() => {
   cleanup();
@@ -318,8 +331,8 @@ describe("PantallaAgenda con fecha fija", () => {
 
     await screen.findByRole("table");
     const casos: [string, string[]][] = [
-      ["08:00", ["Cancelar", "Reubicar"]],
-      ["09:00", []],
+      ["08:00", ["Confirmar pago", "Cancelar", "Reubicar"]],
+      ["09:00", ["Confirmar pago"]],
       ["10:00", ["Check-in", "Marcar ausente", "Cancelar", "Reubicar"]],
       ["11:00", ["Check-in", "Marcar ausente", "Cancelar", "Reubicar"]],
       ["12:00", ["Adicionales", "Finalizar"]],
@@ -333,7 +346,7 @@ describe("PantallaAgenda con fecha fija", () => {
       for (const contenedor of [filaDe(hora), tarjetaDe(hora)]) {
         expect(botonesDe(contenedor)).toEqual(esperados);
         for (const boton of within(contenedor).queryAllByRole("button")) {
-          expect((boton as HTMLButtonElement).disabled).toBe(true);
+          expect((boton as HTMLButtonElement).disabled).toBe(boton.textContent !== "Confirmar pago");
         }
       }
     }
@@ -534,5 +547,114 @@ describe("PantallaAgenda con fecha fija", () => {
 
     fireEvent.change(screen.getByLabelText("Estado"), { target: { value: "CONFIRMADA" } });
     await waitFor(() => expect(ultimaConsulta(fetchMock).get("estado")).toBe("CONFIRMADA"));
+  });
+});
+
+describe("Confirmar pago desde la agenda", () => {
+  const PENDIENTE = turnoAgenda(1, "08:00", "PENDIENTE_PAGO", 80, ["CONFIRMAR_PAGO", "CANCELAR", "REUBICAR"]);
+  const CONFIRMADA = { ...PENDIENTE, estado: "CONFIRMADA", adelantoPagado: 40, saldoPendiente: 40, acciones: ACCIONES_CONFIRMADA };
+  const PAGO_CONFIRMADO = { id: 1, codigo: "LP-000001", estado: "CONFIRMADA", adelantoPagado: 40, saldoPendiente: 40 };
+
+  function responderConPago(respuestaPago: () => Response) {
+    let confirmada = false;
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const destino = new URL(String(url), "http://localhost");
+      if (destino.pathname === "/api/canchas") return json(CANCHAS);
+      if (init?.method === "POST") {
+        const respuesta = respuestaPago();
+        if (respuesta.ok) confirmada = true;
+        return respuesta;
+      }
+      return json([confirmada ? CONFIRMADA : PENDIENTE]);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  function envios(fetchMock: ReturnType<typeof responderConPago>) {
+    return fetchMock.mock.calls
+      .filter(([, init]) => init?.method === "POST")
+      .map(([url, init]) => ({ url, body: JSON.parse(String(init?.body)) }));
+  }
+
+  async function abrirFormulario() {
+    await screen.findByRole("table");
+    fireEvent.click(within(filaDe("08:00")).getByRole("button", { name: "Confirmar pago" }));
+    return within(await screen.findByRole("dialog"));
+  }
+
+  it("muestra los montos, confirma el adelanto y la fila pasa a confirmada", async () => {
+    const fetchMock = responderConPago(() => json(PAGO_CONFIRMADO, 201));
+    renderAgenda();
+
+    const dialogo = await abrirFormulario();
+    expect(
+      within(dialogo.getByLabelText("Monto recibido"))
+        .getAllByRole("option")
+        .map((opcion) => opcion.textContent),
+    ).toEqual(["Adelanto: S/ 40.00", "Turno completo: S/ 80.00"]);
+    fireEvent.change(dialogo.getByLabelText("Método de pago"), { target: { value: "YAPE" } });
+    fireEvent.change(dialogo.getByLabelText("Número de operación (opcional)"), { target: { value: " 0012 " } });
+    fireEvent.click(dialogo.getByRole("button", { name: "Confirmar pago" }));
+
+    expect(await screen.findByText("Pago confirmado: la reserva LP-000001 quedó confirmada")).toBeTruthy();
+    expect(envios(fetchMock)).toEqual([
+      { url: "/api/agenda/1/confirmar-pago", body: { metodo: "YAPE", pagoCompleto: false, numeroOperacion: "0012" } },
+    ]);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() =>
+      expect(within(filaDe("08:00")).queryByRole("button", { name: "Confirmar pago" })).toBeNull(),
+    );
+    expect(within(filaDe("08:00")).getByText("Confirmada")).toBeTruthy();
+  });
+
+  it("con turno completo envía el pago completo", async () => {
+    const fetchMock = responderConPago(() => json({ ...PAGO_CONFIRMADO, saldoPendiente: 0 }, 201));
+    renderAgenda();
+
+    const dialogo = await abrirFormulario();
+    fireEvent.change(dialogo.getByLabelText("Monto recibido"), { target: { value: "TOTAL" } });
+    fireEvent.change(dialogo.getByLabelText("Método de pago"), { target: { value: "PLIN" } });
+    fireEvent.click(dialogo.getByRole("button", { name: "Confirmar pago" }));
+
+    await screen.findByText("Pago confirmado: la reserva LP-000001 quedó confirmada");
+    expect(envios(fetchMock)).toEqual([
+      { url: "/api/agenda/1/confirmar-pago", body: { metodo: "PLIN", pagoCompleto: true } },
+    ]);
+  });
+
+  it("sin método de pago no envía y muestra el error", async () => {
+    const fetchMock = responderConPago(() => json(PAGO_CONFIRMADO, 201));
+    renderAgenda();
+
+    const dialogo = await abrirFormulario();
+    fireEvent.click(dialogo.getByRole("button", { name: "Confirmar pago" }));
+
+    expect(await dialogo.findByText("Elige el método de pago")).toBeTruthy();
+    expect(envios(fetchMock)).toEqual([]);
+  });
+
+  it("si otro recepcionista ya la confirmó muestra el mensaje del servidor y vuelve a pedir la agenda", async () => {
+    const fetchMock = responderConPago(() =>
+      json(
+        {
+          statusCode: 409,
+          message: "Solo se puede confirmar el pago de una reserva pendiente de pago",
+          errores: {},
+        },
+        409,
+      ),
+    );
+    renderAgenda();
+
+    const dialogo = await abrirFormulario();
+    const consultasAntes = consultasAgenda(fetchMock).length;
+    fireEvent.change(dialogo.getByLabelText("Método de pago"), { target: { value: "YAPE" } });
+    fireEvent.click(dialogo.getByRole("button", { name: "Confirmar pago" }));
+
+    expect(
+      await dialogo.findByText("Solo se puede confirmar el pago de una reserva pendiente de pago"),
+    ).toBeTruthy();
+    await waitFor(() => expect(consultasAgenda(fetchMock).length).toBeGreaterThan(consultasAntes));
   });
 });

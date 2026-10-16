@@ -270,6 +270,24 @@ describe('traducirDetalle', () => {
         { campo: 'estado', anterior: 'PENDIENTE_PAGO', nuevo: 'EXPIRADA' },
       ]);
     });
+
+    it('la confirmación de pago muestra el estado, el método, el monto y la operación sin el código', () => {
+      expect(
+        traducirDetalle('RESERVA', {
+          codigo: 'LP7K2M9Q',
+          anterior: { estado: 'PENDIENTE_PAGO' },
+          nuevo: { estado: 'CONFIRMADA' },
+          metodo: 'YAPE',
+          monto: '40.5',
+          numeroOperacion: '00123',
+        }),
+      ).toEqual([
+        { campo: 'estado', anterior: 'PENDIENTE_PAGO', nuevo: 'CONFIRMADA' },
+        { campo: 'metodo', anterior: null, nuevo: 'YAPE' },
+        { campo: 'monto', anterior: null, nuevo: 40.5 },
+        { campo: 'numeroOperacion', anterior: null, nuevo: '00123' },
+      ]);
+    });
   });
 
   describe('RECEPCIONISTA', () => {

@@ -20,6 +20,7 @@ export const ACCIONES: Record<string, { etiqueta: string; tono: Tono }> = {
   DESACTIVAR: { etiqueta: "Desactivó", tono: "alerta" },
   ELIMINAR: { etiqueta: "Eliminó", tono: "error" },
   RESTABLECER_CONTRASENA: { etiqueta: "Restableció la contraseña", tono: "neutro" },
+  CONFIRMAR_PAGO: { etiqueta: "Confirmó el pago", tono: "exito" },
 };
 
 export const ROLES: Record<RolUsuario, string> = {
@@ -58,6 +59,9 @@ const CAMPOS: Record<string, string> = {
   valorTurno: "Valor del turno",
   adelantoMinimo: "Adelanto mínimo",
   creditoAplicado: "Crédito aplicado",
+  metodo: "Método de pago",
+  monto: "Monto",
+  numeroOperacion: "Número de operación",
   nombres: "Nombres",
   apellidos: "Apellidos",
   tipoDocumento: "Tipo de documento",
@@ -67,7 +71,7 @@ const CAMPOS: Record<string, string> = {
 };
 
 const CAMPOS_DINERO = new Set(["valor", "precio", "valorTurno", "adelantoMinimo", "creditoAplicado", "monto", "importe"]);
-const CAMPOS_ENUM = new Set(["estado", "tamano", "franja", "tipoCompensacion", "tipoDocumento"]);
+const CAMPOS_ENUM = new Set(["estado", "tamano", "franja", "tipoCompensacion", "tipoDocumento", "metodo"]);
 
 const VALORES: Record<string, string> = {
   FUTBOL_5: "Fútbol 5",
@@ -88,6 +92,10 @@ const VALORES: Record<string, string> = {
   CANCELADA: "Cancelada",
   EXPIRADA: "Expirada",
   AUSENTE: "Ausente",
+  YAPE: "Yape",
+  PLIN: "Plin",
+  TRANSFERENCIA: "Transferencia",
+  EFECTIVO: "Efectivo",
 };
 
 function capitalizar(texto: string) {

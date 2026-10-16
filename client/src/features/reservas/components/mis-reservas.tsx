@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { fecha, moneda } from "@/lib/formato";
+import { useTurnosEnVivo } from "@/lib/use-turnos-en-vivo";
 import { useMisReservas } from "../hooks";
 import type { EstadoReserva, ReservaJugador } from "../api";
 
@@ -82,6 +83,7 @@ function MontosReserva({ reserva }: { reserva: ReservaJugador }) {
 
 export function PantallaReservas() {
   const { data, isLoading, isError, error } = useMisReservas();
+  useTurnosEnVivo(data?.map((reserva) => reserva.fecha) ?? [], [["mis-reservas"]]);
 
   return (
     <main className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 py-6">

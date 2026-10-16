@@ -29,6 +29,7 @@ interface Turno {
   cliente: { id: number; nombre: string; telefono: string };
   estado: EstadoReserva;
   valorTurno: number;
+  adelantoMinimo: number;
   adelantoPagado: number;
   saldoPendiente: number;
   acciones: string[];
@@ -243,9 +244,10 @@ describe('Agenda (e2e)', () => {
         },
         estado: 'PENDIENTE_PAGO',
         valorTurno: 80,
+        adelantoMinimo: 40,
         adelantoPagado: 0,
         saldoPendiente: 80,
-        acciones: ['CANCELAR', 'REUBICAR'],
+        acciones: ['CONFIRMAR_PAGO', 'CANCELAR', 'REUBICAR'],
       });
     });
 
@@ -257,8 +259,8 @@ describe('Agenda (e2e)', () => {
         turnosPropios(body as Turno[]).map((t) => [t.estado, t.acciones]),
       );
       expect(acciones).toEqual({
-        PENDIENTE_PAGO: ['CANCELAR', 'REUBICAR'],
-        PENDIENTE_VALIDACION: [],
+        PENDIENTE_PAGO: ['CONFIRMAR_PAGO', 'CANCELAR', 'REUBICAR'],
+        PENDIENTE_VALIDACION: ['CONFIRMAR_PAGO'],
         CONFIRMADA: ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
         EN_JUEGO: ['REGISTRAR_ADICIONALES', 'FINALIZAR'],
         FINALIZADA: [],

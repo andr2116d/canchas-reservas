@@ -35,6 +35,7 @@ export class AgendaService {
         franja: true,
         estado: true,
         valorTurno: true,
+        adelantoMinimo: true,
         cancha: { select: { id: true, nombre: true, tamano: true } },
         jugador: {
           select: { id: true, nombres: true, apellidos: true, telefono: true },
@@ -51,31 +52,34 @@ export class AgendaService {
       reservas.map((r) => r.id),
     );
 
-    return reservas.map(({ jugador, valorTurno, ...reserva }) => {
-      const { adelantoPagado, saldoPendiente } = calcularMontosReserva(
-        valorTurno,
-        pagos.get(reserva.id) ?? [],
-      );
-      return {
-        id: reserva.id,
-        codigo: reserva.codigo,
-        horaInicio: reserva.horaInicio,
-        horaFin: reserva.horaFin,
-        franja: reserva.franja,
-        cancha: reserva.cancha,
-        cliente: {
-          id: jugador.id,
-          nombre: [jugador.nombres, jugador.apellidos]
-            .filter(Boolean)
-            .join(' '),
-          telefono: jugador.telefono,
-        },
-        estado: reserva.estado,
-        valorTurno: aNumero(valorTurno),
-        adelantoPagado,
-        saldoPendiente,
-        acciones: accionesAgenda(reserva.estado),
-      };
-    });
+    return reservas.map(
+      ({ jugador, valorTurno, adelantoMinimo, ...reserva }) => {
+        const { adelantoPagado, saldoPendiente } = calcularMontosReserva(
+          valorTurno,
+          pagos.get(reserva.id) ?? [],
+        );
+        return {
+          id: reserva.id,
+          codigo: reserva.codigo,
+          horaInicio: reserva.horaInicio,
+          horaFin: reserva.horaFin,
+          franja: reserva.franja,
+          cancha: reserva.cancha,
+          cliente: {
+            id: jugador.id,
+            nombre: [jugador.nombres, jugador.apellidos]
+              .filter(Boolean)
+              .join(' '),
+            telefono: jugador.telefono,
+          },
+          estado: reserva.estado,
+          valorTurno: aNumero(valorTurno),
+          adelantoMinimo: aNumero(adelantoMinimo),
+          adelantoPagado,
+          saldoPendiente,
+          acciones: accionesAgenda(reserva.estado),
+        };
+      },
+    );
   }
 }

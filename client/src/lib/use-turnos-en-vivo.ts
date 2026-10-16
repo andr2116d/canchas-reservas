@@ -6,22 +6,24 @@ import { EVENTO_TURNOS_ACTUALIZADOS } from "./eventos-tiempo-real";
 import { obtenerSocket } from "./socket";
 
 /**
- * Escucha `turnos:actualizados` e invalida `claves` cuando el cambio toca `fecha`.
+ * Escucha `turnos:actualizados` e invalida `claves` cuando el cambio toca `fecha` (o alguna de ellas).
  * Un `null` en `fecha` significa "todas". Un evento con otra forma se ignora.
  * Al reconectar también invalida, porque pudo perderse un evento.
  */
-export function useTurnosEnVivo(fecha: string, claves: QueryKey[]) {
+export function useTurnosEnVivo(fecha: string | string[], claves: QueryKey[]) {
   const cliente = useQueryClient();
+  const fechas = [...new Set(Array.isArray(fecha) ? fecha : [fecha])].filter(Boolean).sort().join(",");
 
   const invalidar = useEffectEvent(() => {
     for (const queryKey of claves) cliente.invalidateQueries({ queryKey });
   });
 
   useEffect(() => {
-    if (!fecha) return;
+    if (!fechas) return;
+    const lista = fechas.split(",");
     const socket = obtenerSocket();
     const manejar = (payload: unknown) => {
-      if (afectaFecha(payload, fecha)) invalidar();
+      if (lista.some((dia) => afectaFecha(payload, dia))) invalidar();
     };
     let desconectado = false;
     const alDesconectar = () => {
@@ -40,7 +42,7 @@ export function useTurnosEnVivo(fecha: string, claves: QueryKey[]) {
       socket.off("disconnect", alDesconectar);
       socket.off("connect", alConectar);
     };
-  }, [fecha]);
+  }, [fechas]);
 }
 
 type CambioTurnos = { fecha: string | null; canchaId: number | null };
