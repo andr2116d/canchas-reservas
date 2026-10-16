@@ -91,4 +91,20 @@ describe("PantallaReservas", () => {
     await screen.findByText("LP000001");
     expect(within(tarjetas()[0]).getByText(etiqueta)).toBeTruthy();
   });
+
+  it("respeta el orden que llega de la API", async () => {
+    responder(200, [
+      reserva(3, "CONFIRMADA", { codigo: "LPPRIMER0", fecha: "2026-10-22" }),
+      reserva(1, "PENDIENTE_PAGO", { codigo: "LPSEGUND0", fecha: "2026-10-25" }),
+      reserva(2, "FINALIZADA", { codigo: "LPTERCER0", fecha: "2026-10-01" }),
+    ]);
+    renderPantalla();
+
+    await screen.findByText("LPPRIMER0");
+    expect(tarjetas().map((t) => within(t).getByText(/^LP/).textContent)).toEqual([
+      "LPPRIMER0",
+      "LPSEGUND0",
+      "LPTERCER0",
+    ]);
+  });
 });
