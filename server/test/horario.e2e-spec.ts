@@ -4,6 +4,7 @@ import { hash } from 'bcryptjs';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
+import type { EstadoReserva } from '../src/generated/prisma/client';
 import { MENSAJE_CIERRE_POSTERIOR } from '../src/modules/horario/dto/dia-horario.dto';
 import { MENSAJE_SIETE_DIAS } from '../src/modules/horario/dto/guardar-horario.dto';
 import { MENSAJE_RESERVAS_FUERA_DE_HORARIO } from '../src/modules/horario/horario.service';
@@ -124,7 +125,7 @@ describe('Horario (e2e)', () => {
     fecha: string,
     horaInicio: string,
     horaFin: string,
-    estado: 'CONFIRMADA' | 'PENDIENTE_PAGO' | 'CANCELADA' = 'CONFIRMADA',
+    estado: EstadoReserva = 'CONFIRMADA',
   ) =>
     prisma.reserva.create({
       data: {
@@ -193,18 +194,24 @@ describe('Horario (e2e)', () => {
   beforeEach(() => definirHorario(SEMANA, '18:00'));
 
   afterAll(async () => {
-    await prisma.reserva.deleteMany({ where: { canchaId } });
-    await prisma.cancha.deleteMany({ where: { id: canchaId } });
-    await prisma.horarioDia.deleteMany({
-      where: {
-        diaSemana: { notIn: diasOriginales.map((dia) => dia.diaSemana) },
-      },
-    });
-    await definirHorario(diasOriginales, inicioNocheOriginal ?? '18:00');
-    if (inicioNocheOriginal === undefined) {
-      await prisma.configuracion.deleteMany({ where: { id: 1 } });
+    try {
+      await prisma.reserva.deleteMany({ where: { canchaId } });
+      await prisma.cancha.deleteMany({ where: { id: canchaId } });
+    } finally {
+      try {
+        await prisma.horarioDia.deleteMany({
+          where: {
+            diaSemana: { notIn: diasOriginales.map((dia) => dia.diaSemana) },
+          },
+        });
+        await definirHorario(diasOriginales, inicioNocheOriginal ?? '18:00');
+        if (inicioNocheOriginal === undefined) {
+          await prisma.configuracion.deleteMany({ where: { id: 1 } });
+        }
+      } finally {
+        await app.close();
+      }
     }
-    await app.close();
   });
 
   describe('GET /api/horario', () => {
@@ -503,6 +510,25 @@ describe('Horario (e2e)', () => {
         expect.arrayContaining([fuera.id, pendiente.id]),
       );
       expect(detalle.reservasFueraDeHorario).not.toContain(dentro.id);
+    });
+
+    it('una reserva PENDIENTE_VALIDACION fuera del nuevo horario aparece en el 409', async () => {
+      await prisma.reserva.deleteMany({ where: { canchaId } });
+      const reserva = await crearReserva(
+        fecha,
+        '08:00',
+        '09:00',
+        'PENDIENTE_VALIDACION',
+      );
+
+      const res = await guardar({
+        dias: nuevoHorario,
+        inicioNoche: '18:00',
+      }).expect(409);
+
+      expect(res.body.reservasFueraDeHorario).toContainEqual(
+        expect.objectContaining({ id: reserva.id, fecha, horaInicio: '08:00' }),
+      );
     });
 
     it('una reserva cuyo turno sigue existiendo no bloquea el cambio', async () => {
