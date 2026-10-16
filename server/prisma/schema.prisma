@@ -189,6 +189,7 @@ model RegistroAcceso {
 
   usuario Usuario? @relation(fields: [usuarioId], references: [id])
 
+  @@index([fecha])
   @@index([usuarioId, fecha])
   @@map("registro_acceso")
 }
