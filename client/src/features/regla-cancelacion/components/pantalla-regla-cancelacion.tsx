@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Card, EmptyState, Input, Select } from "@/components/ui";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button, Card, EmptyState, Input, Select, useToast } from "@/components/ui";
 import type { ReglaCancelacion, TipoCompensacion } from "../api";
-import { useReglaCancelacion } from "../hooks";
+import { useActualizarRegla, useReglaCancelacion } from "../hooks";
+import { esquemaRegla, type DatosReglaFormulario, type ValoresRegla } from "../schemas";
 
 const DESTINO_ADELANTO: Record<TipoCompensacion, string> = {
   DEVOLUCION: "en recepción",
@@ -53,44 +55,64 @@ function EsqueletoRegla() {
   );
 }
 
+function aValores({ horasAnticipacion, tipoCompensacion }: ReglaCancelacion): ValoresRegla {
+  return { horasAnticipacion: String(horasAnticipacion), tipoCompensacion };
+}
+
 function FormularioRegla({ regla }: { regla: ReglaCancelacion }) {
-  const [horas, setHoras] = useState(String(regla.horasAnticipacion));
-  const [compensacion, setCompensacion] = useState<TipoCompensacion>(regla.tipoCompensacion);
+  const toast = useToast();
+  const actualizar = useActualizarRegla();
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { isDirty, isSubmitting },
+  } = useForm<ValoresRegla, unknown, DatosReglaFormulario>({
+    resolver: zodResolver(esquemaRegla),
+    defaultValues: aValores(regla),
+  });
+  const { horasAnticipacion: horas, tipoCompensacion: compensacion } = useWatch({ control });
+
+  const enviar = handleSubmit(async (datos) => {
+    const guardada = await actualizar.mutateAsync(datos);
+    reset(aValores(guardada));
+    toast.exito("Regla de cancelación guardada");
+  });
 
   return (
     <>
-      <Card className="flex flex-col gap-4">
-        <div className="max-w-48">
-          <Input
-            etiqueta="Horas de anticipación"
-            type="number"
-            min={0}
-            step={1}
-            ayuda="Número entero de horas, mínimo 0."
-            value={horas}
-            onChange={(evento) => setHoras(evento.target.value)}
-          />
-        </div>
+      <Card>
+        <form noValidate onSubmit={enviar} className="flex flex-col gap-4">
+          <div className="max-w-48">
+            <Input
+              etiqueta="Horas de anticipación"
+              type="number"
+              min={0}
+              step={1}
+              ayuda="Número entero de horas, mínimo 0."
+              {...register("horasAnticipacion")}
+            />
+          </div>
 
-        <div className="max-w-48">
-          <Select
-            etiqueta="Compensación del adelanto"
-            value={compensacion}
-            onChange={(evento) => setCompensacion(evento.target.value as TipoCompensacion)}
-          >
-            <option value="CREDITO">Crédito</option>
-            <option value="DEVOLUCION">Devolución</option>
-          </Select>
-        </div>
+          <div className="max-w-48">
+            <Select etiqueta="Compensación del adelanto" {...register("tipoCompensacion")}>
+              <option value="CREDITO">Crédito</option>
+              <option value="DEVOLUCION">Devolución</option>
+            </Select>
+          </div>
 
-        <div>
-          <Button>Guardar</Button>
-        </div>
+          <div>
+            <Button type="submit" cargando={isSubmitting} disabled={!isDirty}>
+              Guardar
+            </Button>
+          </div>
+        </form>
       </Card>
 
       <div className="rounded-lg border border-linea bg-fondo px-3 py-2 text-sm">
         <p className="font-medium">Así lo verá el jugador</p>
-        <p className="text-texto-suave">{fraseDelJugador(horas, compensacion)}</p>
+        <p className="text-texto-suave">{fraseDelJugador(horas ?? "", (compensacion ?? regla.tipoCompensacion) as TipoCompensacion)}</p>
       </div>
     </>
   );
