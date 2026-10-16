@@ -189,6 +189,17 @@ describe('generarTurnos', () => {
         ),
       );
     });
+
+    it('un tramo de exactamente 1 hora genera un turno', () => {
+      expect(generarTurnos(abierto('17:00', '18:00'), '18:00')).toEqual(
+        turnos('DIA', ['17:00', '18:00']),
+      );
+    });
+
+    it('un tramo de 59 minutos no genera turnos', () => {
+      expect(generarTurnos(abierto('08:00', '08:59'), '18:00')).toEqual([]);
+      expect(generarTurnos(abierto('18:00', '18:59'), '18:00')).toEqual([]);
+    });
   });
 });
 
