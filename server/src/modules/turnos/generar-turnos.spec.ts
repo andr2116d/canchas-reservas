@@ -261,6 +261,14 @@ describe('generarTurnos en un barrido de horarios', () => {
       ),
     ).toEqual([]);
   });
+
+  it('los turnos están ordenados y no se solapan', () => {
+    expect(
+      fallosDe(({ turnos }) =>
+        turnos.every((t, i) => i === 0 || t.inicio >= turnos[i - 1].fin),
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe('diaSemanaDe', () => {
