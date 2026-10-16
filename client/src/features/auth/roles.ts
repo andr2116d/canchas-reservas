@@ -5,3 +5,7 @@ export const RUTA_PANEL: Record<Rol, string> = {
   RECEPCIONISTA: "/recepcion",
   JUGADOR: "/jugador",
 };
+
+export function esRutaPrivada(ruta: string) {
+  return Object.values(RUTA_PANEL).some((panel) => ruta === panel || ruta.startsWith(`${panel}/`));
+}

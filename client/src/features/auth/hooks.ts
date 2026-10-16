@@ -18,6 +18,7 @@ export function useIniciarSesion() {
   const router = useRouter();
   return useMutation({
     mutationFn: iniciarSesion,
+    meta: { manejaSesion: true },
     onSuccess: async (usuario) => {
       await queryClient.invalidateQueries({ queryKey: CLAVE_SESION });
       router.replace(RUTA_PANEL[usuario.rol]);
@@ -35,6 +36,7 @@ export function useCerrarSesion(motivo: MotivoCierre = "manual") {
   };
   return useMutation({
     mutationFn: cerrarSesion,
+    meta: { manejaSesion: true },
     onSuccess: terminar,
     onError: (error) => {
       if (error instanceof ErrorApi && error.status === 401) terminar();
