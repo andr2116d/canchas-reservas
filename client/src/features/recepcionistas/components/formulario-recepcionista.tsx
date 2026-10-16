@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Alerta, Button, Input, Modal, Select } from "@/components/ui";
@@ -13,6 +13,7 @@ import {
   type ValoresEditarRecepcionista,
 } from "../schemas";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { conFiltro, filtroDocumento, soloDigitos } from "@/lib/filtros-entrada";
 
 const CAMPOS_CREAR = [
   "nombres",
@@ -24,6 +25,7 @@ const CAMPOS_CREAR = [
   "contrasena",
 ] as const;
 const CAMPOS_EDITAR = ["nombres", "apellidos", "telefono", "correo"] as const;
+const filtroTelefono = (valor: string) => soloDigitos(valor, 9);
 
 function Acciones({ formId, enviando, onCerrar, texto }: { formId: string; enviando: boolean; onCerrar: () => void; texto: string }) {
   return (
@@ -47,9 +49,14 @@ type PropsCrear = {
 export function FormularioCrearRecepcionista({ abierto, onCerrar, onEnviar }: PropsCrear) {
   const formId = useId();
   const {
+    control,
     register,
     handleSubmit,
     setError,
+    getValues,
+    setValue,
+    getFieldState,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm<ValoresCrearRecepcionista, unknown, z.output<typeof esquemaCrearRecepcionista>>({
     resolver: zodResolver(esquemaCrearRecepcionista),
@@ -64,6 +71,8 @@ export function FormularioCrearRecepcionista({ abierto, onCerrar, onEnviar }: Pr
     },
   });
 
+  const tipoDocumento = useWatch({ control, name: "tipoDocumento" });
+
   const enviar = handleSubmit(async (datos) => {
     try {
       await onEnviar(datos);
@@ -71,6 +80,13 @@ export function FormularioCrearRecepcionista({ abierto, onCerrar, onEnviar }: Pr
       aplicarErroresServidor(error, setError, [...CAMPOS_CREAR]);
     }
   });
+
+  const recortarDocumento = (tipo: string) => {
+    const numero = getValues("numeroDocumento");
+    const recortado = filtroDocumento(tipo)(numero);
+    if (recortado !== numero) setValue("numeroDocumento", recortado, { shouldDirty: true });
+    if (getFieldState("numeroDocumento").error) trigger("numeroDocumento");
+  };
 
   return (
     <Modal
@@ -84,15 +100,21 @@ export function FormularioCrearRecepcionista({ abierto, onCerrar, onEnviar }: Pr
         <div className="grid gap-4 sm:grid-cols-2">
           <Input etiqueta="Nombres" autoComplete="off" error={errors.nombres?.message} {...register("nombres")} />
           <Input etiqueta="Apellidos" autoComplete="off" error={errors.apellidos?.message} {...register("apellidos")} />
-          <Select etiqueta="Tipo de documento" error={errors.tipoDocumento?.message} {...register("tipoDocumento")}>
+          <Select
+            etiqueta="Tipo de documento"
+            error={errors.tipoDocumento?.message}
+            {...register("tipoDocumento", { onChange: (evento) => recortarDocumento(evento.target.value) })}
+          >
             <option value="DNI">DNI</option>
             <option value="CE">CE</option>
           </Select>
           <Input
             etiqueta="Número de documento"
+            type="text"
+            inputMode={tipoDocumento === "DNI" ? "numeric" : "text"}
             autoComplete="off"
             error={errors.numeroDocumento?.message}
-            {...register("numeroDocumento")}
+            {...conFiltro(register("numeroDocumento"), filtroDocumento(tipoDocumento))}
           />
           <Input
             etiqueta="Correo"
@@ -107,7 +129,7 @@ export function FormularioCrearRecepcionista({ abierto, onCerrar, onEnviar }: Pr
             inputMode="numeric"
             autoComplete="off"
             error={errors.telefono?.message}
-            {...register("telefono")}
+            {...conFiltro(register("telefono"), filtroTelefono)}
           />
         </div>
         <Input
@@ -184,7 +206,7 @@ export function FormularioEditarRecepcionista({ recepcionista, abierto, onCerrar
             inputMode="numeric"
             autoComplete="off"
             error={errors.telefono?.message}
-            {...register("telefono")}
+            {...conFiltro(register("telefono"), filtroTelefono)}
           />
         </div>
       </form>
