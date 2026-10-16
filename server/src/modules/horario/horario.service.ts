@@ -1,5 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { cuerpoError } from '../../common/errores';
+import { Reloj } from '../../common/reloj/reloj';
 import type { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -66,6 +67,7 @@ export class HorarioService {
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
     private readonly gateway: TurnosGateway,
+    private readonly reloj: Reloj,
   ) {}
 
   async obtener(cliente: Cliente = this.prisma): Promise<Horario> {
@@ -170,7 +172,7 @@ export class HorarioService {
     const reservas = await cliente.reserva.findMany({
       where: {
         estado: { in: ESTADOS_RESERVA_FUTURA },
-        inicioEn: { gt: new Date() },
+        inicioEn: { gt: this.reloj.ahora() },
       },
       select: {
         id: true,
