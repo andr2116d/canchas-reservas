@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { useCerrarSesion, useSesion } from "@/features/auth/hooks";
 import { RUTA_PANEL } from "@/features/auth/roles";
 import { Logo } from "./logo";
-import { MENU_ROL } from "./menu-rol";
+import { MENU_ROL, enlaceActivo } from "./menu-rol";
 
 export function BarraSuperior() {
   const pathname = usePathname();
@@ -16,6 +16,9 @@ export function BarraSuperior() {
 
   if (!sesion) return null;
 
+  const enlaces = MENU_ROL[sesion.rol];
+  const activo = enlaceActivo(enlaces, pathname);
+
   return (
     <header className="bg-noche-900 text-white">
       <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center gap-x-6 px-4 md:px-6">
@@ -23,22 +26,19 @@ export function BarraSuperior() {
           <Logo className="text-[28px] leading-7" />
         </Link>
         <nav aria-label="Menú principal" className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1">
-          {MENU_ROL[sesion.rol].map((enlace) => {
-            const activo = pathname === enlace.href || pathname.startsWith(`${enlace.href}/`);
-            return (
-              <Link
-                key={enlace.href}
-                href={enlace.href}
-                aria-current={activo ? "page" : undefined}
-                className={cn(
-                  "inline-flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium hover:bg-white/10",
-                  activo && "bg-white/10",
-                )}
-              >
-                {enlace.etiqueta}
-              </Link>
-            );
-          })}
+          {enlaces.map((enlace) => (
+            <Link
+              key={enlace.href}
+              href={enlace.href}
+              aria-current={enlace === activo ? "page" : undefined}
+              className={cn(
+                "inline-flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium hover:bg-white/10",
+                enlace === activo && "bg-white/10",
+              )}
+            >
+              {enlace.etiqueta}
+            </Link>
+          ))}
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden text-sm md:inline">{sesion.nombres}</span>
