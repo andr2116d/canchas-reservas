@@ -401,6 +401,55 @@ describe("PantallaAgenda con fecha fija", () => {
     expect(screen.getByText("Turnos del día 20/10/2026")).toBeTruthy();
   });
 
+  it("el campo de fecha cambia la agenda pedida", async () => {
+    const fetchMock = responderApi(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    const campo = screen.getByLabelText("Fecha") as HTMLInputElement;
+    expect(campo.value).toBe(HOY);
+    expect(screen.getByText("20/10/2026")).toBeTruthy();
+
+    fireEvent.change(campo, { target: { value: "2026-11-09" } });
+
+    await waitFor(() => expect(ultimaConsulta(fetchMock).get("fecha")).toBe("2026-11-09"));
+    expect(screen.getByText("09/11/2026")).toBeTruthy();
+    expect(screen.getByText("Turnos del día 09/11/2026")).toBeTruthy();
+  });
+
+  it("las flechas y Hoy actualizan el campo de fecha", async () => {
+    responderApi(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    const campo = screen.getByLabelText("Fecha") as HTMLInputElement;
+
+    fireEvent.change(campo, { target: { value: "2026-11-09" } });
+    fireEvent.click(screen.getByRole("button", { name: "Día siguiente" }));
+    expect(campo.value).toBe("2026-11-10");
+    expect(screen.getByText("10/11/2026")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Día anterior" }));
+    fireEvent.click(screen.getByRole("button", { name: "Día anterior" }));
+    expect(campo.value).toBe("2026-11-08");
+
+    fireEvent.click(screen.getByRole("button", { name: "Hoy" }));
+    expect(campo.value).toBe(HOY);
+    expect(screen.getByText("20/10/2026")).toBeTruthy();
+  });
+
+  it("vaciar el campo de fecha no cambia la agenda pedida", async () => {
+    const fetchMock = responderApi(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    const campo = screen.getByLabelText("Fecha") as HTMLInputElement;
+    fireEvent.change(campo, { target: { value: "" } });
+
+    expect(campo.value).toBe(HOY);
+    expect(consultasAgenda(fetchMock).every((consulta) => consulta.get("fecha") === HOY)).toBe(true);
+  });
+
   it("cruza bien el cambio de mes y de año", async () => {
     vi.setSystemTime(new Date("2026-12-31T15:00:00-05:00"));
     const fetchMock = responderApi([]);

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { CampoFecha } from "@/components/ui/campo-fecha";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/campo";
-import { hoyEnLima, moneda } from "@/lib/formato";
+import { fecha as fechaEnPantalla, hoyEnLima, moneda } from "@/lib/formato";
 import { useTurnosEnVivo } from "@/lib/use-turnos-en-vivo";
 import { useCanchas } from "@/features/canchas/hooks";
 import { useAgenda } from "../hooks";
@@ -221,12 +222,12 @@ export function PantallaAgenda() {
           Agenda de turnos
         </h1>
         <p className="text-sm text-texto-suave">
-          Turnos del día {fecha ? fecha.split("-").reverse().join("/") : "…"}
+          Turnos del día {fecha ? fechaEnPantalla(fecha) : "…"}
         </p>
       </header>
 
       <section className="flex flex-wrap items-end gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
           <Button
             variante="secundario"
             aria-label="Día anterior"
@@ -236,12 +237,13 @@ export function PantallaAgenda() {
           >
             ‹
           </Button>
-          <Button
-            variante="primario"
-            onClick={() => setFecha(hoyEnLima())}
-          >
-            Hoy
-          </Button>
+          <CampoFecha
+            etiqueta="Fecha"
+            fecha={fecha ?? ""}
+            disabled={!fecha}
+            className="w-[150px]"
+            onCambiar={setFecha}
+          />
           <Button
             variante="secundario"
             aria-label="Día siguiente"
@@ -250,6 +252,12 @@ export function PantallaAgenda() {
             onClick={() => setFecha((actual) => (actual ? moverFecha(actual, 1) : actual))}
           >
             ›
+          </Button>
+          <Button
+            variante="primario"
+            onClick={() => setFecha(hoyEnLima())}
+          >
+            Hoy
           </Button>
         </div>
 
