@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Reloj } from '../../common/reloj/reloj';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
@@ -14,6 +15,7 @@ const CANCHA_ID = 3;
 
 const DESDE = new Date('2026-10-01T15:00:00.000Z');
 const HASTA = new Date('2026-10-10T15:00:00.000Z');
+const AHORA = new Date('2026-10-12T20:45:00.000Z');
 
 const tarifa = (
   id: number,
@@ -42,10 +44,12 @@ describe('TarifasService', () => {
   };
   const auditoria = { registrar: jest.fn() };
   const gateway = { notificar: jest.fn() };
+  const reloj = { ahora: jest.fn() };
   const servicio = new TarifasService(
     prisma as unknown as PrismaService,
     auditoria as unknown as AuditoriaService,
     gateway as unknown as TurnosGateway,
+    reloj as unknown as Reloj,
   );
 
   beforeEach(() => {
@@ -54,6 +58,7 @@ describe('TarifasService', () => {
       fn(prisma),
     );
     prisma.cancha.findUnique.mockResolvedValue({ id: CANCHA_ID });
+    reloj.ahora.mockReturnValue(AHORA);
   });
 
   const errorDe = (promesa: Promise<unknown>) =>

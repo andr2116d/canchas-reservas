@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { cuerpoError } from '../../common/errores';
+import { Reloj } from '../../common/reloj/reloj';
 import { Prisma } from '../../generated/prisma/client';
 import type { Franja } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -71,6 +72,7 @@ export class TarifasService {
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
     private readonly gateway: TurnosGateway,
+    private readonly reloj: Reloj,
   ) {}
 
   async obtener(canchaId: number) {
@@ -108,7 +110,7 @@ export class TarifasService {
           return { respuesta: aRespuesta(vigente), cambio: false };
         }
 
-        const ahora = new Date();
+        const ahora = this.reloj.ahora();
         if (vigente) {
           await tx.tarifa.update({
             where: { id: vigente.id },
