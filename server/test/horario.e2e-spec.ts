@@ -550,6 +550,21 @@ describe('Horario (e2e)', () => {
       expect(ids).not.toContain(pasada.id);
     });
 
+    it('una reserva que queda a mitad de turno al pasar la apertura de 08:00 a 08:30 está fuera de horario', async () => {
+      await prisma.reserva.deleteMany({ where: { canchaId } });
+      const mitad = await crearReserva(fecha, '08:00', '09:00');
+      const noche = await crearReserva(fecha, '18:00', '19:00');
+
+      const res = await guardar({
+        dias: semanaCon(abierto(diaSemana, '08:30', '23:00')),
+        inicioNoche: '18:00',
+      }).expect(409);
+
+      const ids = idsDe(res);
+      expect(ids).toContain(mitad.id);
+      expect(ids).not.toContain(noche.id);
+    });
+
     it('una reserva cuyo turno sigue existiendo no bloquea el cambio', async () => {
       await prisma.reserva.deleteMany({ where: { canchaId } });
       const reserva = await crearReserva(fecha, '12:00', '13:00');
