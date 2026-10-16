@@ -130,6 +130,16 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
     });
   };
 
+  const plazoDelResumen = async (jugador: Sesion, turno: Turno) => {
+    const res = await request(servidor())
+      .get('/api/reservas/resumen')
+      .query(turno)
+      .set('Cookie', jugador.cookie)
+      .expect(200);
+    const { regla } = res.body as { regla: Regla & { plazoLimite: string } };
+    return { ...regla, plazoLimite: new Date(regla.plazoLimite) };
+  };
+
   const pagar = (
     reserva: Reserva,
     {
@@ -503,6 +513,27 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
       expect(
         await prisma.reserva.findUniqueOrThrow({ where: { id: reserva.id } }),
       ).toEqual(reserva);
+    });
+  });
+
+  describe('plazo de punta a punta', () => {
+    it('en el plazoLimite del resumen hay compensación y 1 ms después hay retención', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      const { plazoLimite } = await plazoDelResumen(jugador, turno);
+      const reserva = await reservar(jugador, turno);
+      await pagar(reserva);
+
+      expect(plazoLimite).toEqual(horasAntes(reserva, 24));
+      await expect(
+        servicio.calcularCompensacion(reserva, plazoLimite, 'CLIENTE'),
+      ).resolves.toEqual({ resultado: 'CREDITO', importe: 40, retenido: 0 });
+      await expect(
+        servicio.calcularCompensacion(
+          reserva,
+          new Date(plazoLimite.getTime() + 1),
+          'CLIENTE',
+        ),
+      ).resolves.toEqual({ resultado: 'RETENCION', importe: 0, retenido: 40 });
     });
   });
 });
