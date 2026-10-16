@@ -450,4 +450,54 @@ describe('Flujo de reserva (e2e)', () => {
       ['20:00', 'PENDIENTE_PAGO'],
     ]);
   });
+
+  it('si cambian la tarifa y la regla, sus reservas y la agenda conservan lo guardado', async () => {
+    const jugador = await crearUsuario();
+    const turno = {
+      canchaId: await crearCancha(),
+      fecha: MANANA,
+      horaInicio: '18:00',
+    };
+    const creada = (await reservar(jugador.cookie, turno).expect(201))
+      .body as Creada;
+    const miasAntes = await mias(jugador.cookie);
+
+    await request(servidor())
+      .put(`/api/canchas/${turno.canchaId}/tarifas`)
+      .set('Cookie', admin.cookie)
+      .send({ franja: 'NOCHE', valor: 120 })
+      .expect(200);
+    await request(servidor())
+      .put('/api/regla-cancelacion')
+      .set('Cookie', admin.cookie)
+      .send({ horasAnticipacion: 6, tipoCompensacion: 'DEVOLUCION' })
+      .expect(200);
+    try {
+      const otro = await resumen(jugador.cookie, {
+        ...turno,
+        horaInicio: '19:00',
+      }).expect(200);
+      expect(otro.body).toMatchObject({
+        valorTurno: 120,
+        adelanto: 60,
+        regla: { horasAnticipacion: 6, tipoCompensacion: 'DEVOLUCION' },
+      });
+
+      expect(await mias(jugador.cookie)).toEqual(miasAntes);
+      expect(await agenda(turno)).toEqual([
+        expect.objectContaining({
+          id: creada.id,
+          estado: 'PENDIENTE_PAGO',
+          valorTurno: 80,
+          adelantoPagado: 0,
+          saldoPendiente: 80,
+        }),
+      ]);
+    } finally {
+      await prisma.reglaCancelacion.update({
+        where: { id: 1 },
+        data: { horasAnticipacion: 24, tipoCompensacion: 'CREDITO' },
+      });
+    }
+  });
 });
