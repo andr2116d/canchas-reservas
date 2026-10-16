@@ -130,7 +130,8 @@ function ConfirmacionTurno({
             <p className="text-sm text-texto-suave">Pagaste el adelanto con tu crédito.</p>
           ) : (
             <p className="text-sm text-texto-suave">
-              Tiempo para pagar el adelanto: {tiempoRestante}
+              Tiempo para pagar el adelanto: {tiempoRestante} <br />
+              Debes enviar el comprobante de pago al número de WhatsApp +51 987 654 321 para que tu reserva sea confirmada.
             </p>
           )}
           <Button variante="secundario" onClick={() => router.push("/jugador/disponibilidad")}>
