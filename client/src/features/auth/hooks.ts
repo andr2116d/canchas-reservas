@@ -2,8 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { ErrorApi } from "@/lib/api";
 import { cerrarSesion, iniciarSesion, obtenerSesion } from "./api";
 import { RUTA_PANEL } from "./roles";
+import { avisarCierre, DESTINO_CIERRE, type MotivoCierre } from "./sesion-compartida";
 
 export const CLAVE_SESION = ["sesion"];
 
@@ -23,14 +25,19 @@ export function useIniciarSesion() {
   });
 }
 
-export function useCerrarSesion(destino = "/login") {
+export function useCerrarSesion(motivo: MotivoCierre = "manual") {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const terminar = () => {
+    router.replace(DESTINO_CIERRE[motivo]);
+    queryClient.clear();
+    avisarCierre(motivo);
+  };
   return useMutation({
     mutationFn: cerrarSesion,
-    onSuccess: () => {
-      router.replace(destino);
-      queryClient.clear();
+    onSuccess: terminar,
+    onError: (error) => {
+      if (error instanceof ErrorApi && error.status === 401) terminar();
     },
   });
 }
