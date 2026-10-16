@@ -120,6 +120,38 @@ describe('TarifasService', () => {
       });
     });
 
+    it('trae al usuario de cada fila en la misma consulta del historial', async () => {
+      prisma.tarifa.findMany.mockResolvedValue([
+        fila(tarifa(6, 'DIA', '60.00', HASTA), LUIS),
+        fila(tarifa(5, 'DIA', '50.00', DESDE, HASTA), ANA),
+      ]);
+
+      const { historial } = await servicio.obtener(CANCHA_ID);
+
+      expect(prisma.tarifa.findMany).toHaveBeenCalledTimes(1);
+      expect(prisma.tarifa.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: expect.objectContaining({
+            creadoPor: { select: { id: true, nombres: true, apellidos: true } },
+          }) as unknown,
+        }),
+      );
+      expect(historial.map((h) => h.creadoPor)).toEqual([
+        { id: 8, nombre: 'Luis' },
+        { id: ADMIN_ID, nombre: 'Ana Torres Ruiz' },
+      ]);
+    });
+
+    it('creadoPor sale null si el usuario ya no existe', async () => {
+      prisma.tarifa.findMany.mockResolvedValue([
+        fila(tarifa(5, 'NOCHE', '90.00'), null),
+      ]);
+
+      const { historial } = await servicio.obtener(CANCHA_ID);
+
+      expect(historial[0].creadoPor).toBeNull();
+    });
+
     it('una franja sin tarifa vigente sale como null', async () => {
       prisma.tarifa.findMany.mockResolvedValue([]);
 
