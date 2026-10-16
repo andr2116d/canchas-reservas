@@ -212,4 +212,52 @@ describe("Pantalla de la regla de cancelación", () => {
     expect(horas.getAttribute("aria-invalid")).toBe("true");
     expect(llamadas(fetchMock, "PUT")).toHaveLength(0);
   });
+
+  describe("vista previa", () => {
+    async function frase() {
+      const titulo = await screen.findByText("Así lo verá el jugador");
+      return titulo.nextElementSibling?.textContent;
+    }
+
+    it("muestra la frase con los valores cargados y cambia al editar horas y tipo", async () => {
+      responder({ "GET /api/regla-cancelacion": { status: 200, body: REGLA } });
+      renderPantalla();
+
+      expect(await frase()).toBe(
+        "Puedes cancelar hasta 12 h antes del inicio del turno y se te devolverá tu adelanto en recepción. Si cancelas después, el adelanto queda retenido.",
+      );
+
+      fireEvent.change(await campoHoras(), { target: { value: "36" } });
+      expect(await frase()).toBe(
+        "Puedes cancelar hasta 36 h antes del inicio del turno y se te devolverá tu adelanto en recepción. Si cancelas después, el adelanto queda retenido.",
+      );
+
+      fireEvent.change(campoTipo(), { target: { value: "CREDITO" } });
+      expect(await frase()).toBe(
+        "Puedes cancelar hasta 36 h antes del inicio del turno y se te devolverá tu adelanto como crédito. Si cancelas después, el adelanto queda retenido.",
+      );
+    });
+
+    it("con 0 horas se puede cancelar hasta el inicio del turno", async () => {
+      responder({ "GET /api/regla-cancelacion": { status: 200, body: REGLA } });
+      renderPantalla();
+
+      fireEvent.change(await campoHoras(), { target: { value: "0" } });
+      expect(await frase()).toBe(
+        "Puedes cancelar hasta el inicio del turno y se te devolverá tu adelanto en recepción. Si cancelas después, el adelanto queda retenido.",
+      );
+    });
+
+    it.each(["-3", "1.5", "", "2147483648"])("con %j no muestra una frase con ese valor", async (valor) => {
+      responder({ "GET /api/regla-cancelacion": { status: 200, body: REGLA } });
+      renderPantalla();
+
+      fireEvent.change(await campoHoras(), { target: { value: valor } });
+      const texto = await frase();
+      expect(texto).toBe(
+        "Puedes cancelar con la anticipación indicada y se te devolverá tu adelanto en recepción. Si cancelas después, el adelanto queda retenido.",
+      );
+      expect(texto).not.toMatch(/\d/);
+    });
+  });
 });
