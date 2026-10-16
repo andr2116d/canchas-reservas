@@ -337,4 +337,17 @@ describe('Tarifas al reservar (e2e)', () => {
       ]);
     });
   });
+
+  describe('cancha sin tarifa', () => {
+    it('sin tarifa de noche el último turno de día se reserva', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({ DIA: 60 });
+      const { dia } = await corte(jugador.cookie, canchaId);
+
+      await resumen(jugador.cookie, dia).expect(200);
+      const creada = (await reservar(jugador.cookie, dia).expect(201))
+        .body as Creada;
+      expect((await guardada(creada.id)).valorTurno.toFixed(2)).toBe('60.00');
+    });
+  });
 });
