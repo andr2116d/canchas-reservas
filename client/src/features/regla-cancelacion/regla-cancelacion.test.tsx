@@ -197,15 +197,17 @@ describe("Pantalla de la regla de cancelación", () => {
   });
 
   it.each([
-    ["-3", MENSAJES_REGLA.horasMinimo],
-    ["1.5", MENSAJES_REGLA.horasEntero],
+    ["abc", MENSAJES_REGLA.horasEntero],
+    ["-", MENSAJES_REGLA.horasEntero],
+    [".", MENSAJES_REGLA.horasEntero],
     ["", MENSAJES_REGLA.horasEntero],
-  ])("con %j no envía nada y muestra el motivo", async (valor, mensaje) => {
+  ])("con %j el campo queda vacío, no envía nada y muestra el motivo", async (valor, mensaje) => {
     const fetchMock = responder({ "GET /api/regla-cancelacion": { status: 200, body: REGLA } });
     renderPantalla();
 
     const horas = await campoHoras();
     fireEvent.change(horas, { target: { value: valor } });
+    expect(horas.value).toBe("");
     fireEvent.click(botonGuardar());
 
     expect(await screen.findByText(mensaje)).toBeTruthy();
@@ -269,7 +271,7 @@ describe("Pantalla de la regla de cancelación", () => {
       );
     });
 
-    it.each(["-3", "1.5", "", "2147483648"])("con %j no muestra una frase con ese valor", async (valor) => {
+    it.each(["abc", "-", ".", "", "2147483648"])("con %j no muestra una frase con ese valor", async (valor) => {
       responder({ "GET /api/regla-cancelacion": { status: 200, body: REGLA } });
       renderPantalla();
 
