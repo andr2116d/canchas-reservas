@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -74,6 +74,33 @@ const ETIQUETA_ACCION: Record<string, string> = {
   FINALIZAR: "Finalizar",
 };
 
+const AVISO_ACCIONES = "Disponible en el próximo sprint";
+
+function AccionesTurno({ acciones }: { acciones: string[] }) {
+  const avisoId = useId();
+  if (acciones.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap gap-1">
+        {acciones.map((accion) => (
+          <Button
+            key={accion}
+            variante="secundario"
+            disabled
+            aria-describedby={avisoId}
+            className="h-8 px-2 text-xs"
+          >
+            {ETIQUETA_ACCION[accion] ?? accion}
+          </Button>
+        ))}
+      </div>
+      <p id={avisoId} className="text-xs text-texto-suave">
+        {AVISO_ACCIONES}
+      </p>
+    </div>
+  );
+}
+
 function moverFecha(fecha: string, delta: number): string {
   const [anio, mes, dia] = fecha.split("-").map(Number);
   const fechaUtc = new Date(Date.UTC(anio, mes - 1, dia + delta));
@@ -113,19 +140,7 @@ function FilaTurno({ turno }: { turno: TurnoAgenda }) {
       <td className="px-3 py-2 tabular-nums">{moneda(turno.adelantoPagado)}</td>
       <td className="px-3 py-2 tabular-nums">{moneda(turno.saldoPendiente)}</td>
       <td className="px-3 py-2">
-        <div className="flex flex-wrap gap-1">
-          {turno.acciones.map((accion) => (
-            <Button
-              key={accion}
-              variante="secundario"
-              disabled
-              title="Disponible en el próximo sprint"
-              className="h-8 px-2 text-xs"
-            >
-              {ETIQUETA_ACCION[accion] ?? accion}
-            </Button>
-          ))}
-        </div>
+        <AccionesTurno acciones={turno.acciones} />
       </td>
     </tr>
   );
@@ -166,19 +181,7 @@ function TarjetaTurno({ turno }: { turno: TurnoAgenda }) {
           <dd className="tabular-nums">{moneda(turno.saldoPendiente)}</dd>
         </div>
       </dl>
-      <div className="flex flex-wrap gap-1">
-        {turno.acciones.map((accion) => (
-          <Button
-            key={accion}
-            variante="secundario"
-            disabled
-            title="Disponible en el próximo sprint"
-            className="h-8 px-2 text-xs"
-          >
-            {ETIQUETA_ACCION[accion] ?? accion}
-          </Button>
-        ))}
-      </div>
+      <AccionesTurno acciones={turno.acciones} />
     </Card>
   );
 }

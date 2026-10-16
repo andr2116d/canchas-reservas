@@ -152,6 +152,14 @@ function tarjetaDe(hora: string) {
   return tarjeta;
 }
 
+/** Los elementos que describen al botón según su aria-describedby. */
+function descripcionesDe(boton: HTMLElement) {
+  return (boton.getAttribute("aria-describedby") ?? "")
+    .split(" ")
+    .filter(Boolean)
+    .map((id) => document.getElementById(id));
+}
+
 function botonesDe(elemento: HTMLElement) {
   return within(elemento)
     .queryAllByRole("button")
@@ -198,7 +206,9 @@ describe("PantallaAgenda", () => {
       expect(botones.length).toBeGreaterThan(0);
       for (const boton of botones) {
         expect((boton as HTMLButtonElement).disabled).toBe(true);
-        expect(boton.getAttribute("title")).toBe("Disponible en el próximo sprint");
+        expect(descripcionesDe(boton).map((d) => d?.textContent)).toEqual([
+          "Disponible en el próximo sprint",
+        ]);
       }
     }
     expect(screen.queryByRole("button", { name: "Finalizar" })).toBeNull();
@@ -325,6 +335,31 @@ describe("PantallaAgenda con fecha fija", () => {
           expect((boton as HTMLButtonElement).disabled).toBe(true);
         }
       }
+    }
+  });
+
+  it("el aviso de los botones deshabilitados se ve en la tabla y en la tarjeta y está asociado a cada botón", async () => {
+    responderApi(DIA_COMPLETO);
+    renderAgenda();
+
+    await screen.findByRole("table");
+    const ids = new Set<string>();
+    for (const contenedor of [filaDe("10:00"), tarjetaDe("10:00")]) {
+      const aviso = within(contenedor).getByText("Disponible en el próximo sprint");
+      expect(aviso.closest("[aria-hidden='true'], [hidden], .sr-only")).toBeNull();
+      ids.add(aviso.id);
+
+      const botones = within(contenedor).getAllByRole("button");
+      expect(botones).toHaveLength(4);
+      for (const boton of botones) {
+        expect(descripcionesDe(boton)).toEqual([aviso]);
+        expect(boton.hasAttribute("title")).toBe(false);
+      }
+    }
+    expect(ids.size).toBe(2);
+
+    for (const contenedor of [filaDe("09:00"), tarjetaDe("09:00")]) {
+      expect(within(contenedor).queryByText("Disponible en el próximo sprint")).toBeNull();
     }
   });
 
