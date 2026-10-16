@@ -214,4 +214,25 @@ describe('Coherencia de la generación de turnos (e2e)', () => {
     await expect(vistaPrevia(fecha)).resolves.toEqual(generados);
     await expect(disponibilidad(fecha)).resolves.toEqual(generados);
   });
+
+  it('cambiar el inicio de noche por PUT cambia la franja en la vista previa y la disponibilidad', async () => {
+    const fecha = sumarDias(hoy(), 3);
+    const franjaDe18 = (turnos: Turno[]) =>
+      turnos.find((t) => t.horaInicio === '18:00')?.franja;
+    expect(franjaDe18(await vistaPrevia(fecha))).toBe('NOCHE');
+    expect(franjaDe18(await disponibilidad(fecha))).toBe('NOCHE');
+
+    await request(servidor())
+      .put('/api/horario')
+      .set('Cookie', cookieAdmin)
+      .send({ dias: SEMANA, inicioNoche: '19:00', confirmar: true })
+      .expect(200);
+
+    expect(franjaDe18(await vistaPrevia(fecha))).toBe('DIA');
+    expect(franjaDe18(await disponibilidad(fecha))).toBe('DIA');
+    expect(
+      (await disponibilidad(fecha)).find((t) => t.horaInicio === '19:00')
+        ?.franja,
+    ).toBe('NOCHE');
+  });
 });
