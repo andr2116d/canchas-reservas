@@ -385,5 +385,34 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         },
       );
     });
+
+    it('el adelanto pagado con crédito al reservar cuenta como adelanto pagado', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      await prisma.credito.create({
+        data: { jugadorId: jugador.id, monto: 50, saldo: 50 },
+      });
+      const reserva = await reservar(jugador, turno, true);
+      expect(reserva.estado).toBe('CONFIRMADA');
+      const pagos = await prisma.pago.findMany({
+        where: { reservaId: reserva.id },
+      });
+      expect(pagos).toHaveLength(1);
+      expect(pagos[0]).toMatchObject({
+        concepto: 'ADELANTO',
+        metodo: 'CREDITO',
+        estado: 'APROBADO',
+      });
+
+      await expect(calcular(reserva, 30)).resolves.toEqual({
+        resultado: 'CREDITO',
+        importe: 40,
+        retenido: 0,
+      });
+      await expect(calcular(reserva, 23)).resolves.toEqual({
+        resultado: 'RETENCION',
+        importe: 0,
+        retenido: 40,
+      });
+    });
   });
 });
