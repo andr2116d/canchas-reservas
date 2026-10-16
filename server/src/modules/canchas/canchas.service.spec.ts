@@ -1,5 +1,4 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { inicioDeHoyEnLima } from '../../common/fechas-lima';
 import { Reloj } from '../../common/reloj/reloj';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
@@ -274,7 +273,7 @@ describe('CanchasService', () => {
       expect(auditoria.registrar).not.toHaveBeenCalled();
     });
 
-    it('busca reservas futuras por estado y desde hoy en Lima', async () => {
+    it('busca reservas futuras por estado y que empiecen despues de ahora', async () => {
       const ahora = new Date('2026-10-16T03:30:00.000Z');
       reloj.ahora.mockReturnValue(ahora);
       prisma.cancha.findUnique.mockResolvedValue(CANCHA);
@@ -290,7 +289,7 @@ describe('CanchasService', () => {
             estado: {
               in: ['PENDIENTE_PAGO', 'PENDIENTE_VALIDACION', 'CONFIRMADA'],
             },
-            fecha: { gte: inicioDeHoyEnLima(ahora) },
+            inicioEn: { gt: ahora },
           },
         }),
       );

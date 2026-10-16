@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { cuerpoError } from '../../common/errores';
-import { inicioDeHoyEnLima } from '../../common/fechas-lima';
 import { Reloj } from '../../common/reloj/reloj';
 import type { Prisma } from '../../generated/prisma/client';
 import type { EstadoReserva, Rol } from '../../generated/prisma/enums';
@@ -271,7 +270,7 @@ export class CanchasService {
       where: {
         canchaId,
         estado: { in: ESTADOS_RESERVA_FUTURA },
-        fecha: { gte: inicioDeHoyEnLima(this.reloj.ahora()) },
+        inicioEn: { gt: this.reloj.ahora() },
       },
       select: {
         id: true,
