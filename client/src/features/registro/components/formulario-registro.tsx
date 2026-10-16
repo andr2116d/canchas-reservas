@@ -44,6 +44,7 @@ export function FormularioRegistro() {
     setValue,
     getFieldState,
     trigger,
+    reset,
     formState: { errors },
   } = useForm<ValoresRegistro, unknown, DatosValidados>({
     resolver: zodResolver(esquemaRegistro),
@@ -65,6 +66,7 @@ export function FormularioRegistro() {
   const enviar = handleSubmit(async (datos) => {
     try {
       await mutateAsync(quitarConfirmacion(datos));
+      reset();
     } catch (error) {
       aplicarErroresServidor(error, setError, [...CAMPOS_SERVIDOR]);
     }
