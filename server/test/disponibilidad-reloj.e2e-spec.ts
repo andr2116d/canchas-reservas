@@ -12,6 +12,8 @@ import {
   MENSAJE_FUERA_DE_RANGO,
   type TurnoDisponibilidad,
 } from '../src/modules/turnos/disponibilidad.service';
+import { MENSAJE_RESERVAS_FUERA_DE_HORARIO } from '../src/modules/horario/horario.service';
+import { diaSemanaDe } from '../src/modules/turnos/generar-turnos';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const HOY = '2031-03-10';
@@ -49,6 +51,7 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let cookie: string;
+  let cookieAdmin: string;
   let jugadorId: number;
   let principal: number;
   let sinNoche: number;
@@ -173,6 +176,19 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
     });
     jugadorId = jugador.id;
     cookie = `sesion=${await jwt.signAsync(crearPayloadSesion(jugadorId, 'JUGADOR'))}`;
+    const admin = await prisma.usuario.create({
+      data: {
+        nombres: 'Reloj Admin',
+        tipoDocumento: 'CE',
+        numeroDocumento: `RA${sufijo}`,
+        correo: `reloj.admin.${sufijo}@laprevia.test`,
+        telefono: `9005${sufijo.slice(-5)}`,
+        passwordHash: 'sin-uso',
+        rol: 'ADMINISTRADOR',
+      },
+      select: { id: true },
+    });
+    cookieAdmin = `sesion=${await jwt.signAsync(crearPayloadSesion(admin.id, 'ADMINISTRADOR'))}`;
 
     principal = await crearCancha('Principal');
     sinNoche = await crearCancha('SinNoche');
@@ -199,22 +215,30 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.reserva.deleteMany({
-      where: { canchaId: { in: canchas() } },
-    });
-    await prisma.tarifa.deleteMany({ where: { canchaId: { in: canchas() } } });
-    await prisma.cancha.deleteMany({ where: { id: { in: canchas() } } });
-    await prisma.usuario.deleteMany({ where: { id: jugadorId } });
-    await prisma.horarioDia.deleteMany({
-      where: {
-        diaSemana: { notIn: diasOriginales.map((dia) => dia.diaSemana) },
-      },
-    });
-    await definirHorario(diasOriginales, inicioNocheOriginal ?? '18:00');
-    if (inicioNocheOriginal === undefined) {
-      await prisma.configuracion.deleteMany({ where: { id: 1 } });
+    try {
+      await prisma.reserva.deleteMany({
+        where: { canchaId: { in: canchas() } },
+      });
+      await prisma.tarifa.deleteMany({
+        where: { canchaId: { in: canchas() } },
+      });
+      await prisma.cancha.deleteMany({ where: { id: { in: canchas() } } });
+      await prisma.usuario.deleteMany({ where: { id: jugadorId } });
+    } finally {
+      try {
+        await prisma.horarioDia.deleteMany({
+          where: {
+            diaSemana: { notIn: diasOriginales.map((dia) => dia.diaSemana) },
+          },
+        });
+        await definirHorario(diasOriginales, inicioNocheOriginal ?? '18:00');
+        if (inicioNocheOriginal === undefined) {
+          await prisma.configuracion.deleteMany({ where: { id: 1 } });
+        }
+      } finally {
+        await app.close();
+      }
     }
-    await app.close();
   });
 
   describe('hora de inicio', () => {
@@ -379,6 +403,33 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
 
       expect(turnos).toHaveLength(15);
       for (const t of turnos) expect(t.motivo).toBe('PASADO');
+    });
+  });
+
+  describe('reservas fuera del nuevo horario', () => {
+    it('una reserva que ya pasó según el reloj no aparece en el 409', async () => {
+      const pasada = await crearReserva(principal, HOY, '10:00', 'CONFIRMADA');
+      const futura = await crearReserva(principal, HOY, '16:00', 'CONFIRMADA');
+
+      const res = await request(servidor())
+        .put('/api/horario')
+        .set('Cookie', cookieAdmin)
+        .send({
+          dias: SEMANA.map((dia) =>
+            dia.diaSemana === diaSemanaDe(HOY)
+              ? { ...dia, apertura: '17:00' }
+              : dia,
+          ),
+          inicioNoche: '18:00',
+        })
+        .expect(409);
+
+      expect(res.body.message).toBe(MENSAJE_RESERVAS_FUERA_DE_HORARIO);
+      const ids = (res.body.reservasFueraDeHorario as { id: number }[]).map(
+        (r) => r.id,
+      );
+      expect(ids).toContain(futura.id);
+      expect(ids).not.toContain(pasada.id);
     });
   });
 });
