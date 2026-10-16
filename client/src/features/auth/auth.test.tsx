@@ -72,6 +72,24 @@ describe("GuardiaRol", () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
+  it("al volver con atrás desde el bfcache revalida la sesión y va a /login si ya no existe", async () => {
+    responder(200, sesion("ADMINISTRADOR"));
+    renderizar(
+      <GuardiaRol rol="ADMINISTRADOR">
+        <p>Contenido de admin</p>
+      </GuardiaRol>,
+    );
+    expect(await screen.findByText("Contenido de admin")).toBeTruthy();
+
+    responder(401, { statusCode: 401, message: "Sin sesión", errores: {} });
+    window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: false }));
+    window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/login"));
+    expect(screen.queryByText("Contenido de admin")).toBeNull();
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+  });
+
   it("ante un error 500 muestra el mensaje y no redirige", async () => {
     responder(500, { statusCode: 500, message: "Error interno" });
     renderizar(
