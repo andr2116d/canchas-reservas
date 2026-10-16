@@ -311,4 +311,28 @@ describe('Flujo de reserva (e2e)', () => {
     expect((res.body as { message: string }).message).toBe(NO_DISPONIBLE);
     expect(await mias(b.cookie)).toEqual([]);
   });
+
+  it('la recepcionista ve la reserva en la agenda con su estado y saldo', async () => {
+    const jugador = await crearUsuario();
+    const turno = {
+      canchaId: await crearCancha(),
+      fecha: MANANA,
+      horaInicio: '18:00',
+    };
+    const creada = (await reservar(jugador.cookie, turno).expect(201))
+      .body as Creada;
+
+    expect(await agenda(turno)).toEqual([
+      expect.objectContaining({
+        id: creada.id,
+        codigo: creada.codigo,
+        horaInicio: '18:00',
+        estado: 'PENDIENTE_PAGO',
+        valorTurno: 80,
+        adelantoPagado: 0,
+        saldoPendiente: 80,
+        cliente: expect.objectContaining({ id: jugador.id }) as unknown,
+      }),
+    ]);
+  });
 });
