@@ -4,6 +4,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
+function mensajeDe(campo: string, constraints: Record<string, string>) {
+  if (constraints.whitelistValidation)
+    return `El campo ${campo} no está permitido`;
+  return Object.values(constraints)[0];
+}
+
 export function aplanarErrores(
   errores: ValidationError[],
   prefijo = '',
@@ -11,8 +17,8 @@ export function aplanarErrores(
   const resultado: Record<string, string> = {};
   for (const error of errores) {
     const campo = prefijo ? `${prefijo}.${error.property}` : error.property;
-    const mensajes = Object.values(error.constraints ?? {});
-    if (mensajes.length > 0) resultado[campo] = mensajes[0];
+    if (error.constraints && Object.keys(error.constraints).length > 0)
+      resultado[campo] = mensajeDe(campo, error.constraints);
     if (error.children?.length)
       Object.assign(resultado, aplanarErrores(error.children, campo));
   }

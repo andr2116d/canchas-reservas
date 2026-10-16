@@ -47,12 +47,23 @@ describe('crearValidationPipe', () => {
     }
   });
 
-  it('rechaza campos que el DTO no declara', async () => {
-    await expect(
-      pipe.transform(
-        { nombre: 'x', dia: { apertura: '08:00' }, extra: 1 },
+  it('rechaza en español los campos que el DTO no declara', async () => {
+    expect.assertions(2);
+    try {
+      await pipe.transform(
+        { nombre: 'x', dia: { apertura: '08:00', otro: 2 }, extra: 1 },
         meta,
-      ),
-    ).rejects.toBeInstanceOf(BadRequestException);
+      );
+    } catch (e) {
+      expect(e).toBeInstanceOf(BadRequestException);
+      expect((e as BadRequestException).getResponse()).toEqual({
+        statusCode: 400,
+        message: 'El campo extra no está permitido',
+        errores: {
+          extra: 'El campo extra no está permitido',
+          'dia.otro': 'El campo dia.otro no está permitido',
+        },
+      });
+    }
   });
 });
