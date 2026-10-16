@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { fecha } from "@/lib/formato";
+import { fecha, moneda } from "@/lib/formato";
 import { useMisReservas } from "../hooks";
 import type { EstadoReserva, ReservaJugador } from "../api";
 
@@ -36,6 +36,36 @@ function tonoEstado(estado: EstadoReserva) {
     default:
       return "neutro";
   }
+}
+
+const ESTADOS_SIN_DEUDA: EstadoReserva[] = ["CANCELADA", "EXPIRADA"];
+
+function Monto({ etiqueta, monto }: { etiqueta: string; monto: number }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-sm text-texto-suave">{etiqueta}</dt>
+      <dd className="tabular-nums">{moneda(monto)}</dd>
+    </div>
+  );
+}
+
+function MontosReserva({ reserva }: { reserva: ReservaJugador }) {
+  const sinDeuda = ESTADOS_SIN_DEUDA.includes(reserva.estado);
+  const pagado = (Math.round(reserva.valorTurno * 100) - Math.round(reserva.saldoPendiente * 100)) / 100;
+
+  return (
+    <dl className="flex flex-col gap-1 border-t border-linea pt-3">
+      <Monto etiqueta="Valor del turno" monto={reserva.valorTurno} />
+      {sinDeuda ? (
+        pagado > 0 && <Monto etiqueta="Pagado" monto={pagado} />
+      ) : (
+        <>
+          <Monto etiqueta="Adelanto pagado" monto={reserva.adelantoPagado} />
+          <Monto etiqueta="Saldo por pagar" monto={reserva.saldoPendiente} />
+        </>
+      )}
+    </dl>
+  );
 }
 
 export function PantallaReservas() {
@@ -86,6 +116,7 @@ export function PantallaReservas() {
                     {ETIQUETA_ESTADO[reserva.estado]}
                   </Badge>
                 </div>
+                <MontosReserva reserva={reserva} />
               </Card>
             </li>
           ))}
