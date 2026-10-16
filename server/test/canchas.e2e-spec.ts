@@ -3,6 +3,8 @@ import { Test } from '@nestjs/testing';
 import { hash } from 'bcryptjs';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { instanteEnLima } from '../src/common/fechas-lima';
+import { Reloj } from '../src/common/reloj/reloj';
 import { configurarApp } from '../src/configurar-app';
 import {
   CanchasService,
@@ -19,6 +21,13 @@ function fechaEnLima(diasDesdeHoy: number) {
   return fecha;
 }
 
+class RelojAjustable {
+  instante?: Date;
+  ahora() {
+    return this.instante ?? new Date();
+  }
+}
+
 describe('Canchas (e2e)', () => {
   const sufijo = String(Date.now()).slice(-11);
   const ADMIN = {
@@ -30,6 +39,8 @@ describe('Canchas (e2e)', () => {
     contrasena: 'Jugador123',
   };
   const nombre = (texto: string) => `${texto} ${sufijo}`;
+
+  const reloj = new RelojAjustable();
 
   let app: INestApplication;
   let prisma: PrismaService;
@@ -95,7 +106,10 @@ describe('Canchas (e2e)', () => {
   beforeAll(async () => {
     const modulo = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(Reloj)
+      .useValue(reloj)
+      .compile();
     app = modulo.createNestApplication();
     configurarApp(app);
     await app.init();
@@ -439,6 +453,75 @@ describe('Canchas (e2e)', () => {
       expect(conVigente.body).toContainEqual(
         expect.objectContaining({ id, tieneTarifas: true }),
       );
+    });
+  });
+
+  describe('reservas futuras con el reloj fijo', () => {
+    const HOY = '2031-03-10';
+    const horaSiguiente = (hora: string) =>
+      `${String(Number(hora.slice(0, 2)) + 1).padStart(2, '0')}:00`;
+    const reservaDeHoy = (canchaId: number, horaInicio: string) =>
+      prisma.reserva.create({
+        data: {
+          codigo: `E2E-${sufijo}-${canchaId}-${horaInicio}`,
+          jugadorId,
+          creadoPorId: jugadorId,
+          canchaId,
+          fecha: new Date(`${HOY}T00:00:00.000Z`),
+          horaInicio,
+          horaFin: horaSiguiente(horaInicio),
+          inicioEn: instanteEnLima(HOY, horaInicio),
+          finEn: instanteEnLima(HOY, horaSiguiente(horaInicio)),
+          franja: 'DIA',
+          valorTurno: 60,
+          adelantoMinimo: 30,
+          estado: 'CONFIRMADA',
+          reglaHorasAnticipacion: 24,
+          reglaTipoCompensacion: 'CREDITO',
+        },
+      });
+
+    beforeAll(() => {
+      reloj.instante = instanteEnLima(HOY, '15:20');
+    });
+
+    afterAll(() => {
+      reloj.instante = undefined;
+    });
+
+    it('no cuenta una reserva de hoy que ya empezó y sí una que aún no empieza', async () => {
+      const id = await crearCancha('Hoy');
+      await reservaDeHoy(id, '15:00');
+      const pendiente = await reservaDeHoy(id, '16:00');
+
+      const res = await request(servidor())
+        .patch(`/api/canchas/${id}/activa`)
+        .set('Cookie', cookieAdmin)
+        .send({ activa: false })
+        .expect(409);
+
+      expect(
+        (res.body as { reservasFuturas: { id: number }[] }).reservasFuturas,
+      ).toEqual([
+        {
+          id: pendiente.id,
+          codigo: `E2E-${sufijo}-${id}-16:00`,
+          fecha: HOY,
+          horaInicio: '16:00',
+          cliente: 'Diego Soto Prueba',
+        },
+      ]);
+    });
+
+    it('con solo una reserva de hoy que ya empezó desactiva sin pedir confirmación', async () => {
+      const id = await crearCancha('Hoy pasada');
+      await reservaDeHoy(id, '14:00');
+
+      await request(servidor())
+        .patch(`/api/canchas/${id}/activa`)
+        .set('Cookie', cookieAdmin)
+        .send({ activa: false })
+        .expect(200);
     });
   });
 
