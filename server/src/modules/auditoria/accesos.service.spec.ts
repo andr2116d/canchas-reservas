@@ -68,6 +68,14 @@ describe('AccesosService.listar', () => {
     expect(where).toEqual(argumentos().where);
   });
 
+  it('escapa los comodines de LIKE en el correo', async () => {
+    await servicio.listar(filtros({ correo: 'a_b%c\\d' }));
+
+    expect(argumentos().where).toMatchObject({
+      correo: { contains: 'a\\_b\\%c\\\\d', mode: 'insensitive' },
+    });
+  });
+
   it('exito true también filtra', async () => {
     await servicio.listar(filtros({ exito: true }));
 
