@@ -4,6 +4,7 @@ import { useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alerta, Button, Card, EmptyState, Input, Select, useToast } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { conFiltro, soloDigitos } from "@/lib/filtros-entrada";
 import type { ReglaCancelacion, TipoCompensacion } from "../api";
 import { useActualizarRegla, useReglaCancelacion } from "../hooks";
 import { esquemaRegla, type DatosReglaFormulario, type ValoresRegla } from "../schemas";
@@ -97,12 +98,12 @@ function FormularioRegla({ regla }: { regla: ReglaCancelacion }) {
           <div className="max-w-48">
             <Input
               etiqueta="Horas de anticipación"
-              type="number"
-              min={0}
-              step={1}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
               ayuda="Número entero de horas, mínimo 0."
               error={errors.horasAnticipacion?.message}
-              {...register("horasAnticipacion")}
+              {...conFiltro(register("horasAnticipacion"), (valor) => soloDigitos(valor))}
             />
           </div>
 
