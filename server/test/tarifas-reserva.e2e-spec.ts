@@ -280,5 +280,61 @@ describe('Tarifas al reservar (e2e)', () => {
         expect(reserva.adelantoMinimo.toFixed(2)).toBe(adelanto.toFixed(2));
       }
     });
+
+    it('55.05 con adelanto 27.53 sale igual en disponibilidad, resumen, reserva, mias y agenda', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({ DIA: 60, NOCHE: 55.05 });
+      const { noche: turno } = await corte(jugador.cookie, canchaId);
+      await prisma.credito.create({
+        data: { jugadorId: jugador.id, monto: 27.53, saldo: 27.53 },
+      });
+
+      expect(await turnoDe(jugador.cookie, turno)).toMatchObject({
+        valor: 55.05,
+        adelanto: 27.53,
+      });
+      const consulta = await resumen(jugador.cookie, turno).expect(200);
+      expect(consulta.body).toMatchObject({
+        valorTurno: 55.05,
+        adelanto: 27.53,
+        saldo: 27.52,
+        creditoDisponible: 27.53,
+      });
+
+      const creada = (await reservar(jugador.cookie, turno, true).expect(201))
+        .body as Creada;
+      expect(creada.estado).toBe('CONFIRMADA');
+      const reserva = await guardada(creada.id);
+      expect(reserva.valorTurno.toFixed(2)).toBe('55.05');
+      expect(reserva.adelantoMinimo.toFixed(2)).toBe('27.53');
+
+      const mias = await request(servidor())
+        .get('/api/reservas/mias')
+        .set('Cookie', jugador.cookie)
+        .expect(200);
+      expect(mias.body).toEqual([
+        expect.objectContaining({
+          id: creada.id,
+          franja: 'NOCHE',
+          horaInicio: turno.horaInicio,
+          estado: 'CONFIRMADA',
+        }),
+      ]);
+
+      const agenda = await request(servidor())
+        .get('/api/agenda')
+        .query({ fecha: turno.fecha, canchaId })
+        .set('Cookie', recepcion.cookie)
+        .expect(200);
+      expect(agenda.body).toEqual([
+        expect.objectContaining({
+          id: creada.id,
+          franja: 'NOCHE',
+          valorTurno: 55.05,
+          adelantoPagado: 27.53,
+          saldoPendiente: 27.52,
+        }),
+      ]);
+    });
   });
 });
