@@ -139,6 +139,63 @@ describe('calcularCompensacion', () => {
     });
   });
 
+  describe('por incidencia del complejo', () => {
+    it('1 h antes devuelve todo lo pagado aunque la regla sea crédito', () => {
+      expect(
+        calcularCompensacion(
+          datos({
+            motivo: 'INCIDENCIA',
+            adelantoPagado: 40,
+            pagadoTurno: 80,
+            momento: antes(1),
+          }),
+        ),
+      ).toEqual({ resultado: 'DEVOLUCION', importe: 80, retenido: 0 });
+    });
+
+    it('a tiempo también devuelve, no acredita', () => {
+      expect(
+        calcularCompensacion(
+          datos({ motivo: 'INCIDENCIA', momento: antes(30) }),
+        ),
+      ).toEqual({ resultado: 'DEVOLUCION', importe: 40, retenido: 0 });
+    });
+
+    it('después del inicio del turno devuelve', () => {
+      expect(
+        calcularCompensacion(
+          datos({ motivo: 'INCIDENCIA', momento: antes(-1) }),
+        ),
+      ).toEqual({ resultado: 'DEVOLUCION', importe: 40, retenido: 0 });
+    });
+
+    it('devuelve 27.53 sin perder un céntimo', () => {
+      expect(
+        calcularCompensacion(
+          datos({
+            motivo: 'INCIDENCIA',
+            adelantoPagado: '27.53',
+            pagadoTurno: new Prisma.Decimal('27.53'),
+            momento: antes(1),
+          }),
+        ),
+      ).toEqual({ resultado: 'DEVOLUCION', importe: 27.53, retenido: 0 });
+    });
+
+    it('sin nada pagado no hay compensación', () => {
+      expect(
+        calcularCompensacion(
+          datos({
+            motivo: 'INCIDENCIA',
+            adelantoPagado: 0,
+            pagadoTurno: 0,
+            momento: antes(1),
+          }),
+        ),
+      ).toEqual({ resultado: 'SIN_COMPENSACION', importe: 0, retenido: 0 });
+    });
+  });
+
   describe('coherencia con plazoLimite', () => {
     const servicio = new ReglaCancelacionService(
       null as unknown as PrismaService,
