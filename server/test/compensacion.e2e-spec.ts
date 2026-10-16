@@ -414,5 +414,41 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         retenido: 40,
       });
     });
+
+    it('los pagos en proceso, por validar o rechazados y los de otra reserva no cuentan', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      const reserva = await reservar(jugador, turno);
+      const otra = await reservar(await crearUsuario(), {
+        ...turno,
+        horaInicio: '19:00',
+      });
+      await pagar(reserva, { concepto: 'ADELANTO', estado: 'EN_PROCESO' });
+      for (const estado of ['PENDIENTE_VALIDACION', 'RECHAZADO'] as const) {
+        await pagar(reserva, { concepto: 'ADELANTO', estado });
+        await pagar(reserva, { concepto: 'SALDO', estado });
+      }
+      await pagar(otra, { concepto: 'ADELANTO' });
+      await pagar(otra, { concepto: 'SALDO' });
+
+      for (const motivo of ['CLIENTE', 'INCIDENCIA'] as const) {
+        await expect(calcular(reserva, 30, motivo)).resolves.toEqual({
+          resultado: 'SIN_COMPENSACION',
+          importe: 0,
+          retenido: 0,
+        });
+      }
+
+      await pagar(reserva, { concepto: 'ADELANTO', monto: 25.5 });
+      await expect(calcular(reserva, 30)).resolves.toEqual({
+        resultado: 'CREDITO',
+        importe: 25.5,
+        retenido: 0,
+      });
+      await expect(calcular(reserva, 1, 'INCIDENCIA')).resolves.toEqual({
+        resultado: 'DEVOLUCION',
+        importe: 25.5,
+        retenido: 0,
+      });
+    });
   });
 });
