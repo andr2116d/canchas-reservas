@@ -428,5 +428,29 @@ describe('Tarifas al reservar (e2e)', () => {
       expect(reserva.valorTurno.toFixed(2)).toBe('90.15');
       expect(reserva.adelantoMinimo.toFixed(2)).toBe('45.08');
     });
+
+    it('sin tarifa y en mantenimiento muestra el mantenimiento', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({}, 'EN_MANTENIMIENTO');
+      const { dia, noche } = await corte(jugador.cookie, canchaId);
+
+      for (const turno of await turnosDe(jugador.cookie, canchaId, MANANA)) {
+        expect(turno).toMatchObject({
+          estado: 'EN_MANTENIMIENTO',
+          seleccionable: false,
+        });
+        expect(turno).not.toHaveProperty('motivo');
+      }
+      for (const turno of [dia, noche]) {
+        for (const res of [
+          await resumen(jugador.cookie, turno).expect(400),
+          await reservar(jugador.cookie, turno).expect(400),
+        ]) {
+          expect(res.body).toMatchObject({
+            message: 'La cancha está en mantenimiento',
+          });
+        }
+      }
+    });
   });
 });
