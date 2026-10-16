@@ -535,5 +535,42 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         ),
       ).resolves.toEqual({ resultado: 'RETENCION', importe: 0, retenido: 40 });
     });
+
+    it('con regla 0 h el plazo es el inicio del turno', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      await conRegla(
+        { horasAnticipacion: 0, tipoCompensacion: 'DEVOLUCION' },
+        async () => {
+          const regla = await plazoDelResumen(jugador, turno);
+          expect(regla).toEqual({
+            horasAnticipacion: 0,
+            tipoCompensacion: 'DEVOLUCION',
+            plazoLimite: new Date(`${FECHA_TURNO}T18:00:00-05:00`),
+          });
+          const reserva = await reservar(jugador, turno);
+          await pagar(reserva);
+
+          expect(regla.plazoLimite).toEqual(reserva.inicioEn);
+          await expect(
+            servicio.calcularCompensacion(reserva, reserva.inicioEn, 'CLIENTE'),
+          ).resolves.toEqual({
+            resultado: 'DEVOLUCION',
+            importe: 40,
+            retenido: 0,
+          });
+          await expect(
+            servicio.calcularCompensacion(
+              reserva,
+              new Date(reserva.inicioEn.getTime() + 1),
+              'CLIENTE',
+            ),
+          ).resolves.toEqual({
+            resultado: 'RETENCION',
+            importe: 0,
+            retenido: 40,
+          });
+        },
+      );
+    });
   });
 });
