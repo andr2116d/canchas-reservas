@@ -349,5 +349,31 @@ describe('Tarifas al reservar (e2e)', () => {
         .body as Creada;
       expect((await guardada(creada.id)).valorTurno.toFixed(2)).toBe('60.00');
     });
+
+    it('sin tarifa de día rechaza de día y reserva de noche', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({ NOCHE: 80 });
+      const { dia, noche } = await corte(jugador.cookie, canchaId);
+
+      expect(await turnoDe(jugador.cookie, dia)).toEqual({
+        horaInicio: dia.horaInicio,
+        horaFin: expect.any(String) as string,
+        franja: 'DIA',
+        estado: 'DISPONIBLE',
+        seleccionable: false,
+        motivo: 'SIN_TARIFA',
+      });
+      await rechazoSinTarifa(jugador.cookie, dia);
+
+      expect(await turnoDe(jugador.cookie, noche)).toMatchObject({
+        seleccionable: true,
+        valor: 80,
+        adelanto: 40,
+      });
+      await resumen(jugador.cookie, noche).expect(200);
+      const creada = (await reservar(jugador.cookie, noche).expect(201))
+        .body as Creada;
+      expect((await guardada(creada.id)).valorTurno.toFixed(2)).toBe('80.00');
+    });
   });
 });
