@@ -27,10 +27,12 @@ export function useCrearReserva() {
   return useMutation({
     mutationFn: crearReserva,
     onSuccess: () => {
-      consulta.invalidateQueries({ queryKey: ["reserva-resumen"] });
       consulta.invalidateQueries({ queryKey: ["mis-reservas"] });
-      consulta.invalidateQueries({ queryKey: ["disponibilidad"] });
       consulta.invalidateQueries({ queryKey: ["turnos"] });
+    },
+    onSettled: () => {
+      consulta.invalidateQueries({ queryKey: ["reserva-resumen"] });
+      consulta.invalidateQueries({ queryKey: ["disponibilidad"] });
     },
   });
 }
