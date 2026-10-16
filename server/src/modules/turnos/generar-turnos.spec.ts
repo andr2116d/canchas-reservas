@@ -277,6 +277,14 @@ describe('generarTurnos en un barrido de horarios', () => {
       ),
     ).toEqual([]);
   });
+
+  it('ningún turno cruza el inicio de noche', () => {
+    expect(
+      fallosDe(({ noche, turnos }) =>
+        turnos.every((t) => !(t.inicio < noche && t.fin > noche)),
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe('diaSemanaDe', () => {
