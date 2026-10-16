@@ -31,6 +31,14 @@ const tarifa = (
   vigenteHasta,
 });
 
+const ANA = { id: ADMIN_ID, nombres: 'Ana', apellidos: 'Torres Ruiz' };
+const LUIS = { id: 8, nombres: 'Luis', apellidos: null };
+
+const fila = (
+  base: ReturnType<typeof tarifa>,
+  creadoPor: typeof ANA | typeof LUIS | null = ANA,
+) => ({ ...base, creadoPor });
+
 describe('TarifasService', () => {
   const prisma = {
     cancha: { findUnique: jest.fn() },
@@ -67,9 +75,9 @@ describe('TarifasService', () => {
   describe('obtener', () => {
     it('devuelve las vigentes por franja y el historial completo', async () => {
       prisma.tarifa.findMany.mockResolvedValue([
-        tarifa(5, 'NOCHE', '90.00', HASTA),
-        tarifa(4, 'NOCHE', '80.00', DESDE, HASTA),
-        tarifa(3, 'DIA', '55.05'),
+        fila(tarifa(5, 'NOCHE', '90.00', HASTA)),
+        fila(tarifa(4, 'NOCHE', '80.00', DESDE, HASTA)),
+        fila(tarifa(3, 'DIA', '55.05')),
       ]);
 
       const respuesta = await servicio.obtener(CANCHA_ID);
@@ -90,6 +98,7 @@ describe('TarifasService', () => {
             valor: 90,
             vigenteDesde: HASTA,
             vigenteHasta: null,
+            creadoPor: { id: ADMIN_ID, nombre: 'Ana Torres Ruiz' },
           },
           {
             id: 4,
@@ -97,6 +106,7 @@ describe('TarifasService', () => {
             valor: 80,
             vigenteDesde: DESDE,
             vigenteHasta: HASTA,
+            creadoPor: { id: ADMIN_ID, nombre: 'Ana Torres Ruiz' },
           },
           {
             id: 3,
@@ -104,6 +114,7 @@ describe('TarifasService', () => {
             valor: 55.05,
             vigenteDesde: DESDE,
             vigenteHasta: null,
+            creadoPor: { id: ADMIN_ID, nombre: 'Ana Torres Ruiz' },
           },
         ],
       });
