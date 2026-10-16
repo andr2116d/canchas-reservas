@@ -1,5 +1,8 @@
 import { Prisma } from '../../generated/prisma/client';
 import { instanteEnLima } from '../../common/fechas-lima';
+import type { PrismaService } from '../../prisma/prisma.service';
+import type { AuditoriaService } from '../auditoria/auditoria.service';
+import { ReglaCancelacionService } from './regla-cancelacion.service';
 import {
   calcularCompensacion,
   type DatosCompensacion,
@@ -88,5 +91,100 @@ describe('calcularCompensacion', () => {
         ),
       ).toEqual({ resultado: 'CREDITO', importe: 27.53, retenido: 0 });
     });
+  });
+
+  describe('fuera de plazo', () => {
+    it('regla 24 h y 23 h antes retiene el adelanto', () => {
+      expect(calcularCompensacion(datos({ momento: antes(23) }))).toEqual({
+        resultado: 'RETENCION',
+        importe: 0,
+        retenido: 40,
+      });
+    });
+
+    it('1 ms después del límite retiene', () => {
+      expect(
+        calcularCompensacion(
+          datos({ tipoCompensacion: 'DEVOLUCION', momento: antes(24, 1) }),
+        ),
+      ).toEqual({ resultado: 'RETENCION', importe: 0, retenido: 40 });
+    });
+
+    it('con regla 0 h retiene 1 ms después del inicio', () => {
+      expect(
+        calcularCompensacion(
+          datos({ horasAnticipacion: 0, momento: antes(0, 1) }),
+        ),
+      ).toEqual({ resultado: 'RETENCION', importe: 0, retenido: 40 });
+    });
+
+    it('un momento posterior al inicio del turno retiene', () => {
+      expect(calcularCompensacion(datos({ momento: antes(-2) }))).toEqual({
+        resultado: 'RETENCION',
+        importe: 0,
+        retenido: 40,
+      });
+    });
+
+    it('retiene un adelanto de 27.53 completo, sin perder un céntimo', () => {
+      expect(
+        calcularCompensacion(
+          datos({
+            adelantoPagado: new Prisma.Decimal('27.53'),
+            pagadoTurno: new Prisma.Decimal('27.53'),
+            momento: antes(1),
+          }),
+        ),
+      ).toEqual({ resultado: 'RETENCION', importe: 0, retenido: 27.53 });
+    });
+  });
+
+  describe('coherencia con plazoLimite', () => {
+    const servicio = new ReglaCancelacionService(
+      null as unknown as PrismaService,
+      null as unknown as AuditoriaService,
+    );
+    const turnos = [
+      ['2026-10-18', '19:00'],
+      ['2026-10-19', '00:30'],
+      ['2026-12-31', '23:00'],
+    ];
+    const desfases = [
+      -MS_POR_HORA,
+      -60_000,
+      -1_000,
+      -1,
+      0,
+      1,
+      1_000,
+      60_000,
+      MS_POR_HORA,
+    ];
+
+    it.each([0, 1, 24, 48])(
+      'con regla %i h hay compensación si y solo si el momento no pasa el plazo',
+      (horasAnticipacion) => {
+        for (const [fecha, horaInicio] of turnos) {
+          const plazo = servicio.plazoLimite(
+            fecha,
+            horaInicio,
+            horasAnticipacion,
+          );
+          for (const desfase of desfases) {
+            const momento = new Date(plazo.getTime() + desfase);
+            const { resultado } = calcularCompensacion(
+              datos({
+                inicioEn: instanteEnLima(fecha, horaInicio),
+                horasAnticipacion,
+                momento,
+              }),
+            );
+            expect(resultado).toBe(
+              momento.getTime() <= plazo.getTime() ? 'CREDITO' : 'RETENCION',
+            );
+          }
+        }
+      },
+    );
   });
 });
