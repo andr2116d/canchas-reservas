@@ -2,6 +2,7 @@ export { Alerta } from "./alerta";
 export { Badge } from "./badge";
 export { Button, Spinner } from "./button";
 export { Input, Select } from "./campo";
+export { CampoFecha } from "./campo-fecha";
 export { Card } from "./card";
 export { EmptyState } from "./empty-state";
 export { Modal } from "./modal";
