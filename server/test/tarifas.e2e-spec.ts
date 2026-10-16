@@ -13,6 +13,8 @@ interface Historial {
   valor: number;
   vigenteDesde: string;
   vigenteHasta: string | null;
+  valorAnterior: number | null;
+  creadoPor: { id: number; nombre: string } | null;
 }
 
 describe('Tarifas (e2e)', () => {
@@ -20,6 +22,10 @@ describe('Tarifas (e2e)', () => {
   const ADMIN = {
     correo: `admin.tarifas.${sufijo}@laprevia.test`,
     contrasena: 'Admin12345',
+  };
+  const ADMIN_DOS = {
+    correo: `admin2.tarifas.${sufijo}@laprevia.test`,
+    contrasena: 'Admin54321',
   };
   const RECEPCION = {
     correo: `recepcion.tarifas.${sufijo}@laprevia.test`,
@@ -30,7 +36,9 @@ describe('Tarifas (e2e)', () => {
   let prisma: PrismaService;
   let tarifas: TarifasService;
   let adminId: number;
+  let adminDosId: number;
   let cookieAdmin: string;
+  let cookieAdminDos: string;
   let cookieRecepcion: string;
   const canchasCreadas: number[] = [];
 
@@ -101,8 +109,14 @@ describe('Tarifas (e2e)', () => {
     tarifas = modulo.get(TarifasService);
 
     adminId = await crearUsuario(ADMIN, 'ADMINISTRADOR', `A${sufijo}`);
+    adminDosId = await crearUsuario(ADMIN_DOS, 'ADMINISTRADOR', `B${sufijo}`);
+    await prisma.usuario.update({
+      where: { id: adminDosId },
+      data: { nombres: 'Rosa', apellidos: 'Quispe Mamani' },
+    });
     await crearUsuario(RECEPCION, 'RECEPCIONISTA', `R${sufijo}`);
     cookieAdmin = cookieDe(await iniciarSesion(ADMIN).expect(200));
+    cookieAdminDos = cookieDe(await iniciarSesion(ADMIN_DOS).expect(200));
     cookieRecepcion = cookieDe(await iniciarSesion(RECEPCION).expect(200));
   });
 
@@ -337,6 +351,44 @@ describe('Tarifas (e2e)', () => {
         ['DIA', 50, false],
       ]);
       expect(body.historial[2].vigenteHasta).toBe(body.dia.vigenteDesde);
+    });
+
+    it('cada fila muestra quien la cambio y el valor anterior de su franja', async () => {
+      const canchaId = await crearCancha('Tarifa Autores');
+      await definir(canchaId, { franja: 'NOCHE', valor: 80 }).expect(200);
+      await definir(canchaId, { franja: 'DIA', valor: 50 }).expect(200);
+      await definir(
+        canchaId,
+        { franja: 'NOCHE', valor: 90.5 },
+        cookieAdminDos,
+      ).expect(200);
+      await definir(canchaId, { franja: 'DIA', valor: 55.05 }).expect(200);
+      await definir(canchaId, { franja: 'NOCHE', valor: 95 }).expect(200);
+
+      const res = await consultar(canchaId).expect(200);
+      const { historial } = res.body as { historial: Historial[] };
+
+      const admin = { id: adminId, nombre: 'Prueba ADMINISTRADOR' };
+      const adminDos = { id: adminDosId, nombre: 'Rosa Quispe Mamani' };
+      expect(
+        historial.map(({ franja, valorAnterior, valor, creadoPor }) => ({
+          franja,
+          valorAnterior,
+          valor,
+          creadoPor,
+        })),
+      ).toEqual([
+        { franja: 'NOCHE', valorAnterior: 90.5, valor: 95, creadoPor: admin },
+        { franja: 'DIA', valorAnterior: 50, valor: 55.05, creadoPor: admin },
+        {
+          franja: 'NOCHE',
+          valorAnterior: 80,
+          valor: 90.5,
+          creadoPor: adminDos,
+        },
+        { franja: 'DIA', valorAnterior: null, valor: 50, creadoPor: admin },
+        { franja: 'NOCHE', valorAnterior: null, valor: 80, creadoPor: admin },
+      ]);
     });
 
     it('una franja sin tarifa sale como null', async () => {
