@@ -395,6 +395,37 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
       expect(res.body.message).toBe(MENSAJE_FUERA_DE_RANGO);
     });
 
+    it('a las 23:30 hoy usa el horario del día de Lima y no el de UTC', async () => {
+      await definirHorario(
+        SEMANA.map((dia) =>
+          dia.diaSemana === diaSemanaDe(MANANA)
+            ? { ...dia, apertura: '10:00', cierre: '12:00' }
+            : dia,
+        ),
+        '18:00',
+      );
+
+      const res = await consultar(HOY).expect(200);
+      const horas = (
+        (res as Respuesta).body.canchas.find((c) => c.id === principal)
+          ?.turnos ?? []
+      ).map((t) => [t.horaInicio, t.franja]);
+      const vistaPrevia = await request(servidor())
+        .get('/api/horario/vista-previa')
+        .query({ fecha: HOY })
+        .set('Cookie', cookieAdmin)
+        .expect(200);
+
+      expect(horas).toHaveLength(15);
+      expect(horas[0]).toEqual(['08:00', 'DIA']);
+      expect(horas.at(-1)).toEqual(['22:00', 'NOCHE']);
+      expect(
+        (vistaPrevia.body as { horaInicio: string; franja: string }[]).map(
+          (t) => [t.horaInicio, t.franja],
+        ),
+      ).toEqual(horas);
+    });
+
     it('a las 23:30 todos los turnos de hoy salen con PASADO', async () => {
       const res = await consultar(HOY).expect(200);
       const turnos =
