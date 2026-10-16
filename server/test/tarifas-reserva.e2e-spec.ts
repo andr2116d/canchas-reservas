@@ -375,5 +375,26 @@ describe('Tarifas al reservar (e2e)', () => {
         .body as Creada;
       expect((await guardada(creada.id)).valorTurno.toFixed(2)).toBe('80.00');
     });
+
+    it('sin ninguna tarifa ningún turno se puede elegir ni reservar', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({});
+      const { dia, noche } = await corte(jugador.cookie, canchaId);
+      const turnos = await turnosDe(jugador.cookie, canchaId, MANANA);
+
+      expect(turnos.length).toBeGreaterThan(0);
+      for (const turno of turnos) {
+        expect(turno).toMatchObject({
+          estado: 'DISPONIBLE',
+          seleccionable: false,
+          motivo: 'SIN_TARIFA',
+        });
+        expect(turno).not.toHaveProperty('valor');
+        expect(turno).not.toHaveProperty('adelanto');
+      }
+      await rechazoSinTarifa(jugador.cookie, dia);
+      await rechazoSinTarifa(jugador.cookie, noche);
+      expect(await prisma.reserva.count({ where: { canchaId } })).toBe(0);
+    });
   });
 });
