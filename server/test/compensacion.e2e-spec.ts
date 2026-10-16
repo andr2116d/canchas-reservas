@@ -1,0 +1,305 @@
+import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Test } from '@nestjs/testing';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { Reloj } from '../src/common/reloj/reloj';
+import { crearPayloadSesion } from '../src/common/sesion/cookie-sesion';
+import { configurarApp } from '../src/configurar-app';
+import type {
+  HorarioDia,
+  Prisma,
+  Reserva,
+} from '../src/generated/prisma/client';
+import type {
+  ConceptoPago,
+  EstadoPago,
+  MetodoPago,
+  MotivoCancelacion,
+  TipoCompensacion,
+} from '../src/generated/prisma/enums';
+import { ReglaCancelacionService } from '../src/modules/regla-cancelacion/regla-cancelacion.service';
+import { PrismaService } from '../src/prisma/prisma.service';
+
+const HOY = '2030-01-14';
+const FECHA_TURNO = '2030-01-16';
+const AHORA = new Date(`${HOY}T10:00:00-05:00`);
+const MS_POR_HORA = 3_600_000;
+
+class RelojFijo {
+  instante = AHORA;
+  ahora() {
+    return this.instante;
+  }
+}
+
+interface Regla {
+  horasAnticipacion: number;
+  tipoCompensacion: TipoCompensacion;
+}
+
+interface Turno {
+  canchaId: number;
+  fecha: string;
+  horaInicio: string;
+}
+
+interface Sesion {
+  id: number;
+  cookie: string;
+}
+
+describe('Cálculo de la compensación contra la base (e2e)', () => {
+  const sufijo = String(Date.now()).slice(-9);
+  const reloj = new RelojFijo();
+
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let jwt: JwtService;
+  let servicio: ReglaCancelacionService;
+  let admin: Sesion;
+  let diasOriginales: HorarioDia[];
+  let configuracionOriginal: {
+    inicioNoche: string;
+    tiempoLimitePagoMin: number;
+  };
+  let reglaOriginal: Regla | undefined;
+  const usuariosCreados: number[] = [];
+  const canchasCreadas: number[] = [];
+  let documentos = 0;
+
+  const servidor = () => app.getHttpServer() as Parameters<typeof request>[0];
+
+  const crearUsuario = async (
+    rol: 'JUGADOR' | 'ADMINISTRADOR' = 'JUGADOR',
+  ): Promise<Sesion> => {
+    documentos++;
+    const usuario = await prisma.usuario.create({
+      data: {
+        nombres: `Compensacion ${documentos}`,
+        tipoDocumento: 'CE',
+        numeroDocumento: `C${sufijo}${documentos}`,
+        correo: `compensacion.${sufijo}.${documentos}@laprevia.test`,
+        telefono: '900000090',
+        passwordHash: 'sin-uso',
+        rol,
+      },
+    });
+    usuariosCreados.push(usuario.id);
+    const token = await jwt.signAsync(crearPayloadSesion(usuario.id, rol));
+    return { id: usuario.id, cookie: `sesion=${token}` };
+  };
+
+  const crearCancha = async () => {
+    const cancha = await prisma.cancha.create({
+      data: {
+        nombre: `Compensacion ${sufijo} ${canchasCreadas.length + 1}`,
+        tamano: 'FUTBOL_5',
+        iluminacion: true,
+      },
+    });
+    canchasCreadas.push(cancha.id);
+    for (const [franja, valor] of [
+      ['DIA', 60],
+      ['NOCHE', 80],
+    ] as const) {
+      await prisma.tarifa.create({
+        data: { canchaId: cancha.id, franja, valor, creadoPorId: admin.id },
+      });
+    }
+    return cancha.id;
+  };
+
+  const nuevoCaso = async (horaInicio = '18:00') => ({
+    jugador: await crearUsuario(),
+    turno: { canchaId: await crearCancha(), fecha: FECHA_TURNO, horaInicio },
+  });
+
+  const reservar = async (
+    jugador: Sesion,
+    turno: Turno,
+    usarCredito = false,
+  ): Promise<Reserva> => {
+    const res = await request(servidor())
+      .post('/api/reservas')
+      .set('Cookie', jugador.cookie)
+      .send({ ...turno, usarCredito })
+      .expect(201);
+    return prisma.reserva.findUniqueOrThrow({
+      where: { id: (res.body as { id: number }).id },
+    });
+  };
+
+  const pagar = (
+    reserva: Reserva,
+    {
+      concepto = 'ADELANTO',
+      monto = 40,
+      estado = 'APROBADO',
+      metodo = 'EFECTIVO',
+    }: {
+      concepto?: ConceptoPago;
+      monto?: number;
+      estado?: EstadoPago;
+      metodo?: MetodoPago;
+    } = {},
+    cliente: Prisma.TransactionClient | PrismaService = prisma,
+  ) =>
+    cliente.pago.create({
+      data: {
+        reservaId: reserva.id,
+        concepto,
+        canal: 'RECEPCION',
+        metodo,
+        estado,
+        monto,
+        registradoPorId: reserva.jugadorId,
+      },
+    });
+
+  const horasAntes = (reserva: Reserva, horas: number) =>
+    new Date(reserva.inicioEn.getTime() - horas * MS_POR_HORA);
+
+  const calcular = (
+    reserva: Reserva,
+    horas: number,
+    motivo: MotivoCancelacion = 'CLIENTE',
+  ) =>
+    servicio.calcularCompensacion(reserva, horasAntes(reserva, horas), motivo);
+
+  const leerRegla = () =>
+    prisma.reglaCancelacion.findUniqueOrThrow({
+      where: { id: 1 },
+      select: { horasAnticipacion: true, tipoCompensacion: true },
+    });
+
+  const cambiarRegla = (regla: Regla) =>
+    request(servidor())
+      .put('/api/regla-cancelacion')
+      .set('Cookie', admin.cookie)
+      .send(regla)
+      .expect(200);
+
+  const conRegla = async (regla: Regla, prueba: () => Promise<void>) => {
+    const antes = await leerRegla();
+    await cambiarRegla(regla);
+    try {
+      await prueba();
+    } finally {
+      await prisma.reglaCancelacion.update({ where: { id: 1 }, data: antes });
+    }
+  };
+
+  beforeAll(async () => {
+    const modulo = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(Reloj)
+      .useValue(reloj)
+      .compile();
+    app = modulo.createNestApplication();
+    configurarApp(app);
+    await app.init();
+    prisma = modulo.get(PrismaService);
+    jwt = modulo.get(JwtService, { strict: false });
+    servicio = modulo.get(ReglaCancelacionService);
+
+    diasOriginales = await prisma.horarioDia.findMany();
+    configuracionOriginal = await prisma.configuracion.findUniqueOrThrow({
+      where: { id: 1 },
+      select: { inicioNoche: true, tiempoLimitePagoMin: true },
+    });
+    reglaOriginal = await leerRegla();
+
+    for (let diaSemana = 1; diaSemana <= 7; diaSemana++) {
+      const dia = { abierto: true, apertura: '08:00', cierre: '23:00' };
+      await prisma.horarioDia.upsert({
+        where: { diaSemana },
+        update: dia,
+        create: { diaSemana, ...dia },
+      });
+    }
+    await prisma.configuracion.update({
+      where: { id: 1 },
+      data: { inicioNoche: '18:00', tiempoLimitePagoMin: 15 },
+    });
+    await prisma.reglaCancelacion.update({
+      where: { id: 1 },
+      data: { horasAnticipacion: 24, tipoCompensacion: 'CREDITO' },
+    });
+    admin = await crearUsuario('ADMINISTRADOR');
+  });
+
+  beforeEach(() => {
+    reloj.instante = AHORA;
+  });
+
+  afterAll(async () => {
+    try {
+      const canchaId = { in: canchasCreadas };
+      const usuarioId = { in: usuariosCreados };
+      await prisma.creditoUso.deleteMany({
+        where: { pago: { reserva: { canchaId } } },
+      });
+      await prisma.pago.deleteMany({ where: { reserva: { canchaId } } });
+      await prisma.reserva.deleteMany({ where: { canchaId } });
+      await prisma.tarifa.deleteMany({ where: { canchaId } });
+      await prisma.cancha.deleteMany({ where: { id: canchaId } });
+      await prisma.credito.deleteMany({ where: { jugadorId: usuarioId } });
+      await prisma.usuario.deleteMany({
+        where: { id: usuarioId, auditorias: { none: {} } },
+      });
+      for (const { diaSemana, abierto, apertura, cierre } of diasOriginales) {
+        await prisma.horarioDia.update({
+          where: { diaSemana },
+          data: { abierto, apertura, cierre },
+        });
+      }
+      await prisma.horarioDia.deleteMany({
+        where: {
+          diaSemana: { notIn: diasOriginales.map((d) => d.diaSemana) },
+        },
+      });
+      await prisma.configuracion.update({
+        where: { id: 1 },
+        data: configuracionOriginal,
+      });
+    } finally {
+      try {
+        if (reglaOriginal)
+          await prisma.reglaCancelacion.update({
+            where: { id: 1 },
+            data: reglaOriginal,
+          });
+      } finally {
+        await app.close();
+      }
+    }
+  });
+
+  describe('con la regla copiada en la reserva', () => {
+    it('regla 24 h CREDITO y adelanto 40: 30 h antes acredita, 23 h antes retiene y 24 h exactas acredita', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      const reserva = await reservar(jugador, turno);
+      expect(reserva).toMatchObject({
+        reglaHorasAnticipacion: 24,
+        reglaTipoCompensacion: 'CREDITO',
+      });
+      await pagar(reserva);
+
+      await expect(calcular(reserva, 30)).resolves.toEqual({
+        resultado: 'CREDITO',
+        importe: 40,
+        retenido: 0,
+      });
+      await expect(calcular(reserva, 23)).resolves.toEqual({
+        resultado: 'RETENCION',
+        importe: 0,
+        retenido: 40,
+      });
+      await expect(calcular(reserva, 24)).resolves.toEqual({
+        resultado: 'CREDITO',
+        importe: 40,
+        retenido: 0,
+      });
+    });
+  });
+});
