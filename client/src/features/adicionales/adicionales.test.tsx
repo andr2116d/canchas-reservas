@@ -205,6 +205,27 @@ describe("Adicionales", () => {
     ]);
   });
 
+  it("el precio con coma decimal se guarda como 5.50 y no como 550", async () => {
+    const fetchMock = responder({
+      "GET /api/adicionales": { status: 200, body: [] },
+      "POST /api/adicionales": { status: 201, body: { ...AGUA, precio: 5.5 } },
+    });
+    renderPantalla();
+
+    const dialogo = await abrirFormulario();
+    fireEvent.input(dialogo.getByLabelText("Nombre"), { target: { value: "Agua" } });
+    const precio = dialogo.getByLabelText("Precio unitario") as HTMLInputElement;
+    fireEvent.input(precio, { target: { value: "abc" } });
+    expect(precio.value).toBe("");
+    fireEvent.paste(precio, { clipboardData: { getData: () => "S/ 5,50" } });
+    fireEvent.input(precio, { target: { value: "S/ 5,50" } });
+    expect(precio.value).toBe("5.50");
+    fireEvent.click(dialogo.getByRole("button", { name: "Crear adicional" }));
+
+    expect((await screen.findByRole("status")).textContent).toBe("Adicional creado");
+    expect(cuerpos(fetchMock, "POST")).toEqual([{ url: "/api/adicionales", body: { nombre: "Agua", precio: 5.5 } }]);
+  });
+
   it("avisa cuando el precio supera el máximo", async () => {
     const fetchMock = responder({ "GET /api/adicionales": { status: 200, body: [] } });
     renderPantalla();
