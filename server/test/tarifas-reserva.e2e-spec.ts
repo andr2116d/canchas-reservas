@@ -452,5 +452,27 @@ describe('Tarifas al reservar (e2e)', () => {
         }
       }
     });
+
+    it('sin tarifa y ya pasado muestra que ya pasó', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({});
+      const [primero] = await turnosDe(jugador.cookie, canchaId, HOY);
+      const turno = { canchaId, fecha: HOY, horaInicio: primero.horaInicio };
+
+      expect(new Date(`${HOY}T${primero.horaInicio}:00-05:00`) <= AHORA).toBe(
+        true,
+      );
+      expect(primero).toMatchObject({
+        estado: 'DISPONIBLE',
+        seleccionable: false,
+        motivo: 'PASADO',
+      });
+      for (const res of [
+        await resumen(jugador.cookie, turno).expect(400),
+        await reservar(jugador.cookie, turno).expect(400),
+      ]) {
+        expect(res.body).toMatchObject({ message: 'El turno ya pasó' });
+      }
+    });
   });
 });
