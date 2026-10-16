@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ProveedorToast } from "@/components/ui";
+import { decimal } from "@/lib/filtros-entrada";
 import type { Adicional } from "./api";
 import { PantallaAdicionales } from "./components/pantalla-adicionales";
 import { TablaAdicionales } from "./components/tabla-adicionales";
-import { sanearPrecio } from "./schemas";
 
 const AGUA: Adicional = { id: 1, nombre: "Agua", precio: 5, activo: true };
 const BALON: Adicional = { id: 2, nombre: "Balón", precio: 15.5, activo: true };
@@ -159,15 +159,15 @@ describe("Adicionales", () => {
   });
 
   it("deja escribir solo cifras y un punto decimal, con hasta 2 decimales", () => {
-    expect(sanearPrecio("-5")).toBe("5");
-    expect(sanearPrecio("-0.50")).toBe("0.50");
-    expect(sanearPrecio("5,50")).toBe("550");
-    expect(sanearPrecio("5.678")).toBe("5.67");
-    expect(sanearPrecio("5..6")).toBe("5.6");
-    expect(sanearPrecio("...")).toBe(".");
-    expect(sanearPrecio(".")).toBe(".");
-    expect(sanearPrecio("1e5")).toBe("15");
-    expect(sanearPrecio("")).toBe("");
+    expect(decimal("-5")).toBe("5");
+    expect(decimal("-0.50")).toBe("0.50");
+    expect(decimal("5,50")).toBe("5.50");
+    expect(decimal("5.678")).toBe("5.67");
+    expect(decimal("5..6")).toBe("5.6");
+    expect(decimal("...")).toBe(".");
+    expect(decimal(".")).toBe(".");
+    expect(decimal("1e5")).toBe("15");
+    expect(decimal("")).toBe("");
   });
 
   it("el campo precio es de texto con teclado decimal, sin flechas que admitan negativos", async () => {

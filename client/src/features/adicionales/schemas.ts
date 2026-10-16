@@ -29,14 +29,3 @@ export const esquemaAdicional = z.object({
 
 export type ValoresAdicional = z.input<typeof esquemaAdicional>;
 export type DatosAdicional = z.output<typeof esquemaAdicional>;
-
-/**
- * Deja escribir solo cifras y un punto decimal, con hasta 2 decimales.
- * Quita comas, signos y notación científica, que el navegador dejaría pasar.
- */
-export function sanearPrecio(valor: string): string {
-  const limpio = valor.replace(/[^0-9.]/g, "");
-  const [entero, ...resto] = limpio.split(".");
-  if (resto.length === 0) return entero;
-  return `${entero}.${resto.join("").slice(0, 2)}`;
-}
