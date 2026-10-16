@@ -9,6 +9,10 @@ import {
   MENSAJE_PRECIO_POSITIVO,
 } from './crear-adicional.dto';
 import { EditarAdicionalDto } from './editar-adicional.dto';
+import {
+  ListarAdicionalesDto,
+  MENSAJE_FILTRO_ACTIVO,
+} from './listar-adicionales.dto';
 
 const pipe = crearValidationPipe();
 
@@ -77,4 +81,35 @@ describe('Validaciones de adicional', () => {
       nombre: MENSAJE_NOMBRE_LONGITUD,
     });
   });
+});
+
+describe('Filtro del listado de adicionales', () => {
+  const filtrar = (valor: unknown) =>
+    pipe.transform(valor, { type: 'query', metatype: ListarAdicionalesDto });
+
+  it.each([
+    ['true', true],
+    ['false', false],
+  ])('convierte activo=%s en booleano', async (texto, esperado) => {
+    const dto = (await filtrar({ activo: texto })) as ListarAdicionalesDto;
+    expect(dto.activo).toBe(esperado);
+  });
+
+  it('sin activo no filtra', async () => {
+    const dto = (await filtrar({})) as ListarAdicionalesDto;
+    expect(dto.activo).toBeUndefined();
+  });
+
+  it.each(['abc', 'TRUE', '1', ''])(
+    'rechaza activo=%p con el motivo',
+    async (texto) => {
+      const error = await filtrar({ activo: texto }).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(BadRequestException);
+      expect((error as BadRequestException).getResponse()).toEqual({
+        statusCode: 400,
+        message: MENSAJE_FILTRO_ACTIVO,
+        errores: { activo: MENSAJE_FILTRO_ACTIVO },
+      });
+    },
+  );
 });
