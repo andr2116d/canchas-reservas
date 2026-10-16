@@ -1,0 +1,13 @@
+import { BarraSuperior } from "@/components/layout/barra-superior";
+import { GuardiaRol } from "@/features/auth/components/guardia-rol";
+import { TemporizadorInactividad } from "@/features/auth/components/temporizador-inactividad";
+
+export default function LayoutAdmin({ children }: LayoutProps<"/admin">) {
+  return (
+    <GuardiaRol rol="ADMINISTRADOR">
+      <TemporizadorInactividad />
+      <BarraSuperior />
+      <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-6 md:px-6">{children}</main>
+    </GuardiaRol>
+  );
+}

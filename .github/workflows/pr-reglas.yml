@@ -1,0 +1,66 @@
+name: Revisión del PR
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    branches: [dev, main]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+concurrency:
+  group: revision-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  PR_NUMERO: ${{ github.event.pull_request.number }}
+  RESPONSABLE: andr2116d
+
+jobs:
+  titulo:
+    name: titulo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: El título sigue el formato de commits
+        env:
+          TITULO: ${{ github.event.pull_request.title }}
+        run: |
+          if ! printf '%s\n' "$TITULO" | npx commitlint; then
+            echo "::error::El título debe ser 'tipo: descripción' con tipo feat, fix, chore, docs, refactor, style, test o ci."
+            exit 1
+          fi
+      - name: Cada commit del PR sigue el formato de commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if ! npx commitlint --from "$BASE_SHA" --to "$HEAD_SHA"; then
+            echo "::error::Todos los commits del PR deben ser 'tipo: descripción' con tipo feat, fix, chore, docs, refactor, style, test o ci. Corrige los mensajes con git rebase y vuelve a subir la rama."
+            exit 1
+          fi
+
+  reglas:
+    name: reglas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: node .github/scripts/reglas-pr.mjs
+
+  zonas-sensibles:
+    name: zonas-sensibles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: node .github/scripts/zonas-sensibles.mjs

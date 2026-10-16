@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
+const apiUrl = process.env.API_URL ?? "http://localhost:3001";
+
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    instantInsights: { validationLevel: "manual-warning" },
+  },
   turbopack: {
     rules: {
       "*.css": {
@@ -11,6 +15,9 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  async rewrites() {
+    return [{ source: "/api/:path*", destination: `${apiUrl}/api/:path*` }];
   },
 };
 

@@ -1,15 +1,16 @@
-## Descripción
+## Qué cambia
 
-## Tipo de cambio
-- [ ] feat
-- [ ] fix
-- [ ] refactor
-- [ ] docs
-- [ ] chore / ci / test
+<!-- Una o dos líneas. Menciona la tarea de Notion por su nombre. -->
 
 ## Cómo probar
 
+<!-- Pasos para comprobarlo en local. -->
+
 ## Checklist
-- [ ] La rama sigue el formato feature-nombre
-- [ ] Lint, tests y build pasan en local
-- [ ] El PR apunta a dev
+
+- [ ] El título es `tipo: descripción` (será el mensaje del commit)
+- [ ] La rama es `feature-<nombre>` y apunta a `dev`
+- [ ] `npm run lint`, `npm test` y `npm run build` pasan en local
+- [ ] Si cambié `schema.prisma`, subí la migración nueva
+
+Cuando todos los checks pasan, el PR se mergea solo. Si toca archivos compartidos, espera la aprobación de Andreé.
