@@ -144,6 +144,30 @@ describe('generarTurnos', () => {
   it('si queda menos de 1 hora no genera turnos', () => {
     expect(generarTurnos(abierto('17:30', '18:20'), '18:00')).toEqual([]);
   });
+
+  describe('bordes', () => {
+    it('con la noche igual a la apertura todos los turnos son de noche', () => {
+      expect(generarTurnos(abierto('18:00', '21:00'), '18:00')).toEqual(
+        turnos(
+          'NOCHE',
+          ['18:00', '19:00'],
+          ['19:00', '20:00'],
+          ['20:00', '21:00'],
+        ),
+      );
+    });
+
+    it('con la noche igual al cierre todos los turnos son de día', () => {
+      expect(generarTurnos(abierto('15:00', '18:00'), '18:00')).toEqual(
+        turnos(
+          'DIA',
+          ['15:00', '16:00'],
+          ['16:00', '17:00'],
+          ['17:00', '18:00'],
+        ),
+      );
+    });
+  });
 });
 
 describe('diaSemanaDe', () => {
