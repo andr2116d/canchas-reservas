@@ -301,5 +301,37 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         retenido: 0,
       });
     });
+
+    it('regla 24 h DEVOLUCION y adelanto 40: 30 h antes devuelve, 23 h antes retiene y 24 h exactas devuelve', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      let reserva!: Reserva;
+      await conRegla(
+        { horasAnticipacion: 24, tipoCompensacion: 'DEVOLUCION' },
+        async () => {
+          reserva = await reservar(jugador, turno);
+        },
+      );
+      expect(reserva).toMatchObject({
+        reglaHorasAnticipacion: 24,
+        reglaTipoCompensacion: 'DEVOLUCION',
+      });
+      await pagar(reserva);
+
+      await expect(calcular(reserva, 30)).resolves.toEqual({
+        resultado: 'DEVOLUCION',
+        importe: 40,
+        retenido: 0,
+      });
+      await expect(calcular(reserva, 23)).resolves.toEqual({
+        resultado: 'RETENCION',
+        importe: 0,
+        retenido: 40,
+      });
+      await expect(calcular(reserva, 24)).resolves.toEqual({
+        resultado: 'DEVOLUCION',
+        importe: 40,
+        retenido: 0,
+      });
+    });
   });
 });
