@@ -210,6 +210,7 @@ describe('Canchas (e2e)', () => {
         estado: 'OPERATIVA',
         activa: true,
         tieneTarifas: false,
+        franjasSinTarifa: ['DIA', 'NOCHE'],
       });
       const id = (res.body as { id: number }).id;
       canchasCreadas.push(id);
@@ -403,6 +404,7 @@ describe('Canchas (e2e)', () => {
         estado: 'OPERATIVA',
         activa: false,
         tieneTarifas: false,
+        franjasSinTarifa: ['DIA', 'NOCHE'],
       });
     });
 
@@ -425,7 +427,7 @@ describe('Canchas (e2e)', () => {
       );
     });
 
-    it('tieneTarifas solo cuenta tarifas vigentes', async () => {
+    it('las tarifas de la respuesta solo cuentan las vigentes e indican la franja que falta', async () => {
       await prisma.tarifa.create({
         data: {
           canchaId: id,
@@ -440,7 +442,11 @@ describe('Canchas (e2e)', () => {
         .set('Cookie', cookieAdmin)
         .expect(200);
       expect(sinVigente.body).toContainEqual(
-        expect.objectContaining({ id, tieneTarifas: false }),
+        expect.objectContaining({
+          id,
+          tieneTarifas: false,
+          franjasSinTarifa: ['DIA', 'NOCHE'],
+        }),
       );
 
       await prisma.tarifa.create({
@@ -451,7 +457,31 @@ describe('Canchas (e2e)', () => {
         .set('Cookie', cookieAdmin)
         .expect(200);
       expect(conVigente.body).toContainEqual(
-        expect.objectContaining({ id, tieneTarifas: true }),
+        expect.objectContaining({
+          id,
+          tieneTarifas: true,
+          franjasSinTarifa: ['NOCHE'],
+        }),
+      );
+
+      await prisma.tarifa.create({
+        data: {
+          canchaId: id,
+          franja: 'NOCHE',
+          valor: 90,
+          creadoPorId: adminId,
+        },
+      });
+      const completa = await request(servidor())
+        .get('/api/canchas')
+        .set('Cookie', cookieAdmin)
+        .expect(200);
+      expect(completa.body).toContainEqual(
+        expect.objectContaining({
+          id,
+          tieneTarifas: true,
+          franjasSinTarifa: [],
+        }),
       );
     });
   });
