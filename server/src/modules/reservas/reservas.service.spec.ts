@@ -525,6 +525,51 @@ describe('ReservasService', () => {
       ]);
     });
 
+    describe('con 2 pendientes', () => {
+      beforeEach(() => {
+        prisma.reserva.count.mockResolvedValue(2);
+      });
+
+      it('si el crédito cubre todo el adelanto crea la reserva confirmada sin contar pendientes', async () => {
+        creditos('40');
+        const creada = await servicio.crear(JUGADOR_ID, conCredito);
+        expect(creada).toMatchObject({ estado: 'CONFIRMADA', venceEn: null });
+        expect(prisma.reserva.count).not.toHaveBeenCalled();
+      });
+
+      it('si el crédito cubre una parte responde el límite sin crear', async () => {
+        creditos('39.99');
+        const error = await errorDe(servicio.crear(JUGADOR_ID, conCredito));
+        expect(error).toBeInstanceOf(ConflictException);
+        expect(
+          ((error as ConflictException).getResponse() as { message: string })
+            .message,
+        ).toBe(MENSAJES_RESERVA.limitePendientes);
+        expect(prisma.reserva.create).not.toHaveBeenCalled();
+        expect(prisma.pago.create).not.toHaveBeenCalled();
+        expect(prisma.credito.update).not.toHaveBeenCalled();
+      });
+
+      it('sin usarCredito responde el límite aunque tenga crédito', async () => {
+        creditos('50');
+        await expect(
+          mensajeDe(servicio.crear(JUGADOR_ID, DATOS)),
+        ).resolves.toBe(MENSAJES_RESERVA.limitePendientes);
+        expect(prisma.credito.findMany).not.toHaveBeenCalled();
+        expect(prisma.reserva.create).not.toHaveBeenCalled();
+      });
+
+      it('cuenta las pendientes después de bloquear y repartir los créditos', async () => {
+        creditos('10');
+        await errorDe(servicio.crear(JUGADOR_ID, conCredito));
+        const [, bloqueoCreditos] = prisma.$queryRaw.mock.invocationCallOrder;
+        const [lectura] = prisma.credito.findMany.mock.invocationCallOrder;
+        const [conteo] = prisma.reserva.count.mock.invocationCallOrder;
+        expect(bloqueoCreditos).toBeLessThan(conteo);
+        expect(lectura).toBeLessThan(conteo);
+      });
+    });
+
     it('con usarCredito y sin créditos no crea pago', async () => {
       const creada = await servicio.crear(JUGADOR_ID, conCredito);
       expect(prisma.pago.create).not.toHaveBeenCalled();
@@ -559,6 +604,7 @@ describe('ReservasService', () => {
         adelanto: 40,
         saldo: 40,
         creditoDisponible: 12.5,
+        soloConCredito: false,
         minutosParaPagar: 15,
         regla: {
           horasAnticipacion: 24,
@@ -613,6 +659,46 @@ describe('ReservasService', () => {
     it('sin créditos el disponible es 0', async () => {
       await expect(servicio.resumen(JUGADOR_ID, DATOS)).resolves.toMatchObject({
         creditoDisponible: 0,
+      });
+    });
+
+    describe('con 2 pendientes', () => {
+      beforeEach(() => {
+        prisma.reserva.count.mockResolvedValue(2);
+      });
+
+      it('si el crédito cubre el adelanto avisa que solo puede reservar con crédito', async () => {
+        prisma.credito.aggregate.mockResolvedValue({
+          _sum: { saldo: new Prisma.Decimal('40.00') },
+        });
+        await expect(
+          servicio.resumen(JUGADOR_ID, DATOS),
+        ).resolves.toMatchObject({
+          creditoDisponible: 40,
+          soloConCredito: true,
+        });
+      });
+
+      it('si el crédito no cubre el adelanto responde el límite', async () => {
+        prisma.credito.aggregate.mockResolvedValue({
+          _sum: { saldo: new Prisma.Decimal('39.99') },
+        });
+        const error = await errorDe(servicio.resumen(JUGADOR_ID, DATOS));
+        expect(error).toBeInstanceOf(ConflictException);
+        expect(
+          ((error as ConflictException).getResponse() as { message: string })
+            .message,
+        ).toBe(MENSAJES_RESERVA.limitePendientes);
+      });
+
+      it('con crédito suficiente sigue avisando si el turno está tomado', async () => {
+        prisma.credito.aggregate.mockResolvedValue({
+          _sum: { saldo: new Prisma.Decimal('40.00') },
+        });
+        prisma.reserva.findFirst.mockResolvedValue({ id: 1 });
+        await expect(
+          mensajeDe(servicio.resumen(JUGADOR_ID, DATOS)),
+        ).resolves.toBe(MENSAJES_RESERVA.turnoNoDisponible);
       });
     });
   });

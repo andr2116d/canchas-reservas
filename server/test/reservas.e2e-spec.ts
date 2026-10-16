@@ -32,6 +32,7 @@ interface Resumen {
   adelanto: number;
   saldo: number;
   creditoDisponible: number;
+  soloConCredito: boolean;
   minutosParaPagar: number;
   regla: {
     horasAnticipacion: number;
@@ -278,6 +279,7 @@ describe('Reservas (e2e)', () => {
         adelanto: 40,
         saldo: 40,
         creditoDisponible: 12.5,
+        soloConCredito: false,
         minutosParaPagar: 15,
         regla: {
           horasAnticipacion: 24,
@@ -966,6 +968,107 @@ describe('Reservas (e2e)', () => {
           where: { jugadorId: jugador.id, estado: 'PENDIENTE_PAGO' },
         }),
       ).toBe(2);
+    });
+
+    describe('con 2 reservas pendientes', () => {
+      let canchaId: number;
+      const turno = (horaInicio: string) => ({
+        canchaId,
+        fecha: MANANA,
+        horaInicio,
+      });
+      const pendientes = () =>
+        prisma.reserva.count({
+          where: { jugadorId: jugador.id, estado: 'PENDIENTE_PAGO' },
+        });
+      const reservasEn = (horaInicio: string) =>
+        prisma.reserva.count({
+          where: { canchaId, horaInicio, jugadorId: jugador.id },
+        });
+
+      beforeEach(async () => {
+        canchaId = await cancha(60);
+        for (const horaInicio of ['18:00', '19:00']) {
+          await insertarReserva(
+            jugador.id,
+            canchaId,
+            MANANA,
+            horaInicio,
+            'PENDIENTE_PAGO',
+          );
+        }
+      });
+
+      it('si el crédito cubre el adelanto la reserva nace confirmada', async () => {
+        const { id } = await credito(30);
+        const consulta = await resumen(jugador.cookie, turno('20:00')).expect(
+          200,
+        );
+        expect(consulta.body).toMatchObject({
+          adelanto: 30,
+          creditoDisponible: 30,
+          soloConCredito: true,
+        });
+
+        const res = await reservarConCredito(turno('20:00')).expect(201);
+        expect(res.body).toMatchObject({ estado: 'CONFIRMADA', venceEn: null });
+        expect(await saldoDe(id)).toBe('0.00');
+        expect(await pendientes()).toBe(2);
+      });
+
+      it('si el crédito cubre una parte responde 409 y no lo usa', async () => {
+        const { id } = await credito(29.99);
+        const consulta = await resumen(jugador.cookie, turno('20:00')).expect(
+          409,
+        );
+        expect(consulta.body).toMatchObject({
+          message: 'Ya tienes 2 reservas pendientes de pago',
+        });
+
+        const res = await reservarConCredito(turno('20:00')).expect(409);
+        expect(res.body).toMatchObject({
+          statusCode: 409,
+          message: 'Ya tienes 2 reservas pendientes de pago',
+        });
+        expect(await reservasEn('20:00')).toBe(0);
+        expect(await saldoDe(id)).toBe('29.99');
+      });
+
+      it('sin usarCredito responde 409 aunque el crédito alcance', async () => {
+        const { id } = await credito(30);
+        const res = await reservarConCredito(turno('20:00'), false).expect(409);
+        expect(res.body).toMatchObject({
+          message: 'Ya tienes 2 reservas pendientes de pago',
+        });
+        expect(await reservasEn('20:00')).toBe(0);
+        expect(await saldoDe(id)).toBe('30.00');
+      });
+
+      it('dos solicitudes simultáneas con crédito para una sola: una confirmada y otra 409', async () => {
+        const { id } = await credito(30);
+        const respuestas = await Promise.all(
+          ['20:00', '21:00'].map((horaInicio) =>
+            reservarConCredito(turno(horaInicio)),
+          ),
+        );
+
+        expect(respuestas.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+          201, 409,
+        ]);
+        expect(respuestas.find((r) => r.status === 201)?.body).toMatchObject({
+          estado: 'CONFIRMADA',
+        });
+        expect(respuestas.find((r) => r.status === 409)?.body).toMatchObject({
+          message: 'Ya tienes 2 reservas pendientes de pago',
+        });
+        expect(await saldoDe(id)).toBe('0.00');
+        expect(await pendientes()).toBe(2);
+        expect(
+          await prisma.reserva.count({
+            where: { jugadorId: jugador.id, estado: 'CONFIRMADA' },
+          }),
+        ).toBe(1);
+      });
     });
 
     it('la auditoría registra el crédito aplicado', async () => {

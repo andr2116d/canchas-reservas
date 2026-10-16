@@ -60,6 +60,7 @@ const RESUMEN = {
   adelanto: 30,
   saldo: 30,
   creditoDisponible: 0,
+  soloConCredito: false,
   minutosParaPagar: 15,
   regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z", plazoVencido: false },
 };

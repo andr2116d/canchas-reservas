@@ -21,6 +21,7 @@ const RESUMEN = {
   adelanto: 30,
   saldo: 30,
   creditoDisponible: 10,
+  soloConCredito: false,
   minutosParaPagar: 15,
   regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z", plazoVencido: false },
 };
@@ -310,5 +311,70 @@ describe("PantallaConfirmarReserva", () => {
       "El plazo para cancelar sin perder el adelanto venció el viernes 16/10 a las 08:00 (24 h antes del turno). Si cancelas, el adelanto queda retenido.",
     );
     expect(screen.queryByText(/se te devolverá/)).toBeNull();
+  });
+
+  describe("aviso de tiempo para pagar", () => {
+    it("se oculta si el crédito marcado cubre todo el adelanto", async () => {
+      const resumen = { ...RESUMEN, creditoDisponible: 50 };
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+      renderPantalla();
+
+      await screen.findByText(/Tienes 15 minutos/);
+      (screen.getByRole("checkbox") as HTMLInputElement).click();
+
+      await screen.findByText("Adelanto a pagar: S/ 0.00");
+      expect(screen.queryByText(/Tienes 15 minutos/)).toBeNull();
+    });
+
+    it("se mantiene si el crédito cubre solo una parte", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(RESUMEN), { status: 200 })));
+
+      renderPantalla();
+
+      await screen.findByText(/Usar mi crédito/);
+      (screen.getByRole("checkbox") as HTMLInputElement).click();
+
+      await screen.findByText("Adelanto a pagar: S/ 20.00");
+      expect(screen.getByText(/Tienes 15 minutos/)).toBeTruthy();
+    });
+  });
+
+  describe("con 2 pendientes y crédito suficiente", () => {
+    const resumen = { ...RESUMEN, creditoDisponible: 30, soloConCredito: true };
+
+    it("marca y bloquea la casilla del crédito y explica por qué", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+      renderPantalla();
+
+      await screen.findByText(
+        "Ya tienes 2 reservas pendientes de pago: para reservar este turno debes pagar el adelanto con tu crédito.",
+      );
+      const casilla = screen.getByRole("checkbox") as HTMLInputElement;
+      expect(casilla.checked).toBe(true);
+      expect(casilla.disabled).toBe(true);
+      expect(screen.getByText("Adelanto a pagar: S/ 0.00")).toBeTruthy();
+      expect(screen.queryByText(/Tienes 15 minutos/)).toBeNull();
+    });
+
+    it("envía usarCredito=true al confirmar", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(resumen), { status: 200 }))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ id: 1, codigo: "LP7K2M9Q", estado: "CONFIRMADA", venceEn: null }), { status: 201 }),
+        )
+        .mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      renderPantalla();
+
+      (await screen.findByRole("button", { name: "Confirmar reserva" })).click();
+
+      await screen.findByText("LP7K2M9Q");
+      const [, opciones] = fetchMock.mock.calls[1] as [string, RequestInit];
+      expect(JSON.parse(String(opciones.body))).toMatchObject({ usarCredito: true });
+    });
   });
 });

@@ -25,6 +25,7 @@ export type ResumenReserva = {
   adelanto: number;
   saldo: number;
   creditoDisponible: number;
+  soloConCredito: boolean;
   minutosParaPagar: number;
   regla: {
     horasAnticipacion: number;
