@@ -7,6 +7,7 @@ import { fechaEnLima, sumarDias } from '../src/common/fechas-lima';
 import { crearPayloadSesion } from '../src/common/sesion/cookie-sesion';
 import { configurarApp } from '../src/configurar-app';
 import type { Turno } from '../src/modules/turnos/generar-turnos';
+import { TurnosService } from '../src/modules/turnos/turnos.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 interface Dia {
@@ -38,6 +39,7 @@ describe('Coherencia de la generación de turnos (e2e)', () => {
 
   let app: INestApplication;
   let prisma: PrismaService;
+  let turnosService: TurnosService;
   let cookieAdmin: string;
   let cookieJugador: string;
   let jugadorId: number;
@@ -114,6 +116,7 @@ describe('Coherencia de la generación de turnos (e2e)', () => {
     configurarApp(app);
     await app.init();
     prisma = modulo.get(PrismaService);
+    turnosService = modulo.get(TurnosService);
     const jwt = modulo.get(JwtService, { strict: false });
 
     diasOriginales = await prisma.horarioDia.findMany();
@@ -187,5 +190,28 @@ describe('Coherencia de la generación de turnos (e2e)', () => {
       ]);
     }
     expect([...vistos].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it('para una misma fecha la vista previa, la disponibilidad y generar dan los mismos turnos', async () => {
+    const fecha = sumarDias(hoy(), 3);
+    await definirHorario(
+      SEMANA.map((dia) =>
+        dia.diaSemana === diaDeLaSemana(fecha)
+          ? abierto(dia.diaSemana, '08:15', '23:15')
+          : dia,
+      ),
+      '18:40',
+    );
+
+    const generados = await turnosService.generar(fecha);
+
+    expect(generados).toHaveLength(14);
+    expect(generados[0]).toEqual({
+      horaInicio: '08:15',
+      horaFin: '09:15',
+      franja: 'DIA',
+    });
+    await expect(vistaPrevia(fecha)).resolves.toEqual(generados);
+    await expect(disponibilidad(fecha)).resolves.toEqual(generados);
   });
 });
