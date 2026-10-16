@@ -82,19 +82,55 @@ const DIA_COMPLETO = [
   turnoAgenda(9, "16:00", "AUSENTE", 40, []),
 ];
 
-/** Responde siempre con una respuesta nueva para poder leerla en cada consulta. */
-function responderSiempre(turnos: unknown) {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify(turnos), { status: 200 }));
+function cancha(id: number, tamano = "FUTBOL_5") {
+  return {
+    id,
+    nombre: `Cancha ${id}`,
+    tamano,
+    iluminacion: true,
+    estado: "OPERATIVA",
+    activa: true,
+    tieneTarifas: true,
+  };
+}
+
+const CANCHAS = [cancha(1), cancha(2, "FUTBOL_7"), cancha(3)];
+
+function json(datos: unknown, status = 200) {
+  return new Response(JSON.stringify(datos), { status });
+}
+
+type LlamadasFetch = { mock: { calls: unknown[][] } };
+
+/** Responde /api/canchas y /api/agenda por separado, con una respuesta nueva en cada consulta. */
+function responderApi(
+  agenda: unknown | ((consulta: URLSearchParams) => unknown),
+  canchas: () => Response | Promise<Response> = () => json(CANCHAS),
+) {
+  const fetchMock = vi.fn(async (url: string) => {
+    const destino = new URL(String(url), "http://localhost");
+    if (destino.pathname === "/api/canchas") return canchas();
+    return json(typeof agenda === "function" ? agenda(destino.searchParams) : agenda);
+  });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
 
-function parametrosPedidos(fetchMock: { mock: { calls: unknown[][] } }) {
-  return fetchMock.mock.calls.map(([url]) => new URL(String(url), "http://localhost").searchParams);
+function consultasAgenda(fetchMock: LlamadasFetch = vi.mocked(fetch)) {
+  return fetchMock.mock.calls
+    .map(([url]) => new URL(String(url), "http://localhost"))
+    .filter((destino) => destino.pathname === "/api/agenda")
+    .map((destino) => destino.searchParams);
 }
 
-function ultimaConsulta(fetchMock: { mock: { calls: unknown[][] } }) {
-  return parametrosPedidos(fetchMock).at(-1)!;
+function ultimaConsulta(fetchMock: LlamadasFetch) {
+  return consultasAgenda(fetchMock).at(-1)!;
+}
+
+function opcionesCancha() {
+  return within(screen.getByLabelText("Cancha"))
+    .getAllByRole("option")
+    .map((opcion) => opcion.textContent);
 }
 
 /** La fila de la tabla de escritorio que empieza a esa hora. */
@@ -144,15 +180,6 @@ function renderAgenda() {
   );
 }
 
-function responderTurnos(turnos: unknown) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(turnos), { status: 200 }),
-    ),
-  );
-}
-
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -160,7 +187,7 @@ afterEach(() => {
 
 describe("PantallaAgenda", () => {
   it("muestra el badge de saldo y solo los botones de sus acciones", async () => {
-    responderTurnos([TURNO_CON_SALDO]);
+    responderApi([TURNO_CON_SALDO]);
 
     renderAgenda();
 
@@ -178,48 +205,48 @@ describe("PantallaAgenda", () => {
   });
 
   it("vuelve a pedir la agenda al recibir turnos:actualizados de la fecha mostrada", async () => {
-    responderTurnos([TURNO_CON_SALDO]);
+    responderApi([TURNO_CON_SALDO]);
 
     renderAgenda();
 
     await screen.findAllByText("Saldo S/ 40.00");
-    const primeraUrl = vi.mocked(fetch).mock.calls[0][0] as string;
-    const fecha = new URL(primeraUrl, "http://localhost").searchParams.get("fecha");
+    const fecha = consultasAgenda()[0].get("fecha");
+    const llamadas = consultasAgenda().length;
 
     const socketModulo = await import("@/lib/socket");
     const handler = (socketModulo as unknown as { __obtenerHandler: () => ((payload: unknown) => void) | undefined }).__obtenerHandler();
     handler?.({ fecha, canchaId: 2 });
 
     await waitFor(() => {
-      expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(1);
+      expect(consultasAgenda().length).toBeGreaterThan(llamadas);
     });
   });
 
   it("también refresca cuando el cambio afecta a todas las fechas (fecha: null)", async () => {
-    responderTurnos([TURNO_CON_SALDO]);
+    responderApi([TURNO_CON_SALDO]);
 
     renderAgenda();
 
     await screen.findAllByText("Saldo S/ 40.00");
     const socketModulo = await import("@/lib/socket");
     const handler = (socketModulo as unknown as { __obtenerHandler: () => ((payload: unknown) => void) | undefined }).__obtenerHandler();
-    const llamadas = vi.mocked(fetch).mock.calls.length;
+    const llamadas = consultasAgenda().length;
     handler?.({ fecha: null, canchaId: 2 });
 
     await waitFor(() => {
-      expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(llamadas);
+      expect(consultasAgenda().length).toBeGreaterThan(llamadas);
     });
   });
 
   it("usa useTurnosEnVivo con la clave de la agenda y registra un solo listener", async () => {
-    responderTurnos([TURNO_CON_SALDO]);
+    responderApi([TURNO_CON_SALDO]);
     const socket = obtenerSocket();
     const antes = listenersActivos(socket, "turnos:actualizados");
 
     const { unmount } = renderAgenda();
     await screen.findAllByText("Saldo S/ 40.00");
 
-    const fecha = new URL(vi.mocked(fetch).mock.calls[0][0] as string, "http://localhost").searchParams.get("fecha");
+    const fecha = consultasAgenda()[0].get("fecha");
     expect(useTurnosEnVivo).toHaveBeenLastCalledWith(fecha, [["agenda", fecha]]);
     expect(listenersActivos(socket, "turnos:actualizados") - antes).toBe(1);
 
@@ -228,18 +255,18 @@ describe("PantallaAgenda", () => {
   });
 
   it("no vuelve a pedir la agenda si el evento es de otra fecha", async () => {
-    responderTurnos([TURNO_CON_SALDO]);
+    responderApi([TURNO_CON_SALDO]);
 
     renderAgenda();
 
     await screen.findAllByText("Saldo S/ 40.00");
     const socketModulo = await import("@/lib/socket");
     const handler = (socketModulo as unknown as { __obtenerHandler: () => ((payload: unknown) => void) | undefined }).__obtenerHandler();
-    const llamadas = vi.mocked(fetch).mock.calls.length;
+    const llamadas = consultasAgenda().length;
     handler?.({ fecha: "1999-01-01", canchaId: 2 });
 
     await new Promise((resolver) => setTimeout(resolver, 50));
-    expect(vi.mocked(fetch).mock.calls.length).toBe(llamadas);
+    expect(consultasAgenda().length).toBe(llamadas);
   });
 });
 
@@ -254,19 +281,14 @@ describe("PantallaAgenda con fecha fija", () => {
   });
 
   it("los filtros de cancha y estado cambian la consulta", async () => {
-    const fetchMock = responderSiempre(DIA_COMPLETO);
+    const fetchMock = responderApi(DIA_COMPLETO);
     renderAgenda();
 
     await screen.findByRole("table");
     expect(ultimaConsulta(fetchMock).toString()).toBe(`fecha=${HOY}`);
 
-    const cancha = screen.getByLabelText("Cancha");
-    expect(within(cancha).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "Todas las canchas",
-      "Cancha 1",
-      "Cancha 2",
-    ]);
-    fireEvent.change(cancha, { target: { value: "2" } });
+    await waitFor(() => expect(opcionesCancha()).toHaveLength(4));
+    fireEvent.change(screen.getByLabelText("Cancha"), { target: { value: "2" } });
     await waitFor(() => expect(ultimaConsulta(fetchMock).get("canchaId")).toBe("2"));
 
     fireEvent.change(screen.getByLabelText("Estado"), { target: { value: "CONFIRMADA" } });
@@ -280,7 +302,7 @@ describe("PantallaAgenda con fecha fija", () => {
   });
 
   it("cada estado muestra solo los botones de sus acciones, deshabilitados", async () => {
-    responderSiempre(DIA_COMPLETO);
+    responderApi(DIA_COMPLETO);
     renderAgenda();
 
     await screen.findByRole("table");
@@ -307,7 +329,7 @@ describe("PantallaAgenda con fecha fija", () => {
   });
 
   it("una confirmada con saldo lleva borde y badge de saldo, y una pagada lleva Pagada", async () => {
-    responderSiempre(DIA_COMPLETO);
+    responderApi(DIA_COMPLETO);
     renderAgenda();
 
     await screen.findByRole("table");
@@ -330,7 +352,7 @@ describe("PantallaAgenda con fecha fija", () => {
   });
 
   it("los contadores cuentan solo los turnos que corresponden a cada resumen", async () => {
-    responderSiempre(DIA_COMPLETO);
+    responderApi(DIA_COMPLETO);
     renderAgenda();
 
     await screen.findByRole("table");
@@ -341,7 +363,7 @@ describe("PantallaAgenda con fecha fija", () => {
   });
 
   it("los contadores se calculan sobre la lista mostrada", async () => {
-    responderSiempre([DIA_COMPLETO[2], DIA_COMPLETO[3], DIA_COMPLETO[6]]);
+    responderApi([DIA_COMPLETO[2], DIA_COMPLETO[3], DIA_COMPLETO[6]]);
     renderAgenda();
 
     await screen.findByRole("table");
@@ -352,7 +374,7 @@ describe("PantallaAgenda con fecha fija", () => {
   });
 
   it("un día sin reservas muestra el mensaje de vacío", async () => {
-    responderSiempre([]);
+    responderApi([]);
     renderAgenda();
 
     expect(await screen.findByText("No hay reservas para este día")).toBeTruthy();
@@ -360,7 +382,7 @@ describe("PantallaAgenda con fecha fija", () => {
   });
 
   it("las flechas mueven la fecha consultada y Hoy vuelve al día actual", async () => {
-    const fetchMock = responderSiempre(DIA_COMPLETO);
+    const fetchMock = responderApi(DIA_COMPLETO);
     renderAgenda();
 
     await screen.findByRole("table");
@@ -373,7 +395,7 @@ describe("PantallaAgenda con fecha fija", () => {
     fireEvent.click(screen.getByRole("button", { name: "Día anterior" }));
     fireEvent.click(screen.getByRole("button", { name: "Día anterior" }));
     await waitFor(() => expect(screen.getByText("Turnos del día 19/10/2026")).toBeTruthy());
-    expect(parametrosPedidos(fetchMock).map((p) => p.get("fecha"))).toContain("2026-10-19");
+    expect(consultasAgenda(fetchMock).map((p) => p.get("fecha"))).toContain("2026-10-19");
 
     fireEvent.click(screen.getByRole("button", { name: "Hoy" }));
     expect(screen.getByText("Turnos del día 20/10/2026")).toBeTruthy();
@@ -381,12 +403,51 @@ describe("PantallaAgenda con fecha fija", () => {
 
   it("cruza bien el cambio de mes y de año", async () => {
     vi.setSystemTime(new Date("2026-12-31T15:00:00-05:00"));
-    const fetchMock = responderSiempre([]);
+    const fetchMock = responderApi([]);
     renderAgenda();
 
     await screen.findByText("No hay reservas para este día");
     fireEvent.click(screen.getByRole("button", { name: "Día siguiente" }));
 
     await waitFor(() => expect(ultimaConsulta(fetchMock).get("fecha")).toBe("2027-01-01"));
+  });
+
+  it("el filtro de cancha lista todas las canchas aunque no tengan reservas ese día", async () => {
+    responderApi((consulta: URLSearchParams) =>
+      consulta.get("fecha") === HOY ? [DIA_COMPLETO[0]] : [],
+    );
+    renderAgenda();
+
+    await screen.findByRole("table");
+    await waitFor(() =>
+      expect(opcionesCancha()).toEqual(["Todas las canchas", "Cancha 1", "Cancha 2", "Cancha 3"]),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Día siguiente" }));
+    await screen.findByText("No hay reservas para este día");
+    expect(opcionesCancha()).toEqual(["Todas las canchas", "Cancha 1", "Cancha 2", "Cancha 3"]);
+  });
+
+  it("mientras cargan las canchas el filtro solo ofrece todas y la agenda se muestra", async () => {
+    responderApi(DIA_COMPLETO, () => new Promise<Response>(() => {}));
+    renderAgenda();
+
+    await screen.findByRole("table");
+    expect(opcionesCancha()).toEqual(["Todas las canchas"]);
+    expect(screen.queryByText("No se pudo cargar la lista de canchas")).toBeNull();
+  });
+
+  it("si fallan las canchas el filtro avisa y la agenda se muestra", async () => {
+    const fetchMock = responderApi(DIA_COMPLETO, () =>
+      json({ statusCode: 500, message: "Error interno" }, 500),
+    );
+    renderAgenda();
+
+    expect(await screen.findByText("No se pudo cargar la lista de canchas")).toBeTruthy();
+    expect(screen.getByRole("table")).toBeTruthy();
+    expect(opcionesCancha()).toEqual(["Todas las canchas"]);
+
+    fireEvent.change(screen.getByLabelText("Estado"), { target: { value: "CONFIRMADA" } });
+    await waitFor(() => expect(ultimaConsulta(fetchMock).get("estado")).toBe("CONFIRMADA"));
   });
 });

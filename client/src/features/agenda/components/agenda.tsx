@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/campo";
 import { hoyEnLima, moneda } from "@/lib/formato";
 import { useTurnosEnVivo } from "@/lib/use-turnos-en-vivo";
+import { useCanchas } from "@/features/canchas/hooks";
 import { useAgenda } from "../hooks";
 import type { EstadoReserva, TurnoAgenda } from "../api";
 
@@ -199,20 +200,7 @@ export function PantallaAgenda() {
     estadoFiltro || undefined,
   );
 
-  // Recuerda el listado completo de canchas para que el filtro no se reduzca
-  // cuando se filtra por una sola cancha.
-  const [canchasOpciones, setCanchasOpciones] = useState<[number, string][]>([]);
-  useEffect(() => {
-    if (canchaId) return;
-    const mapa = new Map<number, string>();
-    turnos?.forEach((turno) => mapa.set(turno.cancha.id, turno.cancha.nombre));
-    const listado = Array.from(mapa.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-    if (listado.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCanchasOpciones(listado);
-    }
-  }, [canchaId, turnos]);
-  const canchas = canchasOpciones;
+  const canchas = useCanchas();
 
   const lista = [...(turnos ?? [])].sort((a, b) => {
     if (a.horaInicio !== b.horaInicio) return a.horaInicio.localeCompare(b.horaInicio);
@@ -270,11 +258,12 @@ export function PantallaAgenda() {
             etiqueta="Cancha"
             value={canchaId}
             onChange={(evento) => setCanchaId(evento.target.value)}
+            ayuda={canchas.isError ? "No se pudo cargar la lista de canchas" : undefined}
           >
             <option value="">Todas las canchas</option>
-            {canchas.map(([id, nombre]) => (
-              <option key={id} value={id}>
-                {nombre}
+            {canchas.data?.map((cancha) => (
+              <option key={cancha.id} value={cancha.id}>
+                {cancha.nombre}
               </option>
             ))}
           </Select>
