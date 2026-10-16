@@ -356,4 +356,25 @@ describe('Flujo de reserva (e2e)', () => {
     expect(nueva.estado).toBe('PENDIENTE_PAGO');
     expect((await mias(b.cookie)).map((r) => r.id)).toEqual([nueva.id]);
   });
+
+  it('una reserva que pasa a CANCELADA libera el turno y otro jugador lo reserva', async () => {
+    const [a, b] = [await crearUsuario(), await crearUsuario()];
+    const turno = {
+      canchaId: await crearCancha(),
+      fecha: MANANA,
+      horaInicio: '18:00',
+    };
+    const creada = (await reservar(a.cookie, turno).expect(201)).body as Creada;
+    await reservar(b.cookie, turno).expect(409);
+
+    await cambiarEstado(creada.id, 'CANCELADA');
+
+    expect(await disponibilidad(b.cookie, turno)).toMatchObject({
+      estado: 'DISPONIBLE',
+      seleccionable: true,
+    });
+    const nueva = (await reservar(b.cookie, turno).expect(201)).body as Creada;
+    expect(nueva.estado).toBe('PENDIENTE_PAGO');
+    expect((await mias(b.cookie)).map((r) => r.id)).toEqual([nueva.id]);
+  });
 });
