@@ -5,7 +5,7 @@ import { crearReserva, obtenerMisReservas, obtenerResumenReserva } from "./api";
 function responder(status: number, cuerpo?: unknown) {
   vi.stubGlobal(
     "fetch",
-    vi.fn().mockResolvedValue(new Response(cuerpo === undefined ? null : JSON.stringify(cuerpo), { status })),
+    vi.fn(async () => new Response(cuerpo === undefined ? null : JSON.stringify(cuerpo), { status })),
   );
 }
 
@@ -44,5 +44,28 @@ describe("api de reservas", () => {
     responder(200, []);
     await expect(obtenerMisReservas()).resolves.toEqual([]);
     expect(fetch).toHaveBeenCalledWith("/api/reservas/mias", expect.objectContaining({ credentials: "include" }));
+  });
+
+  it("un 400 llega con el mensaje y el campo del server", async () => {
+    const mensaje = "La cancha no tiene tarifa para esa franja";
+    responder(400, { statusCode: 400, message: mensaje, errores: { canchaId: mensaje } });
+
+    const error = await crearReserva({ ...TURNO, usarCredito: false }).catch((e) => e);
+    expect(error).toBeInstanceOf(ErrorApi);
+    expect(error).toMatchObject({ status: 400, message: mensaje, errores: { canchaId: mensaje } });
+  });
+
+  it.each([
+    ["el turno tomado", "El turno ya no está disponible", { horaInicio: "El turno ya no está disponible" }],
+    ["el límite de pendientes", "Ya tienes 2 reservas pendientes de pago", {}],
+  ])("un 409 por %s llega con el mensaje del server", async (_caso, mensaje, errores) => {
+    responder(409, { statusCode: 409, message: mensaje, errores });
+
+    await expect(crearReserva({ ...TURNO, usarCredito: false })).rejects.toMatchObject({
+      status: 409,
+      message: mensaje,
+      errores,
+    });
+    await expect(obtenerResumenReserva(TURNO)).rejects.toMatchObject({ status: 409, message: mensaje });
   });
 });
