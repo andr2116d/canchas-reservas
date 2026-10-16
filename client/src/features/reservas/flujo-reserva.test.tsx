@@ -155,4 +155,22 @@ describe("flujo de reserva", () => {
     await screen.findByText("LP7K2M9Q");
     expect(llamadasA(fetchMock, "/api/reservas/mias")).toBe(miasAntes + 1);
   });
+
+  it("un 409 al confirmar muestra el toast, vuelve a la grilla y la grilla se vuelve a pedir", async () => {
+    const mensaje = "El turno ya no está disponible";
+    const fetchMock = servidor({
+      crear: json({ statusCode: 409, message: mensaje, errores: { horaInicio: mensaje } }, 409),
+      grillas: [disponibilidad("DISPONIBLE"), disponibilidad("PENDIENTE")],
+    });
+    renderApp(GRILLA);
+
+    fireEvent.click((await screen.findAllByRole("button", { name: /18:00/ }))[0]);
+    fireEvent.click(await screen.findByRole("button", { name: "Confirmar reserva" }));
+
+    expect((await screen.findByRole("alert")).textContent).toBe(mensaje);
+    await waitFor(() => expect(rutaActual).toBe(GRILLA));
+    await waitFor(() => expect(llamadasA(fetchMock, "/api/disponibilidad")).toBe(2));
+    expect((await screen.findAllByText("Pendiente")).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /18:00/ })).toBeNull();
+  });
 });
