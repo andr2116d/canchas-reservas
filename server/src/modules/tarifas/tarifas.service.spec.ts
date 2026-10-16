@@ -194,6 +194,23 @@ describe('TarifasService', () => {
       });
     });
 
+    it('con el reloj fijo la nueva empieza y la anterior termina a la hora del reloj', async () => {
+      prisma.tarifa.findFirst.mockResolvedValue(tarifa(4, 'DIA', '60.00'));
+      prisma.tarifa.create.mockResolvedValue(tarifa(5, 'DIA', '65.00', AHORA));
+
+      await servicio.definir(CANCHA_ID, { franja: 'DIA', valor: 65 }, ADMIN_ID);
+
+      expect(prisma.tarifa.update).toHaveBeenCalledWith({
+        where: { id: 4 },
+        data: { vigenteHasta: AHORA },
+      });
+      expect(prisma.tarifa.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ vigenteDesde: AHORA }) as unknown,
+        }),
+      );
+    });
+
     it('la primera tarifa de la franja no cierra nada y audita CREAR', async () => {
       prisma.tarifa.findFirst.mockResolvedValue(null);
       prisma.tarifa.create.mockResolvedValue(tarifa(6, 'DIA', '60.00'));
