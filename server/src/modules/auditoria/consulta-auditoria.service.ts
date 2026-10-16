@@ -3,6 +3,7 @@ import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConsultarAuditoriaDto } from './dto/consultar-auditoria.dto';
 import { aUsuario, CAMPOS_USUARIO, pagina, rangoDeFechas } from './paginacion';
+import { traducirDetalle } from './traducir-detalle';
 
 @Injectable()
 export class ConsultaAuditoriaService {
@@ -34,6 +35,7 @@ export class ConsultaAuditoriaService {
         entidad: fila.entidad,
         entidadId: fila.entidadId,
         motivo: fila.motivo,
+        cambios: traducirDetalle(fila.entidad, fila.detalle),
       })),
       total,
       pagina: filtros.pagina,
