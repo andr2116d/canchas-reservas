@@ -5,8 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alerta, Button, Input, Modal } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { decimal } from "@/lib/filtros-entrada";
 import type { Adicional } from "../api";
-import { type DatosAdicional, esquemaAdicional, sanearPrecio, type ValoresAdicional } from "../schemas";
+import { type DatosAdicional, esquemaAdicional, type ValoresAdicional } from "../schemas";
 
 const CAMPOS = ["nombre", "precio"] as const;
 
@@ -43,7 +44,7 @@ export function FormularioAdicional({ adicional, abierto, onCerrar, onEnviar }: 
   });
 
   const cambiarPrecio = (evento: ChangeEvent<HTMLInputElement>) => {
-    const sanado = sanearPrecio(evento.target.value);
+    const sanado = decimal(evento.target.value);
     if (evento.target.value !== sanado) evento.target.value = sanado;
     setValue("precio", sanado, { shouldValidate: false });
   };
