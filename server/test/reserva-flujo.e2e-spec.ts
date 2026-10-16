@@ -377,4 +377,43 @@ describe('Flujo de reserva (e2e)', () => {
     expect(nueva.estado).toBe('PENDIENTE_PAGO');
     expect((await mias(b.cookie)).map((r) => r.id)).toEqual([nueva.id]);
   });
+
+  it('con crédito que cubre el adelanto la reserva queda confirmada en todas las vistas', async () => {
+    const jugador = await crearUsuario();
+    await prisma.credito.create({
+      data: { jugadorId: jugador.id, monto: 50, saldo: 50 },
+    });
+    const turno = {
+      canchaId: await crearCancha(),
+      fecha: MANANA,
+      horaInicio: '18:00',
+    };
+
+    const creada = (await reservar(jugador.cookie, turno, true).expect(201))
+      .body as Creada;
+    expect(creada).toMatchObject({ estado: 'CONFIRMADA', venceEn: null });
+
+    expect(await disponibilidad(jugador.cookie, turno)).toMatchObject({
+      estado: 'OCUPADO',
+      seleccionable: false,
+    });
+    expect(await mias(jugador.cookie)).toEqual([
+      expect.objectContaining({ id: creada.id, estado: 'CONFIRMADA' }),
+    ]);
+    expect(await agenda(turno)).toEqual([
+      expect.objectContaining({
+        id: creada.id,
+        estado: 'CONFIRMADA',
+        valorTurno: 80,
+        adelantoPagado: 40,
+        saldoPendiente: 40,
+      }),
+    ]);
+
+    const siguiente = await resumen(jugador.cookie, {
+      ...turno,
+      horaInicio: '19:00',
+    }).expect(200);
+    expect(siguiente.body).toMatchObject({ creditoDisponible: 10 });
+  });
 });
