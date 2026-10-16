@@ -3,7 +3,10 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
-import { MENSAJE_RUTA_NO_ENCONTRADA } from '../src/common/filtros/errores-http.filter';
+import {
+  MENSAJE_JSON_INVALIDO,
+  MENSAJE_RUTA_NO_ENCONTRADA,
+} from '../src/common/filtros/errores-http.filter';
 
 describe('Errores en español (e2e)', () => {
   let app: INestApplication;
@@ -46,6 +49,20 @@ describe('Errores en español (e2e)', () => {
     expect(res.body).toEqual({
       statusCode: 404,
       message: MENSAJE_RUTA_NO_ENCONTRADA,
+      errores: {},
+    });
+  });
+
+  it('un JSON mal formado responde 400 en español', async () => {
+    const res = await request(servidor())
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send('{"correo":')
+      .expect(400);
+
+    expect(res.body).toEqual({
+      statusCode: 400,
+      message: MENSAJE_JSON_INVALIDO,
       errores: {},
     });
   });
