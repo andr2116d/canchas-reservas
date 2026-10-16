@@ -564,11 +564,49 @@ describe('ReservasService', () => {
           horasAnticipacion: 24,
           tipoCompensacion: 'CREDITO',
           plazoLimite: '2026-10-19T23:00:00.000Z',
+          plazoVencido: false,
         },
       });
       expect(prisma.credito.aggregate).toHaveBeenCalledWith({
         where: { jugadorId: JUGADOR_ID, saldo: { gt: 0 } },
         _sum: { saldo: true },
+      });
+    });
+
+    describe('plazo vencido según el reloj', () => {
+      const PLAZO = new Date('2026-10-19T23:00:00.000Z');
+      const reglaDe = async () =>
+        (await servicio.resumen(JUGADOR_ID, DATOS)).regla;
+
+      it('antes del plazo no está vencido', async () => {
+        reloj.ahora.mockReturnValue(new Date(PLAZO.getTime() - 60_000));
+        await expect(reglaDe()).resolves.toMatchObject({ plazoVencido: false });
+      });
+
+      it('justo en el plazo todavía no está vencido', async () => {
+        reloj.ahora.mockReturnValue(PLAZO);
+        await expect(reglaDe()).resolves.toMatchObject({ plazoVencido: false });
+      });
+
+      it('después del plazo está vencido', async () => {
+        reloj.ahora.mockReturnValue(new Date(PLAZO.getTime() + 1));
+        await expect(reglaDe()).resolves.toMatchObject({
+          plazoLimite: PLAZO.toISOString(),
+          plazoVencido: true,
+        });
+      });
+
+      it('con 0 horas el plazo es el inicio del turno y no está vencido', async () => {
+        prisma.reglaCancelacion.findUniqueOrThrow.mockResolvedValue({
+          id: 1,
+          horasAnticipacion: 0,
+          tipoCompensacion: 'CREDITO',
+        });
+        reloj.ahora.mockReturnValue(new Date(INICIO_EN.getTime() - 60_000));
+        await expect(reglaDe()).resolves.toMatchObject({
+          plazoLimite: INICIO_EN.toISOString(),
+          plazoVencido: false,
+        });
       });
     });
 

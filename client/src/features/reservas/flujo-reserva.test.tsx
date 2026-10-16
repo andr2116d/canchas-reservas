@@ -61,7 +61,7 @@ const RESUMEN = {
   saldo: 30,
   creditoDisponible: 0,
   minutosParaPagar: 15,
-  regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z" },
+  regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z", plazoVencido: false },
 };
 
 const CREADA = { id: 7, codigo: "LP7K2M9Q", estado: "PENDIENTE_PAGO", venceEn: "2026-10-20T18:15:00.000Z" };

@@ -205,6 +205,11 @@ export class ReservasService {
     const { tiempoLimitePagoMin } = await this.configuracion(this.prisma);
     const regla = await this.regla.obtenerVigente();
     const credito = await this.creditoDisponible(jugadorId, this.prisma);
+    const plazoLimite = this.regla.plazoLimite(
+      turno.fecha,
+      turno.horaInicio,
+      regla.horasAnticipacion,
+    );
     return {
       cancha: turno.cancha,
       fecha: turno.fecha,
@@ -223,9 +228,8 @@ export class ReservasService {
       regla: {
         horasAnticipacion: regla.horasAnticipacion,
         tipoCompensacion: regla.tipoCompensacion,
-        plazoLimite: this.regla
-          .plazoLimite(turno.fecha, turno.horaInicio, regla.horasAnticipacion)
-          .toISOString(),
+        plazoLimite: plazoLimite.toISOString(),
+        plazoVencido: ahora > plazoLimite,
       },
     };
   }
