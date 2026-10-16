@@ -4,7 +4,10 @@ import { hash } from 'bcryptjs';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
-import { CanchasService } from '../src/modules/canchas/canchas.service';
+import {
+  CanchasService,
+  MENSAJE_NO_ENCONTRADA,
+} from '../src/modules/canchas/canchas.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 function fechaEnLima(diasDesdeHoy: number) {
@@ -289,11 +292,16 @@ describe('Canchas (e2e)', () => {
         .set('Cookie', cookieAdmin)
         .send({ estado: 'ROTA' })
         .expect(400);
-      await request(servidor())
+      const inexistente = await request(servidor())
         .patch('/api/canchas/2147483000')
         .set('Cookie', cookieAdmin)
         .send({ nombre: nombre('Nada') })
         .expect(404);
+      expect(inexistente.body).toEqual({
+        statusCode: 404,
+        message: MENSAJE_NO_ENCONTRADA,
+        errores: {},
+      });
       await request(servidor())
         .patch('/api/canchas/abc')
         .set('Cookie', cookieAdmin)
