@@ -245,7 +245,7 @@ describe('Agenda (e2e)', () => {
         valorTurno: 80,
         adelantoPagado: 0,
         saldoPendiente: 80,
-        acciones: ['CANCELAR', 'REUBICAR'],
+        acciones: ['CONFIRMAR_PAGO', 'CANCELAR', 'REUBICAR'],
       });
     });
 
@@ -257,8 +257,8 @@ describe('Agenda (e2e)', () => {
         turnosPropios(body as Turno[]).map((t) => [t.estado, t.acciones]),
       );
       expect(acciones).toEqual({
-        PENDIENTE_PAGO: ['CANCELAR', 'REUBICAR'],
-        PENDIENTE_VALIDACION: [],
+        PENDIENTE_PAGO: ['CONFIRMAR_PAGO', 'CANCELAR', 'REUBICAR'],
+        PENDIENTE_VALIDACION: ['CONFIRMAR_PAGO'],
         CONFIRMADA: ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
         EN_JUEGO: ['REGISTRAR_ADICIONALES', 'FINALIZAR'],
         FINALIZADA: [],
