@@ -531,6 +531,25 @@ describe('Horario (e2e)', () => {
       );
     });
 
+    it('una reserva EXPIRADA o una que ya pasó del mismo día no aparecen en el 409', async () => {
+      await prisma.reserva.deleteMany({ where: { canchaId } });
+      const pasadaMismoDia = fechaEnLima(-4);
+      expect(diaSemanaDe(pasadaMismoDia)).toBe(diaSemana);
+      const fuera = await crearReserva(fecha, '08:00', '09:00');
+      const expirada = await crearReserva(fecha, '08:00', '09:00', 'EXPIRADA');
+      const pasada = await crearReserva(pasadaMismoDia, '08:00', '09:00');
+
+      const res = await guardar({
+        dias: nuevoHorario,
+        inicioNoche: '18:00',
+      }).expect(409);
+
+      const ids = idsDe(res);
+      expect(ids).toContain(fuera.id);
+      expect(ids).not.toContain(expirada.id);
+      expect(ids).not.toContain(pasada.id);
+    });
+
     it('una reserva cuyo turno sigue existiendo no bloquea el cambio', async () => {
       await prisma.reserva.deleteMany({ where: { canchaId } });
       const reserva = await crearReserva(fecha, '12:00', '13:00');
