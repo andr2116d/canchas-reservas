@@ -47,4 +47,46 @@ describe('calcularCompensacion', () => {
       ).toEqual({ resultado: 'SIN_COMPENSACION', importe: 0, retenido: 0 });
     });
   });
+
+  describe('con anticipación suficiente', () => {
+    it.each(['DEVOLUCION', 'CREDITO'] as const)(
+      'regla 24 h y 30 h antes con adelanto 40 da %s de 40',
+      (tipoCompensacion) => {
+        expect(
+          calcularCompensacion(datos({ tipoCompensacion, momento: antes(30) })),
+        ).toEqual({ resultado: tipoCompensacion, importe: 40, retenido: 0 });
+      },
+    );
+
+    it('exactamente 24 h antes corresponde compensación', () => {
+      expect(calcularCompensacion(datos({ momento: antes(24) }))).toEqual({
+        resultado: 'CREDITO',
+        importe: 40,
+        retenido: 0,
+      });
+    });
+
+    it('con regla 0 h compensa hasta el inicio exacto del turno', () => {
+      expect(
+        calcularCompensacion(
+          datos({
+            horasAnticipacion: 0,
+            tipoCompensacion: 'DEVOLUCION',
+            momento: inicioEn,
+          }),
+        ),
+      ).toEqual({ resultado: 'DEVOLUCION', importe: 40, retenido: 0 });
+    });
+
+    it('devuelve un adelanto de 27.53 completo, sin perder un céntimo', () => {
+      expect(
+        calcularCompensacion(
+          datos({
+            adelantoPagado: new Prisma.Decimal('27.53'),
+            pagadoTurno: new Prisma.Decimal('27.53'),
+          }),
+        ),
+      ).toEqual({ resultado: 'CREDITO', importe: 27.53, retenido: 0 });
+    });
+  });
 });
