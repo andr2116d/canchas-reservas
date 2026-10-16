@@ -49,22 +49,34 @@ function Monto({ etiqueta, monto }: { etiqueta: string; monto: number }) {
   );
 }
 
+function diferencia(monto: number, resta: number) {
+  return (Math.round(monto * 100) - Math.round(resta * 100)) / 100;
+}
+
 function MontosReserva({ reserva }: { reserva: ReservaJugador }) {
   const sinDeuda = ESTADOS_SIN_DEUDA.includes(reserva.estado);
-  const pagado = (Math.round(reserva.valorTurno * 100) - Math.round(reserva.saldoPendiente * 100)) / 100;
+  const pagado = diferencia(reserva.valorTurno, reserva.saldoPendiente);
+  const faltaAdelanto = diferencia(reserva.adelantoMinimo, reserva.adelantoPagado);
 
   return (
-    <dl className="flex flex-col gap-1 border-t border-linea pt-3">
-      <Monto etiqueta="Valor del turno" monto={reserva.valorTurno} />
-      {sinDeuda ? (
-        pagado > 0 && <Monto etiqueta="Pagado" monto={pagado} />
-      ) : (
-        <>
-          <Monto etiqueta="Adelanto pagado" monto={reserva.adelantoPagado} />
-          <Monto etiqueta="Saldo por pagar" monto={reserva.saldoPendiente} />
-        </>
+    <>
+      <dl className="flex flex-col gap-1 border-t border-linea pt-3">
+        <Monto etiqueta="Valor del turno" monto={reserva.valorTurno} />
+        {sinDeuda ? (
+          pagado > 0 && <Monto etiqueta="Pagado" monto={pagado} />
+        ) : (
+          <>
+            <Monto etiqueta="Adelanto pagado" monto={reserva.adelantoPagado} />
+            <Monto etiqueta="Saldo por pagar" monto={reserva.saldoPendiente} />
+          </>
+        )}
+      </dl>
+      {reserva.estado === "PENDIENTE_PAGO" && faltaAdelanto > 0 && (
+        <p className="rounded-lg bg-alerta-fondo px-3 py-2 text-sm font-medium text-alerta tabular-nums">
+          Falta para el adelanto: {moneda(faltaAdelanto)}
+        </p>
       )}
-    </dl>
+    </>
   );
 }
 
