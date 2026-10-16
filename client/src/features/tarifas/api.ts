@@ -5,6 +5,7 @@ export type Franja = "DIA" | "NOCHE";
 export type CanchaOpcion = {
   id: number;
   nombre: string;
+  activa: boolean;
 };
 
 export type TarifaVigente = {
