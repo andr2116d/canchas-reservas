@@ -155,6 +155,59 @@ describe('TarifasService', () => {
       expect(historial[0].creadoPor).toBeNull();
     });
 
+    it('el valor anterior es el de la tarifa previa de la misma franja', async () => {
+      const dia = (n: number) => new Date(`2026-10-0${n}T15:00:00.000Z`);
+      prisma.tarifa.findMany.mockResolvedValue([
+        fila(tarifa(16, 'NOCHE', '95.00', dia(7))),
+        fila(tarifa(15, 'DIA', '62.50', dia(6))),
+        fila(tarifa(14, 'NOCHE', '90.00', dia(5), dia(7))),
+        fila(tarifa(13, 'DIA', '55.05', dia(4), dia(6))),
+        fila(tarifa(12, 'NOCHE', '80.00', dia(3), dia(5))),
+        fila(tarifa(11, 'DIA', '50.00', dia(2), dia(4))),
+      ]);
+
+      const { historial } = await servicio.obtener(CANCHA_ID);
+
+      expect(
+        historial.map(({ id, franja, valorAnterior, valor }) => [
+          id,
+          franja,
+          valorAnterior,
+          valor,
+        ]),
+      ).toEqual([
+        [16, 'NOCHE', 90, 95],
+        [15, 'DIA', 55.05, 62.5],
+        [14, 'NOCHE', 80, 90],
+        [13, 'DIA', 50, 55.05],
+        [12, 'NOCHE', null, 80],
+        [11, 'DIA', null, 50],
+      ]);
+    });
+
+    it('la primera de cada franja no tiene valor anterior', async () => {
+      prisma.tarifa.findMany.mockResolvedValue([
+        fila(tarifa(2, 'NOCHE', '80.00', HASTA)),
+        fila(tarifa(1, 'DIA', '50.00', DESDE)),
+      ]);
+
+      const { historial } = await servicio.obtener(CANCHA_ID);
+
+      expect(historial.map((h) => h.valorAnterior)).toEqual([null, null]);
+    });
+
+    it('el valor anterior sale con 2 decimales', async () => {
+      prisma.tarifa.findMany.mockResolvedValue([
+        fila(tarifa(2, 'DIA', '60.00', HASTA)),
+        fila(tarifa(1, 'DIA', '55.10', DESDE, HASTA)),
+      ]);
+
+      const { historial } = await servicio.obtener(CANCHA_ID);
+
+      expect(historial[0].valorAnterior).toBe(55.1);
+      expect(historial[0].valorAnterior?.toFixed(2)).toBe('55.10');
+    });
+
     it('una franja sin tarifa vigente sale como null', async () => {
       prisma.tarifa.findMany.mockResolvedValue([]);
 
