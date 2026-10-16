@@ -450,5 +450,37 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         retenido: 0,
       });
     });
+
+    it('dentro de una transacción ve con tx los pagos insertados en ella', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      const reserva = await reservar(jugador, turno);
+      const momento = horasAntes(reserva, 30);
+      const deshacer = new Error('deshacer');
+
+      await expect(
+        prisma.$transaction(async (tx) => {
+          await pagar(reserva, {}, tx);
+          await expect(
+            servicio.calcularCompensacion(reserva, momento, 'CLIENTE', tx),
+          ).resolves.toEqual({
+            resultado: 'CREDITO',
+            importe: 40,
+            retenido: 0,
+          });
+          await expect(
+            servicio.calcularCompensacion(reserva, momento, 'CLIENTE'),
+          ).resolves.toEqual({
+            resultado: 'SIN_COMPENSACION',
+            importe: 0,
+            retenido: 0,
+          });
+          throw deshacer;
+        }),
+      ).rejects.toBe(deshacer);
+
+      expect(
+        await prisma.pago.count({ where: { reservaId: reserva.id } }),
+      ).toBe(0);
+    });
   });
 });
