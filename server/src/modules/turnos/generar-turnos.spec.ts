@@ -269,6 +269,14 @@ describe('generarTurnos en un barrido de horarios', () => {
       ),
     ).toEqual([]);
   });
+
+  it('los turnos quedan dentro de la apertura y el cierre', () => {
+    expect(
+      fallosDe(({ apertura, cierre, turnos }) =>
+        turnos.every((t) => t.inicio >= apertura && t.fin <= cierre),
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe('diaSemanaDe', () => {
