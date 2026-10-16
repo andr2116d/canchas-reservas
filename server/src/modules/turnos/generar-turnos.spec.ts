@@ -1,4 +1,11 @@
-import { diaSemanaDe, generarTurnos, type Turno } from './generar-turnos';
+import {
+  aHora,
+  aMinutos,
+  DURACION_TURNO_MIN,
+  diaSemanaDe,
+  generarTurnos,
+  type Turno,
+} from './generar-turnos';
 
 const abierto = (apertura: string, cierre: string) => ({
   abierto: true,
@@ -200,6 +207,59 @@ describe('generarTurnos', () => {
       expect(generarTurnos(abierto('08:00', '08:59'), '18:00')).toEqual([]);
       expect(generarTurnos(abierto('18:00', '18:59'), '18:00')).toEqual([]);
     });
+  });
+});
+
+describe('generarTurnos en un barrido de horarios', () => {
+  const horasCada = (pasoMin: number) =>
+    Array.from({ length: (24 * 60) / pasoMin }, (_, i) => aHora(i * pasoMin));
+  const HORAS = horasCada(15);
+  const INICIOS_NOCHE = horasCada(30);
+
+  interface Caso {
+    apertura: number;
+    cierre: number;
+    noche: number;
+    turnos: { inicio: number; fin: number; franja: Turno['franja'] }[];
+  }
+
+  const CASOS: Caso[] = [];
+  for (const apertura of HORAS) {
+    for (const cierre of HORAS) {
+      if (cierre <= apertura) continue;
+      for (const noche of INICIOS_NOCHE) {
+        CASOS.push({
+          apertura: aMinutos(apertura),
+          cierre: aMinutos(cierre),
+          noche: aMinutos(noche),
+          turnos: generarTurnos(abierto(apertura, cierre), noche).map((t) => ({
+            inicio: aMinutos(t.horaInicio),
+            fin: aMinutos(t.horaFin),
+            franja: t.franja,
+          })),
+        });
+      }
+    }
+  }
+
+  const fallosDe = (cumple: (caso: Caso) => boolean) =>
+    CASOS.filter((caso) => !cumple(caso))
+      .slice(0, 5)
+      .map(
+        ({ apertura, cierre, noche }) =>
+          `${aHora(apertura)}-${aHora(cierre)} noche ${aHora(noche)}`,
+      );
+
+  it('recorre apertura y cierre cada 15 minutos y la noche cada 30', () => {
+    expect(CASOS).toHaveLength(((96 * 95) / 2) * 48);
+  });
+
+  it('todos los turnos duran 60 minutos', () => {
+    expect(
+      fallosDe(({ turnos }) =>
+        turnos.every((t) => t.fin - t.inicio === DURACION_TURNO_MIN),
+      ),
+    ).toEqual([]);
   });
 });
 
