@@ -136,7 +136,9 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
       .query(turno)
       .set('Cookie', jugador.cookie)
       .expect(200);
-    const { regla } = res.body as { regla: Regla & { plazoLimite: string } };
+    const { regla } = res.body as {
+      regla: Regla & { plazoLimite: string; plazoVencido: boolean };
+    };
     return { ...regla, plazoLimite: new Date(regla.plazoLimite) };
   };
 
@@ -546,6 +548,7 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
             horasAnticipacion: 0,
             tipoCompensacion: 'DEVOLUCION',
             plazoLimite: new Date(`${FECHA_TURNO}T18:00:00-05:00`),
+            plazoVencido: false,
           });
           const reserva = await reservar(jugador, turno);
           await pagar(reserva);
@@ -590,6 +593,7 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
             horasAnticipacion: 6,
             tipoCompensacion: 'DEVOLUCION',
             plazoLimite: new Date(`${FECHA_TURNO}T14:00:00-05:00`),
+            plazoVencido: false,
           });
 
           const reserva = await reservar(jugador, nuevo);

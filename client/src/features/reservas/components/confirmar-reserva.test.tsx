@@ -22,7 +22,7 @@ const RESUMEN = {
   saldo: 30,
   creditoDisponible: 10,
   minutosParaPagar: 15,
-  regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z" },
+  regla: { horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-19T23:00:00.000Z", plazoVencido: false },
 };
 
 let cliente: QueryClient;
@@ -288,12 +288,27 @@ describe("PantallaConfirmarReserva", () => {
   it("con 0 horas se puede cancelar hasta el inicio del turno", async () => {
     const resumen = {
       ...RESUMEN,
-      regla: { horasAnticipacion: 0, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-20T23:00:00.000Z" },
+      regla: { horasAnticipacion: 0, tipoCompensacion: "CREDITO", plazoLimite: "2026-10-20T23:00:00.000Z", plazoVencido: false },
     };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
 
     renderPantalla();
 
     await screen.findByText(/^Puedes cancelar hasta el inicio del turno y se te devolverá tu adelanto como crédito\./);
+  });
+
+  it("con el plazo vencido avisa que el adelanto queda retenido", async () => {
+    const resumen = {
+      ...RESUMEN,
+      regla: { ...RESUMEN.regla, plazoLimite: "2026-10-16T13:00:00.000Z", plazoVencido: true },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(resumen), { status: 200 })));
+
+    renderPantalla();
+
+    await screen.findByText(
+      "El plazo para cancelar sin perder el adelanto venció el viernes 16/10 a las 08:00 (24 h antes del turno). Si cancelas, el adelanto queda retenido.",
+    );
+    expect(screen.queryByText(/se te devolverá/)).toBeNull();
   });
 });

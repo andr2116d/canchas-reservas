@@ -38,4 +38,28 @@ describe("texto de la regla de cancelación", () => {
       "Puedes cancelar con la anticipación indicada y se te devolverá tu adelanto como crédito. Si cancelas después, el adelanto queda retenido.",
     );
   });
+
+  describe("con el plazo vencido", () => {
+    it.each(["CREDITO", "DEVOLUCION"] as const)("con %s no promete devolver el adelanto", (tipoCompensacion) => {
+      expect(
+        textoReglaCancelacion({ horasAnticipacion: 24, tipoCompensacion, plazo: "viernes 16/10 a las 08:00", vencido: true }),
+      ).toBe(
+        "El plazo para cancelar sin perder el adelanto venció el viernes 16/10 a las 08:00 (24 h antes del turno). Si cancelas, el adelanto queda retenido.",
+      );
+    });
+
+    it("sin plazo indica que ya pasó", () => {
+      expect(textoReglaCancelacion({ horasAnticipacion: 24, tipoCompensacion: "CREDITO", vencido: true })).toBe(
+        "El plazo para cancelar sin perder el adelanto (24 h antes del turno) ya pasó. Si cancelas, el adelanto queda retenido.",
+      );
+    });
+
+    it("con el plazo vigente mantiene el texto de la spec", () => {
+      expect(
+        textoReglaCancelacion({ horasAnticipacion: 24, tipoCompensacion: "CREDITO", plazo: "sábado 17/10 a las 19:00", vencido: false }),
+      ).toBe(
+        "Puedes cancelar hasta el sábado 17/10 a las 19:00 (24 h antes) y se te devolverá tu adelanto como crédito. Si cancelas después, el adelanto queda retenido.",
+      );
+    });
+  });
 });

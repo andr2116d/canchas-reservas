@@ -12,8 +12,13 @@ import { ErrorApi } from "@/lib/api";
 import { textoReglaCancelacion } from "@/features/regla-cancelacion/texto-regla";
 import type { ReservaCreada, ResumenReserva } from "../api";
 
-function textoRegla({ horasAnticipacion, tipoCompensacion, plazoLimite }: ResumenReserva["regla"]) {
-  return textoReglaCancelacion({ horasAnticipacion, tipoCompensacion, plazo: diaYHoraEnLima(plazoLimite) });
+function textoRegla({ horasAnticipacion, tipoCompensacion, plazoLimite, plazoVencido }: ResumenReserva["regla"]) {
+  return textoReglaCancelacion({
+    horasAnticipacion,
+    tipoCompensacion,
+    plazo: diaYHoraEnLima(plazoLimite),
+    vencido: plazoVencido,
+  });
 }
 
 function formatearTiempo(restanteMs: number) {

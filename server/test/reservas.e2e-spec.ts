@@ -37,6 +37,7 @@ interface Resumen {
     horasAnticipacion: number;
     tipoCompensacion: string;
     plazoLimite: string;
+    plazoVencido: boolean;
   };
 }
 
@@ -282,9 +283,25 @@ describe('Reservas (e2e)', () => {
           horasAnticipacion: 24,
           tipoCompensacion: 'CREDITO',
           plazoLimite: new Date(`${HOY}T18:00:00-05:00`).toISOString(),
+          plazoVencido: false,
         },
       } satisfies Resumen);
       expect(await prisma.reserva.count({ where: { canchaId } })).toBe(0);
+    });
+
+    it('el resumen marca vencido el plazo que ya pasó según el reloj', async () => {
+      reloj.instante = new Date(`${HOY}T10:30:00-05:00`);
+      const res = await resumen(jugador.cookie, {
+        canchaId,
+        fecha: MANANA,
+        horaInicio: '08:00',
+      }).expect(200);
+      expect((res.body as Resumen).regla).toEqual({
+        horasAnticipacion: 24,
+        tipoCompensacion: 'CREDITO',
+        plazoLimite: new Date(`${HOY}T08:00:00-05:00`).toISOString(),
+        plazoVencido: true,
+      });
     });
 
     it('crea la reserva pendiente con montos, vencimiento, código y regla', async () => {
