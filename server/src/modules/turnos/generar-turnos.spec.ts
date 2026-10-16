@@ -285,6 +285,14 @@ describe('generarTurnos en un barrido de horarios', () => {
       ),
     ).toEqual([]);
   });
+
+  it('la franja es NOCHE si y solo si el turno empieza en o después del inicio de noche', () => {
+    expect(
+      fallosDe(({ noche, turnos }) =>
+        turnos.every((t) => (t.franja === 'NOCHE') === t.inicio >= noche),
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe('diaSemanaDe', () => {
