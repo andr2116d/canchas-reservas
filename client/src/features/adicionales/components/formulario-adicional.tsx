@@ -1,11 +1,11 @@
 "use client";
 
-import { type ChangeEvent, useId } from "react";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alerta, Button, Input, Modal } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
-import { decimal } from "@/lib/filtros-entrada";
+import { conFiltro, decimal } from "@/lib/filtros-entrada";
 import type { Adicional } from "../api";
 import { type DatosAdicional, esquemaAdicional, type ValoresAdicional } from "../schemas";
 
@@ -25,7 +25,6 @@ export function FormularioAdicional({ adicional, abierto, onCerrar, onEnviar }: 
     register,
     handleSubmit,
     setError,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ValoresAdicional, unknown, DatosAdicional>({
     resolver: zodResolver(esquemaAdicional),
@@ -42,12 +41,6 @@ export function FormularioAdicional({ adicional, abierto, onCerrar, onEnviar }: 
       aplicarErroresServidor(error, setError, [...CAMPOS]);
     }
   });
-
-  const cambiarPrecio = (evento: ChangeEvent<HTMLInputElement>) => {
-    const sanado = decimal(evento.target.value);
-    if (evento.target.value !== sanado) evento.target.value = sanado;
-    setValue("precio", sanado, { shouldValidate: false });
-  };
 
   return (
     <Modal
@@ -76,8 +69,7 @@ export function FormularioAdicional({ adicional, abierto, onCerrar, onEnviar }: 
           placeholder="0.00"
           ayuda="Hasta 2 decimales, con punto. Ejemplo: 15.50"
           error={errors.precio?.message}
-          {...register("precio")}
-          onChange={cambiarPrecio}
+          {...conFiltro(register("precio"), decimal)}
         />
       </form>
     </Modal>
