@@ -1,5 +1,5 @@
 import { fecha, moneda } from "@/lib/formato";
-import type { Cambio, RolUsuario, ValorCambio } from "./api";
+import type { Cambio, MotivoAcceso, RolUsuario, ValorCambio } from "./api";
 
 type Tono = "exito" | "alerta" | "error" | "info" | "neutro";
 
@@ -26,6 +26,12 @@ export const ROLES: Record<RolUsuario, string> = {
   ADMINISTRADOR: "Administrador",
   RECEPCIONISTA: "Recepcionista",
   JUGADOR: "Jugador",
+};
+
+export const MOTIVOS_ACCESO: Record<MotivoAcceso, string | null> = {
+  OK: null,
+  CREDENCIALES: "Credenciales incorrectas",
+  INACTIVO: "Cuenta desactivada",
 };
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
