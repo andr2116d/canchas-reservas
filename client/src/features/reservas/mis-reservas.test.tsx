@@ -113,6 +113,38 @@ describe("PantallaReservas", () => {
     });
   });
 
+  it("en pendiente de pago destaca lo que falta para completar el adelanto", async () => {
+    responder(200, [
+      reserva(1, "PENDIENTE_PAGO", { valorTurno: 55.05, adelantoMinimo: 27.53, adelantoPagado: 10, saldoPendiente: 45.05 }),
+    ]);
+    renderPantalla();
+
+    await screen.findByText("LP000001");
+    expect(within(tarjetas()[0]).getByText("Falta para el adelanto: S/ 17.53")).toBeTruthy();
+  });
+
+  it("en pendiente de pago sin nada pagado falta todo el adelanto", async () => {
+    responder(200, [reserva(1, "PENDIENTE_PAGO")]);
+    renderPantalla();
+
+    await screen.findByText("LP000001");
+    expect(within(tarjetas()[0]).getByText("Falta para el adelanto: S/ 40.00")).toBeTruthy();
+  });
+
+  it.each<[EstadoReserva, Partial<ReservaJugador>]>([
+    ["PENDIENTE_PAGO", { adelantoPagado: 40, saldoPendiente: 40 }],
+    ["PENDIENTE_VALIDACION", {}],
+    ["CONFIRMADA", { adelantoPagado: 40, saldoPendiente: 40 }],
+    ["CANCELADA", {}],
+    ["EXPIRADA", {}],
+  ])("en %s con ese pago no muestra lo que falta para el adelanto", async (estado, extra) => {
+    responder(200, [reserva(1, estado, extra)]);
+    renderPantalla();
+
+    await screen.findByText("LP000001");
+    expect(within(tarjetas()[0]).queryByText(/Falta para el adelanto/)).toBeNull();
+  });
+
   it.each<EstadoReserva>(["CANCELADA", "EXPIRADA"])(
     "una reserva %s sin pagos solo muestra el valor del turno",
     async (estado) => {
