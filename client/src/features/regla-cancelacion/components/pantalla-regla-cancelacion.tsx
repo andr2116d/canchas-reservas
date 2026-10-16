@@ -2,7 +2,8 @@
 
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Card, EmptyState, Input, Select, useToast } from "@/components/ui";
+import { Alerta, Button, Card, EmptyState, Input, Select, useToast } from "@/components/ui";
+import { aplicarErroresServidor } from "@/lib/errores-formulario";
 import type { ReglaCancelacion, TipoCompensacion } from "../api";
 import { useActualizarRegla, useReglaCancelacion } from "../hooks";
 import { esquemaRegla, type DatosReglaFormulario, type ValoresRegla } from "../schemas";
@@ -66,8 +67,9 @@ function FormularioRegla({ regla }: { regla: ReglaCancelacion }) {
     control,
     register,
     handleSubmit,
+    setError,
     reset,
-    formState: { isDirty, isSubmitting },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm<ValoresRegla, unknown, DatosReglaFormulario>({
     resolver: zodResolver(esquemaRegla),
     defaultValues: aValores(regla),
@@ -75,15 +77,20 @@ function FormularioRegla({ regla }: { regla: ReglaCancelacion }) {
   const { horasAnticipacion: horas, tipoCompensacion: compensacion } = useWatch({ control });
 
   const enviar = handleSubmit(async (datos) => {
-    const guardada = await actualizar.mutateAsync(datos);
-    reset(aValores(guardada));
-    toast.exito("Regla de cancelación guardada");
+    try {
+      const guardada = await actualizar.mutateAsync(datos);
+      reset(aValores(guardada));
+      toast.exito("Regla de cancelación guardada");
+    } catch (error) {
+      aplicarErroresServidor(error, setError, ["horasAnticipacion", "tipoCompensacion"]);
+    }
   });
 
   return (
     <>
       <Card>
         <form noValidate onSubmit={enviar} className="flex flex-col gap-4">
+          <Alerta>{errors.root?.servidor?.message}</Alerta>
           <div className="max-w-48">
             <Input
               etiqueta="Horas de anticipación"
@@ -91,12 +98,17 @@ function FormularioRegla({ regla }: { regla: ReglaCancelacion }) {
               min={0}
               step={1}
               ayuda="Número entero de horas, mínimo 0."
+              error={errors.horasAnticipacion?.message}
               {...register("horasAnticipacion")}
             />
           </div>
 
           <div className="max-w-48">
-            <Select etiqueta="Compensación del adelanto" {...register("tipoCompensacion")}>
+            <Select
+              etiqueta="Compensación del adelanto"
+              error={errors.tipoCompensacion?.message}
+              {...register("tipoCompensacion")}
+            >
               <option value="CREDITO">Crédito</option>
               <option value="DEVOLUCION">Devolución</option>
             </Select>
