@@ -16,18 +16,39 @@ const CANCHAS: CanchaOpcion[] = [
   { id: 2, nombre: "Cancha 2" },
 ];
 
+const ANA = { id: 7, nombre: "Ana Torres" };
+const LUIS = { id: 8, nombre: "Luis Quispe" };
+
 const TARIFAS_CANCHA_1: Tarifas = {
   dia: { valor: 55.05, vigenteDesde: "2026-10-01T14:00:00.000Z" },
   noche: { valor: 80, vigenteDesde: "2026-10-16T01:30:00.000Z" },
   historial: [
-    { id: 3, franja: "NOCHE", valor: 80, vigenteDesde: "2026-10-16T01:30:00.000Z", vigenteHasta: null },
-    { id: 2, franja: "DIA", valor: 55.05, vigenteDesde: "2026-10-01T14:00:00.000Z", vigenteHasta: null },
+    {
+      id: 3,
+      franja: "NOCHE",
+      valor: 80,
+      valorAnterior: 70,
+      vigenteDesde: "2026-10-16T01:30:00.000Z",
+      vigenteHasta: null,
+      creadoPor: LUIS,
+    },
+    {
+      id: 2,
+      franja: "DIA",
+      valor: 55.05,
+      valorAnterior: null,
+      vigenteDesde: "2026-10-01T14:00:00.000Z",
+      vigenteHasta: null,
+      creadoPor: ANA,
+    },
     {
       id: 1,
       franja: "NOCHE",
       valor: 70,
+      valorAnterior: null,
       vigenteDesde: "2026-09-01T14:00:00.000Z",
       vigenteHasta: "2026-10-16T01:30:00.000Z",
+      creadoPor: ANA,
     },
   ],
 };
@@ -35,7 +56,17 @@ const TARIFAS_CANCHA_1: Tarifas = {
 const TARIFAS_CANCHA_2: Tarifas = {
   dia: null,
   noche: { valor: 90, vigenteDesde: "2026-10-02T14:00:00.000Z" },
-  historial: [{ id: 4, franja: "NOCHE", valor: 90, vigenteDesde: "2026-10-02T14:00:00.000Z", vigenteHasta: null }],
+  historial: [
+    {
+      id: 4,
+      franja: "NOCHE",
+      valor: 90,
+      valorAnterior: null,
+      vigenteDesde: "2026-10-02T14:00:00.000Z",
+      vigenteHasta: null,
+      creadoPor: ANA,
+    },
+  ],
 };
 
 type Respuesta = { status: number; body?: unknown } | "red";
