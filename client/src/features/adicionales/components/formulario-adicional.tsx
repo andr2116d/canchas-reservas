@@ -67,7 +67,7 @@ export function FormularioAdicional({ adicional, abierto, onCerrar, onEnviar }: 
           inputMode="decimal"
           autoComplete="off"
           placeholder="0.00"
-          ayuda="Hasta 2 decimales, con punto. Ejemplo: 15.50"
+          ayuda="Hasta 2 decimales, con punto o coma. Ejemplo: 15.50"
           error={errors.precio?.message}
           {...conFiltro(register("precio"), decimal)}
         />
