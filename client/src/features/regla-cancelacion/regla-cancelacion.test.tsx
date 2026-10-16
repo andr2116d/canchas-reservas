@@ -215,6 +215,41 @@ describe("Pantalla de la regla de cancelación", () => {
     expect(llamadas(fetchMock, "PUT")).toHaveLength(0);
   });
 
+  it("el campo de horas es de texto con teclado numérico, sin flechas", async () => {
+    responder({ "GET /api/regla-cancelacion": { status: 200, body: REGLA } });
+    renderPantalla();
+
+    const horas = await campoHoras();
+    expect(horas.type).toBe("text");
+    expect(horas.inputMode).toBe("numeric");
+    expect(document.querySelector('input[type="number"]')).toBeNull();
+  });
+
+  it("no acepta letras, signos ni punto al escribir o pegar y guarda el valor limpio", async () => {
+    const guardada: ReglaCancelacion = { horasAnticipacion: 24, tipoCompensacion: "DEVOLUCION" };
+    const fetchMock = responder({
+      "GET /api/regla-cancelacion": [
+        { status: 200, body: REGLA },
+        { status: 200, body: guardada },
+      ],
+      "PUT /api/regla-cancelacion": { status: 200, body: guardada },
+    });
+    renderPantalla();
+
+    const horas = await campoHoras();
+    fireEvent.change(horas, { target: { value: "-1.5h" } });
+    expect(horas.value).toBe("15");
+
+    fireEvent.paste(horas, { clipboardData: { getData: () => "2a4" } });
+    fireEvent.change(horas, { target: { value: "2a4" } });
+    expect(horas.value).toBe("24");
+    fireEvent.click(botonGuardar());
+
+    expect((await screen.findByRole("status")).textContent).toBe("Regla de cancelación guardada");
+    const [put] = llamadas(fetchMock, "PUT");
+    expect(JSON.parse(put[1]?.body as string)).toEqual(guardada);
+  });
+
   it("con 0 horas envía el PUT y guarda", async () => {
     const guardada: ReglaCancelacion = { horasAnticipacion: 0, tipoCompensacion: "DEVOLUCION" };
     const fetchMock = responder({
