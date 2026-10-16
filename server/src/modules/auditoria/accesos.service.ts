@@ -4,6 +4,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ConsultarAccesosDto } from './dto/consultar-accesos.dto';
 import { aUsuario, CAMPOS_USUARIO, pagina, rangoDeFechas } from './paginacion';
 
+const escaparComodines = (texto: string) => texto.replace(/[\\%_]/g, '\\$&');
+
 @Injectable()
 export class AccesosService {
   constructor(private readonly prisma: PrismaService) {}
@@ -12,7 +14,7 @@ export class AccesosService {
     const where: Prisma.RegistroAccesoWhereInput = {
       exito: filtros.exito,
       correo: filtros.correo
-        ? { contains: filtros.correo, mode: 'insensitive' }
+        ? { contains: escaparComodines(filtros.correo), mode: 'insensitive' }
         : undefined,
       fecha: rangoDeFechas(filtros),
     };
