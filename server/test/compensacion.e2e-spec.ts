@@ -346,5 +346,19 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         });
       }
     });
+
+    it('por incidencia 1 h antes devuelve adelanto y saldo aprobados, sin el adicional', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      const reserva = await reservar(jugador, turno);
+      await pagar(reserva, { concepto: 'ADELANTO', monto: 40 });
+      await pagar(reserva, { concepto: 'SALDO', monto: 40 });
+      await pagar(reserva, { concepto: 'ADICIONALES', monto: 15 });
+
+      await expect(calcular(reserva, 1, 'INCIDENCIA')).resolves.toEqual({
+        resultado: 'DEVOLUCION',
+        importe: 80,
+        retenido: 0,
+      });
+    });
   });
 });
