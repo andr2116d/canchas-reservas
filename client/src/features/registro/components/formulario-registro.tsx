@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "@/components/layout/logo";
 import { Button, Card, Input, Select } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { conFiltro, filtroDocumento, soloDigitos } from "@/lib/filtros-entrada";
 import { useRegistro } from "../hooks";
 import type { DatosRegistro } from "../api";
 import { esquemaRegistro, type DatosValidados, type ValoresRegistro } from "../schemas";
@@ -36,8 +37,13 @@ export function FormularioRegistro() {
   const { mutateAsync, isPending } = useRegistro();
   const {
     register,
+    control,
     handleSubmit,
     setError,
+    getValues,
+    setValue,
+    getFieldState,
+    trigger,
     formState: { errors },
   } = useForm<ValoresRegistro, unknown, DatosValidados>({
     resolver: zodResolver(esquemaRegistro),
@@ -54,6 +60,8 @@ export function FormularioRegistro() {
     },
   });
 
+  const tipoDocumento = useWatch({ control, name: "tipoDocumento" });
+
   const enviar = handleSubmit(async (datos) => {
     try {
       await mutateAsync(quitarConfirmacion(datos));
@@ -61,6 +69,13 @@ export function FormularioRegistro() {
       aplicarErroresServidor(error, setError, [...CAMPOS_SERVIDOR]);
     }
   });
+
+  const recortarDocumento = (tipo: string) => {
+    const numero = getValues("numeroDocumento");
+    const recortado = filtroDocumento(tipo)(numero);
+    if (recortado !== numero) setValue("numeroDocumento", recortado, { shouldDirty: true });
+    if (getFieldState("numeroDocumento").error) trigger("numeroDocumento");
+  };
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12">
@@ -75,16 +90,22 @@ export function FormularioRegistro() {
           )}
           <Input etiqueta="Nombres" autoComplete="off" error={errors.nombres?.message} {...register("nombres")} />
           <Input etiqueta="Apellidos" autoComplete="off" error={errors.apellidos?.message} {...register("apellidos")} />
-          <Select etiqueta="Tipo de documento" error={errors.tipoDocumento?.message} {...register("tipoDocumento")}>
+          <Select
+            etiqueta="Tipo de documento"
+            error={errors.tipoDocumento?.message}
+            {...register("tipoDocumento", { onChange: (evento) => recortarDocumento(evento.target.value) })}
+          >
             <option value="">Elige el tipo de documento</option>
             <option value="DNI">DNI</option>
             <option value="CE">CE</option>
           </Select>
           <Input
             etiqueta="Número de documento"
+            type="text"
+            inputMode={tipoDocumento === "DNI" ? "numeric" : "text"}
             autoComplete="off"
             error={errors.numeroDocumento?.message}
-            {...register("numeroDocumento")}
+            {...conFiltro(register("numeroDocumento"), filtroDocumento(tipoDocumento))}
           />
           <Input
             etiqueta="Correo"
@@ -99,7 +120,7 @@ export function FormularioRegistro() {
             inputMode="numeric"
             autoComplete="off"
             error={errors.telefono?.message}
-            {...register("telefono")}
+            {...conFiltro(register("telefono"), (valor) => soloDigitos(valor, 9))}
           />
           <Input
             etiqueta="Contraseña"
