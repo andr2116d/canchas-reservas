@@ -171,6 +171,34 @@ describe("Pantalla de tarifas", () => {
     expect(llamadas(fetchMock, "GET", "/api/canchas/1/tarifas")).toHaveLength(2);
   });
 
+  it("el valor no acepta letras ni signos, es de texto decimal y guarda el número limpio", async () => {
+    const fetchMock = responder(
+      rutasBase({
+        "PUT /api/canchas/1/tarifas": {
+          status: 200,
+          body: { franja: "DIA", valor: 60.5, vigenteDesde: "2026-10-16T02:00:00.000Z" },
+        },
+      }),
+    );
+    renderPantalla();
+
+    const dia = await tarjeta("Día");
+    const valor = dia.getByLabelText("Nuevo valor por hora") as HTMLInputElement;
+    expect(valor.type).toBe("text");
+    expect(valor.inputMode).toBe("decimal");
+
+    fireEvent.change(valor, { target: { value: "abc" } });
+    expect(valor.value).toBe("");
+    fireEvent.paste(valor, { clipboardData: { getData: () => "S/ -6a0,505" } });
+    fireEvent.change(valor, { target: { value: "S/ -6a0,505" } });
+    expect(valor.value).toBe("60.50");
+    fireEvent.click(dia.getByRole("button", { name: "Guardar" }));
+
+    expect((await screen.findByRole("status")).textContent).toBe("Tarifa de día guardada");
+    const [put] = llamadas(fetchMock, "PUT", "/api/canchas/1/tarifas");
+    expect(JSON.parse(put[1]?.body as string)).toEqual({ franja: "DIA", valor: 60.5 });
+  });
+
   it("no envía nada si el valor no es mayor que 0", async () => {
     const fetchMock = responder(rutasBase());
     renderPantalla();
