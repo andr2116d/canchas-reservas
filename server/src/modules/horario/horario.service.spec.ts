@@ -1,4 +1,5 @@
 import { ConflictException } from '@nestjs/common';
+import { Reloj } from '../../common/reloj/reloj';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { TurnosGateway } from '../tiempo-real/turnos.gateway';
@@ -10,6 +11,7 @@ import {
 } from './horario.service';
 
 const ADMIN_ID = 7;
+const AHORA = new Date('2026-10-15T20:00:00.000Z');
 
 const abierto = (diaSemana: number, apertura = '08:00', cierre = '23:00') => ({
   diaSemana,
@@ -53,10 +55,12 @@ describe('HorarioService', () => {
   };
   const auditoria = { registrar: jest.fn() };
   const gateway = { notificar: jest.fn() };
+  const reloj = { ahora: jest.fn() };
   const servicio = new HorarioService(
     prisma as unknown as PrismaService,
     auditoria as unknown as AuditoriaService,
     gateway as unknown as TurnosGateway,
+    reloj as unknown as Reloj,
   );
 
   beforeEach(() => {
@@ -67,6 +71,7 @@ describe('HorarioService', () => {
     prisma.horarioDia.findMany.mockResolvedValue(SEMANA);
     prisma.configuracion.findUnique.mockResolvedValue({ inicioNoche: '18:00' });
     prisma.reserva.findMany.mockResolvedValue([]);
+    reloj.ahora.mockReturnValue(AHORA);
   });
 
   const errorDe = (promesa: Promise<unknown>) =>
@@ -252,9 +257,7 @@ describe('HorarioService', () => {
       expect(auditoria.registrar).not.toHaveBeenCalled();
     });
 
-    it('busca reservas futuras por estado e inicio posterior a ahora', async () => {
-      const antes = Date.now();
-
+    it('busca reservas futuras por estado e inicio posterior a la hora del reloj', async () => {
       await servicio.guardar(
         { dias: dias(cerrado(3)), inicioNoche: '18:00' },
         ADMIN_ID,
@@ -266,9 +269,7 @@ describe('HorarioService', () => {
       expect(consulta.where.estado).toEqual({
         in: ['PENDIENTE_PAGO', 'PENDIENTE_VALIDACION', 'CONFIRMADA'],
       });
-      expect(consulta.where.inicioEn.gt.getTime()).toBeGreaterThanOrEqual(
-        antes,
-      );
+      expect(consulta.where.inicioEn.gt).toBe(AHORA);
     });
 
     it('con reservas fuera del nuevo horario y sin confirmar responde 409 con la lista', async () => {
