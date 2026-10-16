@@ -4,17 +4,25 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCerrarSesion } from "../hooks";
-import { leerUltimaActividad, registrarActividad } from "../sesion-compartida";
+import { DESTINO_CIERRE, escucharCierre, leerUltimaActividad, registrarActividad } from "../sesion-compartida";
 
 export const LIMITE_INACTIVIDAD_MS = 15 * 60 * 1000;
 export const INTERVALO_COMPARTIR_MS = 5000;
-const DESTINO = "/login?motivo=inactividad";
 const EVENTOS = ["click", "keydown", "scroll"] as const;
 
 export function TemporizadorInactividad() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { mutate } = useCerrarSesion(DESTINO);
+  const { mutate } = useCerrarSesion("inactividad");
+
+  useEffect(
+    () =>
+      escucharCierre((motivo) => {
+        router.replace(DESTINO_CIERRE[motivo]);
+        queryClient.clear();
+      }),
+    [router, queryClient],
+  );
 
   useEffect(() => {
     let temporizador: ReturnType<typeof setTimeout> | undefined;
@@ -29,13 +37,8 @@ export function TemporizadorInactividad() {
 
     const vencer = () => {
       const restante = Math.max(ultima, leerUltimaActividad()) + LIMITE_INACTIVIDAD_MS - Date.now();
-      if (restante > 0) return programar(restante);
-      mutate(undefined, {
-        onError: () => {
-          router.replace(DESTINO);
-          queryClient.clear();
-        },
-      });
+      if (restante > 0) programar(restante);
+      else mutate();
     };
 
     const compartir = () => {
@@ -67,7 +70,7 @@ export function TemporizadorInactividad() {
       if (pendiente) registrarActividad(ultima);
       EVENTOS.forEach((evento) => document.removeEventListener(evento, reiniciar, { capture: true }));
     };
-  }, [mutate, router, queryClient]);
+  }, [mutate]);
 
   return null;
 }
