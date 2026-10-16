@@ -25,6 +25,14 @@ function tarjetas() {
   return within(screen.getByRole("list")).getAllByRole("listitem");
 }
 
+function montos(tarjeta: HTMLElement) {
+  return Object.fromEntries(
+    within(tarjeta)
+      .queryAllByRole("term")
+      .map((termino) => [termino.textContent, termino.nextElementSibling?.textContent]),
+  );
+}
+
 function responder(status: number, cuerpo: unknown) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(cuerpo), { status })));
 }
@@ -78,6 +86,58 @@ describe("PantallaReservas", () => {
     expect(within(tarjeta).getByText("21/10/2026 · 20:00–21:00")).toBeTruthy();
     expect(within(tarjeta).getByText("Cancha 2")).toBeTruthy();
   });
+
+  it("cada tarjeta muestra el valor del turno, el adelanto pagado y el saldo por pagar", async () => {
+    responder(200, [
+      reserva(1, "CONFIRMADA", { valorTurno: 55.05, adelantoMinimo: 27.53, adelantoPagado: 27.53, saldoPendiente: 27.52 }),
+    ]);
+    renderPantalla();
+
+    await screen.findByText("LP000001");
+    expect(montos(tarjetas()[0])).toEqual({
+      "Valor del turno": "S/ 55.05",
+      "Adelanto pagado": "S/ 27.53",
+      "Saldo por pagar": "S/ 27.52",
+    });
+  });
+
+  it("una reserva pagada completa muestra el saldo en cero", async () => {
+    responder(200, [reserva(1, "CONFIRMADA", { adelantoPagado: 40, saldoPendiente: 0 })]);
+    renderPantalla();
+
+    await screen.findByText("LP000001");
+    expect(montos(tarjetas()[0])).toEqual({
+      "Valor del turno": "S/ 80.00",
+      "Adelanto pagado": "S/ 40.00",
+      "Saldo por pagar": "S/ 0.00",
+    });
+  });
+
+  it.each<EstadoReserva>(["CANCELADA", "EXPIRADA"])(
+    "una reserva %s sin pagos solo muestra el valor del turno",
+    async (estado) => {
+      responder(200, [reserva(1, estado)]);
+      renderPantalla();
+
+      await screen.findByText("LP000001");
+      expect(montos(tarjetas()[0])).toEqual({ "Valor del turno": "S/ 80.00" });
+    },
+  );
+
+  it.each<EstadoReserva>(["CANCELADA", "EXPIRADA"])(
+    "una reserva %s con pagos muestra lo pagado y no el saldo como deuda",
+    async (estado) => {
+      responder(200, [reserva(1, estado, { valorTurno: 55.05, adelantoPagado: 27.53, saldoPendiente: 27.52 })]);
+      renderPantalla();
+
+      await screen.findByText("LP000001");
+      expect(montos(tarjetas()[0])).toEqual({
+        "Valor del turno": "S/ 55.05",
+        Pagado: "S/ 27.53",
+      });
+      expect(within(tarjetas()[0]).queryByText("Saldo por pagar")).toBeNull();
+    },
+  );
 
   it.each<[EstadoReserva, string]>([
     ["PENDIENTE_PAGO", "Pendiente de pago"],
