@@ -52,6 +52,7 @@ export function FormularioLogin() {
 
   const enviar = handleSubmit((datos) =>
     mutate(datos, {
+      onSuccess: () => reset(),
       onError: (error) => aplicarErroresServidor(error, setError, ["correo", "contrasena"]),
     }),
   );
