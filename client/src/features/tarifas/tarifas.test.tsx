@@ -149,9 +149,9 @@ describe("Pantalla de tarifas", () => {
     const tabla = await screen.findByRole("table", { name: "Historial de tarifas" });
     const filas = within(tabla).getAllByRole("row").slice(1) as HTMLTableRowElement[];
     expect(filas.map((fila) => Array.from(fila.cells).map((celda) => celda.textContent))).toEqual([
-      ["Noche", "S/ 80.00", "15/10/2026 20:30", "Vigente"],
-      ["Día", "S/ 55.05", "01/10/2026 09:00", "Vigente"],
-      ["Noche", "S/ 70.00", "01/09/2026 09:00", "15/10/2026 20:30"],
+      ["Noche", "S/ 70.00", "S/ 80.00", "Luis Quispe", "15/10/2026 20:30", "Vigente"],
+      ["Día", "—", "S/ 55.05", "Ana Torres", "01/10/2026 09:00", "Vigente"],
+      ["Noche", "—", "S/ 70.00", "Ana Torres", "01/09/2026 09:00", "15/10/2026 20:30"],
     ]);
   });
 
