@@ -167,6 +167,28 @@ describe('generarTurnos', () => {
         ),
       );
     });
+
+    it('con apertura a las 00:00 el primer turno es de 00:00 a 01:00', () => {
+      expect(generarTurnos(abierto('00:00', '03:00'), '18:00')).toEqual(
+        turnos(
+          'DIA',
+          ['00:00', '01:00'],
+          ['01:00', '02:00'],
+          ['02:00', '03:00'],
+        ),
+      );
+    });
+
+    it('con cierre a las 23:59 el último turno es de 22:00 a 23:00 y se pierde 23:00-23:59', () => {
+      expect(generarTurnos(abierto('20:00', '23:59'), '18:00')).toEqual(
+        turnos(
+          'NOCHE',
+          ['20:00', '21:00'],
+          ['21:00', '22:00'],
+          ['22:00', '23:00'],
+        ),
+      );
+    });
   });
 });
 
