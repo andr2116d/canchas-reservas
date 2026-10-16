@@ -198,16 +198,52 @@ const TRADUCTORES: Record<
   RESERVA: reserva,
 };
 
+// jsonb guarda las claves en su propio orden; aquí se fija el de lectura.
+const ORDEN_CAMPOS: Record<string, string[]> = {
+  CANCHA: [
+    'nombre',
+    'tamano',
+    'iluminacion',
+    'estado',
+    'activa',
+    'tarifasBorradas',
+    'bloqueosBorrados',
+  ],
+  REGLA_CANCELACION: ['horasAnticipacion', 'tipoCompensacion'],
+  RECEPCIONISTA: [
+    'nombres',
+    'apellidos',
+    'tipoDocumento',
+    'numeroDocumento',
+    'correo',
+    'telefono',
+    'estado',
+  ],
+  ADICIONAL: ['nombre', 'precio', 'activo'],
+};
+
+function ordenar(entidad: string, cambios: Cambio[]) {
+  const orden = ORDEN_CAMPOS[entidad];
+  if (!orden) return cambios;
+  const posicion = (campo: string) => {
+    const i = orden.indexOf(campo);
+    return i === -1 ? orden.length : i;
+  };
+  return [...cambios].sort((a, b) => posicion(a.campo) - posicion(b.campo));
+}
+
 export function traducirDetalle(
   entidad: string,
   detalle: unknown,
   nombres: Nombres = SIN_NOMBRES,
 ): Cambio[] {
   const traductor = TRADUCTORES[entidad];
-  if (!traductor || !esObjeto(detalle)) return cambiosGenericos(detalle);
+  if (!traductor || !esObjeto(detalle)) {
+    return ordenar(entidad, cambiosGenericos(detalle));
+  }
   try {
-    return traductor(detalle, nombres);
+    return ordenar(entidad, traductor(detalle, nombres));
   } catch {
-    return cambiosGenericos(detalle);
+    return ordenar(entidad, cambiosGenericos(detalle));
   }
 }
