@@ -1063,6 +1063,100 @@ describe('Reservas (e2e)', () => {
       });
     });
 
+    it('cada reserva trae su valor, el adelanto pagado y el saldo, sin perder céntimos', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({ DIA: 55.05, NOCHE: 55.05 });
+      const turno = (horaInicio: string) => ({
+        canchaId,
+        fecha: MANANA,
+        horaInicio,
+      });
+      const pago = (
+        reservaId: number,
+        concepto: 'ADELANTO' | 'SALDO',
+        monto: number,
+        estado: 'APROBADO' | 'PENDIENTE_VALIDACION' | 'RECHAZADO',
+      ) =>
+        prisma.pago.create({
+          data: {
+            reservaId,
+            concepto,
+            canal: 'RECEPCION',
+            metodo: 'EFECTIVO',
+            monto,
+            estado,
+            registradoPorId: adminId,
+          },
+        });
+
+      const sinPagos = (
+        await reservar(jugador.cookie, turno('18:00')).expect(201)
+      ).body as Creada;
+      await pago(sinPagos.id, 'ADELANTO', 27.53, 'PENDIENTE_VALIDACION');
+      await pago(sinPagos.id, 'ADELANTO', 27.53, 'RECHAZADO');
+
+      await prisma.credito.create({
+        data: { jugadorId: jugador.id, monto: 27.53, saldo: 27.53 },
+      });
+      const conCredito = (
+        await request(servidor())
+          .post('/api/reservas')
+          .set('Cookie', jugador.cookie)
+          .send({ ...turno('19:00'), usarCredito: true })
+          .expect(201)
+      ).body as Creada;
+      expect(conCredito.estado).toBe('CONFIRMADA');
+
+      const pagada = (
+        await reservar(jugador.cookie, turno('20:00')).expect(201)
+      ).body as Creada;
+      await pago(pagada.id, 'ADELANTO', 27.53, 'APROBADO');
+      await pago(pagada.id, 'SALDO', 27.52, 'APROBADO');
+
+      const res = await request(servidor())
+        .get('/api/reservas/mias')
+        .set('Cookie', jugador.cookie)
+        .expect(200);
+      const montos = (res.body as Array<Record<string, unknown>>).map(
+        ({
+          id,
+          valorTurno,
+          adelantoMinimo,
+          adelantoPagado,
+          saldoPendiente,
+        }) => ({
+          id,
+          valorTurno,
+          adelantoMinimo,
+          adelantoPagado,
+          saldoPendiente,
+        }),
+      );
+      expect(montos).toEqual([
+        {
+          id: sinPagos.id,
+          valorTurno: 55.05,
+          adelantoMinimo: 27.53,
+          adelantoPagado: 0,
+          saldoPendiente: 55.05,
+        },
+        {
+          id: conCredito.id,
+          valorTurno: 55.05,
+          adelantoMinimo: 27.53,
+          adelantoPagado: 27.53,
+          saldoPendiente: 27.52,
+        },
+        {
+          id: pagada.id,
+          valorTurno: 55.05,
+          adelantoMinimo: 27.53,
+          adelantoPagado: 27.53,
+          saldoPendiente: 0,
+        },
+      ]);
+    });
+
     it('sin reservas devuelve una lista vacía y otro rol responde 403', async () => {
       const jugador = await crearUsuario();
       await request(servidor())
