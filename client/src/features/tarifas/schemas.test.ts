@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { calcularAdelanto } from "./api";
-import { esquemaTarifa, MENSAJES_TARIFA, sanearValor } from "./schemas";
+import { decimal } from "@/lib/filtros-entrada";
+import { esquemaTarifa, MENSAJES_TARIFA } from "./schemas";
 
 function primerError(valor: string) {
   const resultado = esquemaTarifa.safeParse({ valor });
@@ -30,10 +31,10 @@ describe("esquema de tarifa", () => {
   });
 
   it("sanea el texto: coma como punto, sin signos y con hasta 2 decimales", () => {
-    expect(sanearValor("55,05")).toBe("55.05");
-    expect(sanearValor("-80")).toBe("80");
-    expect(sanearValor("1.2.345")).toBe("1.23");
-    expect(sanearValor("1e3")).toBe("13");
+    expect(decimal("55,05")).toBe("55.05");
+    expect(decimal("-80")).toBe("80");
+    expect(decimal("1.2.345")).toBe("1.23");
+    expect(decimal("1e3")).toBe("13");
   });
 });
 

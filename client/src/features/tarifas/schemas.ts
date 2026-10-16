@@ -24,14 +24,3 @@ export const esquemaTarifa = z.object({
 
 export type ValoresTarifa = z.input<typeof esquemaTarifa>;
 export type DatosTarifaFormulario = z.output<typeof esquemaTarifa>;
-
-/**
- * Deja escribir solo cifras y un separador decimal, con hasta 2 decimales.
- * La coma se toma como punto.
- */
-export function sanearValor(valor: string): string {
-  const limpio = valor.replace(/,/g, ".").replace(/[^0-9.]/g, "");
-  const [entero, ...resto] = limpio.split(".");
-  if (resto.length === 0) return entero;
-  return `${entero}.${resto.join("").slice(0, 2)}`;
-}

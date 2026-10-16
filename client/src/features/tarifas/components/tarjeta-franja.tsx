@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alerta, Badge, Button, Card, Input, useToast } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
+import { decimal } from "@/lib/filtros-entrada";
 import { fechaEnLima, moneda } from "@/lib/formato";
 import { calcularAdelanto, ETIQUETA_FRANJA, type Franja, type TarifaVigente } from "../api";
 import { useDefinirTarifa } from "../hooks";
-import { esquemaTarifa, sanearValor, type DatosTarifaFormulario, type ValoresTarifa } from "../schemas";
+import { esquemaTarifa, type DatosTarifaFormulario, type ValoresTarifa } from "../schemas";
 
 type Props = {
   canchaId: number;
@@ -42,7 +43,7 @@ export function TarjetaFranja({ canchaId, franja, vigente }: Props) {
   });
 
   const cambiarValor = (evento: ChangeEvent<HTMLInputElement>) => {
-    const sanado = sanearValor(evento.target.value);
+    const sanado = decimal(evento.target.value);
     if (evento.target.value !== sanado) evento.target.value = sanado;
     setValue("valor", sanado, { shouldValidate: false });
   };
