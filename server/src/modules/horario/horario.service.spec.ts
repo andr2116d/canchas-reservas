@@ -2,6 +2,7 @@ import { ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { TurnosGateway } from '../tiempo-real/turnos.gateway';
+import { generarTurnos } from '../turnos/generar-turnos';
 import {
   HorarioService,
   INICIO_NOCHE_POR_DEFECTO,
@@ -110,6 +111,31 @@ describe('HorarioService', () => {
       await expect(servicio.franjaDe('18:20')).resolves.toBe('DIA');
       await expect(servicio.franjaDe('18:40')).resolves.toBe('NOCHE');
     });
+
+    it.each([
+      ['08:00', '23:00', '18:00'],
+      ['08:00', '23:00', '19:00'],
+      ['08:00', '23:00', '18:30'],
+      ['06:30', '22:30', '17:00'],
+      ['10:00', '20:00', '07:00'],
+      ['10:00', '20:00', '23:30'],
+    ])(
+      'de %s a %s con noche a las %s coincide con la franja de cada turno generado',
+      async (apertura, cierre, inicioNoche) => {
+        prisma.configuracion.findUnique.mockResolvedValue({ inicioNoche });
+        const turnos = generarTurnos(
+          { abierto: true, apertura, cierre },
+          inicioNoche,
+        );
+
+        expect(turnos.length).toBeGreaterThan(0);
+        for (const turno of turnos) {
+          await expect(servicio.franjaDe(turno.horaInicio)).resolves.toBe(
+            turno.franja,
+          );
+        }
+      },
+    );
   });
 
   describe('diaDe y vistaPrevia', () => {
