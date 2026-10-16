@@ -213,6 +213,27 @@ describe("Pantalla de la regla de cancelación", () => {
     expect(llamadas(fetchMock, "PUT")).toHaveLength(0);
   });
 
+  it("con 0 horas envía el PUT y guarda", async () => {
+    const guardada: ReglaCancelacion = { horasAnticipacion: 0, tipoCompensacion: "DEVOLUCION" };
+    const fetchMock = responder({
+      "GET /api/regla-cancelacion": [
+        { status: 200, body: REGLA },
+        { status: 200, body: guardada },
+      ],
+      "PUT /api/regla-cancelacion": { status: 200, body: guardada },
+    });
+    renderPantalla();
+
+    const horas = await campoHoras();
+    fireEvent.change(horas, { target: { value: "0" } });
+    fireEvent.click(botonGuardar());
+
+    expect((await screen.findByRole("status")).textContent).toBe("Regla de cancelación guardada");
+    const [put] = llamadas(fetchMock, "PUT");
+    expect(JSON.parse(put[1]?.body as string)).toEqual(guardada);
+    expect(horas.getAttribute("aria-invalid")).not.toBe("true");
+  });
+
   describe("vista previa", () => {
     async function frase() {
       const titulo = await screen.findByText("Así lo verá el jugador");
