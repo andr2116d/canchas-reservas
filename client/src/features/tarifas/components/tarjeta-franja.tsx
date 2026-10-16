@@ -1,11 +1,10 @@
 "use client";
 
-import type { ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alerta, Badge, Button, Card, Input, useToast } from "@/components/ui";
 import { aplicarErroresServidor } from "@/lib/errores-formulario";
-import { decimal } from "@/lib/filtros-entrada";
+import { conFiltro, decimal } from "@/lib/filtros-entrada";
 import { fechaEnLima, moneda } from "@/lib/formato";
 import { calcularAdelanto, ETIQUETA_FRANJA, type Franja, type TarifaVigente } from "../api";
 import { useDefinirTarifa } from "../hooks";
@@ -24,7 +23,6 @@ export function TarjetaFranja({ canchaId, franja, vigente }: Props) {
     register,
     handleSubmit,
     setError,
-    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ValoresTarifa, unknown, DatosTarifaFormulario>({
@@ -41,12 +39,6 @@ export function TarjetaFranja({ canchaId, franja, vigente }: Props) {
       aplicarErroresServidor(error, setError, ["valor"]);
     }
   });
-
-  const cambiarValor = (evento: ChangeEvent<HTMLInputElement>) => {
-    const sanado = decimal(evento.target.value);
-    if (evento.target.value !== sanado) evento.target.value = sanado;
-    setValue("valor", sanado, { shouldValidate: false });
-  };
 
   return (
     <Card className="flex flex-col gap-4">
@@ -83,8 +75,7 @@ export function TarjetaFranja({ canchaId, franja, vigente }: Props) {
               autoComplete="off"
               placeholder="0.00"
               error={errors.valor?.message}
-              {...register("valor")}
-              onChange={cambiarValor}
+              {...conFiltro(register("valor"), decimal)}
             />
           </div>
           <Button type="submit" cargando={isSubmitting} className="sm:mt-6">
