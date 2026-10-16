@@ -226,6 +226,23 @@ describe("Adicionales", () => {
     expect(cuerpos(fetchMock, "POST")).toEqual([{ url: "/api/adicionales", body: { nombre: "Agua", precio: 5.5 } }]);
   });
 
+  it("con un error visible, corregir el precio lo quita sin salir del campo", async () => {
+    responder({ "GET /api/adicionales": { status: 200, body: [] } });
+    renderPantalla();
+
+    const dialogo = await abrirFormulario();
+    fireEvent.input(dialogo.getByLabelText("Nombre"), { target: { value: "Agua" } });
+    const precio = dialogo.getByLabelText("Precio unitario");
+    fireEvent.input(precio, { target: { value: "0" } });
+    fireEvent.click(dialogo.getByRole("button", { name: "Crear adicional" }));
+    expect(await dialogo.findByText("El precio debe ser mayor que cero")).toBeTruthy();
+
+    fireEvent.input(precio, { target: { value: "5" } });
+
+    await waitFor(() => expect(dialogo.queryByText("El precio debe ser mayor que cero")).toBeNull());
+    expect(precio.getAttribute("aria-invalid")).toBe("false");
+  });
+
   it("avisa cuando el precio supera el máximo", async () => {
     const fetchMock = responder({ "GET /api/adicionales": { status: 200, body: [] } });
     renderPantalla();

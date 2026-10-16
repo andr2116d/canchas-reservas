@@ -212,6 +212,22 @@ describe("Pantalla de tarifas", () => {
     expect(llamadas(fetchMock, "PUT", "/api/canchas/1/tarifas")).toHaveLength(0);
   });
 
+  it("con un error visible, corregir el valor lo quita sin salir del campo", async () => {
+    responder(rutasBase());
+    renderPantalla();
+
+    const dia = await tarjeta("Día");
+    const valor = dia.getByLabelText("Nuevo valor por hora");
+    fireEvent.change(valor, { target: { value: "0" } });
+    fireEvent.click(dia.getByRole("button", { name: "Guardar" }));
+    expect(await dia.findByText("El valor debe ser mayor que 0")).toBeTruthy();
+
+    fireEvent.change(valor, { target: { value: "60" } });
+
+    await waitFor(() => expect(dia.queryByText("El valor debe ser mayor que 0")).toBeNull());
+    expect(valor.getAttribute("aria-invalid")).toBe("false");
+  });
+
   it("un 400 del servidor se muestra debajo del campo", async () => {
     responder(
       rutasBase({
