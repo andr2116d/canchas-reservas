@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { cuerpoError } from '../../common/errores';
 import { inicioDeHoyEnLima } from '../../common/fechas-lima';
+import { Reloj } from '../../common/reloj/reloj';
 import type { Prisma } from '../../generated/prisma/client';
 import type { EstadoReserva, Rol } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -86,6 +87,7 @@ export class CanchasService {
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
     private readonly gateway: TurnosGateway,
+    private readonly reloj: Reloj,
   ) {}
 
   async listar(rol: Rol) {
@@ -269,7 +271,7 @@ export class CanchasService {
       where: {
         canchaId,
         estado: { in: ESTADOS_RESERVA_FUTURA },
-        fecha: { gte: inicioDeHoyEnLima() },
+        fecha: { gte: inicioDeHoyEnLima(this.reloj.ahora()) },
       },
       select: {
         id: true,
