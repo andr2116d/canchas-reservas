@@ -396,5 +396,37 @@ describe('Tarifas al reservar (e2e)', () => {
       await rechazoSinTarifa(jugador.cookie, noche);
       expect(await prisma.reserva.count({ where: { canchaId } })).toBe(0);
     });
+
+    it('al definir por PUT la tarifa que faltaba la franja se puede reservar con ese precio', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({ DIA: 60 });
+      const { noche } = await corte(jugador.cookie, canchaId);
+      expect(await turnoDe(jugador.cookie, noche)).toMatchObject({
+        motivo: 'SIN_TARIFA',
+      });
+
+      await definir(canchaId, 'NOCHE', 90.15);
+
+      expect(await turnoDe(jugador.cookie, noche)).toEqual({
+        horaInicio: noche.horaInicio,
+        horaFin: expect.any(String) as string,
+        franja: 'NOCHE',
+        estado: 'DISPONIBLE',
+        seleccionable: true,
+        valor: 90.15,
+        adelanto: 45.08,
+      });
+      const consulta = await resumen(jugador.cookie, noche).expect(200);
+      expect(consulta.body).toMatchObject({
+        valorTurno: 90.15,
+        adelanto: 45.08,
+        saldo: 45.07,
+      });
+      const creada = (await reservar(jugador.cookie, noche).expect(201))
+        .body as Creada;
+      const reserva = await guardada(creada.id);
+      expect(reserva.valorTurno.toFixed(2)).toBe('90.15');
+      expect(reserva.adelantoMinimo.toFixed(2)).toBe('45.08');
+    });
   });
 });
