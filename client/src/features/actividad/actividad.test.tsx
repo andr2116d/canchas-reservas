@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ItemCambio, Pagina } from "./api";
 import { PantallaActividad } from "./components/pantalla-actividad";
@@ -121,7 +121,7 @@ function renderPantalla() {
 }
 
 const tabla = async () => within(await screen.findByRole("table", { name: "Cambios" }));
-const filaDe = async (texto: string) => within((await tabla()).getByText(texto).closest("tr") as HTMLElement);
+const filaDe = async (texto: string) => within((await (await tabla()).findByText(texto)).closest("tr") as HTMLElement);
 
 describe("Actividad: pestaña Cambios", () => {
   it("muestra la carga mientras llega la primera página", async () => {
@@ -232,5 +232,115 @@ describe("Actividad: pestaña Cambios", () => {
     expect(tarjetas).toHaveLength(CAMBIOS.length);
     expect(within(tarjetas[0]).getByText("Valor: S/ 80.00 → S/ 90.50")).toBeTruthy();
     expect(within(tarjetas[0]).getByText("Fecha y hora")).toBeTruthy();
+  });
+});
+
+describe("Actividad: filtros y paginación de cambios", () => {
+  const MENSAJE_RANGO = "La fecha hasta no puede ser anterior a la fecha desde";
+
+  const elegir = (etiqueta: string, valor: string) =>
+    fireEvent.change(screen.getByLabelText(etiqueta), { target: { value: valor } });
+
+  const ultima = (fetchMock: ReturnType<typeof responder>) => consultas(fetchMock, "/api/auditoria").at(-1);
+
+  it("entidad y acción cambian la consulta", async () => {
+    const fetchMock = responder(() => ({ status: 200, body: pagina(CAMBIOS) }));
+    renderPantalla();
+    await tabla();
+
+    elegir("Qué", "TARIFA");
+    await waitFor(() => expect(ultima(fetchMock)).toEqual({ entidad: "TARIFA", pagina: "1", tamano: "20" }));
+    elegir("Acción", "EDITAR");
+    await waitFor(() =>
+      expect(ultima(fetchMock)).toEqual({ entidad: "TARIFA", accion: "EDITAR", pagina: "1", tamano: "20" }),
+    );
+    elegir("Qué", "");
+    await waitFor(() => expect(ultima(fetchMock)).toEqual({ accion: "EDITAR", pagina: "1", tamano: "20" }));
+  });
+
+  it("el rango de fechas va en la consulta", async () => {
+    const fetchMock = responder(() => ({ status: 200, body: pagina(CAMBIOS) }));
+    renderPantalla();
+    await tabla();
+
+    elegir("Desde", "2026-10-01");
+    elegir("Hasta", "2026-10-16");
+
+    await waitFor(() =>
+      expect(ultima(fetchMock)).toEqual({ desde: "2026-10-01", hasta: "2026-10-16", pagina: "1", tamano: "20" }),
+    );
+    expect(screen.getByLabelText("Hasta").getAttribute("min")).toBe("2026-10-01");
+  });
+
+  it("pagina hacia adelante y atrás con el total del server", async () => {
+    const fetchMock = responder((_ruta, query) => ({
+      status: 200,
+      body: pagina([cambio({ id: Number(query.get("pagina")), referencia: `Cancha de la página ${query.get("pagina")}` })], {
+        total: 45,
+        pagina: Number(query.get("pagina")),
+      }),
+    }));
+    renderPantalla();
+
+    await filaDe("Cancha de la página 1");
+    expect(screen.getByText("Página 1 de 3 · 45 registros")).toBeTruthy();
+    const anterior = () => screen.getByRole("button", { name: "Anterior" }) as HTMLButtonElement;
+    const siguiente = () => screen.getByRole("button", { name: "Siguiente" }) as HTMLButtonElement;
+    expect(anterior().disabled).toBe(true);
+
+    fireEvent.click(siguiente());
+    await filaDe("Cancha de la página 2");
+    expect(anterior().disabled).toBe(false);
+    fireEvent.click(siguiente());
+    await filaDe("Cancha de la página 3");
+    expect(screen.getByText("Página 3 de 3 · 45 registros")).toBeTruthy();
+    expect(siguiente().disabled).toBe(true);
+    fireEvent.click(anterior());
+    await filaDe("Cancha de la página 2");
+
+    expect(consultas(fetchMock, "/api/auditoria").map((q) => q.pagina)).toEqual(["1", "2", "3", "2"]);
+  });
+
+  it("cambiar un filtro vuelve a la página 1", async () => {
+    const fetchMock = responder((_ruta, query) => ({
+      status: 200,
+      body: pagina(CAMBIOS, { total: 45, pagina: Number(query.get("pagina")) }),
+    }));
+    renderPantalla();
+    await tabla();
+
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    await waitFor(() => expect(ultima(fetchMock)?.pagina).toBe("2"));
+    elegir("Acción", "ELIMINAR");
+
+    await waitFor(() => expect(ultima(fetchMock)).toEqual({ accion: "ELIMINAR", pagina: "1", tamano: "20" }));
+  });
+
+  it("con filtros sin resultados muestra el vacío de filtros", async () => {
+    responder((_ruta, query) => ({ status: 200, body: pagina(query.get("accion") ? [] : CAMBIOS) }));
+    renderPantalla();
+    await tabla();
+
+    elegir("Acción", "ELIMINAR");
+
+    expect(await screen.findByText("No hay cambios con estos filtros")).toBeTruthy();
+    expect(screen.getByLabelText("Acción")).toBeTruthy();
+  });
+
+  it("si el server rechaza el rango muestra el error debajo de Hasta", async () => {
+    responder((_ruta, query) =>
+      query.get("hasta")
+        ? { status: 400, body: { statusCode: 400, message: MENSAJE_RANGO, errores: { hasta: MENSAJE_RANGO } } }
+        : { status: 200, body: pagina(CAMBIOS) },
+    );
+    renderPantalla();
+    await tabla();
+
+    elegir("Hasta", "2026-01-01");
+
+    const hasta = screen.getByLabelText("Hasta");
+    await waitFor(() => expect(hasta.getAttribute("aria-invalid")).toBe("true"));
+    expect(document.getElementById(hasta.getAttribute("aria-describedby")!)?.textContent).toBe(MENSAJE_RANGO);
+    expect(screen.queryByRole("button", { name: "Reintentar" })).toBeNull();
   });
 });
