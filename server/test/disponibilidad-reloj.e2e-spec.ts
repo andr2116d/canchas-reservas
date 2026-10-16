@@ -12,6 +12,7 @@ import {
   MENSAJE_FUERA_DE_RANGO,
   type TurnoDisponibilidad,
 } from '../src/modules/turnos/disponibilidad.service';
+import { MENSAJE_CONFIRMAR_DESACTIVAR } from '../src/modules/canchas/canchas.service';
 import { MENSAJE_RESERVAS_FUERA_DE_HORARIO } from '../src/modules/horario/horario.service';
 import { diaSemanaDe } from '../src/modules/turnos/generar-turnos';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -461,6 +462,31 @@ describe('Disponibilidad con reloj fijo (e2e)', () => {
       );
       expect(ids).toContain(futura.id);
       expect(ids).not.toContain(pasada.id);
+    });
+  });
+
+  describe('reservas futuras de una cancha', () => {
+    it('al desactivar una reserva de ayer según el reloj no cuenta y una de hoy sí', async () => {
+      const ayer = await crearReserva(
+        principal,
+        '2031-03-09',
+        '16:00',
+        'CONFIRMADA',
+      );
+      const hoy = await crearReserva(principal, HOY, '16:00', 'CONFIRMADA');
+
+      const res = await request(servidor())
+        .patch(`/api/canchas/${principal}/activa`)
+        .set('Cookie', cookieAdmin)
+        .send({ activa: false })
+        .expect(409);
+
+      expect(res.body.message).toBe(MENSAJE_CONFIRMAR_DESACTIVAR);
+      const ids = (res.body.reservasFuturas as { id: number }[]).map(
+        (r) => r.id,
+      );
+      expect(ids).toEqual([hoy.id]);
+      expect(ids).not.toContain(ayer.id);
     });
   });
 });
