@@ -43,10 +43,12 @@ export function calcularCompensacion(datos: DatosCompensacion): Compensacion {
   if (adelanto === 0) {
     return compensacion(ResultadoCancelacion.SIN_COMPENSACION, 0, 0);
   }
+  // Un momento posterior al inicio del turno queda fuera de plazo y retiene;
+  // si se puede cancelar a esa hora lo decide el flujo de cancelar.
   const limite =
     datos.inicioEn.getTime() - datos.horasAnticipacion * MS_POR_HORA;
   if (datos.momento.getTime() <= limite) {
     return compensacion(datos.tipoCompensacion, adelanto, 0);
   }
-  return compensacion(datos.tipoCompensacion, adelanto, 0);
+  return compensacion(ResultadoCancelacion.RETENCION, 0, adelanto);
 }
