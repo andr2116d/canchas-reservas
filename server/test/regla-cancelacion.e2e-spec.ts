@@ -12,6 +12,11 @@ import { configurarApp } from '../src/configurar-app';
 import type { ReglaCancelacion } from '../src/generated/prisma/client';
 import type { Rol } from '../src/generated/prisma/enums';
 import { AuditoriaService } from '../src/modules/auditoria/auditoria.service';
+import {
+  MENSAJE_HORAS_ENTERO,
+  MENSAJE_HORAS_MAXIMO,
+  MENSAJE_HORAS_MINIMO,
+} from '../src/modules/regla-cancelacion/dto/actualizar-regla-cancelacion.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('API de regla de cancelación (e2e)', () => {
@@ -239,29 +244,30 @@ describe('API de regla de cancelación (e2e)', () => {
   });
 
   it.each([
-    undefined,
-    null,
-    '',
-    '24',
-    -1,
-    1.5,
-    true,
-    false,
-    2147483648,
-    Number.MAX_SAFE_INTEGER,
+    [undefined, MENSAJE_HORAS_ENTERO],
+    [null, MENSAJE_HORAS_ENTERO],
+    ['', MENSAJE_HORAS_ENTERO],
+    ['abc', MENSAJE_HORAS_ENTERO],
+    ['24', MENSAJE_HORAS_ENTERO],
+    [-1, MENSAJE_HORAS_MINIMO],
+    [1.5, MENSAJE_HORAS_ENTERO],
+    [true, MENSAJE_HORAS_ENTERO],
+    [false, MENSAJE_HORAS_ENTERO],
+    [2147483648, MENSAJE_HORAS_MAXIMO],
+    [Number.MAX_SAFE_INTEGER, MENSAJE_HORAS_MAXIMO],
   ])(
-    'rechaza horas inválidas %p sin cambiar datos ni auditar',
-    async (horas) => {
+    'rechaza horas inválidas %p con su motivo sin cambiar datos ni auditar',
+    async (horas, mensaje) => {
       const anterior = await leer();
       const cantidad = (await registros()).length;
       const respuesta = await guardar({
         horasAnticipacion: horas,
         tipoCompensacion: 'CREDITO',
       }).expect(400);
-      expect(respuesta.body).toMatchObject({
+      expect(respuesta.body).toEqual({
         statusCode: 400,
-        message: expect.any(String),
-        errores: { horasAnticipacion: expect.any(String) },
+        message: mensaje,
+        errores: { horasAnticipacion: mensaje },
       });
       expect(await leer()).toEqual(anterior);
       expect(await registros()).toHaveLength(cantidad);

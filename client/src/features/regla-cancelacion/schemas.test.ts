@@ -17,6 +17,7 @@ describe("esquema de la regla de cancelación", () => {
 
   it("rechaza horas mayores que el tope del servidor", () => {
     expect(primerError("2147483648")).toBe(MENSAJES_REGLA.horasMaximo);
+    expect(MENSAJES_REGLA.horasMaximo).not.toContain("2147483647");
   });
 
   it.each([

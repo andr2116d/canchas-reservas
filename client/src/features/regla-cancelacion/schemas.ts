@@ -5,7 +5,7 @@ export const HORAS_MAXIMAS = 2147483647;
 export const MENSAJES_REGLA = {
   horasEntero: "Las horas de anticipación deben ser un número entero",
   horasMinimo: "Las horas de anticipación deben ser mayores o iguales a 0",
-  horasMaximo: "Las horas de anticipación no pueden superar 2147483647",
+  horasMaximo: "Las horas de anticipación son demasiado altas",
   tipoCompensacion: "Elige Devolución o Crédito",
 };
 

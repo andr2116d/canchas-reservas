@@ -156,7 +156,7 @@ describe("Pantalla de la regla de cancelación", () => {
   });
 
   it("un 400 del servidor muestra su mensaje debajo del campo", async () => {
-    const mensaje = "Las horas de anticipación no pueden superar 2147483647";
+    const mensaje = "Las horas de anticipación son demasiado altas";
     responder({
       "GET /api/regla-cancelacion": { status: 200, body: REGLA },
       "PUT /api/regla-cancelacion": {
