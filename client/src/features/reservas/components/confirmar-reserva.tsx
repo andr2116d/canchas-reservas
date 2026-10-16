@@ -71,10 +71,13 @@ function ConfirmacionTurno({
   const crear = useCrearReserva();
   const toast = useToast();
 
+  const soloConCredito = Boolean(resumen?.soloConCredito);
+  const usaCredito = soloConCredito || usarCredito;
+
   const creditoAplicado = useMemo(() => {
-    if (!resumen || !usarCredito) return 0;
+    if (!resumen || !usaCredito) return 0;
     return Math.min(resumen.adelanto, resumen.creditoDisponible);
-  }, [resumen, usarCredito]);
+  }, [resumen, usaCredito]);
 
   const adelantoAPagar = useMemo(() => {
     if (!resumen) return 0;
@@ -98,7 +101,7 @@ function ConfirmacionTurno({
         canchaId: canchaId!,
         fecha: fechaParam,
         horaInicio,
-        usarCredito,
+        usarCredito: usaCredito,
       });
       setCreada(resultado);
     } catch (err) {
@@ -194,12 +197,13 @@ function ConfirmacionTurno({
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={usarCredito}
+                  checked={usaCredito}
+                  disabled={soloConCredito}
                   onChange={(e) => setUsarCredito(e.target.checked)}
                 />
                 Usar mi crédito ({moneda(resumen.creditoDisponible)} disponible)
               </label>
-              {usarCredito && (
+              {usaCredito && (
                 <p className="text-sm text-texto-suave">
                   Adelanto a pagar: {moneda(adelantoAPagar)}
                 </p>
@@ -207,9 +211,17 @@ function ConfirmacionTurno({
             </div>
           )}
 
-          <div className="rounded-lg bg-alerta-fondo px-3 py-2 text-sm text-alerta">
-            Tienes {resumen.minutosParaPagar} minutos para pagar el adelanto o la reserva se libera.
-          </div>
+          {soloConCredito && (
+            <div className="rounded-lg bg-alerta-fondo px-3 py-2 text-sm text-alerta">
+              Ya tienes 2 reservas pendientes de pago: para reservar este turno debes pagar el adelanto con tu crédito.
+            </div>
+          )}
+
+          {adelantoAPagar > 0 && (
+            <div className="rounded-lg bg-alerta-fondo px-3 py-2 text-sm text-alerta">
+              Tienes {resumen.minutosParaPagar} minutos para pagar el adelanto o la reserva se libera.
+            </div>
+          )}
 
           <div className="rounded-lg border border-linea bg-fondo px-3 py-2 text-sm">
             <p className="font-medium">Regla de cancelación</p>

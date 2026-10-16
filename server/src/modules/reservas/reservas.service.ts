@@ -73,6 +73,12 @@ export function turnoNoDisponible() {
   );
 }
 
+function limitePendientes() {
+  return new ConflictException(
+    cuerpoError(409, MENSAJES_RESERVA.limitePendientes),
+  );
+}
+
 function rechazo(mensaje: string, campo?: string) {
   return new BadRequestException(
     cuerpoError(400, mensaje, campo ? { [campo]: mensaje } : {}),
@@ -128,6 +134,10 @@ export class ReservasService {
       : [];
     const credito = repartirCredito(creditos, turno.valor.adelanto);
     const confirmada = credito.aplicado.gte(turno.valor.adelanto);
+    if (!confirmada && (await this.alcanzoLimitePendientes(jugadorId, tx))) {
+      throw limitePendientes();
+    }
+    await this.validarTurnoLibre(datos, tx);
     const reserva = await tx.reserva.create({
       data: {
         codigo: generarCodigo(),
@@ -205,6 +215,14 @@ export class ReservasService {
     const { tiempoLimitePagoMin } = await this.configuracion(this.prisma);
     const regla = await this.regla.obtenerVigente();
     const credito = await this.creditoDisponible(jugadorId, this.prisma);
+    const soloConCredito = await this.alcanzoLimitePendientes(
+      jugadorId,
+      this.prisma,
+    );
+    if (soloConCredito && credito.lt(turno.valor.adelanto)) {
+      throw limitePendientes();
+    }
+    await this.validarTurnoLibre(datos, this.prisma);
     const plazoLimite = this.regla.plazoLimite(
       turno.fecha,
       turno.horaInicio,
@@ -220,6 +238,7 @@ export class ReservasService {
       adelanto: aNumero(turno.valor.adelanto),
       saldo: aNumero(turno.valor.valor.minus(turno.valor.adelanto)),
       creditoDisponible: aNumero(credito),
+      soloConCredito,
       minutosParaPagar: minutosParaPagar(
         ahora,
         tiempoLimitePagoMin,
@@ -324,8 +343,6 @@ export class ReservasService {
     const cancha = await this.validarCancha(datos.canchaId, cliente);
     const turno = await this.validarTurno(datos, cliente);
     const valor = await this.validarTarifa(cancha.id, turno.franja, cliente);
-    await this.validarPendientes(jugadorId, cliente);
-    await this.validarTurnoLibre(datos, cliente);
     return {
       cancha,
       ...turno,
@@ -401,15 +418,11 @@ export class ReservasService {
     return valor;
   }
 
-  private async validarPendientes(jugadorId: number, cliente: Cliente) {
+  private async alcanzoLimitePendientes(jugadorId: number, cliente: Cliente) {
     const pendientes = await cliente.reserva.count({
       where: { jugadorId, estado: 'PENDIENTE_PAGO' },
     });
-    if (pendientes >= LIMITE_PENDIENTES) {
-      throw new ConflictException(
-        cuerpoError(409, MENSAJES_RESERVA.limitePendientes),
-      );
-    }
+    return pendientes >= LIMITE_PENDIENTES;
   }
 
   private async validarTurnoLibre(
