@@ -69,12 +69,19 @@ function aCreadoPor(usuario: CreadoPor | null) {
   };
 }
 
-function aHistorial({ creadoPor, ...tarifa }: TarifaHistorial) {
-  return {
+function aHistorial(tarifas: TarifaHistorial[]) {
+  const anteriores = new Map<number, number | null>();
+  const ultimoPorFranja = new Map<Franja, number>();
+  for (const tarifa of [...tarifas].reverse()) {
+    anteriores.set(tarifa.id, ultimoPorFranja.get(tarifa.franja) ?? null);
+    ultimoPorFranja.set(tarifa.franja, aNumero(tarifa.valor));
+  }
+  return tarifas.map(({ creadoPor, ...tarifa }) => ({
     ...tarifa,
     valor: aNumero(tarifa.valor),
+    valorAnterior: anteriores.get(tarifa.id) ?? null,
     creadoPor: aCreadoPor(creadoPor),
-  };
+  }));
 }
 
 function esDuplicado(error: unknown) {
@@ -111,7 +118,7 @@ export class TarifasService {
     return {
       dia: aVigente(vigente('DIA')),
       noche: aVigente(vigente('NOCHE')),
-      historial: tarifas.map(aHistorial),
+      historial: aHistorial(tarifas),
     };
   }
 

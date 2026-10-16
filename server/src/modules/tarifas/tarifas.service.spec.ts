@@ -98,6 +98,7 @@ describe('TarifasService', () => {
             valor: 90,
             vigenteDesde: HASTA,
             vigenteHasta: null,
+            valorAnterior: 80,
             creadoPor: { id: ADMIN_ID, nombre: 'Ana Torres Ruiz' },
           },
           {
@@ -106,6 +107,7 @@ describe('TarifasService', () => {
             valor: 80,
             vigenteDesde: DESDE,
             vigenteHasta: HASTA,
+            valorAnterior: null,
             creadoPor: { id: ADMIN_ID, nombre: 'Ana Torres Ruiz' },
           },
           {
@@ -114,6 +116,7 @@ describe('TarifasService', () => {
             valor: 55.05,
             vigenteDesde: DESDE,
             vigenteHasta: null,
+            valorAnterior: null,
             creadoPor: { id: ADMIN_ID, nombre: 'Ana Torres Ruiz' },
           },
         ],
