@@ -293,4 +293,22 @@ describe('Flujo de reserva (e2e)', () => {
       }),
     ]);
   });
+
+  it('otro jugador ve el turno tomado como no seleccionable y si lo pide recibe 409', async () => {
+    const [a, b] = [await crearUsuario(), await crearUsuario()];
+    const turno = {
+      canchaId: await crearCancha(),
+      fecha: MANANA,
+      horaInicio: '18:00',
+    };
+    await reservar(a.cookie, turno).expect(201);
+
+    const visto = await disponibilidad(b.cookie, turno);
+    expect(visto).toMatchObject({ estado: 'PENDIENTE', seleccionable: false });
+    expect(visto).not.toHaveProperty('valor');
+
+    const res = await reservar(b.cookie, turno).expect(409);
+    expect((res.body as { message: string }).message).toBe(NO_DISPONIBLE);
+    expect(await mias(b.cookie)).toEqual([]);
+  });
 });
