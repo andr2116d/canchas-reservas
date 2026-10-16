@@ -360,5 +360,30 @@ describe('Cálculo de la compensación contra la base (e2e)', () => {
         retenido: 0,
       });
     });
+
+    it('cambiar la regla por PUT después de reservar no cambia el resultado', async () => {
+      const { jugador, turno } = await nuevoCaso();
+      const creada = await reservar(jugador, turno);
+      await pagar(creada);
+
+      await conRegla(
+        { horasAnticipacion: 6, tipoCompensacion: 'DEVOLUCION' },
+        async () => {
+          const reserva = await prisma.reserva.findUniqueOrThrow({
+            where: { id: creada.id },
+          });
+          await expect(calcular(reserva, 23)).resolves.toEqual({
+            resultado: 'RETENCION',
+            importe: 0,
+            retenido: 40,
+          });
+          await expect(calcular(reserva, 30)).resolves.toEqual({
+            resultado: 'CREDITO',
+            importe: 40,
+            retenido: 0,
+          });
+        },
+      );
+    });
   });
 });
