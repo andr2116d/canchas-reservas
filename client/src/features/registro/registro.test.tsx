@@ -155,6 +155,24 @@ describe("FormularioRegistro", () => {
     expect(JSON.parse(opciones?.body as string)).toEqual(CUERPO_VALIDO);
   });
 
+  it("tras crear la cuenta el formulario queda vacío y sin errores", async () => {
+    responder(201, { id: 7, rol: "JUGADOR" });
+    renderizar();
+
+    llenar();
+    fireEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/login?registro=ok"));
+    await waitFor(() =>
+      expect(CAMPOS.map(({ etiqueta }) => (screen.getByLabelText(etiqueta) as HTMLInputElement).value)).toEqual(
+        CAMPOS.map(() => ""),
+      ),
+    );
+    for (const { etiqueta } of CAMPOS) {
+      expect(screen.getByLabelText(etiqueta).getAttribute("aria-invalid")).toBe("false");
+    }
+  });
+
   it("muestra en su campo el error 409 del server sin borrar lo escrito", async () => {
     responder(409, {
       statusCode: 409,
