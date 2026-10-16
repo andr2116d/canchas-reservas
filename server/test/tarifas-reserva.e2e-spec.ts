@@ -475,4 +475,22 @@ describe('Tarifas al reservar (e2e)', () => {
       }
     });
   });
+
+  describe('tarifa al momento de reservar', () => {
+    it('si la tarifa cambia entre el resumen y la reserva se guarda la nueva', async () => {
+      const jugador = await crearUsuario();
+      const canchaId = await crearCancha({ DIA: 60, NOCHE: 80 });
+      const { dia } = await corte(jugador.cookie, canchaId);
+      const antes = await resumen(jugador.cookie, dia).expect(200);
+      expect(antes.body).toMatchObject({ valorTurno: 60, adelanto: 30 });
+
+      await definir(canchaId, 'DIA', 75);
+
+      const creada = (await reservar(jugador.cookie, dia).expect(201))
+        .body as Creada;
+      const reserva = await guardada(creada.id);
+      expect(reserva.valorTurno.toFixed(2)).toBe('75.00');
+      expect(reserva.adelantoMinimo.toFixed(2)).toBe('37.50');
+    });
+  });
 });
