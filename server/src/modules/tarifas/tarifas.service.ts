@@ -29,9 +29,18 @@ const CAMPOS_TARIFA = {
   vigenteHasta: true,
 } satisfies Prisma.TarifaSelect;
 
+const CAMPOS_HISTORIAL = {
+  ...CAMPOS_TARIFA,
+  creadoPor: { select: { id: true, nombres: true, apellidos: true } },
+} satisfies Prisma.TarifaSelect;
+
 type TarifaGuardada = Prisma.TarifaGetPayload<{
   select: typeof CAMPOS_TARIFA;
 }>;
+
+type CreadoPor = { id: number; nombres: string; apellidos: string | null };
+
+type TarifaHistorial = TarifaGuardada & { creadoPor: CreadoPor | null };
 
 type Cliente = Prisma.TransactionClient | PrismaService;
 
@@ -49,8 +58,23 @@ function aRespuesta(tarifa: TarifaGuardada) {
   return { franja: tarifa.franja, ...aVigente(tarifa) };
 }
 
-function aHistorial(tarifa: TarifaGuardada) {
-  return { ...tarifa, valor: aNumero(tarifa.valor) };
+function aCreadoPor(usuario: CreadoPor | null) {
+  if (!usuario) return null;
+  return {
+    id: usuario.id,
+    nombre: [usuario.nombres, usuario.apellidos]
+      .map((parte) => parte?.trim())
+      .filter(Boolean)
+      .join(' '),
+  };
+}
+
+function aHistorial({ creadoPor, ...tarifa }: TarifaHistorial) {
+  return {
+    ...tarifa,
+    valor: aNumero(tarifa.valor),
+    creadoPor: aCreadoPor(creadoPor),
+  };
 }
 
 function esDuplicado(error: unknown) {
@@ -79,7 +103,7 @@ export class TarifasService {
     await this.verificarCancha(canchaId);
     const tarifas = await this.prisma.tarifa.findMany({
       where: { canchaId },
-      select: CAMPOS_TARIFA,
+      select: CAMPOS_HISTORIAL,
       orderBy: [{ vigenteDesde: 'desc' }, { id: 'desc' }],
     });
     const vigente = (franja: Franja) =>
