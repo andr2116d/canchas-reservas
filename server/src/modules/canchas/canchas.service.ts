@@ -6,7 +6,11 @@ import {
 import { cuerpoError } from '../../common/errores';
 import { Reloj } from '../../common/reloj/reloj';
 import type { Prisma } from '../../generated/prisma/client';
-import type { EstadoReserva, Rol } from '../../generated/prisma/enums';
+import {
+  Franja,
+  type EstadoReserva,
+  type Rol,
+} from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { detalleCambios } from '../auditoria/detalle-cambios';
@@ -39,17 +43,24 @@ const CAMPOS_CANCHA = {
   iluminacion: true,
   estado: true,
   activa: true,
-  _count: { select: { tarifas: { where: { vigenteHasta: null } } } },
+  tarifas: { where: { vigenteHasta: null }, select: { franja: true } },
 } satisfies Prisma.CanchaSelect;
 
-type CanchaConConteo = Prisma.CanchaGetPayload<{
+type CanchaConTarifas = Prisma.CanchaGetPayload<{
   select: typeof CAMPOS_CANCHA;
 }>;
 
 type Cliente = Prisma.TransactionClient | PrismaService;
 
-function aRespuesta({ _count, ...cancha }: CanchaConConteo) {
-  return { ...cancha, tieneTarifas: _count.tarifas > 0 };
+function aRespuesta({ tarifas, ...cancha }: CanchaConTarifas) {
+  const conTarifa = new Set(tarifas.map((tarifa) => tarifa.franja));
+  return {
+    ...cancha,
+    tieneTarifas: conTarifa.size > 0,
+    franjasSinTarifa: Object.values(Franja).filter(
+      (franja) => !conTarifa.has(franja),
+    ),
+  };
 }
 
 function codigoError(error: unknown) {
@@ -240,7 +251,7 @@ export class CanchasService {
           where: { canchaId: id },
         });
         await tx.cancha.delete({ where: { id } });
-        const { _count, ...anterior } = actual;
+        const { tarifas: _tarifas, ...anterior } = actual;
         await this.auditoria.registrar(
           {
             usuarioId,

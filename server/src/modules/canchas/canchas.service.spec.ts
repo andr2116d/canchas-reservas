@@ -20,7 +20,7 @@ const CANCHA = {
   iluminacion: true,
   estado: 'OPERATIVA' as const,
   activa: true,
-  _count: { tarifas: 2 },
+  tarifas: [{ franja: 'DIA' as const }, { franja: 'NOCHE' as const }],
 };
 
 const RESPUESTA = {
@@ -31,6 +31,7 @@ const RESPUESTA = {
   estado: 'OPERATIVA',
   activa: true,
   tieneTarifas: true,
+  franjasSinTarifa: [],
 };
 
 const RESERVA_FUTURA = {
@@ -76,27 +77,54 @@ describe('CanchasService', () => {
     promesa.catch((e: unknown) => e);
 
   describe('listar', () => {
-    it('el administrador ve todas y tieneTarifas cuenta solo las vigentes', async () => {
+    it('el administrador ve todas y las tarifas cuentan solo las vigentes', async () => {
       prisma.cancha.findMany.mockResolvedValue([
         CANCHA,
-        { ...CANCHA, id: 4, activa: false, _count: { tarifas: 0 } },
+        { ...CANCHA, id: 4, activa: false, tarifas: [] },
       ]);
 
       const lista = await servicio.listar('ADMINISTRADOR');
 
       const consulta = prisma.cancha.findMany.mock.calls[0][0] as {
         where: unknown;
-        select: { _count: unknown };
+        select: { tarifas: unknown };
       };
       expect(consulta.where).toBeUndefined();
-      expect(consulta.select._count).toEqual({
-        select: { tarifas: { where: { vigenteHasta: null } } },
+      expect(consulta.select.tarifas).toEqual({
+        where: { vigenteHasta: null },
+        select: { franja: true },
       });
       expect(lista).toEqual([
         RESPUESTA,
-        { ...RESPUESTA, id: 4, activa: false, tieneTarifas: false },
+        {
+          ...RESPUESTA,
+          id: 4,
+          activa: false,
+          tieneTarifas: false,
+          franjasSinTarifa: ['DIA', 'NOCHE'],
+        },
       ]);
     });
+
+    it.each([
+      ['DIA', ['NOCHE']],
+      ['NOCHE', ['DIA']],
+    ] as const)(
+      'con tarifa solo de %s indica la franja que falta',
+      async (franja, faltan) => {
+        prisma.cancha.findMany.mockResolvedValue([
+          { ...CANCHA, tarifas: [{ franja }] },
+        ]);
+
+        const [cancha] = await servicio.listar('ADMINISTRADOR');
+
+        expect(cancha).toEqual({
+          ...RESPUESTA,
+          tieneTarifas: true,
+          franjasSinTarifa: faltan,
+        });
+      },
+    );
 
     it.each(['JUGADOR', 'RECEPCIONISTA'] as const)(
       '%s solo ve las activas',
@@ -112,10 +140,7 @@ describe('CanchasService', () => {
 
   describe('crear', () => {
     it('crea sin enviar estado ni activa y registra CREAR en la transacción', async () => {
-      prisma.cancha.create.mockResolvedValue({
-        ...CANCHA,
-        _count: { tarifas: 0 },
-      });
+      prisma.cancha.create.mockResolvedValue({ ...CANCHA, tarifas: [] });
 
       const cancha = await servicio.crear(
         { nombre: 'Cancha 1', tamano: 'FUTBOL_5', iluminacion: true },
@@ -127,7 +152,11 @@ describe('CanchasService', () => {
           data: { nombre: 'Cancha 1', tamano: 'FUTBOL_5', iluminacion: true },
         }),
       );
-      expect(cancha).toEqual({ ...RESPUESTA, tieneTarifas: false });
+      expect(cancha).toEqual({
+        ...RESPUESTA,
+        tieneTarifas: false,
+        franjasSinTarifa: ['DIA', 'NOCHE'],
+      });
       expect(auditoria.registrar).toHaveBeenCalledWith(
         {
           usuarioId: ADMIN_ID,
