@@ -1,6 +1,6 @@
 /*
  * Pantalla de carga de todo el sitio: la cancha cubre la pantalla y, al centro,
- * un balón hace dominadas entre dos botines. Se repite sin fin hasta que carga.
+ * un jugador hace dominadas hasta que el balón cae; luego vuelve a empezar.
  */
 .espera-de-cancha {
   --ancho-de-franja: clamp(4rem, 9vw, 8rem);
@@ -42,127 +42,179 @@
   transform: translate(-50%, -50%);
 }
 
+/*
+ * Coreografía de 6,4 s, todo sincronizado:
+ * pie (3 %, 15 %, 27 %) → muslo (39 %) → pecho (51 %) → cabeza (63 %, 75 %)
+ * → el balón cae, rebota dos veces y vuelve con la suela.
+ * Al subir el balón frena (ease-out) y al bajar acelera (ease-in).
+ */
 .espera-de-cancha__jugada {
+  --duracion: 6400ms;
+  --sube: cubic-bezier(0.2, 0.6, 0.35, 1);
+  --baja: cubic-bezier(0.6, 0, 0.85, 0.4);
   position: relative;
   z-index: 1;
-  width: 11rem;
-  height: 7.5rem;
-  transform: translateY(-1.5rem) scale(1.6);
+  width: auto;
+  /* Cabe a lo alto y a lo ancho: el dibujo es 240×260, así que 99vw de alto deja el ancho en ~92vw. */
+  height: min(62dvh, 30rem, 99vw);
+  overflow: visible;
 }
 
-@media (min-width: 640px) {
-  .espera-de-cancha__jugada {
-    transform: translateY(-2.5rem) scale(2.2);
-  }
+.espera-de-cancha__jugada * {
+  transform-box: view-box;
 }
 
-/* La sombra sigue al balón: se achica cuando sube y crece cuando baja al botín. */
-.espera-de-cancha__sombra {
-  position: absolute;
-  bottom: 0.9rem;
-  left: 2.75rem;
-  width: 1.8rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: rgb(0 0 0 / 0.35);
-  animation: sombra-del-balon 1220ms linear infinite both;
+.espera-de-cancha__piel { stroke: var(--color-tiza); stroke-linecap: round; }
+.espera-de-cancha__piel-relleno { fill: var(--color-tiza); }
+.espera-de-cancha__pelo { fill: var(--color-tinta); }
+.espera-de-cancha__camiseta { fill: var(--color-capitan); }
+.espera-de-cancha__franja { fill: var(--color-botella); }
+.espera-de-cancha__short,
+.espera-de-cancha__botin { fill: var(--color-tinta); }
+.espera-de-cancha__cuero { fill: var(--color-papel); stroke: var(--color-cancha); stroke-width: 1.5; }
+.espera-de-cancha__gajo { fill: var(--color-cancha); }
+.espera-de-cancha__sombra-jugador,
+.espera-de-cancha__sombra-balon { fill: rgb(0 0 0 / 0.3); }
+
+.espera-de-cancha__muslo {
+  transform-origin: 102px 152px;
+  animation: muslo var(--duracion) ease-in-out infinite both;
 }
 
-.espera-de-cancha__pie {
-  position: absolute;
-  z-index: 1;
-  bottom: 0.75rem;
-  width: 2.65rem;
-  height: 1.75rem;
+.espera-de-cancha__pantorrilla {
+  transform-origin: 102px 192px;
+  animation: pantorrilla var(--duracion) ease-in-out infinite both;
 }
 
-.espera-de-cancha__pie--izquierdo { left: 0.95rem; }
-.espera-de-cancha__pie--derecho { right: 0.95rem; transform: scaleX(-1); }
-
-.espera-de-cancha__pie > span {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 0.3rem 0.8rem 0.4rem 0.55rem;
-  background:
-    linear-gradient(111deg, transparent 45%, var(--color-cancha) 46% 50%, transparent 51% 56%, var(--color-cancha) 57% 61%, transparent 62%),
-    linear-gradient(to top, var(--color-tiza) 16%, currentColor 16% 72%, var(--color-tiza) 72%);
-  clip-path: polygon(0 0, 38% 0, 45% 40%, 88% 51%, 100% 72%, 100% 88%, 86% 100%, 0 100%);
-  transform-origin: 20% 85%;
-  animation: toque-de-balon 1220ms ease-out infinite both;
+.espera-de-cancha__torso {
+  transform-origin: 102px 150px;
+  animation: torso var(--duracion) ease-in-out infinite both;
 }
 
-.espera-de-cancha__pie--derecho > span {
-  animation-delay: 610ms;
+.espera-de-cancha__cabeza {
+  transform-origin: 104px 68px;
+  animation: cabeza var(--duracion) ease-in-out infinite both;
+}
+
+.espera-de-cancha__brazo {
+  transform-origin: 112px 80px;
+  animation: brazo var(--duracion) ease-in-out infinite both;
 }
 
 .espera-de-cancha__balon {
-  position: absolute;
-  z-index: 2;
-  bottom: 2rem;
-  left: 2.75rem;
-  width: 1.8rem;
-  height: 1.8rem;
-  animation: dominadas 1220ms linear infinite both;
+  transform: translate(140px, 235px);
+  animation: balon var(--duracion) infinite both;
 }
 
-.espera-de-cancha__balon > span {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border: 1px solid var(--color-cancha);
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--color-papel) 35%, #cad4c3 100%);
-  box-shadow: inset -0.1rem -0.12rem 0.25rem rgb(8 36 27 / 0.25);
-  animation: giro-del-balon 1220ms linear infinite both;
+.espera-de-cancha__giro {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: giro var(--duracion) linear infinite both;
 }
 
-.espera-de-cancha__balon > span::before,
-.espera-de-cancha__balon > span::after {
-  position: absolute;
-  background: var(--color-cancha);
-  clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%);
-  content: "";
+.espera-de-cancha__sombra-balon {
+  transform-origin: 0 247px;
+  transform: translateX(140px);
+  animation: sombra-balon var(--duracion) infinite both;
 }
 
-.espera-de-cancha__balon > span::before {
-  inset: 26% 25%;
+@keyframes balon {
+  0% { transform: translate(140px, 235px); animation-timing-function: var(--sube); }
+  3% { transform: translate(152px, 203px); animation-timing-function: var(--sube); }
+  9% { transform: translate(153px, 150px); animation-timing-function: var(--baja); }
+  15% { transform: translate(152px, 203px); animation-timing-function: var(--sube); }
+  21% { transform: translate(151px, 142px); animation-timing-function: var(--baja); }
+  27% { transform: translate(152px, 203px); animation-timing-function: var(--sube); }
+  33% { transform: translate(144px, 100px); animation-timing-function: var(--baja); }
+  39% { transform: translate(134px, 137px); animation-timing-function: var(--sube); }
+  45% { transform: translate(124px, 48px); animation-timing-function: var(--baja); }
+  51% { transform: translate(116px, 80px); animation-timing-function: var(--sube); }
+  57% { transform: translate(108px, -6px); animation-timing-function: var(--baja); }
+  63% { transform: translate(106px, 27px); animation-timing-function: var(--sube); }
+  69% { transform: translate(106px, -20px); animation-timing-function: var(--baja); }
+  75% { transform: translate(106px, 27px); animation-timing-function: var(--sube); }
+  80% { transform: translate(140px, -12px); animation-timing-function: var(--baja); }
+  86% { transform: translate(178px, 235px); animation-timing-function: var(--sube); }
+  89% { transform: translate(192px, 206px); animation-timing-function: var(--baja); }
+  92% { transform: translate(204px, 235px); animation-timing-function: var(--sube); }
+  94% { transform: translate(210px, 227px); animation-timing-function: var(--baja); }
+  96% { transform: translate(215px, 235px); animation-timing-function: ease-in-out; }
+  100% { transform: translate(140px, 235px); }
 }
 
-.espera-de-cancha__balon > span::after {
-  inset: -8% 54% 70% -8%;
-  box-shadow: 1rem 1.2rem 0 var(--color-cancha);
+@keyframes sombra-balon {
+  0% { transform: translateX(140px) scale(1); opacity: 1; animation-timing-function: var(--sube); }
+  3%, 15%, 27% { transform: translateX(152px) scale(0.8); opacity: 0.8; animation-timing-function: var(--sube); }
+  9% { transform: translateX(153px) scale(0.55); opacity: 0.5; animation-timing-function: var(--baja); }
+  21% { transform: translateX(151px) scale(0.5); opacity: 0.45; animation-timing-function: var(--baja); }
+  33% { transform: translateX(144px) scale(0.42); opacity: 0.4; animation-timing-function: var(--baja); }
+  39% { transform: translateX(134px) scale(0.55); opacity: 0.5; animation-timing-function: var(--sube); }
+  45% { transform: translateX(124px) scale(0.35); opacity: 0.3; animation-timing-function: var(--baja); }
+  51% { transform: translateX(116px) scale(0.42); opacity: 0.4; animation-timing-function: var(--sube); }
+  57%, 69% { transform: translateX(107px) scale(0.3); opacity: 0.25; animation-timing-function: var(--baja); }
+  63%, 75% { transform: translateX(106px) scale(0.35); opacity: 0.3; animation-timing-function: var(--sube); }
+  80% { transform: translateX(140px) scale(0.3); opacity: 0.25; animation-timing-function: var(--baja); }
+  86% { transform: translateX(178px) scale(1); opacity: 1; animation-timing-function: var(--sube); }
+  89% { transform: translateX(192px) scale(0.8); opacity: 0.8; animation-timing-function: var(--baja); }
+  92% { transform: translateX(204px) scale(1); opacity: 1; animation-timing-function: var(--sube); }
+  94% { transform: translateX(210px) scale(0.92); opacity: 0.9; animation-timing-function: var(--baja); }
+  96% { transform: translateX(215px) scale(1); opacity: 1; animation-timing-function: ease-in-out; }
+  100% { transform: translateX(140px) scale(1); opacity: 1; }
 }
 
-@keyframes dominadas {
-  0%, 100% { transform: translate(0, 0); animation-timing-function: cubic-bezier(0.15, 0.75, 0.4, 1); }
-  25%, 75% { transform: translate(1.84rem, -3.25rem); animation-timing-function: cubic-bezier(0.7, 0, 0.93, 0.48); }
-  50% { transform: translate(3.7rem, 0); animation-timing-function: cubic-bezier(0.15, 0.75, 0.4, 1); }
+@keyframes giro {
+  0% { transform: rotate(0deg); }
+  80% { transform: rotate(900deg); }
+  96% { transform: rotate(1260deg); }
+  100% { transform: rotate(1080deg); }
 }
 
-@keyframes sombra-del-balon {
-  0%, 100% { opacity: 1; transform: translateX(0) scale(1); animation-timing-function: cubic-bezier(0.15, 0.75, 0.4, 1); }
-  25%, 75% { opacity: 0.4; transform: translateX(1.84rem) scale(0.45); animation-timing-function: cubic-bezier(0.7, 0, 0.93, 0.48); }
-  50% { opacity: 1; transform: translateX(3.7rem) scale(1); animation-timing-function: cubic-bezier(0.15, 0.75, 0.4, 1); }
+@keyframes muslo {
+  0% { transform: rotate(0deg); }
+  3%, 15%, 27% { transform: rotate(-30deg); }
+  8%, 20% { transform: rotate(-6deg); }
+  12%, 24% { transform: rotate(-12deg); }
+  31% { transform: rotate(-8deg); }
+  39% { transform: rotate(-85deg); }
+  45%, 100% { transform: rotate(0deg); }
 }
 
-@keyframes giro-del-balon {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(160deg); }
+@keyframes pantorrilla {
+  0% { transform: rotate(0deg); }
+  3%, 15%, 27% { transform: rotate(-10deg); }
+  8%, 20%, 31% { transform: rotate(0deg); }
+  35% { transform: rotate(30deg); }
+  39% { transform: rotate(85deg); }
+  45%, 100% { transform: rotate(0deg); }
 }
 
-@keyframes toque-de-balon {
-  0%, 100% { transform: rotate(-16deg); }
-  12%, 86% { transform: rotate(3deg); }
+@keyframes torso {
+  0%, 46% { transform: rotate(0deg); }
+  51% { transform: rotate(-12deg); }
+  56%, 100% { transform: rotate(0deg); }
 }
 
-/* Sin movimiento: el balón queda quieto sobre el botín izquierdo. */
+@keyframes cabeza {
+  0%, 59% { transform: rotate(0deg); }
+  63% { transform: rotate(-18deg); }
+  66% { transform: rotate(5deg); }
+  71% { transform: rotate(0deg); }
+  75% { transform: rotate(-18deg); }
+  78% { transform: rotate(5deg); }
+  82%, 100% { transform: rotate(0deg); }
+}
+
+/* El brazo se abre hacia atrás para dejar libre el pecho y equilibrar los cabezazos. */
+@keyframes brazo {
+  0%, 44% { transform: rotate(0deg); }
+  51% { transform: rotate(40deg); }
+  63%, 75% { transform: rotate(20deg); }
+  86%, 100% { transform: rotate(0deg); }
+}
+
+/* Sin movimiento: el jugador queda de pie con el balón junto al botín. */
 @media (prefers-reduced-motion: reduce) {
-  .espera-de-cancha__sombra,
-  .espera-de-cancha__pie > span,
-  .espera-de-cancha__balon,
-  .espera-de-cancha__balon > span {
+  .espera-de-cancha__jugada * {
     animation: none !important;
   }
 }
