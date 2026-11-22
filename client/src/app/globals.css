@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+@theme {
+  --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;
+  --font-texto: var(--fuente-instrument-sans), system-ui, sans-serif;
+
+  /* Paleta del club: césped de noche, verde de camiseta, tiza y brazalete de capitán. */
+  --color-cancha: #0e3b2e;
+  --color-cancha-clara: #13473a;
+  --color-botella: #17573f;
+  --color-botella-oscura: #10412f;
+  --color-tiza: #f4f6ef;
+  --color-papel: #fbfcf8;
+  --color-capitan: #dceb7b;
+  --color-tinta: #13261e;
+  --color-grava: #56655d;
+  --color-linea: #d3dbd1;
+  --color-error: #b3261e;
+  --color-error-fondo: #fbeceb;
+}
+
+body {
+  background: var(--color-tiza);
+  color: var(--color-tinta);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* El sello de la ficha aparece cuando todos los datos son válidos. */
+@keyframes sello {
+  from {
+    transform: scale(1.4) rotate(6deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(6deg);
+    opacity: 1;
+  }
+}
