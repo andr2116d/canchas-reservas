@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
+import { GENERADOR_TOKEN_SESION } from '../../../src/modulos/sesiones/aplicacion/generador-token-sesion.port';
+import { CryptoGeneradorTokenSesionAdapter } from '../../../src/modulos/sesiones/infraestructura/seguridad/crypto-generador-token-sesion.adapter';
 import { unJugadorValido } from '../../fabricas/datos-registro-jugador';
 import { crearAppDePrueba } from '../../soporte/crear-app-de-prueba';
 import { limpiarTablas } from '../../soporte/limpiar-tablas';
@@ -36,6 +38,37 @@ describe('Sesión del jugador', () => {
   };
 
   describe('al registrarse', () => {
+    it('revierte el alta si falla la escritura de la sesión y permite reintentar', async () => {
+      await app.close();
+      const generador = new CryptoGeneradorTokenSesionAdapter();
+      const tokenRepetido = generador.generar();
+      let intentos = 0;
+      ({ app, prisma } = await crearAppDePrueba((constructor) =>
+        constructor.overrideProvider(GENERADOR_TOKEN_SESION).useValue({
+          generar: () =>
+            ++intentos <= 2 ? tokenRepetido : generador.generar(),
+          hashear: (token: string) => generador.hashear(token),
+        }),
+      ));
+      expect((await registrar()).status).toBe(201);
+      const otroJugador = unJugadorValido({
+        correo: 'otro.jugador@gmail.com',
+        numeroDocumento: '12345678',
+      });
+      const registrarOtro = () =>
+        request(app.getHttpServer()).post('/api/jugadores').send(otroJugador);
+
+      const fallido = await registrarOtro();
+
+      expect(fallido.status).toBe(500);
+      expect(fallido.headers['set-cookie']).toBeUndefined();
+      expect(await prisma.usuario.count()).toBe(1);
+      expect(await prisma.sesion.count()).toBe(1);
+      expect((await registrarOtro()).status).toBe(201);
+      expect(await prisma.usuario.count()).toBe(2);
+      expect(await prisma.sesion.count()).toBe(2);
+    });
+
     it('deja la sesión iniciada con una cookie httpOnly y SameSite=Lax', async () => {
       const respuesta = await registrar();
 

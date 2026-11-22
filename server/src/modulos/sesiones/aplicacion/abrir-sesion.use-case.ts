@@ -1,5 +1,5 @@
 import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
-import { Sesion } from '../dominio/sesion.entity';
+import { Sesion, type SesionNueva } from '../dominio/sesion.entity';
 import type { SesionRepository } from '../dominio/sesion.repository';
 import type { GeneradorTokenSesion } from './generador-token-sesion.port';
 
@@ -7,6 +7,11 @@ export interface SesionAbierta {
   /** Se entrega una sola vez, para la cookie; en la base solo queda su hash. */
   token: string;
   expiraEn: Date;
+}
+
+interface SesionPreparada {
+  datosDeSesion: SesionNueva;
+  credencial: SesionAbierta;
 }
 
 /** Inicia la sesión de un usuario ya autenticado o recién registrado. */
@@ -18,13 +23,21 @@ export class AbrirSesionUseCase {
   ) {}
 
   async ejecutar(usuarioId: number): Promise<SesionAbierta> {
+    const { datosDeSesion, credencial } = this.preparar();
+    await this.sesiones.guardar(Sesion.abrir(usuarioId, datosDeSesion));
+    return credencial;
+  }
+
+  /** Prepara una sesión para guardarla junto con una cuenta nueva. */
+  preparar(): SesionPreparada {
     const token = this.generador.generar();
-    const sesion = Sesion.abrir(
-      usuarioId,
+    const datosDeSesion = Sesion.preparar(
       this.generador.hashear(token),
       this.reloj.ahora(),
     );
-    await this.sesiones.guardar(sesion);
-    return { token, expiraEn: sesion.expiraEn };
+    return {
+      datosDeSesion,
+      credencial: { token, expiraEn: datosDeSesion.expiraEn },
+    };
   }
 }

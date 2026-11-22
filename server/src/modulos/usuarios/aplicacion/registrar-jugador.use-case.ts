@@ -1,5 +1,10 @@
 import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
+import type {
+  AbrirSesionUseCase,
+  SesionAbierta,
+} from '../../sesiones/api-sesiones';
+import { validarVersionLegal } from '../dominio/aceptacion-legal-registro';
 import { Celular } from '../dominio/celular.value-object';
 import { Contrasena } from '../dominio/contrasena.value-object';
 import { Correo } from '../dominio/correo.value-object';
@@ -28,11 +33,13 @@ export interface DatosRegistroJugador {
   contrasena: string;
   /** Opcional, del 1 al 99. */
   dorsal?: string;
+  versionLegalAceptada: string;
 }
 
 export interface JugadorRegistrado {
   id: number;
   nombres: string;
+  sesion: SesionAbierta;
 }
 
 /** Crea la cuenta de un jugador nuevo, mayor de edad, activa y con rol jugador. */
@@ -41,6 +48,7 @@ export class RegistrarJugadorUseCase {
     private readonly usuarios: UsuarioRepository,
     private readonly hasheador: HasheadorContrasena,
     private readonly reloj: Reloj,
+    private readonly abrirSesion: Pick<AbrirSesionUseCase, 'preparar'>,
   ) {}
 
   /** Valida todos los datos, comprueba que no estén repetidos y guarda la cuenta. */
@@ -58,8 +66,16 @@ export class RegistrarJugadorUseCase {
       dorsal: campos.dorsal,
       contrasenaHash: await this.hasheador.hashear(campos.contrasena),
     });
-    const id = await this.usuarios.crear(jugador);
-    return { id, nombres: jugador.nombres.texto };
+    const { datosDeSesion, credencial } = this.abrirSesion.preparar();
+    const id = await this.usuarios.crear(jugador, {
+      sesion: datosDeSesion,
+      aceptacion: {
+        version: campos.versionLegalAceptada,
+        fecha: this.reloj.ahora(),
+        canal: 'web',
+      },
+    });
+    return { id, nombres: jugador.nombres.texto, sesion: credencial };
   }
 
   private async verificarQueNoTengaCuenta(
@@ -88,5 +104,6 @@ function validarDatosDeRegistro(datos: DatosRegistroJugador, ahora: Date) {
     celular: () => Celular.crear(datos.celular),
     contrasena: () => Contrasena.crear(datos.contrasena),
     dorsal: () => Dorsal.crearOpcional(datos.dorsal),
+    versionLegalAceptada: () => validarVersionLegal(datos.versionLegalAceptada),
   });
 }

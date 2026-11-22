@@ -23,6 +23,21 @@ describe('POST /api/jugadores', () => {
     request(app.getHttpServer()).post(RUTA).send(cuerpo);
 
   describe('registro exitoso', () => {
+    it('guarda la versión aceptada, el momento y el canal del registro', async () => {
+      const respuesta = await registrar({
+        ...unJugadorValido(),
+        versionLegalAceptada: 'registro-1',
+      });
+
+      expect(respuesta.status).toBe(201);
+      const usuario = await prisma.usuario.findFirstOrThrow();
+      expect(usuario).toMatchObject({
+        versionLegalAceptada: 'registro-1',
+        canalAceptacionLegal: 'web',
+        aceptacionLegalEn: expect.any(Date),
+      });
+    });
+
     it('responde 201 con los nombres del jugador', async () => {
       const respuesta = await registrar(unJugadorValido());
 
@@ -99,7 +114,9 @@ describe('POST /api/jugadores', () => {
         Array.from({ length: 5 }, () => registrar(unJugadorValido())),
       );
 
-      const estados = respuestas.map(({ status }) => status).sort();
+      const estados = respuestas
+        .map(({ status }) => status)
+        .sort((a, b) => a - b);
       expect(estados).toEqual([201, 409, 409, 409, 409]);
       expect(await prisma.usuario.count()).toBe(1);
       expect(await prisma.sesion.count()).toBe(1);
@@ -111,7 +128,9 @@ describe('POST /api/jugadores', () => {
         registrar(unJugadorValido({ correo: 'segunda@gmail.com' })),
       ]);
 
-      expect(respuestas.map(({ status }) => status).sort()).toEqual([201, 409]);
+      expect(
+        respuestas.map(({ status }) => status).sort((a, b) => a - b),
+      ).toEqual([201, 409]);
       const rechazo = respuestas.find(({ status }) => status === 409);
       expect(rechazo?.body.errores).toEqual({
         numeroDocumento: 'Ya existe una cuenta con este documento.',
@@ -131,6 +150,21 @@ describe('POST /api/jugadores', () => {
   });
 
   describe('datos inválidos', () => {
+    it.each([undefined, 'registro-0'])(
+      'rechaza la aceptación legal %s',
+      async (version) => {
+        const respuesta = await registrar({
+          ...unJugadorValido(),
+          versionLegalAceptada: version,
+        });
+
+        expect(respuesta.status).toBe(400);
+        expect(respuesta.body.errores.versionLegalAceptada).toBeDefined();
+        expect(await prisma.usuario.count()).toBe(0);
+        expect(await prisma.sesion.count()).toBe(0);
+      },
+    );
+
     it('responde 400 con el mensaje de cada campo inválido y no guarda nada', async () => {
       const respuesta = await registrar(
         unJugadorValido({

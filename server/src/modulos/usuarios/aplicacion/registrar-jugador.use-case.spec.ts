@@ -1,6 +1,7 @@
 import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
 import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugador';
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
+import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
 import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
@@ -16,10 +17,13 @@ class HasheadorDePrueba implements HasheadorContrasena {
 
 function prepararRegistro() {
   const usuarios = new EnMemoriaUsuarioRepository();
+  const sesiones = new EnMemoriaSesionRepository();
+  const reloj = new RelojDePrueba();
   const registrar = new RegistrarJugadorUseCase(
     usuarios,
     new HasheadorDePrueba(),
-    new RelojDePrueba(),
+    reloj,
+    new AbrirSesionUseCase(sesiones, new GeneradorTokenDePrueba(), reloj),
   );
   return { usuarios, registrar };
 }
@@ -44,12 +48,19 @@ describe('RegistrarJugadorUseCase', () => {
     expect(guardado.estado).toBe('ACTIVO');
   });
 
-  it('devuelve el id y los nombres del jugador para abrir su sesión', async () => {
+  it('devuelve los nombres y la credencial de la sesión del jugador registrado', async () => {
     const { registrar } = prepararRegistro();
 
     const jugador = await registrar.ejecutar(unJugadorValido());
 
-    expect(jugador).toEqual({ id: 1, nombres: 'Valeria' });
+    expect(jugador).toEqual({
+      id: 1,
+      nombres: 'Valeria',
+      sesion: {
+        token: 'token-1',
+        expiraEn: new Date('2026-11-22T18:00:00.000Z'),
+      },
+    });
   });
 
   it('guarda el hash de la contraseña, nunca el texto', async () => {
@@ -165,3 +176,5 @@ describe('RegistrarJugadorUseCase', () => {
     expect(usuarios.todos()).toHaveLength(0);
   });
 });
+import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
+import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';

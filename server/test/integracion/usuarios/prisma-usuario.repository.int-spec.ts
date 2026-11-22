@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { AesGcmCifradorAdapter } from '../../../src/compartido/infraestructura/cifrado/aes-gcm-cifrador.adapter';
 import { leerConfiguracion } from '../../../src/compartido/infraestructura/configuracion/configuracion';
 import { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
+import { Sesion } from '../../../src/modulos/sesiones/dominio/sesion.entity';
 import { Celular } from '../../../src/modulos/usuarios/dominio/celular.value-object';
 import { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
 import { CuentaYaExisteError } from '../../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
@@ -46,11 +47,19 @@ describe('PrismaUsuarioRepository', () => {
   );
   const repositorio = new PrismaUsuarioRepository(prisma, cifrador);
 
+  function guardarJugador(jugador = unJugador()): Promise<number> {
+    const fecha = new Date();
+    return repositorio.crear(jugador, {
+      sesion: Sesion.preparar(randomBytes(32).toString('hex'), fecha),
+      aceptacion: { version: 'registro-1', fecha, canal: 'web' },
+    });
+  }
+
   beforeEach(() => limpiarTablas(prisma));
   afterAll(() => prisma.$disconnect());
 
   it('guarda los datos personales cifrados, nunca en claro', async () => {
-    const id = await repositorio.crear(unJugador());
+    const id = await guardarJugador();
 
     const fila = await prisma.usuario.findUniqueOrThrow({ where: { id } });
     const guardado = JSON.stringify(fila);
@@ -68,7 +77,7 @@ describe('PrismaUsuarioRepository', () => {
   });
 
   it('guarda el rol jugador y el estado activo', async () => {
-    const id = await repositorio.crear(unJugador());
+    const id = await guardarJugador();
 
     const fila = await prisma.usuario.findUniqueOrThrow({ where: { id } });
     expect(fila.rol).toBe('JUGADOR');
@@ -76,7 +85,7 @@ describe('PrismaUsuarioRepository', () => {
   });
 
   it('encuentra un documento y un correo ya registrados por su hash', async () => {
-    await repositorio.crear(unJugador());
+    await guardarJugador();
 
     await expect(
       repositorio.existeConDocumento(
@@ -92,7 +101,7 @@ describe('PrismaUsuarioRepository', () => {
   });
 
   it('recupera al usuario por su id con los datos descifrados', async () => {
-    const id = await repositorio.crear(unJugador());
+    const id = await guardarJugador();
 
     const usuario = await repositorio.buscarPorId(id);
 
@@ -108,10 +117,10 @@ describe('PrismaUsuarioRepository', () => {
   });
 
   it('traduce un documento repetido que llega a la base en CuentaYaExisteError', async () => {
-    await repositorio.crear(unJugador('45678912', 'primera@gmail.com'));
+    await guardarJugador(unJugador('45678912', 'primera@gmail.com'));
 
     const error = await capturarError(
-      repositorio.crear(unJugador('45678912', 'segunda@gmail.com')),
+      guardarJugador(unJugador('45678912', 'segunda@gmail.com')),
     );
 
     expect(error).toBeInstanceOf(CuentaYaExisteError);
@@ -121,10 +130,10 @@ describe('PrismaUsuarioRepository', () => {
   });
 
   it('traduce un correo repetido que llega a la base en CuentaYaExisteError', async () => {
-    await repositorio.crear(unJugador('45678912', 'valeria@gmail.com'));
+    await guardarJugador(unJugador('45678912', 'valeria@gmail.com'));
 
     const error = await capturarError(
-      repositorio.crear(unJugador('11223344', 'valeria@gmail.com')),
+      guardarJugador(unJugador('11223344', 'valeria@gmail.com')),
     );
 
     expect((error as CuentaYaExisteError).repetidos).toEqual(['correo']);

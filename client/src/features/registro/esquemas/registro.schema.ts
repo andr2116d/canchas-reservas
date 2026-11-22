@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { VERSION_LEGAL_DEL_REGISTRO } from "../servicios/version-legal-del-registro";
 
 export const TIPOS_DOCUMENTO = ["DNI", "CARNE_EXTRANJERIA"] as const;
 export type TipoDocumento = (typeof TIPOS_DOCUMENTO)[number];
@@ -127,6 +128,11 @@ export const esquemaRegistro = z
     correo: campoCon(reglaDeCorreo),
     contrasena: campoCon(reglaDeContrasena),
     dorsal: campoCon(reglaDeDorsal),
+    versionLegalAceptada: campoCon((version) =>
+      version === VERSION_LEGAL_DEL_REGISTRO
+        ? undefined
+        : "Acepta los términos y la política de privacidad para crear tu cuenta.",
+    ),
   })
   .superRefine(({ tipoDocumento, numeroDocumento }, contexto) => {
     const numero = numeroDocumento.trim();

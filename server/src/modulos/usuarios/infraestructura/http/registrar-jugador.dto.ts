@@ -1,5 +1,6 @@
 import { IsIn, IsOptional, IsString } from 'class-validator';
 import type { DatosRegistroJugador } from '../../aplicacion/registrar-jugador.use-case';
+import { MENSAJE_ACEPTACION_LEGAL } from '../../dominio/aceptacion-legal-registro';
 import {
   MENSAJE_ELEGIR_TIPO_DOCUMENTO,
   TIPOS_DOCUMENTO,
@@ -39,4 +40,7 @@ export class RegistrarJugadorDto implements DatosRegistroJugador {
   @IsOptional()
   @IsString(COMO_TEXTO)
   dorsal?: string;
+
+  @IsString({ message: MENSAJE_ACEPTACION_LEGAL })
+  versionLegalAceptada: string;
 }

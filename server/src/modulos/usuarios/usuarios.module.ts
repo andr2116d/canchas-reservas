@@ -10,7 +10,7 @@ import {
   USUARIO_REPOSITORY,
   type UsuarioRepository,
 } from './dominio/usuario.repository';
-import { SesionesModule } from '../sesiones/sesiones.module';
+import { AbrirSesionUseCase, SesionesModule } from '../sesiones/api-sesiones';
 import { CuentaController } from './infraestructura/http/cuenta.controller';
 import { JugadoresController } from './infraestructura/http/jugadores.controller';
 import { PrismaUsuarioRepository } from './infraestructura/persistencia/prisma-usuario.repository';
@@ -32,8 +32,14 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
         usuarios: UsuarioRepository,
         hasheador: HasheadorContrasena,
         reloj: Reloj,
-      ) => new RegistrarJugadorUseCase(usuarios, hasheador, reloj),
-      inject: [USUARIO_REPOSITORY, HASHEADOR_CONTRASENA, RELOJ],
+        abrirSesion: AbrirSesionUseCase,
+      ) => new RegistrarJugadorUseCase(usuarios, hasheador, reloj, abrirSesion),
+      inject: [
+        USUARIO_REPOSITORY,
+        HASHEADOR_CONTRASENA,
+        RELOJ,
+        AbrirSesionUseCase,
+      ],
     },
     {
       provide: ConsultarCuentaUseCase,

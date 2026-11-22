@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { type UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { type DatosRegistro, esquemaRegistro } from "../esquemas/registro.schema";
-import { destinoTrasRegistro } from "../servicios/destino-tras-registro";
 import { type ErroresDeRegistro, registrarJugador } from "../servicios/registro.api";
 
 const DATOS_INICIALES: DatosRegistro = {
@@ -18,6 +17,7 @@ const DATOS_INICIALES: DatosRegistro = {
   correo: "",
   contrasena: "",
   dorsal: "",
+  versionLegalAceptada: "",
 };
 
 /** Muestra junto a cada campo lo que respondió el server y enfoca el primero. */
@@ -54,7 +54,7 @@ function useAjustarDocumentoAlCambiarTipo(formulario: UseFormReturn<DatosRegistr
 
 /**
  * Estado y envío del formulario de registro: valida cada campo mientras se
- * escribe y, al registrarse, lleva a la reserva pendiente o al inicio.
+ * escribe y, al registrarse, lleva al inicio del jugador.
  */
 export function useRegistrarJugador() {
   const router = useRouter();
@@ -70,8 +70,7 @@ export function useRegistrarJugador() {
     setErrorGeneral(undefined);
     const resultado = await registrarJugador(datos);
     if (resultado.tipo === "registrado") {
-      const siguiente = new URLSearchParams(window.location.search).get("siguiente");
-      router.replace(destinoTrasRegistro(siguiente ?? undefined));
+      router.replace("/inicio");
     } else if (resultado.tipo === "datos-rechazados") {
       marcarErroresDelServer(formulario, resultado.errores);
     } else {

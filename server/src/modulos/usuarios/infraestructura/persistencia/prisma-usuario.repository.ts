@@ -12,7 +12,10 @@ import {
 } from '../../dominio/cuenta-ya-existe.error';
 import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
 import type { Usuario } from '../../dominio/usuario.entity';
-import type { UsuarioRepository } from '../../dominio/usuario.repository';
+import type {
+  DatosDelAlta,
+  UsuarioRepository,
+} from '../../dominio/usuario.repository';
 import {
   aEntidad,
   aFilaNueva,
@@ -53,10 +56,19 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     return fila ? aEntidad(fila, this.cifrador) : undefined;
   }
 
-  async crear(usuario: Usuario): Promise<number> {
+  async crear(
+    usuario: Usuario,
+    { sesion, aceptacion }: DatosDelAlta,
+  ): Promise<number> {
     try {
       const fila = await this.prisma.usuario.create({
-        data: aFilaNueva(usuario, this.cifrador),
+        data: {
+          ...aFilaNueva(usuario, this.cifrador),
+          versionLegalAceptada: aceptacion.version,
+          aceptacionLegalEn: aceptacion.fecha,
+          canalAceptacionLegal: aceptacion.canal,
+          sesiones: { create: sesion },
+        },
         select: { id: true },
       });
       return fila.id;

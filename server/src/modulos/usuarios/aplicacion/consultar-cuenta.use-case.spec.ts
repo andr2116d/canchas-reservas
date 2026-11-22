@@ -2,6 +2,7 @@ import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
 import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugador';
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
+import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
 import { ConsultarCuentaUseCase } from './consultar-cuenta.use-case';
 import { RegistrarJugadorUseCase } from './registrar-jugador.use-case';
 
@@ -12,10 +13,17 @@ const hasheador = {
 describe('ConsultarCuentaUseCase', () => {
   it('devuelve los nombres del usuario de la sesión', async () => {
     const usuarios = new EnMemoriaUsuarioRepository();
+    const reloj = new RelojDePrueba();
+    const abrirSesion = new AbrirSesionUseCase(
+      new EnMemoriaSesionRepository(),
+      new GeneradorTokenDePrueba(),
+      reloj,
+    );
     const { id } = await new RegistrarJugadorUseCase(
       usuarios,
       hasheador,
-      new RelojDePrueba(),
+      reloj,
+      abrirSesion,
     ).ejecutar(unJugadorValido());
 
     const cuenta = await new ConsultarCuentaUseCase(usuarios).ejecutar(id);
@@ -31,3 +39,5 @@ describe('ConsultarCuentaUseCase', () => {
     expect(cuenta).toBeUndefined();
   });
 });
+import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
+import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';

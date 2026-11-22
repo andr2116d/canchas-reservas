@@ -14,9 +14,10 @@ import {
   type Configuracion,
   leerLimiteDeRegistros,
 } from '../../../../compartido/infraestructura/configuracion/configuracion';
-import { AbrirSesionUseCase } from '../../../sesiones/aplicacion/abrir-sesion.use-case';
-import { escribirCookieDeSesion } from '../../../sesiones/infraestructura/http/cookie-de-sesion';
-import { Publico } from '../../../sesiones/infraestructura/http/publico.decorator';
+import {
+  escribirCookieDeSesion,
+  Publico,
+} from '../../../sesiones/api-sesiones';
 import { RegistrarJugadorUseCase } from '../../aplicacion/registrar-jugador.use-case';
 import { RegistrarJugadorDto } from './registrar-jugador.dto';
 
@@ -33,7 +34,6 @@ const LIMITE_DE_REGISTROS = {
 export class JugadoresController {
   constructor(
     private readonly registrarJugador: RegistrarJugadorUseCase,
-    private readonly abrirSesion: AbrirSesionUseCase,
     @Inject(CONFIGURACION) private readonly configuracion: Configuracion,
   ) {}
 
@@ -46,9 +46,8 @@ export class JugadoresController {
     @Body() datos: RegistrarJugadorDto,
     @Res({ passthrough: true }) respuesta: Response,
   ): Promise<{ nombres: string }> {
-    const jugador = await this.registrarJugador.ejecutar(datos);
-    const sesion = await this.abrirSesion.ejecutar(jugador.id);
+    const { nombres, sesion } = await this.registrarJugador.ejecutar(datos);
     escribirCookieDeSesion(respuesta, sesion, this.configuracion.cookieSegura);
-    return { nombres: jugador.nombres };
+    return { nombres };
   }
 }

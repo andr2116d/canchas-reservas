@@ -4,9 +4,11 @@ import type { FormEventHandler, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 import { type DatosRegistro, LARGOS } from "../esquemas/registro.schema";
 import { filtrarCelular, filtrarDorsal } from "../utilidades/filtros-de-entrada";
+import { AceptacionLegalDelRegistro } from "./aceptacion-legal-del-registro";
 import { CampoContrasena } from "./campo-contrasena";
 import { CampoDeTexto } from "./campo-de-texto";
 import { CamposDelDocumento } from "./campos-del-documento";
+import { DocumentosDelRegistro } from "./documentos-del-registro";
 
 interface GrupoProps {
   titulo: string;
@@ -30,7 +32,7 @@ function Grupo({ titulo, explicacion, children }: GrupoProps) {
 /** Quién es el jugador: nombre, edad, dorsal y documento. */
 function GrupoDelJugador() {
   return (
-    <Grupo titulo="Quién juega" explicacion="Para crear tu cuenta debes ser mayor de edad.">
+    <Grupo titulo="Quién juega" explicacion="Para crear tu cuenta de titular debes tener 18 años cumplidos.">
       <div className="grid gap-4 sm:grid-cols-2">
         <CampoDeTexto nombre="nombres" etiqueta="Nombres" autoComplete="given-name" maxLength={LARGOS.nombre} />
         <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" maxLength={LARGOS.nombre} />
@@ -66,8 +68,10 @@ export function FormularioRegistro({ alEnviarRegistro, errorGeneral }: Formulari
 
   return (
     <form noValidate onSubmit={alEnviarRegistro} className="flex flex-col gap-6">
+      <DocumentosDelRegistro />
       <GrupoDelJugador />
       <GrupoDeContactoYAcceso />
+      <AceptacionLegalDelRegistro />
       {errorGeneral && (
         <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm font-medium text-error">
           {errorGeneral}

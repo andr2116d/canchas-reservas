@@ -4,6 +4,11 @@ import type { Usuario } from './usuario.entity';
 
 export const USUARIO_REPOSITORY = Symbol('USUARIO_REPOSITORY');
 
+export interface DatosDelAlta {
+  sesion: SesionNueva;
+  aceptacion: { version: string; fecha: Date; canal: 'web' };
+}
+
 /** Puerto de persistencia de usuarios. */
 export interface UsuarioRepository {
   existeConDocumento(documento: DocumentoIdentidad): Promise<boolean>;
@@ -13,8 +18,9 @@ export interface UsuarioRepository {
   buscarPorId(id: number): Promise<Usuario | undefined>;
 
   /**
-   * Guarda un usuario nuevo y devuelve su id. Lanza CuentaYaExisteError si otro
-   * registro con el mismo documento o correo se guardó antes.
+   * Guarda cuenta, aceptación y sesión en una operación y devuelve el id.
+   * Lanza CuentaYaExisteError si ya existe el documento o el correo.
    */
-  crear(usuario: Usuario): Promise<number>;
+  crear(usuario: Usuario, alta: DatosDelAlta): Promise<number>;
 }
+import type { SesionNueva } from '../../sesiones/api-sesiones';

@@ -10,6 +10,12 @@ vi.mock("next/navigation", () => ({
 vi.mock("../servicios/registro.api", () => ({ registrarJugador: vi.fn() }));
 
 const registrarJugadorSimulado = vi.mocked(registrarJugador);
+const casillaLegal = () => screen.getByRole("checkbox", { name: /acepto los términos/i });
+
+async function llenarYaceptar(persona: ReturnType<typeof mostrarRegistro>) {
+  await llenarDatosValidos(persona);
+  await persona.click(casillaLegal());
+}
 
 describe("RegistroDeJugador", () => {
   beforeEach(() => window.history.replaceState({}, "", "/registro"));
@@ -46,10 +52,25 @@ describe("RegistroDeJugador", () => {
   });
 
   describe("envío", () => {
+    it("permite leer los documentos y pide aceptar antes de enviar", async () => {
+      const persona = mostrarRegistro();
+      await persona.click(screen.getByText("Términos y condiciones", { exact: true }));
+      await persona.click(screen.getByText("Política de privacidad", { exact: true }));
+      expect(screen.getByText(/titular de la reserva debe tener 18 años/i)).toBeVisible();
+      expect(screen.getByText(/usamos tus nombres, apellidos y documento/i)).toBeVisible();
+      expect(casillaLegal()).not.toBeChecked();
+      await llenarDatosValidos(persona);
+
+      await persona.click(botonCrearCuenta());
+
+      expect(casillaLegal()).toHaveAccessibleDescription(/acepta los términos/i);
+      expect(registrarJugadorSimulado).not.toHaveBeenCalled();
+    });
+
     it("envía los datos y lleva al inicio del jugador", async () => {
       registrarJugadorSimulado.mockResolvedValue({ tipo: "registrado", nombres: "Valeria" });
       const persona = mostrarRegistro();
-      await llenarDatosValidos(persona);
+      await llenarYaceptar(persona);
 
       await persona.click(botonCrearCuenta());
 
@@ -63,6 +84,7 @@ describe("RegistroDeJugador", () => {
         correo: "valeria@gmail.com",
         contrasena: "pichanga10",
         dorsal: "",
+        versionLegalAceptada: "registro-1",
       });
       expect(reemplazarRuta).toHaveBeenCalledWith("/inicio");
     });
@@ -70,7 +92,7 @@ describe("RegistroDeJugador", () => {
     it("un doble clic envía el registro una sola vez", async () => {
       registrarJugadorSimulado.mockReturnValue(new Promise(() => undefined));
       const persona = mostrarRegistro();
-      await llenarDatosValidos(persona);
+      await llenarYaceptar(persona);
 
       await persona.dblClick(botonCrearCuenta());
 
@@ -78,15 +100,15 @@ describe("RegistroDeJugador", () => {
       expect(screen.getByRole("button", { name: "Creando tu cuenta…" })).toBeDisabled();
     });
 
-    it("vuelve a la reserva pendiente si llegó desde ese flujo", async () => {
+    it("lleva al inicio aunque el enlace apunte a una reserva que aún no existe", async () => {
       window.history.replaceState({}, "", "/registro?siguiente=/reservar/la-popular");
       registrarJugadorSimulado.mockResolvedValue({ tipo: "registrado", nombres: "Valeria" });
       const persona = mostrarRegistro();
-      await llenarDatosValidos(persona);
+      await llenarYaceptar(persona);
 
       await persona.click(botonCrearCuenta());
 
-      expect(reemplazarRuta).toHaveBeenCalledWith("/reservar/la-popular");
+      expect(reemplazarRuta).toHaveBeenCalledWith("/inicio");
     });
 
     it("muestra junto al campo que ya existe una cuenta con ese correo", async () => {
@@ -95,7 +117,7 @@ describe("RegistroDeJugador", () => {
         errores: { correo: "Ya existe una cuenta con este correo." },
       });
       const persona = mostrarRegistro();
-      await llenarDatosValidos(persona);
+      await llenarYaceptar(persona);
 
       await persona.click(botonCrearCuenta());
 
@@ -112,7 +134,7 @@ describe("RegistroDeJugador", () => {
         mensaje: "Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.",
       });
       const persona = mostrarRegistro();
-      await llenarDatosValidos(persona);
+      await llenarYaceptar(persona);
 
       await persona.click(botonCrearCuenta());
 

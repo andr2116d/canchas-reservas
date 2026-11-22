@@ -3,6 +3,8 @@ import { type JugadorDePrueba, unJugadorNuevo } from "../soporte/jugador-de-prue
 
 // La etiqueta visible termina en asterisco; se busca por su comienzo.
 const campo = (pagina: Page, nombre: string) => pagina.getByLabel(new RegExp(`^${nombre}`));
+const aceptacionLegal = (pagina: Page) => pagina.getByRole("checkbox", { name: /acepto los términos/i });
+const crearCuenta = (pagina: Page) => pagina.getByRole("button", { name: "Crear mi cuenta" });
 
 async function llenarRegistro(pagina: Page, jugador: JugadorDePrueba) {
   await campo(pagina, "Nombres").fill(jugador.nombres);
@@ -17,7 +19,8 @@ async function llenarRegistro(pagina: Page, jugador: JugadorDePrueba) {
 async function registrar(pagina: Page, jugador: JugadorDePrueba) {
   await pagina.goto("/registro");
   await llenarRegistro(pagina, jugador);
-  await pagina.getByRole("button", { name: "Crear mi cuenta" }).click();
+  await aceptacionLegal(pagina).check();
+  await crearCuenta(pagina).click();
 }
 
 test.describe("Registro de jugador", () => {
@@ -28,13 +31,33 @@ test.describe("Registro de jugador", () => {
     await expect(page.getByRole("heading", { name: "Hola, Valeria." })).toBeVisible();
   });
 
-  test("vuelve a la reserva pendiente si llegó desde ese flujo", async ({ page }) => {
+  test("lleva al inicio si el enlace apunta a una reserva que aún no existe", async ({ page }) => {
     await page.goto("/registro?siguiente=/reservar/la-popular");
     await llenarRegistro(page, unJugadorNuevo());
 
-    await page.getByRole("button", { name: "Crear mi cuenta" }).click();
+    await aceptacionLegal(page).check();
+    await crearCuenta(page).click();
 
-    await expect(page).toHaveURL("/reservar/la-popular");
+    await expect(page).toHaveURL("/inicio");
+    await expect(page.getByRole("heading", { name: "Hola, Valeria." })).toBeVisible();
+  });
+
+  test("deja revisar los documentos y exige la aceptación antes de crear la cuenta", async ({ page }) => {
+    await page.goto("/registro");
+    await page.getByText("Términos y condiciones", { exact: true }).click();
+    await page.getByText("Política de privacidad", { exact: true }).click();
+    await expect(page.getByText(/el titular de la reserva debe tener 18 años/i)).toBeVisible();
+    await expect(page.getByText(/usamos tus nombres, apellidos y documento/i)).toBeVisible();
+    await expect(aceptacionLegal(page)).not.toBeChecked();
+    await llenarRegistro(page, unJugadorNuevo());
+
+    await crearCuenta(page).click();
+
+    await expect(aceptacionLegal(page)).toHaveAccessibleDescription(/acepta los términos/i);
+    await expect(page).toHaveURL("/registro");
+    await aceptacionLegal(page).check();
+    await crearCuenta(page).click();
+    await expect(page).toHaveURL("/inicio");
   });
 
   test("avisa mientras se escribe, sin presionar el botón", async ({ page }) => {
