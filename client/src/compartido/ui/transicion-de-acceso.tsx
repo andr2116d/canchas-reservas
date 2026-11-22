@@ -5,13 +5,14 @@ export const CAMBIO_DE_ACCESO = "cambio-de-acceso";
 /**
  * Cómo entra cada parte de la pantalla al pasar entre el inicio de sesión y el registro:
  * - `tarjeta`: la tarjeta de acceso sube.
- * - `formulario`: el formulario de registro llega desde la derecha.
- * - `panel`: el «Te fichamos» y la ficha se colocan sobre la cancha.
+ * - `formulario`: el formulario de registro sube.
+ * - `panel`: el «Te fichamos» aparece sobre la cancha.
+ * - `ficha`: la ficha se coloca un instante después, con un leve giro.
  */
-export type ParteDelAcceso = "tarjeta" | "formulario" | "panel";
+export type ParteDelAcceso = "tarjeta" | "formulario" | "panel" | "ficha";
 
 /**
- * Hace entrar una parte de la pantalla cuando la cancha ya terminó de moverse.
+ * Hace entrar una parte de la pantalla mientras la cancha frena.
  * Es una animación CSS al montarse: no depende de cuántas veces se actualice la página.
  */
 export function TransicionDeAcceso({ parte, children }: { parte: ParteDelAcceso; children: ReactNode }) {

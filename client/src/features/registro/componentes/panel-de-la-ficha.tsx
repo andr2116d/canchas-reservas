@@ -8,16 +8,16 @@ export function PanelDeLaFicha() {
     <aside className="relative isolate flex flex-col gap-6 overflow-hidden bg-cancha px-4 py-6 text-papel sm:px-10 lg:sticky lg:top-0 lg:h-dvh lg:justify-center lg:gap-14 lg:py-12">
       <FondoDeCancha encuadre="registro" />
       <TransicionDeAcceso parte="panel">
-        <div className="flex flex-col gap-6 lg:gap-14">
-          <div className="max-w-md">
-            <p className="font-titular text-5xl leading-[0.9] font-black sm:text-7xl">Te fichamos.</p>
-            <p className="mt-3 hidden max-w-xs text-base text-papel/80 sm:block">
-              Con tu cuenta reservas canchas de fútbol 5 y 7 y sigues tus partidos.
-            </p>
-          </div>
-          <div className="flex justify-center lg:justify-start">
-            <FichaJugador />
-          </div>
+        <div className="max-w-md">
+          <p className="font-titular text-5xl leading-[0.9] font-black sm:text-7xl">Te fichamos.</p>
+          <p className="mt-3 hidden max-w-xs text-base text-papel/80 sm:block">
+            Con tu cuenta reservas canchas de fútbol 5 y 7 y sigues tus partidos.
+          </p>
+        </div>
+      </TransicionDeAcceso>
+      <TransicionDeAcceso parte="ficha">
+        <div className="flex justify-center lg:justify-start">
+          <FichaJugador />
         </div>
       </TransicionDeAcceso>
     </aside>

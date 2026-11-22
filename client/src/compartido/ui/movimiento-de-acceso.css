@@ -47,24 +47,29 @@
   }
 }
 
-html:active-view-transition-type(cambio-de-acceso)::view-transition-old(root),
+/*
+ * Al pasar entre acceso y registro:
+ * 1. La página anterior se desvanece y la nueva aparece en un fundido corto.
+ * 2. La cancha cambia de panel lateral a pantalla completa, o al revés: arranca
+ *    rápido y frena al final (520 ms).
+ * 3. Lo que llega empieza a entrar mientras la cancha frena, para que todo se
+ *    acomode junto: primero el título o la tarjeta, después la ficha.
+ */
+html:active-view-transition-type(cambio-de-acceso)::view-transition-old(root) {
+  animation: pagina-sale 180ms ease-out both;
+}
+
 html:active-view-transition-type(cambio-de-acceso)::view-transition-new(root) {
-  animation: none;
+  animation: pagina-entra 220ms ease-out both;
 }
 
 html:active-view-transition-type(cambio-de-acceso)::view-transition {
   pointer-events: none;
 }
 
-/*
- * Al pasar entre acceso y registro:
- * 1. Lo que se va queda tapado al instante por la página nueva.
- * 2. La cancha cambia de panel lateral a pantalla completa, o al revés (420 ms).
- * 3. Lo que llega entra cuando la cancha ya se acomodó (desde los 240 ms).
- */
 ::view-transition-group(.cancha-compartida) {
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   overflow: clip;
 }
 
@@ -77,29 +82,41 @@ html:active-view-transition-type(cambio-de-acceso)::view-transition {
 }
 
 .entrada-de-acceso--tarjeta {
-  animation: tarjeta-entra 360ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+  animation: tarjeta-entra 460ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
 }
 
 .entrada-de-acceso--formulario {
-  animation: formulario-entra 340ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both;
+  animation: sube-y-aparece 440ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
 }
 
 .entrada-de-acceso--panel {
-  animation: panel-entra 400ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
+  animation: sube-y-aparece 440ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+}
+
+.entrada-de-acceso--ficha {
+  animation: ficha-entra 520ms cubic-bezier(0.22, 1, 0.36, 1) 280ms both;
+}
+
+@keyframes pagina-sale {
+  to { opacity: 0; }
+}
+
+@keyframes pagina-entra {
+  from { opacity: 0; }
 }
 
 @keyframes tarjeta-entra {
-  from { opacity: 0; transform: translateY(28px) scale(0.98); }
+  from { opacity: 0; transform: translateY(32px) scale(0.97); }
   to { opacity: 1; transform: none; }
 }
 
-@keyframes formulario-entra {
-  from { opacity: 0; transform: translateX(24px); }
+@keyframes sube-y-aparece {
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: none; }
 }
 
-@keyframes panel-entra {
-  from { opacity: 0; transform: translateY(18px) rotate(-1.5deg); }
+@keyframes ficha-entra {
+  from { opacity: 0; transform: translateY(24px) rotate(-4deg) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
 
