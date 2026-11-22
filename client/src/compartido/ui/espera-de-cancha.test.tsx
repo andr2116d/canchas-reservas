@@ -26,12 +26,12 @@ describe("EsperaDeCancha", () => {
     expect(screen.getByRole("status")).toHaveClass("espera-de-cancha");
   });
 
-  it("dibuja al jugador y el balón como decoración oculta", () => {
+  it("dibuja los botines y el balón como decoración oculta", () => {
     const { container } = render(<EsperaDeCancha />);
 
     const jugada = container.querySelector(".espera-de-cancha__jugada");
     expect(jugada).toHaveAttribute("aria-hidden", "true");
-    for (const parte of ["muslo", "pantorrilla", "torso", "cabeza", "balon"]) {
+    for (const parte of ["pierna--atras", "pierna--adelante", "tobillo", "balon"]) {
       expect(jugada?.querySelector(`.espera-de-cancha__${parte}`)).not.toBeNull();
     }
   });
