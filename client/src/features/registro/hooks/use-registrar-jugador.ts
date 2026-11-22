@@ -11,6 +11,7 @@ import { type ErroresDeRegistro, registrarJugador } from "../servicios/registro.
 const DATOS_INICIALES: DatosRegistro = {
   nombres: "",
   apellidos: "",
+  fechaNacimiento: "",
   tipoDocumento: "DNI",
   numeroDocumento: "",
   celular: "",

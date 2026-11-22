@@ -24,6 +24,7 @@ const campo = (nombre: string) => screen.getByLabelText(new RegExp(`^${nombre}`)
 async function llenarDatosValidos(persona: ReturnType<typeof userEvent.setup>) {
   await persona.type(campo("Nombres"), "Valeria");
   await persona.type(campo("Apellidos"), "León Paredes");
+  await persona.type(campo("Fecha de nacimiento"), "1998-05-14");
   await persona.type(campo("Número de documento"), "45678912");
   await persona.type(campo("Celular"), "987654321");
   await persona.type(campo("Correo"), "valeria@gmail.com");
@@ -44,6 +45,7 @@ describe("RegistroDeJugador", () => {
       for (const nombre of [
         "Nombres",
         "Apellidos",
+        "Fecha de nacimiento",
         "Número de documento",
         "Celular",
         "Correo",
@@ -75,6 +77,16 @@ describe("RegistroDeJugador", () => {
         "El DNI solo debe contener números.",
       );
       expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "true");
+    });
+
+    it("avisa de inmediato si la persona es menor de 18 años", async () => {
+      const persona = mostrarRegistro();
+
+      await persona.type(campo("Fecha de nacimiento"), "2015-06-01");
+
+      expect(campo("Fecha de nacimiento")).toHaveAccessibleDescription(
+        "Debes tener al menos 18 años para crear tu cuenta.",
+      );
     });
 
     it("avisa que el celular debe empezar con 9", async () => {
@@ -129,6 +141,7 @@ describe("RegistroDeJugador", () => {
       expect(registrarJugadorSimulado).toHaveBeenCalledWith({
         nombres: "Valeria",
         apellidos: "León Paredes",
+        fechaNacimiento: "1998-05-14",
         tipoDocumento: "DNI",
         numeroDocumento: "45678912",
         celular: "987654321",

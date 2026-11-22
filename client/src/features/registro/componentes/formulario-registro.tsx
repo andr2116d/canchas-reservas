@@ -38,11 +38,12 @@ export function FormularioRegistro({ alEnviarRegistro, errorGeneral }: Formulari
   return (
     <form noValidate onSubmit={alEnviarRegistro} className="flex flex-col gap-8">
       <p className="text-sm text-grava">Todos los datos son obligatorios.</p>
-      <Grupo titulo="Quién juega" explicacion="Tu nombre aparece en tus reservas.">
+      <Grupo titulo="Quién juega" explicacion="Tu nombre aparece en tus reservas. Para crear tu cuenta debes ser mayor de edad.">
         <div className="grid gap-4 sm:grid-cols-2">
           <CampoDeTexto nombre="nombres" etiqueta="Nombres" autoComplete="given-name" />
           <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" />
         </div>
+        <CampoDeTexto nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" type="date" autoComplete="bday" />
         <CamposDelDocumento />
       </Grupo>
       <Grupo titulo="Contacto" explicacion="Con tu correo entras a tu cuenta. Al celular te avisamos de tus reservas.">

@@ -5,6 +5,7 @@ import { registrarJugador } from "./registro.api";
 const DATOS: DatosRegistro = {
   nombres: "Valeria",
   apellidos: "León",
+  fechaNacimiento: "1998-05-14",
   tipoDocumento: "DNI",
   numeroDocumento: "45678912",
   celular: "987654321",

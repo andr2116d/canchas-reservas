@@ -35,6 +35,30 @@ const REGLAS_DE_DOCUMENTO: Record<TipoDocumento, Regla> = {
   },
 };
 
+/** Fecha (AAAA-MM-DD) de hoy en Lima, para que la edad no dependa del huso del navegador. */
+function hoyEnLima(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima" }).format(new Date());
+}
+
+function esFechaReal(fecha: string): boolean {
+  const [anio, mes, dia] = fecha.split("-").map(Number);
+  const calendario = new Date(Date.UTC(anio, mes - 1, dia));
+  return calendario.getUTCMonth() === mes - 1 && calendario.getUTCDate() === dia;
+}
+
+const reglaDeFechaNacimiento: Regla = (valor) => {
+  if (valor === "") return "Ingresa tu fecha de nacimiento.";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valor) || !esFechaReal(valor)) {
+    return "La fecha de nacimiento no es válida.";
+  }
+  const hoy = hoyEnLima();
+  if (valor > hoy) return "La fecha de nacimiento no puede ser futura.";
+  if (Number(valor.slice(0, 4)) < 1900) return "Revisa el año de tu fecha de nacimiento.";
+  const anios = Number(hoy.slice(0, 4)) - Number(valor.slice(0, 4));
+  const edad = hoy.slice(5) < valor.slice(5) ? anios - 1 : anios;
+  if (edad < 18) return "Debes tener al menos 18 años para crear tu cuenta.";
+};
+
 const reglaDeCelular: Regla = (valor) => {
   const limpio = valor.trim();
   if (limpio === "") return "Ingresa tu número de celular.";
@@ -73,6 +97,7 @@ export const esquemaRegistro = z
   .object({
     nombres: campoCon(reglaDeNombre("nombres")),
     apellidos: campoCon(reglaDeNombre("apellidos")),
+    fechaNacimiento: campoCon(reglaDeFechaNacimiento),
     tipoDocumento: z.enum(TIPOS_DOCUMENTO, {
       error: "Elige tu tipo de documento.",
     }),

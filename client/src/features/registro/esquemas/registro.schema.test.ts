@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { type DatosRegistro, esquemaRegistro } from "./registro.schema";
 
 function unRegistroValido(cambios: Partial<DatosRegistro> = {}): DatosRegistro {
   return {
     nombres: "Valeria",
     apellidos: "León Paredes",
+    fechaNacimiento: "1998-05-14",
     tipoDocumento: "DNI",
     numeroDocumento: "45678912",
     celular: "987654321",
@@ -23,6 +24,10 @@ function errorDe(campo: keyof DatosRegistro, cambios: Partial<DatosRegistro>) {
 }
 
 describe("esquemaRegistro", () => {
+  // 22 de noviembre de 2026 a las 10:00 en Lima.
+  beforeAll(() => vi.setSystemTime(new Date("2026-11-22T15:00:00.000Z")));
+  afterAll(() => vi.useRealTimers());
+
   it("acepta un registro con todos los datos válidos", () => {
     expect(esquemaRegistro.safeParse(unRegistroValido()).success).toBe(true);
   });
@@ -39,6 +44,22 @@ describe("esquemaRegistro", () => {
       expect(errorDe("nombres", { nombres: "a".repeat(81) })).toBe(
         "Tus nombres no pueden tener más de 80 caracteres.",
       );
+    });
+  });
+
+  describe("fecha de nacimiento", () => {
+    it("acepta a quien cumple 18 años hoy", () => {
+      expect(errorDe("fechaNacimiento", { fechaNacimiento: "2008-11-22" })).toBeUndefined();
+    });
+
+    it.each([
+      ["2008-11-23", "Debes tener al menos 18 años para crear tu cuenta."],
+      ["2027-01-01", "La fecha de nacimiento no puede ser futura."],
+      ["1899-12-31", "Revisa el año de tu fecha de nacimiento."],
+      ["1998-02-30", "La fecha de nacimiento no es válida."],
+      ["", "Ingresa tu fecha de nacimiento."],
+    ])('rechaza "%s": %s', (fechaNacimiento, mensaje) => {
+      expect(errorDe("fechaNacimiento", { fechaNacimiento })).toBe(mensaje);
     });
   });
 
