@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { FormProvider } from "react-hook-form";
+import { RUTA_DE_ACCESO } from "@/compartido/sesion/destino-de-sesion";
 import { useRegistrarJugador } from "../hooks/use-registrar-jugador";
 import { FormularioRegistro } from "./formulario-registro";
 import { PanelDeLaFicha } from "./panel-de-la-ficha";
@@ -19,6 +21,10 @@ export function RegistroDeJugador() {
               Crea tu cuenta de jugador
             </h1>
             <FormularioRegistro alEnviarRegistro={enviarRegistro} errorGeneral={errorGeneral} />
+            <p className="mt-6 text-center text-sm text-grava">
+              ¿Ya tienes cuenta?{" "}
+              <Link href={RUTA_DE_ACCESO} className="font-bold text-botella underline underline-offset-4">Inicia sesión</Link>
+            </p>
           </div>
         </main>
       </div>
