@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const verde = (t) => `\x1b[32m${t}\x1b[0m`;
 const rojo = (t) => `\x1b[31m${t}\x1b[0m`;
@@ -17,6 +18,15 @@ function fallar(mensaje) {
 function ejecutar(comando, mensajeError) {
   const resultado = spawnSync(comando, { stdio: 'inherit', shell: true });
   if (resultado.status !== 0) fallar(mensajeError);
+}
+
+// Llena las claves vacías del .env con valores aleatorios de 32 bytes.
+function completarClaves(archivo) {
+  const contenido = readFileSync(archivo, 'utf8').replace(
+    /^(CLAVE_[A-Z_]+)=$/gm,
+    (_, nombre) => `${nombre}=${randomBytes(32).toString('base64')}`,
+  );
+  writeFileSync(archivo, contenido);
 }
 
 paso('Revisando Node.js');
@@ -43,6 +53,7 @@ for (const [origen, destino] of envs) {
     console.log(`${destino} ya existe, se mantiene`);
   } else {
     copyFileSync(origen, destino);
+    completarClaves(destino);
     console.log(verde(`${destino} creado`));
   }
 }
