@@ -7,6 +7,7 @@ const campo = (pagina: Page, nombre: string) => pagina.getByLabel(new RegExp(`^$
 async function llenarRegistro(pagina: Page, jugador: JugadorDePrueba) {
   await campo(pagina, "Nombres").fill(jugador.nombres);
   await campo(pagina, "Apellidos").fill(jugador.apellidos);
+  await campo(pagina, "Fecha de nacimiento").fill(jugador.fechaNacimiento);
   await campo(pagina, "Número de documento").fill(jugador.numeroDocumento);
   await campo(pagina, "Celular").fill(jugador.celular);
   await campo(pagina, "Correo").fill(jugador.correo);
@@ -50,6 +51,15 @@ test.describe("Registro de jugador", () => {
     );
   });
 
+  test("no deja crear la cuenta a un menor de 18 años", async ({ page }) => {
+    await registrar(page, { ...unJugadorNuevo(), fechaNacimiento: "2012-03-10" });
+
+    await expect(campo(page, "Fecha de nacimiento")).toHaveAccessibleDescription(
+      "Debes tener al menos 18 años para crear tu cuenta.",
+    );
+    await expect(page).toHaveURL("/registro");
+  });
+
   test("informa junto al campo que el documento ya tiene cuenta", async ({ page, browser }) => {
     const titular = unJugadorNuevo();
     await registrar(page, titular);
@@ -75,6 +85,16 @@ test.describe("Registro de jugador", () => {
     await expect(campo(otraPersona, "Correo")).toHaveAccessibleDescription(
       "Ya existe una cuenta con este correo.",
     );
+  });
+
+  test("indica qué tan segura es la contraseña mientras se escribe", async ({ page }) => {
+    await page.goto("/registro");
+
+    await campo(page, "Contraseña").fill("123456789a");
+    await expect(page.getByRole("status")).toContainText("Seguridad de la contraseña: Débil");
+
+    await campo(page, "Contraseña").fill("Tq7#vR2!mZp9$Lw4");
+    await expect(page.getByRole("status")).toContainText("Seguridad de la contraseña: Muy buena");
   });
 
   test("sin sesión, el inicio lleva a crear la cuenta", async ({ page }) => {

@@ -5,6 +5,7 @@ export function unJugadorNuevo() {
   return {
     nombres: "Valeria",
     apellidos: "León Paredes",
+    fechaNacimiento: "1998-05-14",
     numeroDocumento: String(randomInt(10_000_000, 99_999_999)),
     celular: `9${randomInt(10_000_000, 99_999_999)}`,
     correo: `jugador.${randomUUID()}@prueba.pe`,
