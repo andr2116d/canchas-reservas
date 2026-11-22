@@ -51,22 +51,22 @@ test.describe("Registro de jugador", () => {
     );
   });
 
-  test("con DNI y en el celular no se pueden escribir letras", async ({ page }) => {
+  test("con DNI y en el celular solo entran números, hasta 8 y 9", async ({ page }) => {
     await page.goto("/registro");
 
-    await campo(page, "Número de documento").pressSequentially("45A67B8912");
-    await campo(page, "Celular").pressSequentially("98a76 54-321");
+    await campo(page, "Número de documento").pressSequentially("45A67B891234");
+    await campo(page, "Celular").pressSequentially("98a76 54-3210");
 
     await expect(campo(page, "Número de documento")).toHaveValue("45678912");
     await expect(campo(page, "Celular")).toHaveValue("987654321");
   });
 
-  test("con carné de extranjería sí se escriben letras, y al volver a DNI se vacía", async ({ page }) => {
+  test("con carné entran hasta 12 letras o números, y al volver a DNI se vacía", async ({ page }) => {
     await page.goto("/registro");
     await page.getByText("Carné de extranjería").click();
 
-    await campo(page, "Número de documento").pressSequentially("AB1234567");
-    await expect(campo(page, "Número de documento")).toHaveValue("AB1234567");
+    await campo(page, "Número de documento").pressSequentially("ab-1234567890123");
+    await expect(campo(page, "Número de documento")).toHaveValue("AB1234567890");
 
     await page.getByText("DNI", { exact: true }).click();
     await expect(campo(page, "Número de documento")).toHaveValue("");
