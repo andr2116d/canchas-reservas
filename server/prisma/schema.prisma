@@ -8,3 +8,41 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum TipoDocumento {
+  DNI               @map("dni")
+  CARNE_EXTRANJERIA @map("carne_extranjeria")
+
+  @@map("tipo_documento")
+}
+
+enum RolUsuario {
+  JUGADOR @map("jugador")
+
+  @@map("rol_usuario")
+}
+
+enum EstadoUsuario {
+  ACTIVO @map("activo")
+
+  @@map("estado_usuario")
+}
+
+model Usuario {
+  id                     Int           @id @default(autoincrement())
+  nombresCifrado         String        @map("nombres_cifrado")
+  apellidosCifrado       String        @map("apellidos_cifrado")
+  tipoDocumento          TipoDocumento @map("tipo_documento")
+  numeroDocumentoCifrado String        @map("numero_documento_cifrado")
+  documentoHash          String        @unique @map("documento_hash")
+  correoCifrado          String        @map("correo_cifrado")
+  correoHash             String        @unique @map("correo_hash")
+  celularCifrado         String        @map("celular_cifrado")
+  contrasenaHash         String        @map("contrasena_hash")
+  rol                    RolUsuario
+  estado                 EstadoUsuario
+  creadoEn               DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn          DateTime      @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  @@map("usuario")
+}
