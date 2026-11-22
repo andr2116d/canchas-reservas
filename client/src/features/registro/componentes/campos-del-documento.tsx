@@ -2,11 +2,14 @@
 
 import { useFormContext, useWatch } from "react-hook-form";
 import type { DatosRegistro } from "../esquemas/registro.schema";
-import { soloDigitos } from "../utilidades/solo-digitos";
+import { filtrarCarneExtranjeria, filtrarDni } from "../utilidades/filtros-de-entrada";
 import { CampoDeTexto } from "./campo-de-texto";
 import { SelectorTipoDocumento } from "./selector-tipo-documento";
 
-/** Tipo y número de documento. Con DNI solo se pueden escribir números y el teclado es numérico. */
+/**
+ * Tipo y número de documento. Con DNI solo entran 8 números (teclado numérico);
+ * con carné de extranjería, hasta 12 letras o números.
+ */
 export function CamposDelDocumento() {
   const { control } = useFormContext<DatosRegistro>();
   const tipoDocumento = useWatch({ control, name: "tipoDocumento" });
@@ -18,7 +21,7 @@ export function CamposDelDocumento() {
         nombre="numeroDocumento"
         etiqueta="Número de documento"
         inputMode={tipoDocumento === "DNI" ? "numeric" : "text"}
-        filtrarEntrada={tipoDocumento === "DNI" ? soloDigitos : undefined}
+        filtrarEntrada={tipoDocumento === "DNI" ? filtrarDni : filtrarCarneExtranjeria}
         autoCapitalize="characters"
         autoComplete="off"
         spellCheck={false}

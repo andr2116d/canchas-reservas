@@ -3,6 +3,18 @@ import { z } from "zod";
 export const TIPOS_DOCUMENTO = ["DNI", "CARNE_EXTRANJERIA"] as const;
 export type TipoDocumento = (typeof TIPOS_DOCUMENTO)[number];
 
+/** Largos que aceptan las reglas; los campos no dejan escribir más. */
+export const LARGOS = {
+  nombre: 80,
+  dni: 8,
+  carneMinimo: 9,
+  carneMaximo: 12,
+  celular: 9,
+  correo: 254,
+  contrasenaMinima: 8,
+  contrasenaMaxima: 64,
+} as const;
+
 /** Cada regla devuelve qué corregir, o nada si el valor es válido. */
 type Regla = (valor: string) => string | undefined;
 
@@ -15,7 +27,7 @@ const reglaDeNombre =
   (valor) => {
     const limpio = valor.trim();
     if (limpio === "") return `Ingresa tus ${etiqueta}.`;
-    if (limpio.length > 80) {
+    if (limpio.length > LARGOS.nombre) {
       return `Tus ${etiqueta} no pueden tener más de 80 caracteres.`;
     }
   };
@@ -23,13 +35,13 @@ const reglaDeNombre =
 const REGLAS_DE_DOCUMENTO: Record<TipoDocumento, Regla> = {
   DNI: (numero) => {
     if (!/^\d+$/.test(numero)) return "El DNI solo debe contener números.";
-    if (numero.length !== 8) return "El DNI debe tener 8 dígitos.";
+    if (numero.length !== LARGOS.dni) return "El DNI debe tener 8 dígitos.";
   },
   CARNE_EXTRANJERIA: (numero) => {
     if (!/^[A-Z0-9]+$/i.test(numero)) {
       return "El carné de extranjería solo admite letras y números.";
     }
-    if (numero.length < 9 || numero.length > 12) {
+    if (numero.length < LARGOS.carneMinimo || numero.length > LARGOS.carneMaximo) {
       return "El carné de extranjería debe tener entre 9 y 12 caracteres.";
     }
   },
@@ -72,20 +84,20 @@ const reglaDeCelular: Regla = (valor) => {
   if (limpio === "") return "Ingresa tu número de celular.";
   if (!/^\d+$/.test(limpio)) return "El celular solo debe contener números.";
   if (!limpio.startsWith("9")) return "El celular debe empezar con 9.";
-  if (limpio.length !== 9) return "El celular debe tener 9 dígitos.";
+  if (limpio.length !== LARGOS.celular) return "El celular debe tener 9 dígitos.";
 };
 
 const reglaDeCorreo: Regla = (valor) => {
   const limpio = valor.trim();
   if (limpio === "") return "Ingresa tu correo.";
-  if (limpio.length > 254) return "El correo no puede tener más de 254 caracteres.";
+  if (limpio.length > LARGOS.correo) return "El correo no puede tener más de 254 caracteres.";
   if (!FORMATO_CORREO.test(limpio)) return "El correo no tiene un formato válido.";
 };
 
 const reglaDeContrasena: Regla = (valor) => {
   if (valor === "") return "Ingresa una contraseña.";
-  if (valor.length < 8) return "La contraseña debe tener al menos 8 caracteres.";
-  if (valor.length > 64) return "La contraseña no puede tener más de 64 caracteres.";
+  if (valor.length < LARGOS.contrasenaMinima) return "La contraseña debe tener al menos 8 caracteres.";
+  if (valor.length > LARGOS.contrasenaMaxima) return "La contraseña no puede tener más de 64 caracteres.";
   if (!/\d/.test(valor)) return "La contraseña debe incluir al menos un número.";
 };
 

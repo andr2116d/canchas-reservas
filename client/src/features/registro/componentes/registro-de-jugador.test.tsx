@@ -1,8 +1,7 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { botonCrearCuenta, campo, llenarDatosValidos, mostrarRegistro } from "../pruebas/pantalla-de-registro";
 import { registrarJugador } from "../servicios/registro.api";
-import { RegistroDeJugador } from "./registro-de-jugador";
 
 const reemplazarRuta = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -11,27 +10,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("../servicios/registro.api", () => ({ registrarJugador: vi.fn() }));
 
 const registrarJugadorSimulado = vi.mocked(registrarJugador);
-
-function mostrarRegistro() {
-  const persona = userEvent.setup();
-  render(<RegistroDeJugador />);
-  return persona;
-}
-
-// La etiqueta visible lleva un asterisco al final; se busca por su comienzo.
-const campo = (nombre: string) => screen.getByLabelText(new RegExp(`^${nombre}`));
-
-async function llenarDatosValidos(persona: ReturnType<typeof userEvent.setup>) {
-  await persona.type(campo("Nombres"), "Valeria");
-  await persona.type(campo("Apellidos"), "León Paredes");
-  await persona.type(campo("Fecha de nacimiento"), "1998-05-14");
-  await persona.type(campo("Número de documento"), "45678912");
-  await persona.type(campo("Celular"), "987654321");
-  await persona.type(campo("Correo"), "valeria@gmail.com");
-  await persona.type(campo("Contraseña"), "pichanga10");
-}
-
-const botonCrearCuenta = () => screen.getByRole("button", { name: "Crear mi cuenta" });
 
 describe("RegistroDeJugador", () => {
   beforeEach(() => window.history.replaceState({}, "", "/registro"));
@@ -64,105 +42,6 @@ describe("RegistroDeJugador", () => {
       expect(campo("Celular")).toHaveAccessibleDescription("Ingresa tu número de celular.");
       expect(campo("Nombres")).toHaveFocus();
       expect(registrarJugadorSimulado).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("validación mientras se escribe", () => {
-    it("con DNI no deja escribir letras ni otros caracteres", async () => {
-      const persona = mostrarRegistro();
-
-      await persona.type(campo("Número de documento"), "45A6-78 9B12");
-
-      expect(campo("Número de documento")).toHaveValue("45678912");
-      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "false");
-    });
-
-    it("con DNI avisa mientras falten dígitos", async () => {
-      const persona = mostrarRegistro();
-
-      await persona.type(campo("Número de documento"), "4567");
-
-      expect(campo("Número de documento")).toHaveAccessibleDescription(
-        "El DNI debe tener 8 dígitos.",
-      );
-    });
-
-    it("con carné de extranjería sí deja escribir letras", async () => {
-      const persona = mostrarRegistro();
-      await persona.click(screen.getByRole("radio", { name: "Carné de extranjería" }));
-
-      await persona.type(campo("Número de documento"), "AB1234567");
-
-      expect(campo("Número de documento")).toHaveValue("AB1234567");
-      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "false");
-    });
-
-    it("el celular solo acepta números", async () => {
-      const persona = mostrarRegistro();
-
-      await persona.type(campo("Celular"), "+51 987-654-321");
-
-      expect(campo("Celular")).toHaveValue("51987654321");
-    });
-
-    it("avisa de inmediato si la persona es menor de 18 años", async () => {
-      const persona = mostrarRegistro();
-
-      await persona.type(campo("Fecha de nacimiento"), "2015-06-01");
-
-      expect(campo("Fecha de nacimiento")).toHaveAccessibleDescription(
-        "Debes tener al menos 18 años para crear tu cuenta.",
-      );
-    });
-
-    it("avisa que el celular debe empezar con 9", async () => {
-      const persona = mostrarRegistro();
-
-      await persona.type(campo("Celular"), "044123456");
-
-      expect(campo("Celular")).toHaveAccessibleDescription("El celular debe empezar con 9.");
-    });
-
-    it("avisa que la contraseña necesita un número", async () => {
-      const persona = mostrarRegistro();
-
-      await persona.type(campo("Contraseña"), "pichanga");
-
-      expect(campo("Contraseña")).toHaveAccessibleDescription(
-        expect.stringContaining("La contraseña debe incluir al menos un número."),
-      );
-    });
-
-    it("quita el error cuando el dato queda bien", async () => {
-      const persona = mostrarRegistro();
-
-      await persona.type(campo("Celular"), "98765432");
-      await persona.type(campo("Celular"), "1");
-
-      expect(campo("Celular")).toHaveAttribute("aria-invalid", "false");
-    });
-
-    it("al cambiar a DNI vacía el número escrito para el carné", async () => {
-      const persona = mostrarRegistro();
-      await persona.click(screen.getByRole("radio", { name: "Carné de extranjería" }));
-      await persona.type(campo("Número de documento"), "AB1234567");
-
-      await persona.click(screen.getByRole("radio", { name: "DNI" }));
-
-      expect(campo("Número de documento")).toHaveValue("");
-      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "false");
-    });
-
-    it("al cambiar a carné conserva los dígitos y aplica sus reglas", async () => {
-      const persona = mostrarRegistro();
-      await persona.type(campo("Número de documento"), "4567891");
-
-      await persona.click(screen.getByRole("radio", { name: "Carné de extranjería" }));
-
-      expect(campo("Número de documento")).toHaveValue("4567891");
-      expect(campo("Número de documento")).toHaveAccessibleDescription(
-        "El carné de extranjería debe tener entre 9 y 12 caracteres.",
-      );
     });
   });
 

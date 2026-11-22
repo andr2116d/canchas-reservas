@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LARGOS } from "../esquemas/registro.schema";
 import { CampoDeTexto } from "./campo-de-texto";
 import { IndicadorDeSeguridad } from "./indicador-de-seguridad";
 
@@ -16,6 +17,7 @@ export function CampoContrasena() {
         etiqueta="Contraseña"
         type={visible ? "text" : "password"}
         autoComplete="new-password"
+        maxLength={LARGOS.contrasenaMaxima}
         ayuda="De 8 a 64 caracteres, con al menos un número."
         className="pr-24"
         accesorio={

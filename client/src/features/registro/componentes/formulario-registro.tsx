@@ -2,8 +2,8 @@
 
 import type { FormEventHandler, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
-import type { DatosRegistro } from "../esquemas/registro.schema";
-import { soloDigitos } from "../utilidades/solo-digitos";
+import { type DatosRegistro, LARGOS } from "../esquemas/registro.schema";
+import { filtrarCelular } from "../utilidades/filtros-de-entrada";
 import { CampoContrasena } from "./campo-contrasena";
 import { CampoDeTexto } from "./campo-de-texto";
 import { CamposDelDocumento } from "./campos-del-documento";
@@ -32,8 +32,8 @@ function GrupoDelJugador() {
   return (
     <Grupo titulo="Quién juega" explicacion="Para crear tu cuenta debes ser mayor de edad.">
       <div className="grid gap-4 sm:grid-cols-2">
-        <CampoDeTexto nombre="nombres" etiqueta="Nombres" autoComplete="given-name" />
-        <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" />
+        <CampoDeTexto nombre="nombres" etiqueta="Nombres" autoComplete="given-name" maxLength={LARGOS.nombre} />
+        <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" maxLength={LARGOS.nombre} />
         <CampoDeTexto nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" type="date" autoComplete="bday" />
         <CampoDeTexto nombre="dorsal" etiqueta="Dorsal" opcional inputMode="numeric" maxLength={2} placeholder="Del 1 al 99" />
       </div>
@@ -47,8 +47,8 @@ function GrupoDeContactoYAcceso() {
   return (
     <Grupo titulo="Contacto y acceso" explicacion="Con tu correo y contraseña entras a tu cuenta. Al celular te avisamos de tus reservas.">
       <div className="grid gap-4 sm:grid-cols-2">
-        <CampoDeTexto nombre="celular" etiqueta="Celular" type="tel" inputMode="numeric" autoComplete="tel-national" filtrarEntrada={soloDigitos} />
-        <CampoDeTexto nombre="correo" etiqueta="Correo" type="email" autoComplete="email" spellCheck={false} />
+        <CampoDeTexto nombre="celular" etiqueta="Celular" type="tel" inputMode="numeric" autoComplete="tel-national" filtrarEntrada={filtrarCelular} />
+        <CampoDeTexto nombre="correo" etiqueta="Correo" type="email" autoComplete="email" spellCheck={false} maxLength={LARGOS.correo} />
       </div>
       <CampoContrasena />
     </Grupo>
