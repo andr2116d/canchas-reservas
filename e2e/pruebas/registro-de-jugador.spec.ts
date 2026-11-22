@@ -6,6 +6,15 @@ const campo = (pagina: Page, nombre: string) => pagina.getByLabel(new RegExp(`^$
 const aceptacionLegal = (pagina: Page) => pagina.getByRole("checkbox", { name: /acepto los términos/i });
 const crearCuenta = (pagina: Page) => pagina.getByRole("button", { name: "Crear mi cuenta" });
 
+/**
+ * Abre el registro y espera a que el formulario esté activo, como haría una
+ * persona: mientras la página se activa, los campos esperan deshabilitados.
+ */
+async function abrirRegistro(pagina: Page, ruta = "/registro") {
+  await pagina.goto(ruta);
+  await expect(campo(pagina, "Nombres")).toBeEnabled();
+}
+
 async function llenarRegistro(pagina: Page, jugador: JugadorDePrueba) {
   await campo(pagina, "Nombres").fill(jugador.nombres);
   await campo(pagina, "Apellidos").fill(jugador.apellidos);
@@ -17,7 +26,7 @@ async function llenarRegistro(pagina: Page, jugador: JugadorDePrueba) {
 }
 
 async function registrar(pagina: Page, jugador: JugadorDePrueba) {
-  await pagina.goto("/registro");
+  await abrirRegistro(pagina);
   await llenarRegistro(pagina, jugador);
   await aceptacionLegal(pagina).check();
   await crearCuenta(pagina).click();
@@ -32,7 +41,7 @@ test.describe("Registro de jugador", () => {
   });
 
   test("lleva al inicio si el enlace apunta a una reserva que aún no existe", async ({ page }) => {
-    await page.goto("/registro?siguiente=/reservar/la-popular");
+    await abrirRegistro(page, "/registro?siguiente=/reservar/la-popular");
     await llenarRegistro(page, unJugadorNuevo());
 
     await aceptacionLegal(page).check();
@@ -43,7 +52,7 @@ test.describe("Registro de jugador", () => {
   });
 
   test("deja revisar los documentos y exige la aceptación antes de crear la cuenta", async ({ page }) => {
-    await page.goto("/registro");
+    await abrirRegistro(page);
     await llenarRegistro(page, unJugadorNuevo());
     const leerDocumentos = page.getByText("Leer términos y privacidad", { exact: true });
     const terminos = page.getByText(/el titular de la reserva debe tener 18 años/i);
@@ -65,7 +74,7 @@ test.describe("Registro de jugador", () => {
   });
 
   test("avisa mientras se escribe, sin presionar el botón", async ({ page }) => {
-    await page.goto("/registro");
+    await abrirRegistro(page);
 
     await campo(page, "Número de documento").pressSequentially("4567");
     await campo(page, "Celular").pressSequentially("044123456");
@@ -79,7 +88,7 @@ test.describe("Registro de jugador", () => {
   });
 
   test("con DNI, en el celular y en el dorsal solo entran números, hasta 8, 9 y 2", async ({ page }) => {
-    await page.goto("/registro");
+    await abrirRegistro(page);
 
     await campo(page, "Número de documento").pressSequentially("45A67B891234");
     await campo(page, "Celular").pressSequentially("98a76 54-3210");
@@ -91,7 +100,7 @@ test.describe("Registro de jugador", () => {
   });
 
   test("con carné entran hasta 12 letras o números, y al volver a DNI se vacía", async ({ page }) => {
-    await page.goto("/registro");
+    await abrirRegistro(page);
     await page.getByText("Carné de extranjería").click();
 
     await campo(page, "Número de documento").pressSequentially("ab-1234567890123");
@@ -138,7 +147,7 @@ test.describe("Registro de jugador", () => {
   });
 
   test("indica qué tan segura es la contraseña mientras se escribe", async ({ page }) => {
-    await page.goto("/registro");
+    await abrirRegistro(page);
 
     await campo(page, "Contraseña").fill("123456789a");
     await expect(page.getByRole("status")).toContainText("Seguridad de la contraseña: Débil");
