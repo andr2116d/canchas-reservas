@@ -147,6 +147,18 @@ test.describe("Registro de jugador", () => {
     await expect(page.getByRole("status")).toContainText("Seguridad de la contraseña: Muy buena");
   });
 
+  test("no aparece scroll horizontal, ni durante la animación ni en reposo", async ({ page }) => {
+    const desbordeHorizontal = () =>
+      page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+
+    for (const ruta of ["/registro", "/iniciar-sesion"]) {
+      await page.goto(ruta);
+      expect(await desbordeHorizontal()).toBe(0);
+      await page.waitForTimeout(1000);
+      expect(await desbordeHorizontal()).toBe(0);
+    }
+  });
+
   test("sin sesión, el inicio lleva a iniciar sesión", async ({ page }) => {
     await page.goto("/inicio");
 

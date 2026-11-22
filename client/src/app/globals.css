@@ -31,6 +31,8 @@ body {
   background: var(--color-tiza);
   color: var(--color-tinta);
   overscroll-behavior: none;
+  /* Nada se sale por los costados: recorta sin crear scroll horizontal ni romper el panel fijo. */
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: reduce) {
