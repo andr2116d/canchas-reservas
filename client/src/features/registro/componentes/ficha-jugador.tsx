@@ -27,7 +27,7 @@ export function FichaJugador() {
   return (
     <div
       aria-hidden="true"
-      className="relative w-full max-w-sm -rotate-2 rounded-2xl bg-papel p-5 text-tinta shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)]"
+      className="relative w-full max-w-sm -rotate-2 rounded-2xl bg-papel p-4 text-tinta sm:p-5 shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)]"
     >
       <div className="flex items-center justify-between border-b border-dashed border-linea pb-3">
         <div className="flex items-center gap-2">
@@ -36,7 +36,7 @@ export function FichaJugador() {
         </div>
         <span className="text-xs font-semibold text-grava">Ficha de jugador</span>
       </div>
-      <p data-testid="ficha-nombres" className="mt-4 truncate font-titular text-5xl leading-none font-black uppercase">
+      <p data-testid="ficha-nombres" className="mt-3 truncate font-titular text-4xl leading-none font-black uppercase sm:mt-4 sm:text-5xl">
         {nombres.trim() || "Tu nombre"}
       </p>
       <p className="mt-1 truncate text-lg font-semibold text-grava">{apellidos.trim() || "Tus apellidos"}</p>

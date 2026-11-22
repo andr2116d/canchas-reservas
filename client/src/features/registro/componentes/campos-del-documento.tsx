@@ -11,7 +11,7 @@ export function CamposDelDocumento() {
   const tipoDocumento = useWatch({ control, name: "tipoDocumento" });
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="flex flex-col gap-4">
       <SelectorTipoDocumento />
       <CampoDeTexto
         nombre="numeroDocumento"

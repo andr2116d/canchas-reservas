@@ -16,7 +16,7 @@ interface GrupoProps {
 /** Grupo de datos con una línea que explica para qué se piden. */
 function Grupo({ titulo, explicacion, children }: GrupoProps) {
   return (
-    <section className="flex flex-col gap-4 border-t border-linea pt-6 first:border-t-0 first:pt-0">
+    <section className="flex flex-col gap-4 border-t border-linea pt-6 first-of-type:border-t-0 first-of-type:pt-0">
       <div>
         <h2 className="font-titular text-2xl font-extrabold text-tinta">{titulo}</h2>
         <p className="text-sm text-grava">{explicacion}</p>
