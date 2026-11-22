@@ -15,10 +15,9 @@ export function RegistroDeJugador() {
         <PanelDeLaFicha />
         <main className="px-4 py-8 sm:px-10 lg:py-12">
           <div className="mx-auto max-w-xl">
-            <h1 className="font-titular text-4xl font-black text-tinta sm:text-5xl">Crea tu cuenta de jugador</h1>
-            <p className="mt-2 mb-6 text-grava">
-              Te toma un minuto. <span>Los datos con * son obligatorios.</span>
-            </p>
+            <h1 className="mb-6 font-titular text-4xl font-black text-balance text-tinta sm:mb-8 sm:text-5xl">
+              Crea tu cuenta de jugador
+            </h1>
             <FormularioRegistro alEnviarRegistro={enviarRegistro} errorGeneral={errorGeneral} />
           </div>
         </main>

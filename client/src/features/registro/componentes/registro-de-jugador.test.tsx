@@ -21,11 +21,17 @@ describe("RegistroDeJugador", () => {
   beforeEach(() => window.history.replaceState({}, "", "/registro"));
   afterEach(() => vi.clearAllMocks());
 
+  it("muestra el título del registro sin el subtítulo", () => {
+    mostrarRegistro();
+
+    expect(screen.getByRole("heading", { name: "Crea tu cuenta de jugador" })).toBeVisible();
+    expect(screen.queryByText(/te toma un minuto/i)).not.toBeInTheDocument();
+  });
+
   describe("campos obligatorios", () => {
-    it("marca todos los campos como obligatorios y lo dice en pantalla", () => {
+    it("marca los campos obligatorios", () => {
       mostrarRegistro();
 
-      expect(screen.getByText("Los datos con * son obligatorios.")).toBeVisible();
       for (const nombre of [
         "Nombres",
         "Apellidos",
@@ -63,6 +69,7 @@ describe("RegistroDeJugador", () => {
       expect(terminos).toBeVisible();
       expect(screen.getByText(/usamos tus nombres, apellidos y documento/i)).toBeVisible();
       expect(screen.queryByText(/borrador para pruebas/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/versión registro-1/i)).not.toBeInTheDocument();
       await persona.click(leerDocumentos);
       expect(terminos).not.toBeVisible();
       expect(casillaLegal()).not.toBeChecked();
