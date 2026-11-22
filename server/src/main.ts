@@ -1,10 +1,15 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import {
+  CONFIGURACION,
+  type Configuracion,
+} from './compartido/infraestructura/configuracion/configuracion';
+import { configurarApp } from './compartido/infraestructura/http/configurar-app';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
-  app.enableShutdownHooks();
-  await app.listen(process.env.PORT ?? 3001);
+async function iniciar(): Promise<void> {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  configurarApp(app);
+  await app.listen(app.get<Configuracion>(CONFIGURACION).puerto);
 }
-void bootstrap();
+void iniciar();
