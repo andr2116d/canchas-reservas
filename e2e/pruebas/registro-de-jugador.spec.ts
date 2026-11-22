@@ -147,10 +147,10 @@ test.describe("Registro de jugador", () => {
     await expect(page.getByRole("status")).toContainText("Seguridad de la contraseña: Muy buena");
   });
 
-  test("sin sesión, el inicio lleva a crear la cuenta", async ({ page }) => {
+  test("sin sesión, el inicio lleva a iniciar sesión", async ({ page }) => {
     await page.goto("/inicio");
 
-    await expect(page).toHaveURL("/registro");
+    await expect(page).toHaveURL("/iniciar-sesion");
   });
 
   test("la sesión no es accesible desde JavaScript", async ({ page, context }) => {

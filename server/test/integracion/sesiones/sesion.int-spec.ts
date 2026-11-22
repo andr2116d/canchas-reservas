@@ -5,16 +5,9 @@ import type { PrismaService } from '../../../src/compartido/infraestructura/pris
 import { GENERADOR_TOKEN_SESION } from '../../../src/modulos/sesiones/aplicacion/generador-token-sesion.port';
 import { CryptoGeneradorTokenSesionAdapter } from '../../../src/modulos/sesiones/infraestructura/seguridad/crypto-generador-token-sesion.adapter';
 import { unJugadorValido } from '../../fabricas/datos-registro-jugador';
+import { cookieDeSesion } from '../../soporte/cookie-de-sesion';
 import { crearAppDePrueba } from '../../soporte/crear-app-de-prueba';
 import { limpiarTablas } from '../../soporte/limpiar-tablas';
-
-/** Extrae el valor de la cookie `sesion` de una respuesta. */
-function cookieDeSesion(cabeceras: Record<string, unknown>): string {
-  const cookies = (cabeceras['set-cookie'] as string[] | undefined) ?? [];
-  const cookie = cookies.find((valor) => valor.startsWith('sesion='));
-  if (!cookie) throw new Error('La respuesta no trae la cookie de sesión');
-  return cookie;
-}
 
 function tokenDe(cookie: string): string {
   return cookie.split(';')[0].replace('sesion=', '');
@@ -122,10 +115,10 @@ describe('Sesión del jugador', () => {
       expect(respuesta.status).toBe(401);
     });
 
-    it('responde 401 si la sesión lleva 30 minutos sin actividad', async () => {
+    it('responde 401 si la sesión lleva 15 minutos sin actividad', async () => {
       const cookie = cookieDeSesion((await registrar()).headers);
       await prisma.sesion.updateMany({
-        data: { ultimaActividadEn: new Date(Date.now() - 31 * 60 * 1000) },
+        data: { ultimaActividadEn: new Date(Date.now() - 15 * 60 * 1000) },
       });
 
       const respuesta = await consultarCuenta(cookie.split(';')[0]);

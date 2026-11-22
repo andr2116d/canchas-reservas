@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { config as cargarEntorno } from "dotenv";
+import { DOMINIO_DE_PRUEBA } from "./soporte/personal-de-prueba";
 
 // La API y la web de pruebas usan puertos propios y la base `_pruebas`,
 // para no chocar con el entorno de desarrollo ni tocar sus datos.
@@ -32,6 +33,7 @@ export default defineConfig({
         PORT: String(PUERTO_API),
         DATABASE_URL: baseDePruebas.toString(),
         NODE_ENV: "test",
+        DOMINIO_CORPORATIVO: DOMINIO_DE_PRUEBA,
         // Todas las pruebas registran desde la misma IP.
         LIMITE_REGISTROS_POR_HORA: "1000",
       },
