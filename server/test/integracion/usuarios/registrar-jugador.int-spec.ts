@@ -47,6 +47,7 @@ describe('POST /api/jugadores', () => {
       for (const dato of [
         datos.nombres,
         datos.apellidos,
+        datos.fechaNacimiento,
         datos.numeroDocumento,
         datos.celular,
         datos.correo,
@@ -143,6 +144,18 @@ describe('POST /api/jugadores', () => {
           correo: 'El correo no tiene un formato válido.',
           contrasena: 'La contraseña debe tener al menos 8 caracteres.',
         },
+      });
+      expect(await prisma.usuario.count()).toBe(0);
+    });
+
+    it('rechaza a un menor de 18 años', async () => {
+      const respuesta = await registrar(
+        unJugadorValido({ fechaNacimiento: '2012-03-10' }),
+      );
+
+      expect(respuesta.status).toBe(400);
+      expect(respuesta.body.errores).toEqual({
+        fechaNacimiento: 'Debes tener al menos 18 años para crear tu cuenta.',
       });
       expect(await prisma.usuario.count()).toBe(0);
     });

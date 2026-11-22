@@ -1,6 +1,7 @@
 import { Celular } from './celular.value-object';
 import { Correo } from './correo.value-object';
 import { DocumentoIdentidad } from './documento-identidad.value-object';
+import { FechaNacimiento } from './fecha-nacimiento.value-object';
 import { NombrePersona } from './nombre-persona.value-object';
 import { Usuario } from './usuario.entity';
 
@@ -8,6 +9,7 @@ function datosDeUnJugador() {
   return {
     nombres: NombrePersona.crear('Valeria', 'nombres'),
     apellidos: NombrePersona.crear('León', 'apellidos'),
+    fechaNacimiento: FechaNacimiento.restaurar('1998-05-14'),
     documento: DocumentoIdentidad.crear('DNI', '45678912'),
     correo: Correo.crear('valeria@gmail.com'),
     celular: Celular.crear('987654321'),

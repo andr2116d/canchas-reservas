@@ -1,3 +1,4 @@
+import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
 import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugador';
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
@@ -14,6 +15,7 @@ describe('ConsultarCuentaUseCase', () => {
     const { id } = await new RegistrarJugadorUseCase(
       usuarios,
       hasheador,
+      new RelojDePrueba(),
     ).ejecutar(unJugadorValido());
 
     const cuenta = await new ConsultarCuentaUseCase(usuarios).ejecutar(id);

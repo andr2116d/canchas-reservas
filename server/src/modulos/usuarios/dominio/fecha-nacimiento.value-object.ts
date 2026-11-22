@@ -55,4 +55,9 @@ export class FechaNacimiento {
     }
     return new FechaNacimiento(limpia);
   }
+
+  /** Reconstruye una fecha ya guardada, validada cuando se registró. */
+  static restaurar(fecha: string): FechaNacimiento {
+    return new FechaNacimiento(fecha);
+  }
 }

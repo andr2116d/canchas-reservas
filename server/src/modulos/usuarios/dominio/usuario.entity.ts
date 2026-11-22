@@ -1,6 +1,7 @@
 import type { Celular } from './celular.value-object';
 import type { Correo } from './correo.value-object';
 import type { DocumentoIdentidad } from './documento-identidad.value-object';
+import type { FechaNacimiento } from './fecha-nacimiento.value-object';
 import type { NombrePersona } from './nombre-persona.value-object';
 
 export type RolUsuario = 'JUGADOR';
@@ -10,6 +11,7 @@ export type EstadoUsuario = 'ACTIVO';
 export interface DatosDeCuenta {
   nombres: NombrePersona;
   apellidos: NombrePersona;
+  fechaNacimiento: FechaNacimiento;
   documento: DocumentoIdentidad;
   correo: Correo;
   celular: Celular;
@@ -46,6 +48,10 @@ export class Usuario {
 
   get apellidos(): NombrePersona {
     return this.datos.apellidos;
+  }
+
+  get fechaNacimiento(): FechaNacimiento {
+    return this.datos.fechaNacimiento;
   }
 
   get documento(): DocumentoIdentidad {

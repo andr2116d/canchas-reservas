@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { RELOJ, type Reloj } from '../../compartido/aplicacion/reloj.port';
 import {
   HASHEADOR_CONTRASENA,
   type HasheadorContrasena,
@@ -30,8 +31,9 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
       useFactory: (
         usuarios: UsuarioRepository,
         hasheador: HasheadorContrasena,
-      ) => new RegistrarJugadorUseCase(usuarios, hasheador),
-      inject: [USUARIO_REPOSITORY, HASHEADOR_CONTRASENA],
+        reloj: Reloj,
+      ) => new RegistrarJugadorUseCase(usuarios, hasheador, reloj),
+      inject: [USUARIO_REPOSITORY, HASHEADOR_CONTRASENA, RELOJ],
     },
     {
       provide: ConsultarCuentaUseCase,

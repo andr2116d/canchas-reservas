@@ -1,3 +1,4 @@
+import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
 import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugador';
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import type { Contrasena } from '../dominio/contrasena.value-object';
@@ -18,6 +19,7 @@ function prepararRegistro() {
   const registrar = new RegistrarJugadorUseCase(
     usuarios,
     new HasheadorDePrueba(),
+    new RelojDePrueba(),
   );
   return { usuarios, registrar };
 }
@@ -100,6 +102,29 @@ describe('RegistrarJugadorUseCase', () => {
       'numeroDocumento',
       'correo',
     ]);
+  });
+
+  it('guarda la fecha de nacimiento del jugador', async () => {
+    const { usuarios, registrar } = prepararRegistro();
+
+    await registrar.ejecutar(
+      unJugadorValido({ fechaNacimiento: '1998-05-14' }),
+    );
+
+    expect(usuarios.todos()[0].fechaNacimiento.fecha).toBe('1998-05-14');
+  });
+
+  it('rechaza a un menor de 18 años y no guarda nada', async () => {
+    const { usuarios, registrar } = prepararRegistro();
+
+    const error = await capturarError(
+      registrar.ejecutar(unJugadorValido({ fechaNacimiento: '2010-01-01' })),
+    );
+
+    expect((error as ReglaInvalidaError).errores).toEqual({
+      fechaNacimiento: 'Debes tener al menos 18 años para crear tu cuenta.',
+    });
+    expect(usuarios.todos()).toHaveLength(0);
   });
 
   it('reúne los errores de todos los campos y no guarda nada', async () => {

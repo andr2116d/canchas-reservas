@@ -18,6 +18,9 @@ export class RegistrarJugadorDto implements DatosRegistroJugador {
   @IsString(COMO_TEXTO)
   apellidos: string;
 
+  @IsString(COMO_TEXTO)
+  fechaNacimiento: string;
+
   @IsIn(TIPOS_DOCUMENTO, { message: MENSAJE_ELEGIR_TIPO_DOCUMENTO })
   tipoDocumento: string;
 

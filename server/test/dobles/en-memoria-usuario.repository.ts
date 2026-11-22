@@ -39,6 +39,7 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
         id,
         nombres: usuario.nombres,
         apellidos: usuario.apellidos,
+        fechaNacimiento: usuario.fechaNacimiento,
         documento: usuario.documento,
         correo: usuario.correo,
         celular: usuario.celular,

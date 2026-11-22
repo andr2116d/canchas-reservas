@@ -7,6 +7,7 @@ export function unJugadorValido(
   return {
     nombres: 'Valeria',
     apellidos: 'León Paredes',
+    fechaNacimiento: '1998-05-14',
     tipoDocumento: 'DNI',
     numeroDocumento: '45678912',
     correo: 'valeria.leon@gmail.com',

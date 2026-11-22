@@ -1,3 +1,4 @@
+import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { Celular } from '../dominio/celular.value-object';
 import { Contrasena } from '../dominio/contrasena.value-object';
@@ -7,6 +8,7 @@ import {
   type DatoUnico,
 } from '../dominio/cuenta-ya-existe.error';
 import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
 import { NombrePersona } from '../dominio/nombre-persona.value-object';
 import { Usuario } from '../dominio/usuario.entity';
 import type { UsuarioRepository } from '../dominio/usuario.repository';
@@ -16,6 +18,8 @@ import type { HasheadorContrasena } from './hasheador-contrasena.port';
 export interface DatosRegistroJugador {
   nombres: string;
   apellidos: string;
+  /** AAAA-MM-DD, como la entrega un campo de fecha del navegador. */
+  fechaNacimiento: string;
   tipoDocumento: string;
   numeroDocumento: string;
   correo: string;
@@ -28,21 +32,23 @@ export interface JugadorRegistrado {
   nombres: string;
 }
 
-/** Crea la cuenta de un jugador nuevo, activa y con rol jugador. */
+/** Crea la cuenta de un jugador nuevo, mayor de edad, activa y con rol jugador. */
 export class RegistrarJugadorUseCase {
   constructor(
     private readonly usuarios: UsuarioRepository,
     private readonly hasheador: HasheadorContrasena,
+    private readonly reloj: Reloj,
   ) {}
 
   /** Valida todos los datos, comprueba que no estén repetidos y guarda la cuenta. */
   async ejecutar(datos: DatosRegistroJugador): Promise<JugadorRegistrado> {
-    const campos = validarDatosDeRegistro(datos);
+    const campos = validarDatosDeRegistro(datos, this.reloj.ahora());
     await this.verificarQueNoTengaCuenta(campos.numeroDocumento, campos.correo);
 
     const jugador = Usuario.registrarJugador({
       nombres: campos.nombres,
       apellidos: campos.apellidos,
+      fechaNacimiento: campos.fechaNacimiento,
       documento: campos.numeroDocumento,
       correo: campos.correo,
       celular: campos.celular,
@@ -67,10 +73,11 @@ export class RegistrarJugadorUseCase {
   }
 }
 
-function validarDatosDeRegistro(datos: DatosRegistroJugador) {
+function validarDatosDeRegistro(datos: DatosRegistroJugador, ahora: Date) {
   return validarCampos({
     nombres: () => NombrePersona.crear(datos.nombres, 'nombres'),
     apellidos: () => NombrePersona.crear(datos.apellidos, 'apellidos'),
+    fechaNacimiento: () => FechaNacimiento.crear(datos.fechaNacimiento, ahora),
     numeroDocumento: () =>
       DocumentoIdentidad.crear(datos.tipoDocumento, datos.numeroDocumento),
     correo: () => Correo.crear(datos.correo),

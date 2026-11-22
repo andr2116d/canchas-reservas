@@ -6,6 +6,7 @@ import type {
 import { Celular } from '../../dominio/celular.value-object';
 import { Correo } from '../../dominio/correo.value-object';
 import { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
+import { FechaNacimiento } from '../../dominio/fecha-nacimiento.value-object';
 import { NombrePersona } from '../../dominio/nombre-persona.value-object';
 import { Usuario } from '../../dominio/usuario.entity';
 
@@ -30,6 +31,7 @@ export function aFilaNueva(
   return {
     nombresCifrado: cifrador.cifrar(usuario.nombres.texto),
     apellidosCifrado: cifrador.cifrar(usuario.apellidos.texto),
+    fechaNacimientoCifrada: cifrador.cifrar(usuario.fechaNacimiento.fecha),
     tipoDocumento: usuario.documento.tipo,
     numeroDocumentoCifrado: cifrador.cifrar(usuario.documento.numero),
     documentoHash: hashDeDocumento(usuario.documento, cifrador),
@@ -51,6 +53,9 @@ export function aEntidad(fila: FilaUsuario, cifrador: Cifrador): Usuario {
     apellidos: NombrePersona.crear(
       descifrar(fila.apellidosCifrado),
       'apellidos',
+    ),
+    fechaNacimiento: FechaNacimiento.restaurar(
+      descifrar(fila.fechaNacimientoCifrada),
     ),
     documento: DocumentoIdentidad.crear(
       fila.tipoDocumento,

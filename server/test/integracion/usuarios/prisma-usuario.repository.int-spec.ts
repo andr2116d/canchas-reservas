@@ -6,6 +6,7 @@ import { Celular } from '../../../src/modulos/usuarios/dominio/celular.value-obj
 import { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
 import { CuentaYaExisteError } from '../../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
 import { DocumentoIdentidad } from '../../../src/modulos/usuarios/dominio/documento-identidad.value-object';
+import { FechaNacimiento } from '../../../src/modulos/usuarios/dominio/fecha-nacimiento.value-object';
 import { NombrePersona } from '../../../src/modulos/usuarios/dominio/nombre-persona.value-object';
 import { Usuario } from '../../../src/modulos/usuarios/dominio/usuario.entity';
 import { PrismaUsuarioRepository } from '../../../src/modulos/usuarios/infraestructura/persistencia/prisma-usuario.repository';
@@ -15,6 +16,7 @@ function unJugador(documento = '45678912', correo = 'valeria@gmail.com') {
   return Usuario.registrarJugador({
     nombres: NombrePersona.crear('Valeria', 'nombres'),
     apellidos: NombrePersona.crear('León', 'apellidos'),
+    fechaNacimiento: FechaNacimiento.restaurar('1998-05-14'),
     documento: DocumentoIdentidad.crear('DNI', documento),
     correo: Correo.crear(correo),
     celular: Celular.crear('987654321'),
@@ -58,6 +60,7 @@ describe('PrismaUsuarioRepository', () => {
       '45678912',
       'valeria@gmail.com',
       '987654321',
+      '1998-05-14',
     ]) {
       expect(guardado).not.toContain(dato);
     }
@@ -95,6 +98,7 @@ describe('PrismaUsuarioRepository', () => {
 
     expect(usuario?.nombres.texto).toBe('Valeria');
     expect(usuario?.documento.identificador()).toBe('DNI:45678912');
+    expect(usuario?.fechaNacimiento.fecha).toBe('1998-05-14');
     expect(usuario?.correo.direccion).toBe('valeria@gmail.com');
     expect(usuario?.estaActivo()).toBe(true);
   });
