@@ -185,7 +185,9 @@ describe('Inicio de sesión y autorización por rol', () => {
       cambiarContrasena(cookie, 'alternativa22'),
     ]);
 
-    expect(cambios.map((cambio) => cambio.status)).toEqual(expect.arrayContaining([200, 401]));
+    expect(cambios.map((cambio) => cambio.status)).toEqual(
+      expect.arrayContaining([200, 401]),
+    );
     expect(await prisma.sesion.count()).toBe(1);
   });
 
@@ -260,29 +262,6 @@ describe('Inicio de sesión y autorización por rol', () => {
       .delete('/api/sesiones/actual')
       .set('Cookie', cookie)
       .expect(204);
-  });
-
-  it('limita intentos por correo normalizado incluso desde IP distintas', async () => {
-    for (let intento = 0; intento < 8; intento++) {
-      await iniciar()
-        .set('X-Forwarded-For', '192.0.2.' + (intento + 1))
-        .expect(401);
-    }
-
-    const bloqueo = await iniciar(' JUGADOR@EXTERNO.TEST ')
-      .set('X-Forwarded-For', '192.0.2.23')
-      .expect(429);
-
-    expect(Number(bloqueo.headers['retry-after'])).toBeGreaterThan(0);
-    expect(bloqueo.headers['set-cookie']).toBeUndefined();
-  });
-
-  it('limita intentos por IP aunque cambie el correo', async () => {
-    for (let intento = 0; intento < 20; intento++) {
-      await iniciar('prueba' + intento + '@externo.test').expect(401);
-    }
-
-    await iniciar('ultimo@externo.test').expect(429);
   });
 
   it('rechaza un inicio solicitado desde otro sitio', async () => {

@@ -56,13 +56,17 @@ export class InicioDeSesionController {
     @Res({ passthrough: true }) respuesta: Response,
   ): Promise<DestinoDeSesion> {
     respuesta.set('Cache-Control', 'no-store');
-    const espera = await this.limite.segundosDeEspera(datos.correo);
+    const espera = this.limite.segundosDeEspera(datos.correo);
     if (espera) {
       respuesta.set('Retry-After', String(espera));
       throw new ThrottlerException();
     }
 
     const resultado = await this.iniciarSesion.ejecutar(datos);
+    // La contraseña fue correcta: los fallos anteriores de este correo ya no cuentan.
+    if (resultado.tipo !== 'credenciales-invalidas') {
+      this.limite.reiniciar(datos.correo);
+    }
     if (resultado.tipo === 'cuenta-inactiva') {
       throw new ForbiddenException({
         mensaje: 'Tu cuenta está inactiva. Contacta a La Previa.',
@@ -70,6 +74,7 @@ export class InicioDeSesionController {
       });
     }
     if (resultado.tipo === 'credenciales-invalidas') {
+      this.limite.registrarFallo(datos.correo);
       throw new UnauthorizedException({
         mensaje: 'Correo o contraseña incorrectos.',
         errores: {},
