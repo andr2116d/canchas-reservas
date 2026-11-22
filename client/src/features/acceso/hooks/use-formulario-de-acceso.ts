@@ -34,8 +34,8 @@ export function useFormularioDeAcceso() {
     const resultado = await iniciarSesion({ correo, contrasena });
     if (resultado.tipo === "autenticado") {
       guardarCorreoRecordado(datos.has("recordar") ? correo : undefined);
+      // Solo navegar: un refresh recargaría el acceso y competiría con la navegación al panel.
       router.replace(destinoDeSesion(resultado));
-      router.refresh();
       return;
     }
     setError(resultado.mensaje);

@@ -97,6 +97,23 @@ test("recuerda el correo al cerrar sesión y permite que el navegador complete l
   await expect(page.getByLabel("Correo")).toHaveValue("");
 });
 
+test("lleva al panel aunque el panel tarde en cargar", async ({ page, request }) => {
+  const jugador = unJugadorNuevo();
+  await request.post("/api/jugadores", { data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: "registro-1" } });
+  await page.context().clearCookies();
+  await page.route("**/inicio**", async (ruta) => {
+    await new Promise((resolver) => setTimeout(resolver, 2500));
+    await ruta.continue();
+  });
+  await page.goto(RUTA_DE_ACCESO);
+
+  await page.getByLabel(/^Correo/).fill(jugador.correo);
+  await page.getByLabel(/^Contraseña/).fill(jugador.contrasena);
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
+
+  await expect(page).toHaveURL("/inicio", { timeout: 15_000 });
+});
+
 test("rechaza credenciales inválidas con un mensaje genérico", async ({ page }) => {
   await page.goto(RUTA_DE_ACCESO);
   await iniciar(page, "nadie@externo.test", "incorrecta1");

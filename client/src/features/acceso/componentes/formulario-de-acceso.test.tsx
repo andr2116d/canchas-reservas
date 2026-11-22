@@ -37,6 +37,8 @@ describe("FormularioDeAcceso", () => {
 
     expect(iniciarSesion).toHaveBeenCalledWith({ correo: CORREO, contrasena: CONTRASENA });
     expect(navegar.replace).toHaveBeenCalledWith(ruta);
+    // Refrescar recargaría el acceso y competiría con la navegación al panel.
+    expect(navegar.refresh).not.toHaveBeenCalled();
   });
 
   it("recupera el correo elegido y ofrece al navegador el campo de contraseña actual", async () => {

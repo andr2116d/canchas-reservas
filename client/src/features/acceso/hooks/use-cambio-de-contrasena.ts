@@ -27,12 +27,10 @@ export function useCambioDeContrasena() {
     const resultado = await cambiarContrasenaTemporal(contrasena);
     if (resultado.tipo === "autenticado") {
       router.replace(destinoDeSesion(resultado));
-      router.refresh();
       return;
     }
     if (resultado.sesionVencida) {
       router.replace(RUTA_DE_ACCESO + "?motivo=inactividad");
-      router.refresh();
       return;
     }
     setError(resultado.mensaje);
