@@ -33,7 +33,9 @@ npm run dev
 | Comando | Qué hace |
 |---|---|
 | `npm run dev` | Levanta la base, aplica migraciones y corre client y server |
-| `npm test` | Pruebas de client y server |
+| `npm test` | Pruebas unitarias de client y server |
+| `npm run test:integracion -w server` | Pruebas del server contra Postgres (usa la base `laprevia_pruebas`) |
+| `npm run test:e2e` | Recorridos completos con Playwright en escritorio y celular (puertos 3100 y 3101) |
 | `npm run lint` | Lint de client y server |
 | `npm run build` | Build de client y server |
 | `npm run db:migrate` | Crea una migración después de cambiar `schema.prisma` |
@@ -41,7 +43,7 @@ npm run dev
 | `npm run db:studio` | Abre Prisma Studio para ver los datos |
 | `npm run db:stop` | Detiene el contenedor de Postgres |
 
-Las pruebas del server se corren siempre con `npm test -w server`, no con `npx jest` directo.
+Las pruebas del server se corren siempre con `npm test -w server`, no con `npx jest` directo. La primera vez que corras Playwright instala su navegador con `npx playwright install chromium`.
 
 ## Flujo de trabajo
 
