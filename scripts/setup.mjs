@@ -59,9 +59,6 @@ ejecutar('npm run db:generate -w server', 'Fallo prisma generate. Ejecuta npm in
 paso('Creando las tablas');
 ejecutar('npm run db:deploy -w server', 'Fallaron las migraciones. Prueba con npm run db:reset.');
 
-paso('Cargando datos de demo');
-ejecutar('npm run db:seed -w server', 'Fallo el seed. Prueba con npm run db:reset.');
-
 console.log(`\n${verde(negrita('Todo listo.'))} Ahora ejecuta: ${negrita('npm run dev')}`);
 console.log('  Aplicacion  http://localhost:3000');
-console.log('  API         http://localhost:3001/api/salud\n');
+console.log('  API         http://localhost:3001/api\n');

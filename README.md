@@ -2,7 +2,7 @@
 
 Sistema web de reservas y gestión de canchas deportivas (fútbol 5 y 7).
 
-- `client/` Next.js 16, Tailwind v4, TanStack Query
+- `client/` Next.js 16, Tailwind v4
 - `server/` NestJS 12, Prisma 7, PostgreSQL 17
 
 La documentación del proyecto (specs, tareas, reglas y diseño) está en el Notion del equipo.
@@ -23,18 +23,10 @@ npm run setup
 npm run dev
 ```
 
-`npm run setup` crea los `.env`, levanta Postgres en Docker, aplica las migraciones y carga los datos de demo.
+`npm run setup` crea los `.env`, levanta Postgres en Docker y aplica las migraciones.
 
 - Client: http://localhost:3000
-- Server: http://localhost:3001/api/salud
-
-## Usuarios de demo
-
-| Rol | Correo | Contraseña |
-|---|---|---|
-| Administrador | admin@laprevia.pe | Admin12345 |
-| Recepcionista | recepcion@laprevia.pe | Recepcion123 |
-| Jugador | jugador1@laprevia.pe | Jugador123 |
+- Server: http://localhost:3001/api
 
 ## Comandos
 
@@ -45,7 +37,7 @@ npm run dev
 | `npm run lint` | Lint de client y server |
 | `npm run build` | Build de client y server |
 | `npm run db:migrate` | Crea una migración después de cambiar `schema.prisma` |
-| `npm run db:reset` | Borra la base local y la vuelve a crear con el seed |
+| `npm run db:reset` | Borra la base local y la vuelve a crear |
 | `npm run db:studio` | Abre Prisma Studio para ver los datos |
 | `npm run db:stop` | Detiene el contenedor de Postgres |
 
