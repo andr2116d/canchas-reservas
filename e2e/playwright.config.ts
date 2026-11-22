@@ -1,0 +1,50 @@
+import { defineConfig, devices } from "@playwright/test";
+import { config as cargarEntorno } from "dotenv";
+
+// La API y la web de pruebas usan puertos propios y la base `_pruebas`,
+// para no chocar con el entorno de desarrollo ni tocar sus datos.
+cargarEntorno({ path: "../server/.env", quiet: true });
+const PUERTO_API = 3101;
+const PUERTO_WEB = 3100;
+const baseDePruebas = new URL(process.env.DATABASE_URL ?? "");
+baseDePruebas.pathname = `${baseDePruebas.pathname.replace(/_pruebas$/, "")}_pruebas`;
+
+export default defineConfig({
+  testDir: "./pruebas",
+  fullyParallel: true,
+  forbidOnly: Boolean(process.env.CI),
+  reporter: process.env.CI ? "github" : "list",
+  use: {
+    baseURL: `http://localhost:${PUERTO_WEB}`,
+    locale: "es-PE",
+    trace: "retain-on-failure",
+  },
+  projects: [
+    { name: "escritorio", use: { ...devices["Desktop Chrome"] } },
+    { name: "celular", use: { ...devices["Pixel 7"] } },
+  ],
+  webServer: [
+    {
+      command: "npm run db:preparar-pruebas -w server && npm run start -w server",
+      cwd: "..",
+      url: `http://localhost:${PUERTO_API}/api/cuenta`,
+      env: {
+        PORT: String(PUERTO_API),
+        DATABASE_URL: baseDePruebas.toString(),
+        NODE_ENV: "test",
+        // Todas las pruebas registran desde la misma IP.
+        LIMITE_REGISTROS_POR_HORA: "1000",
+      },
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      command: `npm run build -w client && npm run start -w client -- --port ${PUERTO_WEB}`,
+      cwd: "..",
+      url: `http://localhost:${PUERTO_WEB}/registro`,
+      env: { API_URL: `http://localhost:${PUERTO_API}` },
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+  ],
+});
