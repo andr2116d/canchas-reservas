@@ -1,6 +1,7 @@
 import type { Celular } from './celular.value-object';
 import type { Correo } from './correo.value-object';
 import type { DocumentoIdentidad } from './documento-identidad.value-object';
+import type { Dorsal } from './dorsal.value-object';
 import type { FechaNacimiento } from './fecha-nacimiento.value-object';
 import type { NombrePersona } from './nombre-persona.value-object';
 
@@ -16,6 +17,8 @@ export interface DatosDeCuenta {
   correo: Correo;
   celular: Celular;
   contrasenaHash: string;
+  /** Opcional: el jugador puede no elegir dorsal. */
+  dorsal?: Dorsal;
 }
 
 interface EstadoCompleto extends DatosDeCuenta {
@@ -64,6 +67,10 @@ export class Usuario {
 
   get celular(): Celular {
     return this.datos.celular;
+  }
+
+  get dorsal(): Dorsal | undefined {
+    return this.datos.dorsal;
   }
 
   get contrasenaHash(): string {

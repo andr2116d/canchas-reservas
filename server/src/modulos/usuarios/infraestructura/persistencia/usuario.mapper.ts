@@ -6,6 +6,7 @@ import type {
 import { Celular } from '../../dominio/celular.value-object';
 import { Correo } from '../../dominio/correo.value-object';
 import { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
+import { Dorsal } from '../../dominio/dorsal.value-object';
 import { FechaNacimiento } from '../../dominio/fecha-nacimiento.value-object';
 import { NombrePersona } from '../../dominio/nombre-persona.value-object';
 import { Usuario } from '../../dominio/usuario.entity';
@@ -39,6 +40,7 @@ export function aFilaNueva(
     correoHash: hashDeCorreo(usuario.correo, cifrador),
     celularCifrado: cifrador.cifrar(usuario.celular.numero),
     contrasenaHash: usuario.contrasenaHash,
+    dorsal: usuario.dorsal?.numero ?? null,
     rol: usuario.rol,
     estado: usuario.estado,
   };
@@ -64,6 +66,7 @@ export function aEntidad(fila: FilaUsuario, cifrador: Cifrador): Usuario {
     correo: Correo.crear(descifrar(fila.correoCifrado)),
     celular: Celular.crear(descifrar(fila.celularCifrado)),
     contrasenaHash: fila.contrasenaHash,
+    dorsal: fila.dorsal === null ? undefined : Dorsal.restaurar(fila.dorsal),
     rol: fila.rol,
     estado: fila.estado,
   });

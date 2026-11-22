@@ -44,6 +44,7 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
         correo: usuario.correo,
         celular: usuario.celular,
         contrasenaHash: usuario.contrasenaHash,
+        dorsal: usuario.dorsal,
         rol: usuario.rol,
         estado: usuario.estado,
       }),

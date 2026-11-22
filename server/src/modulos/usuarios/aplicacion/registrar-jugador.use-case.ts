@@ -8,6 +8,7 @@ import {
   type DatoUnico,
 } from '../dominio/cuenta-ya-existe.error';
 import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { Dorsal } from '../dominio/dorsal.value-object';
 import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
 import { NombrePersona } from '../dominio/nombre-persona.value-object';
 import { Usuario } from '../dominio/usuario.entity';
@@ -25,6 +26,8 @@ export interface DatosRegistroJugador {
   correo: string;
   celular: string;
   contrasena: string;
+  /** Opcional, del 1 al 99. */
+  dorsal?: string;
 }
 
 export interface JugadorRegistrado {
@@ -52,6 +55,7 @@ export class RegistrarJugadorUseCase {
       documento: campos.numeroDocumento,
       correo: campos.correo,
       celular: campos.celular,
+      dorsal: campos.dorsal,
       contrasenaHash: await this.hasheador.hashear(campos.contrasena),
     });
     const id = await this.usuarios.crear(jugador);
@@ -83,5 +87,6 @@ function validarDatosDeRegistro(datos: DatosRegistroJugador, ahora: Date) {
     correo: () => Correo.crear(datos.correo),
     celular: () => Celular.crear(datos.celular),
     contrasena: () => Contrasena.crear(datos.contrasena),
+    dorsal: () => Dorsal.crearOpcional(datos.dorsal),
   });
 }

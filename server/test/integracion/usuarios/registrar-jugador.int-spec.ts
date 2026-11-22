@@ -30,6 +30,12 @@ describe('POST /api/jugadores', () => {
       expect(respuesta.body).toEqual({ nombres: 'Valeria' });
     });
 
+    it('guarda el dorsal elegido, sin cifrar porque no es un dato personal', async () => {
+      await registrar(unJugadorValido({ dorsal: '7' }));
+
+      expect((await prisma.usuario.findFirstOrThrow()).dorsal).toBe(7);
+    });
+
     it('crea al usuario con rol jugador y estado activo', async () => {
       await registrar(unJugadorValido());
 
@@ -146,6 +152,15 @@ describe('POST /api/jugadores', () => {
         },
       });
       expect(await prisma.usuario.count()).toBe(0);
+    });
+
+    it('rechaza un dorsal fuera del rango', async () => {
+      const respuesta = await registrar(unJugadorValido({ dorsal: '100' }));
+
+      expect(respuesta.status).toBe(400);
+      expect(respuesta.body.errores).toEqual({
+        dorsal: 'El dorsal debe estar entre 1 y 99.',
+      });
     });
 
     it('rechaza a un menor de 18 años', async () => {

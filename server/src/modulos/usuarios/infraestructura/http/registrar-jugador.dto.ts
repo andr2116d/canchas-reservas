@@ -1,4 +1,4 @@
-import { IsIn, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 import type { DatosRegistroJugador } from '../../aplicacion/registrar-jugador.use-case';
 import {
   MENSAJE_ELEGIR_TIPO_DOCUMENTO,
@@ -35,4 +35,8 @@ export class RegistrarJugadorDto implements DatosRegistroJugador {
 
   @IsString(COMO_TEXTO)
   contrasena: string;
+
+  @IsOptional()
+  @IsString(COMO_TEXTO)
+  dorsal?: string;
 }

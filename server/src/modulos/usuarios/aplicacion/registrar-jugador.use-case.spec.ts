@@ -114,6 +114,22 @@ describe('RegistrarJugadorUseCase', () => {
     expect(usuarios.todos()[0].fechaNacimiento.fecha).toBe('1998-05-14');
   });
 
+  it('guarda el dorsal elegido', async () => {
+    const { usuarios, registrar } = prepararRegistro();
+
+    await registrar.ejecutar(unJugadorValido({ dorsal: '10' }));
+
+    expect(usuarios.todos()[0].dorsal?.numero).toBe(10);
+  });
+
+  it('permite registrarse sin dorsal', async () => {
+    const { usuarios, registrar } = prepararRegistro();
+
+    await registrar.ejecutar(unJugadorValido({ dorsal: undefined }));
+
+    expect(usuarios.todos()[0].dorsal).toBeUndefined();
+  });
+
   it('rechaza a un menor de 18 años y no guarda nada', async () => {
     const { usuarios, registrar } = prepararRegistro();
 
