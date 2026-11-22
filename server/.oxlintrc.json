@@ -2,8 +2,19 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "rules": {
     "typescript/no-explicit-any": "off",
-    "typescript/no-floating-promises": "error"
+    "typescript/no-floating-promises": "error",
+    "max-lines": ["error", { "max": 300 }],
+    "max-lines-per-function": ["error", { "max": 50 }],
+    "max-params": ["error", { "max": 4 }]
   },
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts", "**/*.e2e-spec.ts"],
+      "rules": {
+        "max-lines-per-function": "off"
+      }
+    }
+  ],
   "env": {
     "node": true
   }
