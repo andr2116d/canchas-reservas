@@ -17,7 +17,10 @@ describe('Contrasena', () => {
     ['pichanga', 'La contraseña debe incluir al menos un número.'],
     ['sinNumeros!', 'La contraseña debe incluir al menos un número.'],
     ['corta1', 'La contraseña debe tener al menos 8 caracteres.'],
-    ['a1'.repeat(32) + 'x', 'La contraseña no puede tener más de 64 caracteres.'],
+    [
+      'a1'.repeat(32) + 'x',
+      'La contraseña no puede tener más de 64 caracteres.',
+    ],
     ['', 'Ingresa una contraseña.'],
   ])('rechaza "%s" con el mensaje: %s', (texto, mensaje) => {
     expect(() => Contrasena.crear(texto)).toThrow(

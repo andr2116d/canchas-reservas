@@ -48,4 +48,9 @@ export class DocumentoIdentidad {
     if (error) throw new ValorInvalidoError(error);
     return new DocumentoIdentidad(tipo, normalizado);
   }
+
+  /** Identifica al documento entre todos los tipos: el mismo número en otro tipo es otro documento. */
+  identificador(): string {
+    return `${this.tipo}:${this.numero}`;
+  }
 }

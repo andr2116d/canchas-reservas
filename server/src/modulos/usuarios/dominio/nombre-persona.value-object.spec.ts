@@ -25,7 +25,9 @@ describe('NombrePersona', () => {
 
   it('rechaza más de 80 caracteres', () => {
     expect(() => NombrePersona.crear('a'.repeat(81), 'nombres')).toThrow(
-      new ValorInvalidoError('Tus nombres no pueden tener más de 80 caracteres.'),
+      new ValorInvalidoError(
+        'Tus nombres no pueden tener más de 80 caracteres.',
+      ),
     );
   });
 });

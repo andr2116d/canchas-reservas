@@ -54,7 +54,10 @@ describe('DocumentoIdentidad', () => {
       ['AB-123456', 'El carné de extranjería solo admite letras y números.'],
       ['AB 1234567', 'El carné de extranjería solo admite letras y números.'],
       ['ÑB1234567', 'El carné de extranjería solo admite letras y números.'],
-      ['12345678', 'El carné de extranjería debe tener entre 9 y 12 caracteres.'],
+      [
+        '12345678',
+        'El carné de extranjería debe tener entre 9 y 12 caracteres.',
+      ],
       [
         '1234567890123',
         'El carné de extranjería debe tener entre 9 y 12 caracteres.',
@@ -64,6 +67,15 @@ describe('DocumentoIdentidad', () => {
         DocumentoIdentidad.crear('CARNE_EXTRANJERIA', numero),
       ).toThrow(new ValorInvalidoError(mensaje));
     });
+  });
+
+  it('se identifica por su tipo y su número juntos', () => {
+    const documento = DocumentoIdentidad.crear(
+      'CARNE_EXTRANJERIA',
+      'ab1234567',
+    );
+
+    expect(documento.identificador()).toBe('CARNE_EXTRANJERIA:AB1234567');
   });
 
   it('rechaza un tipo de documento que no existe', () => {

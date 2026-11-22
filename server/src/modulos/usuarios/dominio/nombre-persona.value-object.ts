@@ -7,7 +7,10 @@ export class NombrePersona {
   private constructor(readonly texto: string) {}
 
   /** @param etiqueta qué se está nombrando, para armar el mensaje de error. */
-  static crear(texto: string, etiqueta: 'nombres' | 'apellidos'): NombrePersona {
+  static crear(
+    texto: string,
+    etiqueta: 'nombres' | 'apellidos',
+  ): NombrePersona {
     const limpio = texto.trim().replace(/\s+/g, ' ');
     if (limpio === '') throw new ValorInvalidoError(`Ingresa tus ${etiqueta}.`);
     if (limpio.length > LARGO_MAXIMO) {
