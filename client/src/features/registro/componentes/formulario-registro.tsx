@@ -2,6 +2,7 @@
 
 import type { FormEventHandler, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
+import { usePaginaActiva } from "../hooks/use-pagina-activa";
 import { type DatosRegistro, LARGOS } from "../esquemas/registro.schema";
 import { filtrarCelular, filtrarDorsal } from "../utilidades/filtros-de-entrada";
 import { AceptacionLegalDelRegistro } from "./aceptacion-legal-del-registro";
@@ -64,26 +65,30 @@ export interface FormularioRegistroProps {
 /** Datos de la cuenta agrupados por para qué sirven. */
 export function FormularioRegistro({ alEnviarRegistro, errorGeneral }: FormularioRegistroProps) {
   const { formState } = useFormContext<DatosRegistro>();
+  const paginaActiva = usePaginaActiva();
 
   return (
-    <form noValidate onSubmit={alEnviarRegistro} className="flex flex-col gap-6">
-      <GrupoDelJugador />
-      <GrupoDeContactoYAcceso />
-      <AceptacionLegalDelRegistro />
-      {errorGeneral && (
-        <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm font-medium text-error">
-          {errorGeneral}
-        </p>
-      )}
-      <button
-        type="submit"
-        disabled={formState.isSubmitting}
-        aria-busy={formState.isSubmitting}
-        className="rounded-xl bg-botella px-6 py-4 text-base font-bold text-papel transition-colors hover:bg-botella-oscura focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-botella disabled:cursor-wait disabled:opacity-70"
-      >
-        {formState.isSubmitting ? "Creando tu cuenta…" : "Crear mi cuenta"}
-      </button>
-      <p className="-mt-3 text-center text-sm text-grava">Guardamos tus datos personales cifrados.</p>
+    <form noValidate onSubmit={alEnviarRegistro}>
+      {/* Hasta que la página se activa, lo escrito se perdería: los campos esperan deshabilitados. */}
+      <fieldset disabled={!paginaActiva} className="m-0 flex min-w-0 flex-col gap-6 border-0 p-0">
+        <GrupoDelJugador />
+        <GrupoDeContactoYAcceso />
+        <AceptacionLegalDelRegistro />
+        {errorGeneral && (
+          <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm font-medium text-error">
+            {errorGeneral}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={formState.isSubmitting}
+          aria-busy={formState.isSubmitting}
+          className="rounded-xl bg-botella px-6 py-4 text-base font-bold text-papel transition-colors hover:bg-botella-oscura focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-botella disabled:cursor-wait disabled:opacity-70"
+        >
+          {formState.isSubmitting ? "Creando tu cuenta…" : "Crear mi cuenta"}
+        </button>
+        <p className="-mt-3 text-center text-sm text-grava">Guardamos tus datos personales cifrados.</p>
+      </fieldset>
     </form>
   );
 }
