@@ -10,7 +10,7 @@ export function FormularioDeAcceso() {
   const { enviar, campoCorreo, campoRecordar, enviando, error } = useFormularioDeAcceso();
 
   return (
-    <form onSubmit={enviar} className="grid gap-5">
+    <form onSubmit={enviar} className="grid gap-4 sm:gap-5">
       <CampoDeAcceso id="correo" name="correo" etiqueta="Correo" type="email" autoComplete="username" maxLength={254} ref={campoCorreo} />
       <CampoDeAcceso id="contrasena" name="contrasena" etiqueta="Contraseña" type="password" autoComplete="current-password" maxLength={64} />
       <div>

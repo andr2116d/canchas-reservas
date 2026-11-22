@@ -28,12 +28,15 @@ describe("RegistroDeJugador", () => {
     expect(screen.queryByText(/te toma un minuto/i)).not.toBeInTheDocument();
   });
 
-  it("ofrece iniciar sesión en la cabecera, antes del formulario", () => {
+  it("ofrece iniciar sesión junto al título del formulario", () => {
     mostrarRegistro();
 
     const enlace = screen.getByRole("link", { name: "Inicia sesión" });
-    expect(screen.getByRole("banner")).toContainElement(enlace);
+    const titulo = screen.getByRole("heading", { name: "Crea tu cuenta de jugador" });
+    expect(screen.getByRole("main")).toContainElement(enlace);
+    expect(enlace.compareDocumentPosition(titulo)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(enlace).toHaveAttribute("href", "/iniciar-sesion");
+    expect(screen.queryByRole("banner")).toBeNull();
   });
 
   describe("campos obligatorios", () => {

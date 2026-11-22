@@ -5,7 +5,6 @@
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  color: var(--color-tiza);
   background-image: repeating-linear-gradient(
     90deg,
     var(--color-cancha) 0 var(--ancho-de-franja),
@@ -23,6 +22,7 @@
 
 .fondo-de-cancha--acceso {
   --ancho-de-franja: clamp(4rem, 9vw, 8rem);
+  color: var(--color-tiza);
 }
 
 .fondo-de-cancha--acceso::after {

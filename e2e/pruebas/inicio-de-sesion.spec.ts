@@ -28,7 +28,8 @@ async function cambiarContrasena(page: Page) {
   await page.getByRole("button", { name: "Cambiar contraseña" }).click();
 }
 
-test("conecta el acceso y el registro con la misma cancha y un enlace en la cabecera", async ({ page }) => {
+test("conecta el acceso y el registro con la misma cancha y un enlace junto al título", async ({ page, isMobile }) => {
+  if (isMobile) await page.setViewportSize({ width: 320, height: 568 });
   await page.addInitScript(() => {
     const iniciarTransicion = document.startViewTransition?.bind(document);
     if (!iniciarTransicion) return;
@@ -44,6 +45,7 @@ test("conecta el acceso y el registro con la misma cancha y un enlace en la cabe
   const canchaDeAcceso = page.locator(".fondo-de-cancha--acceso");
   await expect(canchaDeAcceso.locator("svg")).toBeVisible();
   await expect(canchaDeAcceso).toHaveCSS("background-image", /repeating-linear-gradient/);
+  await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeInViewport({ ratio: 1 });
   await page.getByRole("link", { name: "Crea tu cuenta de jugador" }).click();
   await expect(page).toHaveURL("/registro");
   const canchaDeRegistro = page.getByRole("complementary").locator(".fondo-de-cancha--registro");
@@ -51,8 +53,8 @@ test("conecta el acceso y el registro con la misma cancha y un enlace en la cabe
   await expect(canchaDeRegistro).toHaveCSS("background-image", /repeating-linear-gradient/);
   await expect(page.locator("html")).toHaveAttribute("data-cambios-de-acceso", "1");
 
-  const volver = page.getByRole("banner").getByRole("link", { name: "Inicia sesión" });
-  await expect(volver).toBeInViewport();
+  const volver = page.getByRole("main").getByRole("link", { name: "Inicia sesión" });
+  await expect(volver).toBeInViewport({ ratio: 1 });
   await volver.click();
 
   await expect(page).toHaveURL(RUTA_DE_ACCESO);

@@ -25,7 +25,7 @@ export async function PantallaDeAcceso({ parametros }: { parametros: ParametrosD
             <p role="status" className="mb-5 rounded-lg bg-tiza px-4 py-3 text-sm text-grava">Tu sesión se cerró por inactividad.</p>
           )}
           <FormularioDeAcceso />
-          <p className="mt-6 border-t border-linea pt-4 text-center text-sm text-grava">
+          <p className="mt-4 text-center text-sm text-grava sm:mt-6">
             ¿Todavía no tienes cuenta?{" "}
             <Link
               href="/registro"
