@@ -86,6 +86,43 @@ describe('POST /api/jugadores', () => {
     });
   });
 
+  describe('idempotencia', () => {
+    it('cinco envíos iguales al mismo tiempo crean una sola cuenta y una sola sesión', async () => {
+      const respuestas = await Promise.all(
+        Array.from({ length: 5 }, () => registrar(unJugadorValido())),
+      );
+
+      const estados = respuestas.map(({ status }) => status).sort();
+      expect(estados).toEqual([201, 409, 409, 409, 409]);
+      expect(await prisma.usuario.count()).toBe(1);
+      expect(await prisma.sesion.count()).toBe(1);
+    });
+
+    it('dos personas con el mismo documento al mismo tiempo: solo una queda registrada', async () => {
+      const respuestas = await Promise.all([
+        registrar(unJugadorValido({ correo: 'primera@gmail.com' })),
+        registrar(unJugadorValido({ correo: 'segunda@gmail.com' })),
+      ]);
+
+      expect(respuestas.map(({ status }) => status).sort()).toEqual([201, 409]);
+      const rechazo = respuestas.find(({ status }) => status === 409);
+      expect(rechazo?.body.errores).toEqual({
+        numeroDocumento: 'Ya existe una cuenta con este documento.',
+      });
+      expect(await prisma.usuario.count()).toBe(1);
+    });
+
+    it('repetir el registro ya hecho no crea otra cuenta', async () => {
+      await registrar(unJugadorValido());
+
+      const repetido = await registrar(unJugadorValido());
+
+      expect(repetido.status).toBe(409);
+      expect(await prisma.usuario.count()).toBe(1);
+      expect(await prisma.sesion.count()).toBe(1);
+    });
+  });
+
   describe('datos inválidos', () => {
     it('responde 400 con el mensaje de cada campo inválido y no guarda nada', async () => {
       const respuesta = await registrar(
