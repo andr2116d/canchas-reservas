@@ -1,0 +1,194 @@
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import request from 'supertest';
+import type { PrismaService } from '../../src/compartido/infraestructura/prisma/prisma.service';
+import { HASHEADOR_CONTRASENA } from '../../src/modulos/usuarios/aplicacion/hasheador-contrasena.port';
+import { unJugadorValido } from '../fabricas/datos-registro-jugador';
+import { crearAppDePrueba } from '../soporte/crear-app-de-prueba';
+import { limpiarTablas } from '../soporte/limpiar-tablas';
+
+const RUTA = '/api/jugadores';
+
+describe('POST /api/jugadores', () => {
+  let app: NestExpressApplication;
+  let prisma: PrismaService;
+
+  // Una app nueva por prueba: el límite de intentos se cuenta por instancia.
+  beforeEach(async () => {
+    ({ app, prisma } = await crearAppDePrueba());
+    await limpiarTablas(prisma);
+  });
+  afterEach(() => app.close());
+
+  const registrar = (cuerpo: object) =>
+    request(app.getHttpServer()).post(RUTA).send(cuerpo);
+
+  describe('registro exitoso', () => {
+    it('responde 201 con los nombres del jugador', async () => {
+      const respuesta = await registrar(unJugadorValido());
+
+      expect(respuesta.status).toBe(201);
+      expect(respuesta.body).toEqual({ nombres: 'Valeria' });
+    });
+
+    it('crea al usuario con rol jugador y estado activo', async () => {
+      await registrar(unJugadorValido());
+
+      const usuarios = await prisma.usuario.findMany();
+      expect(usuarios).toHaveLength(1);
+      expect(usuarios[0].rol).toBe('JUGADOR');
+      expect(usuarios[0].estado).toBe('ACTIVO');
+    });
+
+    it('guarda documento, celular, correo y nombres cifrados, y la contraseña con hash', async () => {
+      const datos = unJugadorValido();
+      await registrar(datos);
+
+      const fila = JSON.stringify(await prisma.usuario.findFirstOrThrow());
+      for (const dato of [
+        datos.nombres,
+        datos.apellidos,
+        datos.numeroDocumento,
+        datos.celular,
+        datos.correo,
+        datos.contrasena,
+      ]) {
+        expect(fila).not.toContain(dato);
+      }
+      expect(fila).toContain('$argon2id$');
+    });
+  });
+
+  describe('datos repetidos', () => {
+    it('responde 409 si el documento ya tiene cuenta', async () => {
+      await registrar(unJugadorValido());
+
+      const respuesta = await registrar(
+        unJugadorValido({ correo: 'otra.persona@gmail.com' }),
+      );
+
+      expect(respuesta.status).toBe(409);
+      expect(respuesta.body.errores).toEqual({
+        numeroDocumento: 'Ya existe una cuenta con este documento.',
+      });
+    });
+
+    it('responde 409 si el correo ya tiene cuenta', async () => {
+      await registrar(unJugadorValido());
+
+      const respuesta = await registrar(
+        unJugadorValido({ numeroDocumento: '11223344' }),
+      );
+
+      expect(respuesta.status).toBe(409);
+      expect(respuesta.body.errores).toEqual({
+        correo: 'Ya existe una cuenta con este correo.',
+      });
+    });
+  });
+
+  describe('datos inválidos', () => {
+    it('responde 400 con el mensaje de cada campo inválido y no guarda nada', async () => {
+      const respuesta = await registrar(
+        unJugadorValido({
+          numeroDocumento: '4567891A',
+          celular: '044123456',
+          correo: 'valeria@',
+          contrasena: 'corta1',
+        }),
+      );
+
+      expect(respuesta.status).toBe(400);
+      expect(respuesta.body).toEqual({
+        mensaje: 'Revisa los datos marcados.',
+        errores: {
+          numeroDocumento: 'El DNI solo debe contener números.',
+          celular: 'El celular debe empezar con 9.',
+          correo: 'El correo no tiene un formato válido.',
+          contrasena: 'La contraseña debe tener al menos 8 caracteres.',
+        },
+      });
+      expect(await prisma.usuario.count()).toBe(0);
+    });
+
+    it('rechaza un tipo de documento que no existe', async () => {
+      const respuesta = await registrar(
+        unJugadorValido({ tipoDocumento: 'PASAPORTE' }),
+      );
+
+      expect(respuesta.status).toBe(400);
+      expect(respuesta.body.errores.tipoDocumento).toBe(
+        'Elige tu tipo de documento.',
+      );
+    });
+
+    it('rechaza campos que no son del registro, como un rol elegido por la persona', async () => {
+      const respuesta = await registrar({
+        ...unJugadorValido(),
+        rol: 'ADMINISTRADOR',
+      });
+
+      expect(respuesta.status).toBe(400);
+      expect(respuesta.body.errores).toEqual({
+        rol: 'Este campo no está permitido.',
+      });
+      expect(await prisma.usuario.count()).toBe(0);
+    });
+
+    it('rechaza un dato que no es texto', async () => {
+      const respuesta = await registrar(
+        unJugadorValido({ celular: 987654321 as never }),
+      );
+
+      expect(respuesta.status).toBe(400);
+      expect(respuesta.body.errores.celular).toBe(
+        'Ingresa este dato como texto.',
+      );
+    });
+  });
+
+  describe('seguridad', () => {
+    it('responde 429 después de 10 registros desde la misma IP en una hora', async () => {
+      for (let intento = 1; intento <= 10; intento++) {
+        await registrar(unJugadorValido({ contrasena: 'x' }));
+      }
+
+      const respuesta = await registrar(unJugadorValido());
+
+      expect(respuesta.status).toBe(429);
+      expect(respuesta.body.mensaje).toBe(
+        'Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.',
+      );
+    });
+
+    it('rechaza un envío desde otro sitio (CSRF) con 403', async () => {
+      const respuesta = await registrar(unJugadorValido()).set(
+        'Sec-Fetch-Site',
+        'cross-site',
+      );
+
+      expect(respuesta.status).toBe(403);
+      expect(await prisma.usuario.count()).toBe(0);
+    });
+
+    it('envía cabeceras de seguridad y oculta la tecnología del server', async () => {
+      const respuesta = await registrar(unJugadorValido());
+
+      expect(respuesta.headers['x-content-type-options']).toBe('nosniff');
+      expect(respuesta.headers['x-powered-by']).toBeUndefined();
+    });
+
+    it('responde 500 sin detalles internos si algo falla', async () => {
+      await app.close();
+      ({ app, prisma } = await crearAppDePrueba((constructor) =>
+        constructor.overrideProvider(HASHEADOR_CONTRASENA).useValue({
+          hashear: () => Promise.reject(new Error('detalle interno secreto')),
+        }),
+      ));
+
+      const respuesta = await registrar(unJugadorValido());
+
+      expect(respuesta.status).toBe(500);
+      expect(JSON.stringify(respuesta.body)).not.toContain('secreto');
+    });
+  });
+});

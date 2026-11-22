@@ -1,6 +1,7 @@
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
 
 export const TIPOS_DOCUMENTO = ['DNI', 'CARNE_EXTRANJERIA'] as const;
+export const MENSAJE_ELEGIR_TIPO_DOCUMENTO = 'Elige tu tipo de documento.';
 export type TipoDocumento = (typeof TIPOS_DOCUMENTO)[number];
 
 /** Devuelve el mensaje de lo que falla en el número, o nada si es válido. */
@@ -38,7 +39,7 @@ export class DocumentoIdentidad {
   /** Valida el número según las reglas de su tipo. */
   static crear(tipo: string, numero: string): DocumentoIdentidad {
     if (!esTipoDocumento(tipo)) {
-      throw new ValorInvalidoError('Elige tu tipo de documento.');
+      throw new ValorInvalidoError(MENSAJE_ELEGIR_TIPO_DOCUMENTO);
     }
     const normalizado = numero.trim().toUpperCase();
     if (normalizado === '') {
