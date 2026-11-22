@@ -16,7 +16,7 @@ export function RegistroDeJugador() {
     <FormProvider {...formulario}>
       <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <PanelDeLaFicha />
-        <TransicionDeAcceso>
+        <TransicionDeAcceso parte="formulario">
           <main className="px-4 py-8 sm:px-10 lg:py-12">
             <div className="mx-auto max-w-xl">
               <p className="mb-1 flex flex-wrap items-center gap-x-2 text-sm text-grava">

@@ -1,29 +1,29 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { destinoDeSesion } from "@/compartido/sesion/destino-de-sesion";
-import { consultarSesionEnServidor } from "@/compartido/sesion/sesion.servidor";
+import { Suspense } from "react";
 import { FondoDeCancha } from "@/compartido/ui/fondo-de-cancha";
 import { CAMBIO_DE_ACCESO, TransicionDeAcceso } from "@/compartido/ui/transicion-de-acceso";
+import { AvisoDeInactividad, type ParametrosDeAcceso } from "./aviso-de-inactividad";
 import { FormularioDeAcceso } from "./formulario-de-acceso";
+import { RedirigirSiHaySesion } from "./redirigir-si-hay-sesion";
 import { TarjetaDeAcceso } from "./tarjeta-de-acceso";
 
-type ParametrosDeAcceso = Promise<{ motivo?: string | string[] }>;
-
-/** Muestra el acceso o lleva a su panel a quien ya tiene una sesión. */
-export async function PantallaDeAcceso({ parametros }: { parametros: ParametrosDeAcceso }) {
-  const sesion = await consultarSesionEnServidor((await cookies()).toString());
-  if (sesion) redirect(destinoDeSesion(sesion));
-  const { motivo } = await parametros;
-
+/**
+ * Pantalla de inicio de sesión. La cancha y la tarjeta son estáticas para que
+ * entren con la transición desde el registro; la consulta de la sesión y el
+ * aviso de inactividad cargan aparte, sin retrasar la tarjeta.
+ */
+export function PantallaDeAcceso({ parametros }: { parametros: ParametrosDeAcceso }) {
   return (
     <div className="relative isolate min-h-dvh overflow-hidden bg-cancha">
+      <Suspense fallback={null}>
+        <RedirigirSiHaySesion />
+      </Suspense>
       <FondoDeCancha encuadre="acceso" />
-      <TransicionDeAcceso>
+      <TransicionDeAcceso parte="tarjeta">
         <TarjetaDeAcceso titulo="Inicia sesión" sobreCancha>
-          {motivo === "inactividad" && (
-            <p role="status" className="mb-5 rounded-lg bg-tiza px-4 py-3 text-sm text-grava">Tu sesión se cerró por inactividad.</p>
-          )}
+          <Suspense fallback={null}>
+            <AvisoDeInactividad parametros={parametros} />
+          </Suspense>
           <FormularioDeAcceso />
           <p className="mt-4 text-center text-sm text-grava sm:mt-6">
             ¿Todavía no tienes cuenta?{" "}

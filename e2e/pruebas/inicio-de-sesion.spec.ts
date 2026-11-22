@@ -61,20 +61,14 @@ test("conecta el acceso y el registro con la misma cancha y un enlace junto al t
   await expect(page.locator("html")).toHaveAttribute("data-cambios-de-acceso", "2");
 });
 
-test.describe("Espera antes de mostrar el acceso", () => {
+test.describe("Acceso sin JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("muestra las dominadas y respeta el movimiento reducido", async ({ page }) => {
+  test("muestra la tarjeta de acceso de inmediato, sin esperar la sesión", async ({ page }) => {
     await page.goto(RUTA_DE_ACCESO);
-    const espera = page.getByRole("status");
-    await expect(espera).toHaveText("Cargando tu cuenta…");
-    const balon = espera.locator(".espera-de-cancha__balon");
-    await expect(balon).toHaveCSS("animation-name", "dominadas");
 
-    await page.emulateMedia({ reducedMotion: "reduce" });
-
-    await expect(balon).toHaveCSS("animation-name", "none");
-    await expect(espera).toHaveText("Cargando tu cuenta…");
+    await expect(page.getByRole("heading", { name: "Inicia sesión" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Iniciar sesión" })).toBeVisible();
   });
 });
 
