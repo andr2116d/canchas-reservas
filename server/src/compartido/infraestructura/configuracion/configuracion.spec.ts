@@ -19,6 +19,14 @@ describe('leerConfiguracion', () => {
     expect(configuracion.claveCifrado).toHaveLength(32);
     expect(configuracion.cookieSegura).toBe(true);
     expect(configuracion.saltosDeProxy).toBe(1);
+    expect(configuracion.limiteDeRegistrosPorHora).toBe(10);
+  });
+
+  it('permite ajustar el límite de registros por hora', () => {
+    expect(
+      leerConfiguracion(unEntornoValido({ LIMITE_REGISTROS_POR_HORA: '50' }))
+        .limiteDeRegistrosPorHora,
+    ).toBe(50);
   });
 
   it('solo desactiva la cookie segura en desarrollo y pruebas', () => {

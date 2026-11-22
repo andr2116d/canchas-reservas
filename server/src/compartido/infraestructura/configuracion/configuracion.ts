@@ -10,6 +10,8 @@ export interface Configuracion {
   cookieSegura: boolean;
   /** Proxies delante del server (Next en local, balanceador y Next en AWS) para leer la IP real. */
   saltosDeProxy: number;
+  /** Registros permitidos por hora desde una misma IP. */
+  limiteDeRegistrosPorHora: number;
 }
 
 type Entorno = Record<string, string | undefined>;
@@ -39,6 +41,11 @@ function leerEntero(entorno: Entorno, variable: string, porDefecto: number) {
   return Number(valor);
 }
 
+/** Registros por hora desde una IP; 10 si no se configura. */
+export function leerLimiteDeRegistros(entorno: Entorno): number {
+  return leerEntero(entorno, 'LIMITE_REGISTROS_POR_HORA', 10);
+}
+
 /** Lee las variables de entorno y falla con un mensaje claro si falta alguna. */
 export function leerConfiguracion(entorno: Entorno): Configuracion {
   return {
@@ -48,5 +55,6 @@ export function leerConfiguracion(entorno: Entorno): Configuracion {
     claveHash: leerClave(entorno, 'CLAVE_HASH'),
     cookieSegura: !ENTORNOS_SIN_HTTPS.includes(entorno.NODE_ENV ?? ''),
     saltosDeProxy: leerEntero(entorno, 'SALTOS_PROXY', 1),
+    limiteDeRegistrosPorHora: leerLimiteDeRegistros(entorno),
   };
 }
