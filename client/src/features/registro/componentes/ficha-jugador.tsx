@@ -2,7 +2,7 @@
 
 import { useFormContext, useWatch } from "react-hook-form";
 import type { DatosRegistro } from "../esquemas/registro.schema";
-import { MonogramaLaPrevia } from "./monograma-la-previa";
+import { MonogramaLaPrevia } from "@/compartido/ui/monograma-la-previa";
 
 const NOMBRE_DEL_DOCUMENTO = { DNI: "DNI", CARNE_EXTRANJERIA: "Carné" } as const;
 
