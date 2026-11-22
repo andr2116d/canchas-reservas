@@ -1,7 +1,7 @@
 "use client";
 
-import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
-import { useFormContext } from "react-hook-form";
+import type { ChangeEvent, ClipboardEvent, InputHTMLAttributes, ReactNode } from "react";
+import { useFormContext, type UseFormRegisterReturn } from "react-hook-form";
 import type { DatosRegistro } from "../esquemas/registro.schema";
 import { EtiquetaDeCampo } from "./etiqueta-de-campo";
 
@@ -15,7 +15,7 @@ export interface CampoDeTextoProps
   accesorio?: ReactNode;
   /** Los campos son obligatorios salvo que se indique lo contrario. */
   opcional?: boolean;
-  /** Descarta lo que no se puede escribir en el campo (por ejemplo, letras en un DNI). */
+  /** Limita lo que se escribe en el campo (por ejemplo, el largo del DNI). */
   filtrarEntrada?: (valor: string) => string;
 }
 
@@ -37,6 +37,32 @@ function filtrarConservandoCursor(evento: ChangeEvent<HTMLInputElement>, filtrar
   entrada.setSelectionRange(cursor, cursor);
 }
 
+function eventosDeEntradaFiltrada(
+  registro: UseFormRegisterReturn,
+  filtrar: CampoDeTextoProps["filtrarEntrada"],
+  guardarPegado: (valor: string) => void,
+) {
+  if (!filtrar) return {};
+  return {
+    onChange(evento: ChangeEvent<HTMLInputElement>) {
+      filtrarConservandoCursor(evento, filtrar);
+      return registro.onChange(evento);
+    },
+    onPaste(evento: ClipboardEvent<HTMLInputElement>) {
+      evento.preventDefault();
+      const entrada = evento.currentTarget;
+      const inicio = entrada.selectionStart ?? entrada.value.length;
+      const fin = entrada.selectionEnd ?? inicio;
+      // Conserva todos los caracteres salvo espacios y guiones entre dígitos.
+      const pegado = evento.clipboardData.getData("text").trim().replace(/(?<=\d)[\s-]+(?=\d)/g, "");
+      const completo = entrada.value.slice(0, inicio) + pegado + entrada.value.slice(fin);
+      const filtrado = filtrar(completo);
+      guardarPegado(filtrado === completo.toUpperCase() ? filtrado : completo);
+      entrada.setSelectionRange(inicio + pegado.length, inicio + pegado.length);
+    },
+  };
+}
+
 /** Campo de texto con su etiqueta, su ayuda y su error asociados. */
 export function CampoDeTexto({
   nombre,
@@ -48,12 +74,11 @@ export function CampoDeTexto({
   className = "",
   ...entrada
 }: CampoDeTextoProps) {
-  const { register, formState } = useFormContext<DatosRegistro>();
+  const { register, setValue, formState } = useFormContext<DatosRegistro>();
   const registro = register(nombre);
-  const alCambiar = (evento: ChangeEvent<HTMLInputElement>) => {
-    if (filtrarEntrada) filtrarConservandoCursor(evento, filtrarEntrada);
-    return registro.onChange(evento);
-  };
+  const eventos = eventosDeEntradaFiltrada(registro, filtrarEntrada, (valor) =>
+    setValue(nombre, valor, { shouldDirty: true, shouldValidate: true }),
+  );
   const error = formState.errors[nombre]?.message;
   const idAyuda = `${nombre}-ayuda`;
   const idError = `${nombre}-error`;
@@ -73,7 +98,7 @@ export function CampoDeTexto({
           className={`${ESTILO_ENTRADA} ${className}`}
           {...entrada}
           {...registro}
-          onChange={alCambiar}
+          {...eventos}
         />
         {accesorio}
       </div>

@@ -52,6 +52,19 @@ describe("Registro: validación y restricciones mientras se escribe", () => {
       expect(campo("Número de documento")).toHaveValue("45678912");
     });
 
+    it.each([
+      ["Número de documento", "456789123", "El DNI debe tener 8 dígitos."],
+      ["Celular", "9876543210", "El celular debe tener 9 dígitos."],
+    ])("avisa si el número pegado en %s es demasiado largo", async (nombre, valor, mensaje) => {
+      const persona = mostrarRegistro();
+      await persona.click(campo(nombre));
+
+      await persona.paste(valor);
+
+      expect(campo(nombre)).toHaveValue(valor);
+      expect(campo(nombre)).toHaveAccessibleDescription(mensaje);
+    });
+
     it("con carné acepta solo letras y números, en mayúscula y hasta 12", async () => {
       const persona = mostrarRegistro();
       await persona.click(screen.getByRole("radio", { name: "Carné de extranjería" }));
