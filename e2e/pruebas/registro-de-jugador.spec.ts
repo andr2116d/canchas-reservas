@@ -51,14 +51,16 @@ test.describe("Registro de jugador", () => {
     );
   });
 
-  test("con DNI y en el celular solo entran números, hasta 8 y 9", async ({ page }) => {
+  test("con DNI, en el celular y en el dorsal solo entran números, hasta 8, 9 y 2", async ({ page }) => {
     await page.goto("/registro");
 
     await campo(page, "Número de documento").pressSequentially("45A67B891234");
     await campo(page, "Celular").pressSequentially("98a76 54-3210");
+    await campo(page, "Dorsal").pressSequentially("1O a 234");
 
     await expect(campo(page, "Número de documento")).toHaveValue("45678912");
     await expect(campo(page, "Celular")).toHaveValue("987654321");
+    await expect(campo(page, "Dorsal")).toHaveValue("12");
   });
 
   test("con carné entran hasta 12 letras o números, y al volver a DNI se vacía", async ({ page }) => {
