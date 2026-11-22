@@ -18,7 +18,7 @@ const eslintConfig = defineConfig([
       "max-lines-per-function": "off",
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", ".next-e2e/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;
