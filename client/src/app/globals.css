@@ -20,9 +20,16 @@
   --color-error-fondo: #fbeceb;
 }
 
+/* La página no rebota al llegar a sus bordes y, si el sistema la estira igual, se ve el mismo fondo. */
+html {
+  background: var(--color-tiza);
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--color-tiza);
   color: var(--color-tinta);
+  overscroll-behavior: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
