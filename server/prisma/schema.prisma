@@ -33,6 +33,7 @@ model Usuario {
   nombresCifrado         String        @map("nombres_cifrado")
   apellidosCifrado       String        @map("apellidos_cifrado")
   fechaNacimientoCifrada String        @map("fecha_nacimiento_cifrada")
+  dorsal                 Int?          @db.SmallInt
   tipoDocumento          TipoDocumento @map("tipo_documento")
   numeroDocumentoCifrado String        @map("numero_documento_cifrado")
   documentoHash          String        @unique @map("documento_hash")
