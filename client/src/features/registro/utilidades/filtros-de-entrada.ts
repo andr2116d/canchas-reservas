@@ -12,6 +12,9 @@ export const filtrarDni = digitosHasta(LARGOS.dni);
 /** Celular: solo números, máximo 9. */
 export const filtrarCelular = digitosHasta(LARGOS.celular);
 
+/** Dorsal: solo números, máximo 2 (del 1 al 99). */
+export const filtrarDorsal = digitosHasta(LARGOS.dorsal);
+
 /** Carné de extranjería: letras y números en mayúscula, máximo 12. */
 export function filtrarCarneExtranjeria(valor: string): string {
   return valor

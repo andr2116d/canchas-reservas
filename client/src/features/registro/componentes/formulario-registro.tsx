@@ -3,7 +3,7 @@
 import type { FormEventHandler, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 import { type DatosRegistro, LARGOS } from "../esquemas/registro.schema";
-import { filtrarCelular } from "../utilidades/filtros-de-entrada";
+import { filtrarCelular, filtrarDorsal } from "../utilidades/filtros-de-entrada";
 import { CampoContrasena } from "./campo-contrasena";
 import { CampoDeTexto } from "./campo-de-texto";
 import { CamposDelDocumento } from "./campos-del-documento";
@@ -35,7 +35,7 @@ function GrupoDelJugador() {
         <CampoDeTexto nombre="nombres" etiqueta="Nombres" autoComplete="given-name" maxLength={LARGOS.nombre} />
         <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" maxLength={LARGOS.nombre} />
         <CampoDeTexto nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" type="date" autoComplete="bday" />
-        <CampoDeTexto nombre="dorsal" etiqueta="Dorsal" opcional inputMode="numeric" maxLength={2} placeholder="Del 1 al 99" />
+        <CampoDeTexto nombre="dorsal" etiqueta="Dorsal" opcional inputMode="numeric" filtrarEntrada={filtrarDorsal} placeholder="Del 1 al 99" />
       </div>
       <CamposDelDocumento />
     </Grupo>

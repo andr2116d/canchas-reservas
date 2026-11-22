@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { filtrarCarneExtranjeria, filtrarCelular, filtrarDni } from "./filtros-de-entrada";
+import {
+  filtrarCarneExtranjeria,
+  filtrarCelular,
+  filtrarDni,
+  filtrarDorsal,
+} from "./filtros-de-entrada";
 
 describe("filtrarDni", () => {
   it.each([
@@ -32,5 +37,17 @@ describe("filtrarCelular", () => {
     ["9876543210", "987654321"],
   ])('"%s" queda como "%s": solo números y máximo 9', (entrada, salida) => {
     expect(filtrarCelular(entrada)).toBe(salida);
+  });
+});
+
+describe("filtrarDorsal", () => {
+  it.each([
+    ["10", "10"],
+    ["1O", "1"],
+    ["a7", "7"],
+    ["123", "12"],
+    ["#9", "9"],
+  ])('"%s" queda como "%s": solo números y máximo 2', (entrada, salida) => {
+    expect(filtrarDorsal(entrada)).toBe(salida);
   });
 });

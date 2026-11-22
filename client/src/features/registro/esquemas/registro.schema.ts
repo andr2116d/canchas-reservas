@@ -10,6 +10,7 @@ export const LARGOS = {
   carneMinimo: 9,
   carneMaximo: 12,
   celular: 9,
+  dorsal: 2,
   correo: 254,
   contrasenaMinima: 8,
   contrasenaMaxima: 64,

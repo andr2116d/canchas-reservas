@@ -61,7 +61,15 @@ describe("Registro: validación y restricciones mientras se escribe", () => {
       expect(campo("Número de documento")).toHaveValue("AB1234567890");
     });
 
-    it("el celular solo acepta números y hasta 9", async () => {
+    it("el dorsal, aunque es opcional, solo acepta números y hasta 2", async () => {
+    const persona = mostrarRegistro();
+
+    await persona.type(campo("Dorsal"), "1O a 234");
+
+    expect(campo("Dorsal")).toHaveValue("12");
+  });
+
+  it("el celular solo acepta números y hasta 9", async () => {
       const persona = mostrarRegistro();
 
       await persona.type(campo("Celular"), "98a7 654-32109");
