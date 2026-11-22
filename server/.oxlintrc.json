@@ -9,7 +9,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.spec.ts", "**/*.e2e-spec.ts"],
+      "files": ["**/*.spec.ts", "**/*.int-spec.ts"],
       "rules": {
         "max-lines-per-function": "off"
       }

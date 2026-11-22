@@ -64,5 +64,5 @@ jobs:
         run: npm run db:deploy -w server
       - name: Verificar que schema.prisma y las migraciones coinciden
         run: node scripts/ci/verificar-migraciones.mjs
-      - name: Pruebas e2e
-        run: npm run test:e2e -w server
+      - name: Pruebas de integración
+        run: npm run test:integracion -w server

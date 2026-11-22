@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import type { PrismaService } from '../../src/compartido/infraestructura/prisma/prisma.service';
-import { unJugadorValido } from '../fabricas/datos-registro-jugador';
-import { crearAppDePrueba } from '../soporte/crear-app-de-prueba';
-import { limpiarTablas } from '../soporte/limpiar-tablas';
+import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
+import { unJugadorValido } from '../../fabricas/datos-registro-jugador';
+import { crearAppDePrueba } from '../../soporte/crear-app-de-prueba';
+import { limpiarTablas } from '../../soporte/limpiar-tablas';
 
 /** Extrae el valor de la cookie `sesion` de una respuesta. */
 function cookieDeSesion(cabeceras: Record<string, unknown>): string {

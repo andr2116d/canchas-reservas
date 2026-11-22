@@ -1,15 +1,15 @@
 import { randomBytes } from 'node:crypto';
-import { AesGcmCifradorAdapter } from '../../src/compartido/infraestructura/cifrado/aes-gcm-cifrador.adapter';
-import { leerConfiguracion } from '../../src/compartido/infraestructura/configuracion/configuracion';
-import { PrismaService } from '../../src/compartido/infraestructura/prisma/prisma.service';
-import { Celular } from '../../src/modulos/usuarios/dominio/celular.value-object';
-import { Correo } from '../../src/modulos/usuarios/dominio/correo.value-object';
-import { CuentaYaExisteError } from '../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
-import { DocumentoIdentidad } from '../../src/modulos/usuarios/dominio/documento-identidad.value-object';
-import { NombrePersona } from '../../src/modulos/usuarios/dominio/nombre-persona.value-object';
-import { Usuario } from '../../src/modulos/usuarios/dominio/usuario.entity';
-import { PrismaUsuarioRepository } from '../../src/modulos/usuarios/infraestructura/persistencia/prisma-usuario.repository';
-import { limpiarTablas } from '../soporte/limpiar-tablas';
+import { AesGcmCifradorAdapter } from '../../../src/compartido/infraestructura/cifrado/aes-gcm-cifrador.adapter';
+import { leerConfiguracion } from '../../../src/compartido/infraestructura/configuracion/configuracion';
+import { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
+import { Celular } from '../../../src/modulos/usuarios/dominio/celular.value-object';
+import { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
+import { CuentaYaExisteError } from '../../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
+import { DocumentoIdentidad } from '../../../src/modulos/usuarios/dominio/documento-identidad.value-object';
+import { NombrePersona } from '../../../src/modulos/usuarios/dominio/nombre-persona.value-object';
+import { Usuario } from '../../../src/modulos/usuarios/dominio/usuario.entity';
+import { PrismaUsuarioRepository } from '../../../src/modulos/usuarios/infraestructura/persistencia/prisma-usuario.repository';
+import { limpiarTablas } from '../../soporte/limpiar-tablas';
 
 function unJugador(documento = '45678912', correo = 'valeria@gmail.com') {
   return Usuario.registrarJugador({

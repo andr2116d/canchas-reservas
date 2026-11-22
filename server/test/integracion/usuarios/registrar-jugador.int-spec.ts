@@ -1,10 +1,10 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import type { PrismaService } from '../../src/compartido/infraestructura/prisma/prisma.service';
-import { HASHEADOR_CONTRASENA } from '../../src/modulos/usuarios/aplicacion/hasheador-contrasena.port';
-import { unJugadorValido } from '../fabricas/datos-registro-jugador';
-import { crearAppDePrueba } from '../soporte/crear-app-de-prueba';
-import { limpiarTablas } from '../soporte/limpiar-tablas';
+import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
+import { HASHEADOR_CONTRASENA } from '../../../src/modulos/usuarios/aplicacion/hasheador-contrasena.port';
+import { unJugadorValido } from '../../fabricas/datos-registro-jugador';
+import { crearAppDePrueba } from '../../soporte/crear-app-de-prueba';
+import { limpiarTablas } from '../../soporte/limpiar-tablas';
 
 const RUTA = '/api/jugadores';
 
