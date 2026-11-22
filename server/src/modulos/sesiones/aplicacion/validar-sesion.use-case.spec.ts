@@ -2,6 +2,7 @@ import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-
 import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
 import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
 import { AbrirSesionUseCase } from './abrir-sesion.use-case';
+import { CerrarSesionUseCase } from './cerrar-sesion.use-case';
 import { ValidarSesionUseCase } from './validar-sesion.use-case';
 
 async function prepararSesionAbierta() {
@@ -14,30 +15,57 @@ async function prepararSesionAbierta() {
     reloj,
   ).ejecutar(7);
   const validar = new ValidarSesionUseCase(sesiones, generador, reloj);
-  return { reloj, token, validar };
+  return {
+    reloj,
+    token,
+    validar,
+    cerrar: new CerrarSesionUseCase(sesiones, generador),
+  };
 }
 
 describe('ValidarSesionUseCase', () => {
   it('devuelve el usuario de una sesión vigente', async () => {
     const { token, validar } = await prepararSesionAbierta();
 
-    await expect(validar.ejecutar(token)).resolves.toEqual({ usuarioId: 7 });
+    await expect(validar.ejecutar(token)).resolves.toMatchObject({
+      usuarioId: 7,
+      rol: 'JUGADOR',
+    });
   });
 
   it('registra la actividad para que la sesión siga viva', async () => {
     const { token, validar, reloj } = await prepararSesionAbierta();
 
-    reloj.avanzarMinutos(25);
+    reloj.avanzarMinutos(10);
     await validar.ejecutar(token);
-    reloj.avanzarMinutos(25);
+    reloj.avanzarMinutos(10);
 
-    await expect(validar.ejecutar(token)).resolves.toEqual({ usuarioId: 7 });
+    await expect(validar.ejecutar(token)).resolves.toMatchObject({
+      usuarioId: 7,
+    });
   });
 
-  it('rechaza una sesión inactiva por 30 minutos', async () => {
+  it('rechaza una sesión inactiva por 15 minutos', async () => {
     const { token, validar, reloj } = await prepararSesionAbierta();
 
-    reloj.avanzarMinutos(30);
+    reloj.avanzarMinutos(15);
+
+    await expect(validar.ejecutar(token)).resolves.toBeUndefined();
+  });
+
+  it('permite consultar la vigencia sin extenderla', async () => {
+    const { token, validar, reloj } = await prepararSesionAbierta();
+    reloj.avanzarMinutos(10);
+
+    await expect(validar.ejecutar(token, () => false)).resolves.toBeDefined();
+    reloj.avanzarMinutos(5);
+    await expect(validar.ejecutar(token)).resolves.toBeUndefined();
+  });
+
+  it('rechaza el token después de revocarlo', async () => {
+    const { token, validar, cerrar } = await prepararSesionAbierta();
+
+    await cerrar.ejecutar(token);
 
     await expect(validar.ejecutar(token)).resolves.toBeUndefined();
   });

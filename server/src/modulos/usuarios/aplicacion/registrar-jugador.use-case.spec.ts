@@ -5,6 +5,8 @@ import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
 import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
+import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
+import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';
 import type { HasheadorContrasena } from './hasheador-contrasena.port';
 import { RegistrarJugadorUseCase } from './registrar-jugador.use-case';
 
@@ -122,7 +124,7 @@ describe('RegistrarJugadorUseCase', () => {
       unJugadorValido({ fechaNacimiento: '1998-05-14' }),
     );
 
-    expect(usuarios.todos()[0].fechaNacimiento.fecha).toBe('1998-05-14');
+    expect(usuarios.todos()[0].fechaNacimiento?.fecha).toBe('1998-05-14');
   });
 
   it('guarda el dorsal elegido', async () => {
@@ -176,5 +178,3 @@ describe('RegistrarJugadorUseCase', () => {
     expect(usuarios.todos()).toHaveLength(0);
   });
 });
-import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
-import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';

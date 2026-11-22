@@ -12,6 +12,7 @@ export interface Configuracion {
   saltosDeProxy: number;
   /** Registros permitidos por hora desde una misma IP. */
   limiteDeRegistrosPorHora: number;
+  dominioCorporativo?: string;
 }
 
 type Entorno = Record<string, string | undefined>;
@@ -46,6 +47,21 @@ export function leerLimiteDeRegistros(entorno: Entorno): number {
   return leerEntero(entorno, 'LIMITE_REGISTROS_POR_HORA', 10);
 }
 
+function leerDominioCorporativo(entorno: Entorno): string | undefined {
+  const dominio = entorno.DOMINIO_CORPORATIVO?.trim().toLowerCase();
+  if (!dominio) return undefined;
+  if (
+    !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(
+      dominio,
+    )
+  ) {
+    throw new Error(
+      'DOMINIO_CORPORATIVO debe contener un dominio de correo válido.',
+    );
+  }
+  return dominio;
+}
+
 /** Lee las variables de entorno y falla con un mensaje claro si falta alguna. */
 export function leerConfiguracion(entorno: Entorno): Configuracion {
   return {
@@ -56,5 +72,6 @@ export function leerConfiguracion(entorno: Entorno): Configuracion {
     cookieSegura: !ENTORNOS_SIN_HTTPS.includes(entorno.NODE_ENV ?? ''),
     saltosDeProxy: leerEntero(entorno, 'SALTOS_PROXY', 1),
     limiteDeRegistrosPorHora: leerLimiteDeRegistros(entorno),
+    dominioCorporativo: leerDominioCorporativo(entorno),
   };
 }

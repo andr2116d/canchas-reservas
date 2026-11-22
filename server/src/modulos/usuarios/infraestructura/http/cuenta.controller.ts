@@ -1,5 +1,6 @@
 import { Controller, Get, UnauthorizedException } from '@nestjs/common';
 import {
+  RequerirPermiso,
   SesionDeLaSolicitud,
   type SesionValida,
 } from '../../../sesiones/api-sesiones';
@@ -14,6 +15,7 @@ export class CuentaController {
   constructor(private readonly consultarCuenta: ConsultarCuentaUseCase) {}
 
   @Get()
+  @RequerirPermiso('panel:jugador')
   async consultar(
     @SesionDeLaSolicitud() sesion: SesionValida,
   ): Promise<Cuenta> {

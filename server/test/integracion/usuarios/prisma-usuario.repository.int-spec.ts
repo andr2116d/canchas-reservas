@@ -106,8 +106,8 @@ describe('PrismaUsuarioRepository', () => {
     const usuario = await repositorio.buscarPorId(id);
 
     expect(usuario?.nombres.texto).toBe('Valeria');
-    expect(usuario?.documento.identificador()).toBe('DNI:45678912');
-    expect(usuario?.fechaNacimiento.fecha).toBe('1998-05-14');
+    expect(usuario?.documento?.identificador()).toBe('DNI:45678912');
+    expect(usuario?.fechaNacimiento?.fecha).toBe('1998-05-14');
     expect(usuario?.correo.direccion).toBe('valeria@gmail.com');
     expect(usuario?.estaActivo()).toBe(true);
   });

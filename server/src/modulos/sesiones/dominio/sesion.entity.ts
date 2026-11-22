@@ -1,6 +1,5 @@
 const MINUTO = 60 * 1000;
-// OWASP sugiere 15 a 30 minutos de inactividad para aplicaciones de bajo riesgo.
-const MINUTOS_DE_INACTIVIDAD = 30;
+const MINUTOS_DE_INACTIVIDAD = 15;
 const HORAS_DE_DURACION_MAXIMA = 8;
 
 /** Datos de una sesión nueva antes de asociarla a un usuario. */
@@ -15,7 +14,7 @@ interface DatosSesion extends SesionNueva {
 }
 
 /**
- * Sesión iniciada de un usuario. Vence tras 30 minutos sin actividad o a las
+ * Sesión iniciada de un usuario. Vence tras 15 minutos sin actividad o a las
  * 8 horas de abrirse, lo que ocurra primero.
  */
 export class Sesion {
@@ -59,10 +58,13 @@ export class Sesion {
   }
 
   estaVigente(ahora: Date): boolean {
-    const inactiva =
-      ahora.getTime() - this.datos.ultimaActividadEn.getTime() >=
-      MINUTOS_DE_INACTIVIDAD * MINUTO;
-    return !inactiva && ahora < this.datos.expiraEn;
+    return ahora < this.venceEn();
+  }
+
+  venceEn(): Date {
+    const limiteDeInactividad =
+      this.ultimaActividadEn.getTime() + MINUTOS_DE_INACTIVIDAD * MINUTO;
+    return new Date(Math.min(limiteDeInactividad, this.expiraEn.getTime()));
   }
 
   /** Devuelve la misma sesión con la actividad renovada al momento indicado. */

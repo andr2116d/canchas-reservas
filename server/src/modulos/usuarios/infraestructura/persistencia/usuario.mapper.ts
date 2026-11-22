@@ -32,17 +32,21 @@ export function aFilaNueva(
   return {
     nombresCifrado: cifrador.cifrar(usuario.nombres.texto),
     apellidosCifrado: cifrador.cifrar(usuario.apellidos.texto),
-    fechaNacimientoCifrada: cifrador.cifrar(usuario.fechaNacimiento.fecha),
-    tipoDocumento: usuario.documento.tipo,
-    numeroDocumentoCifrado: cifrador.cifrar(usuario.documento.numero),
-    documentoHash: hashDeDocumento(usuario.documento, cifrador),
+    fechaNacimientoCifrada:
+      usuario.fechaNacimiento && cifrador.cifrar(usuario.fechaNacimiento.fecha),
+    tipoDocumento: usuario.documento?.tipo,
+    numeroDocumentoCifrado:
+      usuario.documento && cifrador.cifrar(usuario.documento.numero),
+    documentoHash:
+      usuario.documento && hashDeDocumento(usuario.documento, cifrador),
     correoCifrado: cifrador.cifrar(usuario.correo.direccion),
     correoHash: hashDeCorreo(usuario.correo, cifrador),
-    celularCifrado: cifrador.cifrar(usuario.celular.numero),
+    celularCifrado: usuario.celular && cifrador.cifrar(usuario.celular.numero),
     contrasenaHash: usuario.contrasenaHash,
     dorsal: usuario.dorsal?.numero ?? null,
     rol: usuario.rol,
     estado: usuario.estado,
+    requiereCambiarContrasena: usuario.requiereCambiarContrasena,
   };
 }
 
@@ -56,18 +60,24 @@ export function aEntidad(fila: FilaUsuario, cifrador: Cifrador): Usuario {
       descifrar(fila.apellidosCifrado),
       'apellidos',
     ),
-    fechaNacimiento: FechaNacimiento.restaurar(
-      descifrar(fila.fechaNacimientoCifrada),
-    ),
-    documento: DocumentoIdentidad.crear(
-      fila.tipoDocumento,
-      descifrar(fila.numeroDocumentoCifrado),
-    ),
+    fechaNacimiento: fila.fechaNacimientoCifrada
+      ? FechaNacimiento.restaurar(descifrar(fila.fechaNacimientoCifrada))
+      : undefined,
+    documento:
+      fila.tipoDocumento && fila.numeroDocumentoCifrado
+        ? DocumentoIdentidad.crear(
+            fila.tipoDocumento,
+            descifrar(fila.numeroDocumentoCifrado),
+          )
+        : undefined,
     correo: Correo.crear(descifrar(fila.correoCifrado)),
-    celular: Celular.crear(descifrar(fila.celularCifrado)),
+    celular: fila.celularCifrado
+      ? Celular.crear(descifrar(fila.celularCifrado))
+      : undefined,
     contrasenaHash: fila.contrasenaHash,
     dorsal: fila.dorsal === null ? undefined : Dorsal.restaurar(fila.dorsal),
     rol: fila.rol,
     estado: fila.estado,
+    requiereCambiarContrasena: fila.requiereCambiarContrasena,
   });
 }

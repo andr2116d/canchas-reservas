@@ -11,7 +11,7 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
   existeConDocumento(documento: DocumentoIdentidad): Promise<boolean> {
     const identificador = documento.identificador();
     return Promise.resolve(
-      this.usuarios.some((u) => u.documento.identificador() === identificador),
+      this.usuarios.some((u) => u.documento?.identificador() === identificador),
     );
   }
 
@@ -27,7 +27,7 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
 
   async crear(usuario: Usuario): Promise<number> {
     const [documentoUsado, correoUsado] = await Promise.all([
-      this.existeConDocumento(usuario.documento),
+      usuario.documento && this.existeConDocumento(usuario.documento),
       this.existeConCorreo(usuario.correo),
     ]);
     if (documentoUsado) throw new CuentaYaExisteError(['numeroDocumento']);
@@ -47,9 +47,14 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
         dorsal: usuario.dorsal,
         rol: usuario.rol,
         estado: usuario.estado,
+        requiereCambiarContrasena: usuario.requiereCambiarContrasena,
       }),
     );
     return id;
+  }
+
+  async crearPersonal(usuario: Usuario): Promise<void> {
+    await this.crear(usuario);
   }
 
   /** Lista lo guardado, para que las pruebas lo inspeccionen. */

@@ -28,6 +28,12 @@ npm run dev
 - Client: http://localhost:3000
 - Server: http://localhost:3001/api
 
+## Acceso del personal
+
+Configura `DOMINIO_CORPORATIVO` en el entorno del servidor con el dominio de correo de la empresa. Con las migraciones aplicadas, ejecuta `npm run personal:crear-administrador -w server -- correo nombres apellidos`. Entrega `CONTRASENA_TEMPORAL_ADMINISTRADOR` al proceso desde el entorno de ejecución y comparte la contraseña temporal por un canal privado.
+
+Un administrador que ya cambió su contraseña temporal puede dar de alta a un recepcionista con `POST /api/recepcionistas`. El cuerpo lleva `nombres`, `apellidos`, `correo` y `contrasena`. El recepcionista cambia la contraseña en su primer acceso.
+
 ## Comandos
 
 | Comando | Qué hace |

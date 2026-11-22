@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { RELOJ, type Reloj } from '../../compartido/aplicacion/reloj.port';
 import { AbrirSesionUseCase } from './aplicacion/abrir-sesion.use-case';
+import { CerrarSesionUseCase } from './aplicacion/cerrar-sesion.use-case';
 import {
   GENERADOR_TOKEN_SESION,
   type GeneradorTokenSesion,
@@ -12,6 +13,8 @@ import {
   type SesionRepository,
 } from './dominio/sesion.repository';
 import { SesionGuard } from './infraestructura/http/sesion.guard';
+import { SesionesController } from './infraestructura/http/sesiones.controller';
+import { PanelesController } from './infraestructura/http/paneles.controller';
 import { PrismaSesionRepository } from './infraestructura/persistencia/prisma-sesion.repository';
 import { CryptoGeneradorTokenSesionAdapter } from './infraestructura/seguridad/crypto-generador-token-sesion.adapter';
 
@@ -19,6 +22,7 @@ const DEPENDENCIAS = [SESION_REPOSITORY, GENERADOR_TOKEN_SESION, RELOJ];
 
 /** Sesiones de usuario y protección de todas las rutas privadas. */
 @Module({
+  controllers: [SesionesController, PanelesController],
   providers: [
     { provide: SESION_REPOSITORY, useClass: PrismaSesionRepository },
     {
@@ -42,6 +46,14 @@ const DEPENDENCIAS = [SESION_REPOSITORY, GENERADOR_TOKEN_SESION, RELOJ];
         reloj: Reloj,
       ) => new ValidarSesionUseCase(sesiones, generador, reloj),
       inject: DEPENDENCIAS,
+    },
+    {
+      provide: CerrarSesionUseCase,
+      useFactory: (
+        sesiones: SesionRepository,
+        generador: GeneradorTokenSesion,
+      ) => new CerrarSesionUseCase(sesiones, generador),
+      inject: [SESION_REPOSITORY, GENERADOR_TOKEN_SESION],
     },
     { provide: APP_GUARD, useClass: SesionGuard },
   ],

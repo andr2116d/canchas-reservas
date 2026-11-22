@@ -1,3 +1,4 @@
+import type { SesionNueva } from '../../sesiones/api-sesiones';
 import type { Correo } from './correo.value-object';
 import type { DocumentoIdentidad } from './documento-identidad.value-object';
 import type { Usuario } from './usuario.entity';
@@ -22,5 +23,6 @@ export interface UsuarioRepository {
    * Lanza CuentaYaExisteError si ya existe el documento o el correo.
    */
   crear(usuario: Usuario, alta: DatosDelAlta): Promise<number>;
+
+  crearPersonal(usuario: Usuario): Promise<void>;
 }
-import type { SesionNueva } from '../../sesiones/api-sesiones';

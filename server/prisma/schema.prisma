@@ -17,38 +17,43 @@ enum TipoDocumento {
 }
 
 enum RolUsuario {
-  JUGADOR @map("jugador")
+  JUGADOR       @map("jugador")
+  ADMINISTRADOR @map("administrador")
+  RECEPCIONISTA @map("recepcionista")
 
   @@map("rol_usuario")
 }
 
 enum EstadoUsuario {
-  ACTIVO @map("activo")
+  ACTIVO   @map("activo")
+  INACTIVO @map("inactivo")
 
   @@map("estado_usuario")
 }
 
 model Usuario {
-  id                     Int           @id @default(autoincrement())
-  nombresCifrado         String        @map("nombres_cifrado")
-  apellidosCifrado       String        @map("apellidos_cifrado")
-  fechaNacimientoCifrada String        @map("fecha_nacimiento_cifrada")
-  dorsal                 Int?          @db.SmallInt
-  tipoDocumento          TipoDocumento @map("tipo_documento")
-  numeroDocumentoCifrado String        @map("numero_documento_cifrado")
-  documentoHash          String        @unique @map("documento_hash")
-  correoCifrado          String        @map("correo_cifrado")
-  correoHash             String        @unique @map("correo_hash")
-  celularCifrado         String        @map("celular_cifrado")
-  contrasenaHash         String        @map("contrasena_hash")
-  rol                    RolUsuario
-  estado                 EstadoUsuario
-  creadoEn               DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
-  actualizadoEn          DateTime      @updatedAt @map("actualizado_en") @db.Timestamptz(3)
-  versionLegalAceptada    String?       @map("version_legal_aceptada")
-  aceptacionLegalEn       DateTime?     @map("aceptacion_legal_en") @db.Timestamptz(3)
-  canalAceptacionLegal    String?       @map("canal_aceptacion_legal")
-  sesiones               Sesion[]
+  id                        Int              @id @default(autoincrement())
+  nombresCifrado            String           @map("nombres_cifrado")
+  apellidosCifrado          String           @map("apellidos_cifrado")
+  fechaNacimientoCifrada    String?          @map("fecha_nacimiento_cifrada")
+  dorsal                    Int?             @db.SmallInt
+  tipoDocumento             TipoDocumento?   @map("tipo_documento")
+  numeroDocumentoCifrado    String?          @map("numero_documento_cifrado")
+  documentoHash             String?          @unique @map("documento_hash")
+  correoCifrado             String           @map("correo_cifrado")
+  correoHash                String           @unique @map("correo_hash")
+  celularCifrado            String?          @map("celular_cifrado")
+  contrasenaHash            String           @map("contrasena_hash")
+  rol                       RolUsuario
+  estado                    EstadoUsuario
+  creadoEn                  DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn             DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  versionLegalAceptada      String?          @map("version_legal_aceptada")
+  aceptacionLegalEn         DateTime?        @map("aceptacion_legal_en") @db.Timestamptz(3)
+  canalAceptacionLegal      String?          @map("canal_aceptacion_legal")
+  sesiones                  Sesion[]
+  requiereCambiarContrasena Boolean          @default(false) @map("requiere_cambiar_contrasena")
+  accesos                   RegistroAcceso[]
 
   @@map("usuario")
 }
@@ -63,5 +68,16 @@ model Sesion {
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
 
+  @@index([usuarioId])
   @@map("sesion")
+}
+
+model RegistroAcceso {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int      @map("usuario_id")
+  ocurridoEn DateTime @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId, ocurridoEn])
+  @@map("registro_acceso")
 }

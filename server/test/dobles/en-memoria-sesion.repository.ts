@@ -1,5 +1,8 @@
 import type { Sesion } from '../../src/modulos/sesiones/dominio/sesion.entity';
-import type { SesionRepository } from '../../src/modulos/sesiones/dominio/sesion.repository';
+import type {
+  SesionConAcceso,
+  SesionRepository,
+} from '../../src/modulos/sesiones/dominio/sesion.repository';
 
 /** Repositorio en memoria para probar casos de uso sin base de datos. */
 export class EnMemoriaSesionRepository implements SesionRepository {
@@ -10,12 +13,27 @@ export class EnMemoriaSesionRepository implements SesionRepository {
     return Promise.resolve();
   }
 
-  buscarPorTokenHash(tokenHash: string): Promise<Sesion | undefined> {
-    return Promise.resolve(this.sesiones.get(tokenHash));
+  buscarPorTokenHash(tokenHash: string): Promise<SesionConAcceso | undefined> {
+    const sesion = this.sesiones.get(tokenHash);
+    return Promise.resolve(
+      sesion && {
+        sesion,
+        activa: true,
+        rol: 'JUGADOR',
+        requiereCambiarContrasena: false,
+      },
+    );
   }
 
-  actualizarActividad(sesion: Sesion): Promise<void> {
-    return this.guardar(sesion);
+  async actualizarActividad(sesion: Sesion): Promise<boolean> {
+    if (!this.sesiones.has(sesion.tokenHash)) return false;
+    await this.guardar(sesion);
+    return true;
+  }
+
+  eliminar(tokenHash: string): Promise<void> {
+    this.sesiones.delete(tokenHash);
+    return Promise.resolve();
   }
 
   /** Lista lo guardado, para que las pruebas lo inspeccionen. */

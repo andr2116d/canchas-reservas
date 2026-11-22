@@ -1,12 +1,13 @@
+import type {
+  EstadoUsuario,
+  RolUsuario,
+} from '../../../compartido/dominio/rol-usuario';
 import type { Celular } from './celular.value-object';
 import type { Correo } from './correo.value-object';
 import type { DocumentoIdentidad } from './documento-identidad.value-object';
 import type { Dorsal } from './dorsal.value-object';
 import type { FechaNacimiento } from './fecha-nacimiento.value-object';
 import type { NombrePersona } from './nombre-persona.value-object';
-
-export type RolUsuario = 'JUGADOR';
-export type EstadoUsuario = 'ACTIVO';
 
 /** Datos personales y de acceso que se piden al crear una cuenta. */
 export interface DatosDeCuenta {
@@ -21,10 +22,15 @@ export interface DatosDeCuenta {
   dorsal?: Dorsal;
 }
 
-interface EstadoCompleto extends DatosDeCuenta {
+type DatosDeJugador = 'fechaNacimiento' | 'documento' | 'celular';
+type DatosDeUsuario = Omit<DatosDeCuenta, DatosDeJugador> &
+  Partial<Pick<DatosDeCuenta, DatosDeJugador>>;
+
+interface EstadoCompleto extends DatosDeUsuario {
   id?: number;
   rol: RolUsuario;
   estado: EstadoUsuario;
+  requiereCambiarContrasena?: boolean;
 }
 
 /** Persona con cuenta en La Previa. */
@@ -34,6 +40,21 @@ export class Usuario {
   /** Crea la cuenta de un jugador nuevo: siempre con rol jugador y activa. */
   static registrarJugador(datos: DatosDeCuenta): Usuario {
     return new Usuario({ ...datos, rol: 'JUGADOR', estado: 'ACTIVO' });
+  }
+
+  static registrarPersonal(
+    datos: Pick<
+      DatosDeCuenta,
+      'nombres' | 'apellidos' | 'correo' | 'contrasenaHash'
+    >,
+    rol: Exclude<RolUsuario, 'JUGADOR'>,
+  ): Usuario {
+    return new Usuario({
+      ...datos,
+      rol,
+      estado: 'ACTIVO',
+      requiereCambiarContrasena: true,
+    });
   }
 
   /** Reconstruye un usuario que ya está guardado. */
@@ -53,11 +74,11 @@ export class Usuario {
     return this.datos.apellidos;
   }
 
-  get fechaNacimiento(): FechaNacimiento {
+  get fechaNacimiento(): FechaNacimiento | undefined {
     return this.datos.fechaNacimiento;
   }
 
-  get documento(): DocumentoIdentidad {
+  get documento(): DocumentoIdentidad | undefined {
     return this.datos.documento;
   }
 
@@ -65,7 +86,7 @@ export class Usuario {
     return this.datos.correo;
   }
 
-  get celular(): Celular {
+  get celular(): Celular | undefined {
     return this.datos.celular;
   }
 
@@ -83,6 +104,10 @@ export class Usuario {
 
   get estado(): EstadoUsuario {
     return this.datos.estado;
+  }
+
+  get requiereCambiarContrasena(): boolean {
+    return this.datos.requiereCambiarContrasena ?? false;
   }
 
   /** Solo los usuarios activos pueden iniciar sesión. */

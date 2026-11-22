@@ -22,6 +22,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset --force",
     "db:studio": "prisma studio",
+    "personal:crear-administrador": "ts-node --transpile-only src/modulos/usuarios/infraestructura/comandos/crear-administrador.ts",
     "db:preparar-pruebas": "ts-node --transpile-only -e \"require('./test/soporte/preparar-base-de-pruebas').default()\"",
     "test:integracion": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-integracion.json --runInBand --passWithNoTests"
   },

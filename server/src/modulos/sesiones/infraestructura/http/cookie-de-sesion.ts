@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { CookieOptions, Request, Response } from 'express';
 import type { SesionAbierta } from '../../aplicacion/abrir-sesion.use-case';
 
 const NOMBRE_COOKIE_SESION = 'sesion';
@@ -14,12 +14,25 @@ export function escribirCookieDeSesion(
   segura: boolean,
 ): void {
   respuesta.cookie(NOMBRE_COOKIE_SESION, sesion.token, {
+    ...opcionesCookie(segura),
+    expires: sesion.expiraEn,
+  });
+}
+
+export function borrarCookieDeSesion(
+  respuesta: Response,
+  segura: boolean,
+): void {
+  respuesta.clearCookie(NOMBRE_COOKIE_SESION, opcionesCookie(segura));
+}
+
+function opcionesCookie(segura: boolean): CookieOptions {
+  return {
     httpOnly: true,
     sameSite: 'lax',
     secure: segura,
     path: '/',
-    expires: sesion.expiraEn,
-  });
+  };
 }
 
 export function leerTokenDeSesion(solicitud: Request): string | undefined {

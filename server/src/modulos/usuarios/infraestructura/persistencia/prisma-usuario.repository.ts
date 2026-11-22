@@ -68,15 +68,31 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
           aceptacionLegalEn: aceptacion.fecha,
           canalAceptacionLegal: aceptacion.canal,
           sesiones: { create: sesion },
+          accesos: { create: { ocurridoEn: sesion.ultimaActividadEn } },
         },
         select: { id: true },
       });
       return fila.id;
     } catch (error) {
       // Otro registro con el mismo dato pudo guardarse entre la verificación y esta escritura.
-      const dato = DATO_POR_INDICE[indiceUnicoViolado(error) ?? ''];
-      if (dato) throw new CuentaYaExisteError([dato]);
-      throw error;
+      rechazarDuplicado(error);
     }
   }
+
+  async crearPersonal(usuario: Usuario): Promise<void> {
+    try {
+      await this.prisma.usuario.create({
+        data: aFilaNueva(usuario, this.cifrador),
+        select: { id: true },
+      });
+    } catch (error) {
+      rechazarDuplicado(error);
+    }
+  }
+}
+
+function rechazarDuplicado(error: unknown): never {
+  const dato = DATO_POR_INDICE[indiceUnicoViolado(error) ?? ''];
+  if (dato) throw new CuentaYaExisteError([dato]);
+  throw error;
 }

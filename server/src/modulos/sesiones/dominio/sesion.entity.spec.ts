@@ -17,27 +17,29 @@ describe('Sesion', () => {
     expect(sesion.expiraEn).toEqual(minutosDespues(8 * 60));
   });
 
-  it('está vigente mientras hay actividad dentro de los 30 minutos', () => {
+  it('está vigente un milisegundo antes de cumplir los 15 minutos', () => {
     const sesion = unaSesionAbierta();
 
-    expect(sesion.estaVigente(minutosDespues(29))).toBe(true);
+    expect(sesion.estaVigente(new Date(minutosDespues(15).getTime() - 1))).toBe(
+      true,
+    );
   });
 
-  it('vence tras 30 minutos sin actividad', () => {
+  it('vence al cumplir 15 minutos sin actividad', () => {
     const sesion = unaSesionAbierta();
 
-    expect(sesion.estaVigente(minutosDespues(30))).toBe(false);
+    expect(sesion.estaVigente(minutosDespues(15))).toBe(false);
   });
 
   it('la actividad renueva el plazo de inactividad', () => {
-    const sesion = unaSesionAbierta().registrarActividad(minutosDespues(25));
+    const sesion = unaSesionAbierta().registrarActividad(minutosDespues(10));
 
-    expect(sesion.estaVigente(minutosDespues(50))).toBe(true);
+    expect(sesion.estaVigente(minutosDespues(20))).toBe(true);
   });
 
   it('vence a las 8 horas aunque haya actividad', () => {
     let sesion = unaSesionAbierta();
-    for (let minuto = 20; minuto < 8 * 60; minuto += 20) {
+    for (let minuto = 10; minuto < 8 * 60; minuto += 10) {
       sesion = sesion.registrarActividad(minutosDespues(minuto));
     }
 
