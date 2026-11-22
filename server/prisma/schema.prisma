@@ -45,6 +45,9 @@ model Usuario {
   estado                 EstadoUsuario
   creadoEn               DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn          DateTime      @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  versionLegalAceptada    String?       @map("version_legal_aceptada")
+  aceptacionLegalEn       DateTime?     @map("aceptacion_legal_en") @db.Timestamptz(3)
+  canalAceptacionLegal    String?       @map("canal_aceptacion_legal")
   sesiones               Sesion[]
 
   @@map("usuario")
