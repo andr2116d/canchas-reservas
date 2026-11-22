@@ -3,23 +3,35 @@ import { describe, expect, it } from "vitest";
 import { EsperaDeCancha } from "./espera-de-cancha";
 
 describe("EsperaDeCancha", () => {
-  it("anuncia la espera a lectores de pantalla con su mensaje", () => {
-    render(<EsperaDeCancha />);
+  it("no muestra ningún texto en pantalla", () => {
+    const { container } = render(<EsperaDeCancha />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Cargando tu cuenta…");
+    const visible = [...container.querySelectorAll("*")]
+      .filter((elemento) => !elemento.closest(".sr-only") && elemento.children.length === 0)
+      .map((elemento) => elemento.textContent?.trim())
+      .filter(Boolean);
+    expect(visible).toEqual([]);
   });
 
-  it("permite cambiar el mensaje", () => {
-    render(<EsperaDeCancha mensaje="Revisando tu acceso…" />);
+  it("anuncia la carga solo a lectores de pantalla", () => {
+    render(<EsperaDeCancha />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Revisando tu acceso…");
+    expect(screen.getByRole("status")).toHaveTextContent("Cargando");
+    expect(screen.queryByText(/cuenta/i)).not.toBeInTheDocument();
+  });
+
+  it("cubre toda la pantalla con la cancha", () => {
+    render(<EsperaDeCancha />);
+
+    expect(screen.getByRole("status")).toHaveClass("espera-de-cancha");
   });
 
   it("dibuja el balón y los botines como decoración oculta", () => {
     const { container } = render(<EsperaDeCancha />);
 
-    const campo = container.querySelector(".espera-de-cancha__campo");
-    expect(campo).toHaveAttribute("aria-hidden", "true");
-    expect(campo?.querySelector(".espera-de-cancha__balon")).not.toBeNull();
+    const jugada = container.querySelector(".espera-de-cancha__jugada");
+    expect(jugada).toHaveAttribute("aria-hidden", "true");
+    expect(jugada?.querySelector(".espera-de-cancha__balon")).not.toBeNull();
+    expect(jugada?.querySelectorAll(".espera-de-cancha__pie")).toHaveLength(2);
   });
 });
