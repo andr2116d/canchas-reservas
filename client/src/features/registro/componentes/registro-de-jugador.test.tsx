@@ -138,6 +138,17 @@ describe("RegistroDeJugador", () => {
       expect(reemplazarRuta).toHaveBeenCalledWith("/inicio");
     });
 
+    it("un doble clic envía el registro una sola vez", async () => {
+      registrarJugadorSimulado.mockReturnValue(new Promise(() => undefined));
+      const persona = mostrarRegistro();
+      await llenarDatosValidos(persona);
+
+      await persona.dblClick(botonCrearCuenta());
+
+      expect(registrarJugadorSimulado).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: "Creando tu cuenta…" })).toBeDisabled();
+    });
+
     it("vuelve a la reserva pendiente si llegó desde ese flujo", async () => {
       window.history.replaceState({}, "", "/registro?siguiente=/reservar/la-popular");
       registrarJugadorSimulado.mockResolvedValue({ tipo: "registrado", nombres: "Valeria" });
