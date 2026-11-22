@@ -11,6 +11,7 @@ const DATOS: DatosRegistro = {
   celular: "987654321",
   correo: "valeria@gmail.com",
   contrasena: "pichanga10",
+  dorsal: "10",
 };
 
 function responderCon(estado: number, cuerpo: object) {

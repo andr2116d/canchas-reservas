@@ -17,6 +17,7 @@ const DATOS_INICIALES: DatosRegistro = {
   celular: "",
   correo: "",
   contrasena: "",
+  dorsal: "",
 };
 
 /** Muestra junto a cada campo lo que respondió el server y enfoca el primero. */

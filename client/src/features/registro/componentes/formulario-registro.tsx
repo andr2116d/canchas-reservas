@@ -16,13 +16,41 @@ interface GrupoProps {
 /** Grupo de datos con una línea que explica para qué se piden. */
 function Grupo({ titulo, explicacion, children }: GrupoProps) {
   return (
-    <section className="flex flex-col gap-4 border-t border-linea pt-6 first-of-type:border-t-0 first-of-type:pt-0">
+    <section className="flex flex-col gap-4 border-t border-linea pt-5 first-of-type:border-t-0 first-of-type:pt-0">
       <div>
-        <h2 className="font-titular text-2xl font-extrabold text-tinta">{titulo}</h2>
+        <h2 className="font-titular text-xl font-extrabold text-tinta">{titulo}</h2>
         <p className="text-sm text-grava">{explicacion}</p>
       </div>
       {children}
     </section>
+  );
+}
+
+/** Quién es el jugador: nombre, edad, dorsal y documento. */
+function GrupoDelJugador() {
+  return (
+    <Grupo titulo="Quién juega" explicacion="Para crear tu cuenta debes ser mayor de edad.">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CampoDeTexto nombre="nombres" etiqueta="Nombres" autoComplete="given-name" />
+        <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" />
+        <CampoDeTexto nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" type="date" autoComplete="bday" />
+        <CampoDeTexto nombre="dorsal" etiqueta="Dorsal" opcional inputMode="numeric" maxLength={2} placeholder="Del 1 al 99" />
+      </div>
+      <CamposDelDocumento />
+    </Grupo>
+  );
+}
+
+/** Cómo contactarlo y con qué entra a su cuenta. */
+function GrupoDeContactoYAcceso() {
+  return (
+    <Grupo titulo="Contacto y acceso" explicacion="Con tu correo y contraseña entras a tu cuenta. Al celular te avisamos de tus reservas.">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CampoDeTexto nombre="celular" etiqueta="Celular" type="tel" inputMode="numeric" autoComplete="tel-national" />
+        <CampoDeTexto nombre="correo" etiqueta="Correo" type="email" autoComplete="email" spellCheck={false} />
+      </div>
+      <CampoContrasena />
+    </Grupo>
   );
 }
 
@@ -36,25 +64,9 @@ export function FormularioRegistro({ alEnviarRegistro, errorGeneral }: Formulari
   const { formState } = useFormContext<DatosRegistro>();
 
   return (
-    <form noValidate onSubmit={alEnviarRegistro} className="flex flex-col gap-8">
-      <p className="text-sm text-grava">Todos los datos son obligatorios.</p>
-      <Grupo titulo="Quién juega" explicacion="Tu nombre aparece en tus reservas. Para crear tu cuenta debes ser mayor de edad.">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CampoDeTexto nombre="nombres" etiqueta="Nombres" autoComplete="given-name" />
-          <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" />
-        </div>
-        <CampoDeTexto nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" type="date" autoComplete="bday" />
-        <CamposDelDocumento />
-      </Grupo>
-      <Grupo titulo="Contacto" explicacion="Con tu correo entras a tu cuenta. Al celular te avisamos de tus reservas.">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CampoDeTexto nombre="celular" etiqueta="Celular" type="tel" inputMode="numeric" autoComplete="tel-national" />
-          <CampoDeTexto nombre="correo" etiqueta="Correo" type="email" autoComplete="email" spellCheck={false} />
-        </div>
-      </Grupo>
-      <Grupo titulo="Acceso" explicacion="Con ella y tu correo inicias sesión.">
-        <CampoContrasena />
-      </Grupo>
+    <form noValidate onSubmit={alEnviarRegistro} className="flex flex-col gap-6">
+      <GrupoDelJugador />
+      <GrupoDeContactoYAcceso />
       {errorGeneral && (
         <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm font-medium text-error">
           {errorGeneral}
@@ -68,7 +80,7 @@ export function FormularioRegistro({ alEnviarRegistro, errorGeneral }: Formulari
       >
         {formState.isSubmitting ? "Creando tu cuenta…" : "Crear mi cuenta"}
       </button>
-      <p className="-mt-4 text-center text-sm text-grava">Guardamos tus datos personales cifrados.</p>
+      <p className="-mt-3 text-center text-sm text-grava">Guardamos tus datos personales cifrados.</p>
     </form>
   );
 }

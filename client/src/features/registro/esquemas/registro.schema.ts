@@ -59,6 +59,14 @@ const reglaDeFechaNacimiento: Regla = (valor) => {
   if (edad < 18) return "Debes tener al menos 18 años para crear tu cuenta.";
 };
 
+const reglaDeDorsal: Regla = (valor) => {
+  const limpio = valor.trim();
+  if (limpio === "") return undefined;
+  if (!/^\d+$/.test(limpio)) return "El dorsal solo debe contener números.";
+  const numero = Number(limpio);
+  if (numero < 1 || numero > 99) return "El dorsal debe estar entre 1 y 99.";
+};
+
 const reglaDeCelular: Regla = (valor) => {
   const limpio = valor.trim();
   if (limpio === "") return "Ingresa tu número de celular.";
@@ -105,6 +113,7 @@ export const esquemaRegistro = z
     celular: campoCon(reglaDeCelular),
     correo: campoCon(reglaDeCorreo),
     contrasena: campoCon(reglaDeContrasena),
+    dorsal: campoCon(reglaDeDorsal),
   })
   .superRefine(({ tipoDocumento, numeroDocumento }, contexto) => {
     const numero = numeroDocumento.trim();

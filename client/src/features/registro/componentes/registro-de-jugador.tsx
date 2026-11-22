@@ -13,10 +13,12 @@ export function RegistroDeJugador() {
     <FormProvider {...formulario}>
       <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <PanelDeLaFicha />
-        <main className="px-4 py-8 sm:px-10 lg:py-16">
+        <main className="px-4 py-8 sm:px-10 lg:py-12">
           <div className="mx-auto max-w-xl">
             <h1 className="font-titular text-4xl font-black text-tinta sm:text-5xl">Crea tu cuenta de jugador</h1>
-            <p className="mt-2 mb-8 text-grava">Te toma un minuto. Luego eliges cancha y horario.</p>
+            <p className="mt-2 mb-6 text-grava">
+              Te toma un minuto. <span>Los datos con * son obligatorios.</span>
+            </p>
             <FormularioRegistro alEnviarRegistro={enviarRegistro} errorGeneral={errorGeneral} />
           </div>
         </main>

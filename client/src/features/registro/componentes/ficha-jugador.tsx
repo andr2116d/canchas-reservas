@@ -13,15 +13,30 @@ function ocultarDocumento(numero: string): string {
   return "•".repeat(limpio.length - 3) + limpio.slice(-3);
 }
 
+/** Número de camiseta grande, solo si ya es un dorsal válido. */
+function DorsalDeLaFicha({ dorsal }: { dorsal: string }) {
+  const limpio = dorsal.trim();
+  const numero = Number(limpio);
+  if (!/^\d{1,2}$/.test(limpio) || numero < 1) return null;
+  return (
+    <span
+      data-testid="ficha-dorsal"
+      className="-mt-1 font-titular text-6xl leading-none font-black text-botella tabular-nums sm:text-7xl"
+    >
+      {numero}
+    </span>
+  );
+}
+
 /**
  * Ficha de jugador que se llena mientras la persona escribe. Es una vista previa
  * decorativa: los datos reales están en el formulario, por eso se oculta a lectores de pantalla.
  */
 export function FichaJugador() {
   const { control, formState } = useFormContext<DatosRegistro>();
-  const [nombres, apellidos, tipo, numero] = useWatch({
+  const [nombres, apellidos, tipo, numero, dorsal] = useWatch({
     control,
-    name: ["nombres", "apellidos", "tipoDocumento", "numeroDocumento"],
+    name: ["nombres", "apellidos", "tipoDocumento", "numeroDocumento", "dorsal"],
   });
 
   return (
@@ -36,10 +51,15 @@ export function FichaJugador() {
         </div>
         <span className="text-xs font-semibold text-grava">Ficha de jugador</span>
       </div>
-      <p data-testid="ficha-nombres" className="mt-3 truncate font-titular text-4xl leading-none font-black uppercase sm:mt-4 sm:text-5xl">
-        {nombres.trim() || "Tu nombre"}
-      </p>
-      <p className="mt-1 truncate text-lg font-semibold text-grava">{apellidos.trim() || "Tus apellidos"}</p>
+      <div className="mt-3 flex items-start justify-between gap-3 sm:mt-4">
+        <div className="min-w-0">
+          <p data-testid="ficha-nombres" className="truncate font-titular text-4xl leading-none font-black uppercase sm:text-5xl">
+            {nombres.trim() || "Tu nombre"}
+          </p>
+          <p className="mt-1 truncate text-lg font-semibold text-grava">{apellidos.trim() || "Tus apellidos"}</p>
+        </div>
+        <DorsalDeLaFicha dorsal={dorsal} />
+      </div>
       <div className="mt-5 flex items-end justify-between text-sm">
         <span className="tabular-nums">
           {NOMBRE_DEL_DOCUMENTO[tipo]} {ocultarDocumento(numero) || "—"}

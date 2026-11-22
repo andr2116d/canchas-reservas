@@ -11,6 +11,7 @@ function unRegistroValido(cambios: Partial<DatosRegistro> = {}): DatosRegistro {
     celular: "987654321",
     correo: "valeria.leon@gmail.com",
     contrasena: "pichanga10",
+    dorsal: "",
     ...cambios,
   };
 }
@@ -60,6 +61,20 @@ describe("esquemaRegistro", () => {
       ["", "Ingresa tu fecha de nacimiento."],
     ])('rechaza "%s": %s', (fechaNacimiento, mensaje) => {
       expect(errorDe("fechaNacimiento", { fechaNacimiento })).toBe(mensaje);
+    });
+  });
+
+  describe("dorsal", () => {
+    it.each(["", "7", "10", "99"])('acepta "%s" (es opcional)', (dorsal) => {
+      expect(errorDe("dorsal", { dorsal })).toBeUndefined();
+    });
+
+    it.each([
+      ["1O", "El dorsal solo debe contener números."],
+      ["0", "El dorsal debe estar entre 1 y 99."],
+      ["100", "El dorsal debe estar entre 1 y 99."],
+    ])('rechaza "%s": %s', (dorsal, mensaje) => {
+      expect(errorDe("dorsal", { dorsal })).toBe(mensaje);
     });
   });
 

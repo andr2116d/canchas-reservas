@@ -41,7 +41,7 @@ describe("RegistroDeJugador", () => {
     it("marca todos los campos como obligatorios y lo dice en pantalla", () => {
       mostrarRegistro();
 
-      expect(screen.getByText("Todos los datos son obligatorios.")).toBeVisible();
+      expect(screen.getByText("Los datos con * son obligatorios.")).toBeVisible();
       for (const nombre of [
         "Nombres",
         "Apellidos",
@@ -147,6 +147,7 @@ describe("RegistroDeJugador", () => {
         celular: "987654321",
         correo: "valeria@gmail.com",
         contrasena: "pichanga10",
+        dorsal: "",
       });
       expect(reemplazarRuta).toHaveBeenCalledWith("/inicio");
     });
@@ -215,6 +216,21 @@ describe("RegistroDeJugador", () => {
 
       await persona.click(screen.getByRole("button", { name: "Ocultar contraseña" }));
       expect(campo("Contraseña")).toHaveAttribute("type", "password");
+    });
+
+    it("el dorsal es opcional y lo dice en su etiqueta", () => {
+      mostrarRegistro();
+
+      expect(campo("Dorsal")).not.toBeRequired();
+      expect(screen.getByText("(opcional)")).toBeVisible();
+    });
+
+    it("muestra en la ficha el dorsal elegido", async () => {
+      const persona = mostrarRegistro();
+
+      await persona.type(campo("Dorsal"), "10");
+
+      expect(screen.getByTestId("ficha-dorsal")).toHaveTextContent("10");
     });
 
     it("llena la ficha de jugador con el nombre mientras se escribe", async () => {
