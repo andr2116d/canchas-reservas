@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { type DatosRegistro, esquemaRegistro } from "../esquemas/registro.schema";
 import { destinoTrasRegistro } from "../servicios/destino-tras-registro";
@@ -32,13 +32,24 @@ function marcarErroresDelServer(
   if (campos[0]) formulario.setFocus(campos[0]);
 }
 
-/** Si cambia el tipo de documento, revalida el número con las reglas del nuevo tipo. */
-function useRevalidarDocumento(formulario: UseFormReturn<DatosRegistro>) {
-  const { control, getFieldState, trigger } = formulario;
+/**
+ * Al cambiar el tipo de documento: si pasa a DNI vacía el número (el DNI no
+ * admite letras); si pasa a carné, revalida lo escrito con sus reglas.
+ */
+function useAjustarDocumentoAlCambiarTipo(formulario: UseFormReturn<DatosRegistro>) {
+  const { control, getFieldState, setValue, clearErrors, trigger } = formulario;
   const tipoDocumento = useWatch({ control, name: "tipoDocumento" });
+  const tipoAnterior = useRef(tipoDocumento);
   useEffect(() => {
-    if (getFieldState("numeroDocumento").isDirty) void trigger("numeroDocumento");
-  }, [tipoDocumento, getFieldState, trigger]);
+    if (tipoAnterior.current === tipoDocumento) return;
+    tipoAnterior.current = tipoDocumento;
+    if (tipoDocumento === "DNI") {
+      setValue("numeroDocumento", "");
+      clearErrors("numeroDocumento");
+    } else if (getFieldState("numeroDocumento").isDirty) {
+      void trigger("numeroDocumento");
+    }
+  }, [tipoDocumento, getFieldState, setValue, clearErrors, trigger]);
 }
 
 /**
@@ -53,7 +64,7 @@ export function useRegistrarJugador() {
     mode: "onChange",
     defaultValues: DATOS_INICIALES,
   });
-  useRevalidarDocumento(formulario);
+  useAjustarDocumentoAlCambiarTipo(formulario);
 
   const enviarRegistro = formulario.handleSubmit(async (datos) => {
     setErrorGeneral(undefined);

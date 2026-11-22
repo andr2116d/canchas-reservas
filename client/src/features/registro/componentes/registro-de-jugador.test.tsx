@@ -68,15 +68,41 @@ describe("RegistroDeJugador", () => {
   });
 
   describe("validación mientras se escribe", () => {
-    it("avisa de inmediato que el DNI no admite letras", async () => {
+    it("con DNI no deja escribir letras ni otros caracteres", async () => {
       const persona = mostrarRegistro();
 
-      await persona.type(campo("Número de documento"), "4567891A");
+      await persona.type(campo("Número de documento"), "45A6-78 9B12");
+
+      expect(campo("Número de documento")).toHaveValue("45678912");
+      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "false");
+    });
+
+    it("con DNI avisa mientras falten dígitos", async () => {
+      const persona = mostrarRegistro();
+
+      await persona.type(campo("Número de documento"), "4567");
 
       expect(campo("Número de documento")).toHaveAccessibleDescription(
-        "El DNI solo debe contener números.",
+        "El DNI debe tener 8 dígitos.",
       );
-      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "true");
+    });
+
+    it("con carné de extranjería sí deja escribir letras", async () => {
+      const persona = mostrarRegistro();
+      await persona.click(screen.getByRole("radio", { name: "Carné de extranjería" }));
+
+      await persona.type(campo("Número de documento"), "AB1234567");
+
+      expect(campo("Número de documento")).toHaveValue("AB1234567");
+      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "false");
+    });
+
+    it("el celular solo acepta números", async () => {
+      const persona = mostrarRegistro();
+
+      await persona.type(campo("Celular"), "+51 987-654-321");
+
+      expect(campo("Celular")).toHaveValue("51987654321");
     });
 
     it("avisa de inmediato si la persona es menor de 18 años", async () => {
@@ -116,16 +142,26 @@ describe("RegistroDeJugador", () => {
       expect(campo("Celular")).toHaveAttribute("aria-invalid", "false");
     });
 
-    it("aplica las reglas del carné de extranjería al cambiar de documento", async () => {
+    it("al cambiar a DNI vacía el número escrito para el carné", async () => {
       const persona = mostrarRegistro();
+      await persona.click(screen.getByRole("radio", { name: "Carné de extranjería" }));
       await persona.type(campo("Número de documento"), "AB1234567");
+
+      await persona.click(screen.getByRole("radio", { name: "DNI" }));
+
+      expect(campo("Número de documento")).toHaveValue("");
+      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "false");
+    });
+
+    it("al cambiar a carné conserva los dígitos y aplica sus reglas", async () => {
+      const persona = mostrarRegistro();
+      await persona.type(campo("Número de documento"), "4567891");
 
       await persona.click(screen.getByRole("radio", { name: "Carné de extranjería" }));
 
-      expect(campo("Número de documento")).toHaveAttribute("aria-invalid", "false");
-      await persona.click(screen.getByRole("radio", { name: "DNI" }));
+      expect(campo("Número de documento")).toHaveValue("4567891");
       expect(campo("Número de documento")).toHaveAccessibleDescription(
-        "El DNI solo debe contener números.",
+        "El carné de extranjería debe tener entre 9 y 12 caracteres.",
       );
     });
   });

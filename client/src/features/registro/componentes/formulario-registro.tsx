@@ -3,6 +3,7 @@
 import type { FormEventHandler, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 import type { DatosRegistro } from "../esquemas/registro.schema";
+import { soloDigitos } from "../utilidades/solo-digitos";
 import { CampoContrasena } from "./campo-contrasena";
 import { CampoDeTexto } from "./campo-de-texto";
 import { CamposDelDocumento } from "./campos-del-documento";
@@ -46,7 +47,7 @@ function GrupoDeContactoYAcceso() {
   return (
     <Grupo titulo="Contacto y acceso" explicacion="Con tu correo y contraseña entras a tu cuenta. Al celular te avisamos de tus reservas.">
       <div className="grid gap-4 sm:grid-cols-2">
-        <CampoDeTexto nombre="celular" etiqueta="Celular" type="tel" inputMode="numeric" autoComplete="tel-national" />
+        <CampoDeTexto nombre="celular" etiqueta="Celular" type="tel" inputMode="numeric" autoComplete="tel-national" filtrarEntrada={soloDigitos} />
         <CampoDeTexto nombre="correo" etiqueta="Correo" type="email" autoComplete="email" spellCheck={false} />
       </div>
       <CampoContrasena />

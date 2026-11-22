@@ -1,6 +1,6 @@
 "use client";
 
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 import type { DatosRegistro } from "../esquemas/registro.schema";
 import { EtiquetaDeCampo } from "./etiqueta-de-campo";
@@ -15,6 +15,8 @@ export interface CampoDeTextoProps
   accesorio?: ReactNode;
   /** Los campos son obligatorios salvo que se indique lo contrario. */
   opcional?: boolean;
+  /** Descarta lo que no se puede escribir en el campo (por ejemplo, letras en un DNI). */
+  filtrarEntrada?: (valor: string) => string;
 }
 
 const ESTILO_ENTRADA =
@@ -23,6 +25,18 @@ const ESTILO_ENTRADA =
   "focus-visible:border-botella focus-visible:ring-3 focus-visible:ring-botella/25 " +
   "aria-invalid:border-error aria-invalid:focus-visible:ring-error/20";
 
+/**
+ * Aplica el filtro sobre lo escrito o pegado y deja el cursor donde estaba,
+ * descontando los caracteres descartados antes de él.
+ */
+function filtrarConservandoCursor(evento: ChangeEvent<HTMLInputElement>, filtrar: (valor: string) => string) {
+  const entrada = evento.target;
+  const posicion = entrada.selectionStart ?? entrada.value.length;
+  const cursor = filtrar(entrada.value.slice(0, posicion)).length;
+  entrada.value = filtrar(entrada.value);
+  entrada.setSelectionRange(cursor, cursor);
+}
+
 /** Campo de texto con su etiqueta, su ayuda y su error asociados. */
 export function CampoDeTexto({
   nombre,
@@ -30,10 +44,16 @@ export function CampoDeTexto({
   ayuda,
   accesorio,
   opcional = false,
+  filtrarEntrada,
   className = "",
   ...entrada
 }: CampoDeTextoProps) {
   const { register, formState } = useFormContext<DatosRegistro>();
+  const registro = register(nombre);
+  const alCambiar = (evento: ChangeEvent<HTMLInputElement>) => {
+    if (filtrarEntrada) filtrarConservandoCursor(evento, filtrarEntrada);
+    return registro.onChange(evento);
+  };
   const error = formState.errors[nombre]?.message;
   const idAyuda = `${nombre}-ayuda`;
   const idError = `${nombre}-error`;
@@ -52,7 +72,8 @@ export function CampoDeTexto({
           aria-describedby={descripcion || undefined}
           className={`${ESTILO_ENTRADA} ${className}`}
           {...entrada}
-          {...register(nombre)}
+          {...registro}
+          onChange={alCambiar}
         />
         {accesorio}
       </div>
