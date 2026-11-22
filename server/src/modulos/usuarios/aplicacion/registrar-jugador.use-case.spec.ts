@@ -2,7 +2,7 @@ import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugado
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
-import { EnMemoriaUsuarioRepository } from '../infraestructura/persistencia/en-memoria-usuario.repository';
+import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
 import type { HasheadorContrasena } from './hasheador-contrasena.port';
 import { RegistrarJugadorUseCase } from './registrar-jugador.use-case';
 

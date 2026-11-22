@@ -1,10 +1,10 @@
-import type { Correo } from '../../dominio/correo.value-object';
-import { CuentaYaExisteError } from '../../dominio/cuenta-ya-existe.error';
-import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
-import { Usuario } from '../../dominio/usuario.entity';
-import type { UsuarioRepository } from '../../dominio/usuario.repository';
+import type { Correo } from '../../src/modulos/usuarios/dominio/correo.value-object';
+import { CuentaYaExisteError } from '../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
+import type { DocumentoIdentidad } from '../../src/modulos/usuarios/dominio/documento-identidad.value-object';
+import { Usuario } from '../../src/modulos/usuarios/dominio/usuario.entity';
+import type { UsuarioRepository } from '../../src/modulos/usuarios/dominio/usuario.repository';
 
-/** Adaptador en memoria del repositorio, para pruebas sin base de datos. */
+/** Repositorio en memoria para probar casos de uso sin base de datos. */
 export class EnMemoriaUsuarioRepository implements UsuarioRepository {
   private readonly usuarios: Usuario[] = [];
 

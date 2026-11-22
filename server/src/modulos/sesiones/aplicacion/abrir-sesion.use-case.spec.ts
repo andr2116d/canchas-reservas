@@ -1,6 +1,6 @@
 import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';
 import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { EnMemoriaSesionRepository } from '../infraestructura/persistencia/en-memoria-sesion.repository';
+import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
 import { AbrirSesionUseCase } from './abrir-sesion.use-case';
 
 function prepararApertura() {

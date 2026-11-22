@@ -1,6 +1,6 @@
 import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugador';
 import type { Contrasena } from '../dominio/contrasena.value-object';
-import { EnMemoriaUsuarioRepository } from '../infraestructura/persistencia/en-memoria-usuario.repository';
+import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
 import { ConsultarCuentaUseCase } from './consultar-cuenta.use-case';
 import { RegistrarJugadorUseCase } from './registrar-jugador.use-case';
 
