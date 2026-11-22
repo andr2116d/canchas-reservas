@@ -8,7 +8,7 @@ const OPCIONES_OWASP = {
   memoryCost: 19456,
   timeCost: 2,
   parallelism: 1,
-};
+} as const;
 
 /** Hashea contraseñas con argon2id; la sal aleatoria va dentro del hash. */
 export class Argon2HasheadorContrasenaAdapter implements HasheadorContrasena {
