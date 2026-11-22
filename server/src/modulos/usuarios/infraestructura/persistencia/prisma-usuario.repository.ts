@@ -13,7 +13,12 @@ import {
 import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
 import type { Usuario } from '../../dominio/usuario.entity';
 import type { UsuarioRepository } from '../../dominio/usuario.repository';
-import { aFilaNueva, hashDeCorreo, hashDeDocumento } from './usuario.mapper';
+import {
+  aEntidad,
+  aFilaNueva,
+  hashDeCorreo,
+  hashDeDocumento,
+} from './usuario.mapper';
 
 // Índice único de la base que corresponde a cada dato que no puede repetirse.
 const DATO_POR_INDICE: Record<string, DatoUnico> = {
@@ -41,6 +46,11 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
       where: { correoHash: hashDeCorreo(correo, this.cifrador) },
     });
     return total > 0;
+  }
+
+  async buscarPorId(id: number): Promise<Usuario | undefined> {
+    const fila = await this.prisma.usuario.findUnique({ where: { id } });
+    return fila ? aEntidad(fila, this.cifrador) : undefined;
   }
 
   async crear(usuario: Usuario): Promise<number> {

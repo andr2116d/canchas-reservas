@@ -88,6 +88,21 @@ describe('PrismaUsuarioRepository', () => {
     ).resolves.toBe(false);
   });
 
+  it('recupera al usuario por su id con los datos descifrados', async () => {
+    const id = await repositorio.crear(unJugador());
+
+    const usuario = await repositorio.buscarPorId(id);
+
+    expect(usuario?.nombres.texto).toBe('Valeria');
+    expect(usuario?.documento.identificador()).toBe('DNI:45678912');
+    expect(usuario?.correo.direccion).toBe('valeria@gmail.com');
+    expect(usuario?.estaActivo()).toBe(true);
+  });
+
+  it('no devuelve nada si el id no existe', async () => {
+    await expect(repositorio.buscarPorId(999)).resolves.toBeUndefined();
+  });
+
   it('traduce un documento repetido que llega a la base en CuentaYaExisteError', async () => {
     await repositorio.crear(unJugador('45678912', 'primera@gmail.com'));
 

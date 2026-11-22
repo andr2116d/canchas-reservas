@@ -10,6 +10,8 @@ export interface UsuarioRepository {
 
   existeConCorreo(correo: Correo): Promise<boolean>;
 
+  buscarPorId(id: number): Promise<Usuario | undefined>;
+
   /**
    * Guarda un usuario nuevo y devuelve su id. Lanza CuentaYaExisteError si otro
    * registro con el mismo documento o correo se guardó antes.

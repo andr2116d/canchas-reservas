@@ -1,8 +1,13 @@
 import type { Cifrador } from '../../../../compartido/aplicacion/cifrador.port';
-import type { Prisma } from '../../../../generated/prisma/client';
-import type { Correo } from '../../dominio/correo.value-object';
-import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
-import type { Usuario } from '../../dominio/usuario.entity';
+import type {
+  Usuario as FilaUsuario,
+  Prisma,
+} from '../../../../generated/prisma/client';
+import { Celular } from '../../dominio/celular.value-object';
+import { Correo } from '../../dominio/correo.value-object';
+import { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
+import { NombrePersona } from '../../dominio/nombre-persona.value-object';
+import { Usuario } from '../../dominio/usuario.entity';
 
 /** Hash con el que se busca y se exige unicidad del documento sin descifrarlo. */
 export function hashDeDocumento(
@@ -35,4 +40,26 @@ export function aFilaNueva(
     rol: usuario.rol,
     estado: usuario.estado,
   };
+}
+
+/** Reconstruye el usuario de una fila guardada, descifrando sus datos personales. */
+export function aEntidad(fila: FilaUsuario, cifrador: Cifrador): Usuario {
+  const descifrar = (valor: string) => cifrador.descifrar(valor);
+  return Usuario.restaurar({
+    id: fila.id,
+    nombres: NombrePersona.crear(descifrar(fila.nombresCifrado), 'nombres'),
+    apellidos: NombrePersona.crear(
+      descifrar(fila.apellidosCifrado),
+      'apellidos',
+    ),
+    documento: DocumentoIdentidad.crear(
+      fila.tipoDocumento,
+      descifrar(fila.numeroDocumentoCifrado),
+    ),
+    correo: Correo.crear(descifrar(fila.correoCifrado)),
+    celular: Celular.crear(descifrar(fila.celularCifrado)),
+    contrasenaHash: fila.contrasenaHash,
+    rol: fila.rol,
+    estado: fila.estado,
+  });
 }

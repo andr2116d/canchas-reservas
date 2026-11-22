@@ -3,18 +3,22 @@ import {
   HASHEADOR_CONTRASENA,
   type HasheadorContrasena,
 } from './aplicacion/hasheador-contrasena.port';
+import { ConsultarCuentaUseCase } from './aplicacion/consultar-cuenta.use-case';
 import { RegistrarJugadorUseCase } from './aplicacion/registrar-jugador.use-case';
 import {
   USUARIO_REPOSITORY,
   type UsuarioRepository,
 } from './dominio/usuario.repository';
+import { SesionesModule } from '../sesiones/sesiones.module';
+import { CuentaController } from './infraestructura/http/cuenta.controller';
 import { JugadoresController } from './infraestructura/http/jugadores.controller';
 import { PrismaUsuarioRepository } from './infraestructura/persistencia/prisma-usuario.repository';
 import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/argon2-hasheador-contrasena.adapter';
 
-/** Cuentas de usuario: registro de jugadores. */
+/** Cuentas de usuario: registro de jugadores y consulta de la propia cuenta. */
 @Module({
-  controllers: [JugadoresController],
+  imports: [SesionesModule],
+  controllers: [JugadoresController, CuentaController],
   providers: [
     { provide: USUARIO_REPOSITORY, useClass: PrismaUsuarioRepository },
     {
@@ -28,6 +32,12 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
         hasheador: HasheadorContrasena,
       ) => new RegistrarJugadorUseCase(usuarios, hasheador),
       inject: [USUARIO_REPOSITORY, HASHEADOR_CONTRASENA],
+    },
+    {
+      provide: ConsultarCuentaUseCase,
+      useFactory: (usuarios: UsuarioRepository) =>
+        new ConsultarCuentaUseCase(usuarios),
+      inject: [USUARIO_REPOSITORY],
     },
   ],
 })

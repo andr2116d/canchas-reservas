@@ -21,6 +21,10 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
     );
   }
 
+  buscarPorId(id: number): Promise<Usuario | undefined> {
+    return Promise.resolve(this.usuarios.find((u) => u.id === id));
+  }
+
   async crear(usuario: Usuario): Promise<number> {
     const [documentoUsado, correoUsado] = await Promise.all([
       this.existeConDocumento(usuario.documento),
