@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../compartido/ui/movimiento-de-acceso.css";
 
 @theme {
   --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;

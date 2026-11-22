@@ -28,14 +28,52 @@ async function cambiarContrasena(page: Page) {
   await page.getByRole("button", { name: "Cambiar contraseña" }).click();
 }
 
-test("enlaza el acceso con el registro público", async ({ page }) => {
+test("conecta el acceso y el registro con la misma cancha y un enlace en la cabecera", async ({ page }) => {
+  await page.addInitScript(() => {
+    const iniciarTransicion = document.startViewTransition?.bind(document);
+    if (!iniciarTransicion) return;
+    let cambios = 0;
+    document.startViewTransition = (opciones) => {
+      if (typeof opciones === "object" && opciones.types?.includes("cambio-de-acceso")) {
+        document.documentElement.dataset.cambiosDeAcceso = String(++cambios);
+      }
+      return iniciarTransicion(opciones);
+    };
+  });
   await page.goto(RUTA_DE_ACCESO);
+  const canchaDeAcceso = page.locator(".fondo-de-cancha--acceso");
+  await expect(canchaDeAcceso.locator("svg")).toBeVisible();
+  await expect(canchaDeAcceso).toHaveCSS("background-image", /repeating-linear-gradient/);
   await page.getByRole("link", { name: "Crea tu cuenta de jugador" }).click();
   await expect(page).toHaveURL("/registro");
+  const canchaDeRegistro = page.getByRole("complementary").locator(".fondo-de-cancha--registro");
+  await expect(canchaDeRegistro.locator("svg")).toBeVisible();
+  await expect(canchaDeRegistro).toHaveCSS("background-image", /repeating-linear-gradient/);
+  await expect(page.locator("html")).toHaveAttribute("data-cambios-de-acceso", "1");
 
-  await page.getByRole("link", { name: "Inicia sesión" }).click();
+  const volver = page.getByRole("banner").getByRole("link", { name: "Inicia sesión" });
+  await expect(volver).toBeInViewport();
+  await volver.click();
 
   await expect(page).toHaveURL(RUTA_DE_ACCESO);
+  await expect(page.locator("html")).toHaveAttribute("data-cambios-de-acceso", "2");
+});
+
+test.describe("Espera antes de mostrar el acceso", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("muestra las dominadas y respeta el movimiento reducido", async ({ page }) => {
+    await page.goto(RUTA_DE_ACCESO);
+    const espera = page.getByRole("status");
+    await expect(espera).toHaveText("Cargando tu cuenta…");
+    const balon = espera.locator(".espera-de-cancha__balon");
+    await expect(balon).toHaveCSS("animation-name", "dominadas");
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+
+    await expect(balon).toHaveCSS("animation-name", "none");
+    await expect(espera).toHaveText("Cargando tu cuenta…");
+  });
 });
 
 test("recuerda el correo al cerrar sesión y permite que el navegador complete la contraseña", async ({ page }) => {

@@ -1,0 +1,231 @@
+.fondo-de-cancha {
+  --ancho-de-franja: 64px;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--color-tiza);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-cancha) 0 var(--ancho-de-franja),
+    var(--color-cancha-clara) var(--ancho-de-franja) calc(2 * var(--ancho-de-franja))
+  );
+}
+
+.fondo-de-cancha svg {
+  position: absolute;
+  right: -8rem;
+  bottom: -8rem;
+  width: 28rem;
+  opacity: 0.25;
+}
+
+.fondo-de-cancha--acceso {
+  --ancho-de-franja: clamp(4rem, 9vw, 8rem);
+}
+
+.fondo-de-cancha--acceso::after {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 24%, transparent 12%, rgb(8 31 25 / 0.34) 100%);
+  content: "";
+}
+
+.fondo-de-cancha--acceso svg {
+  right: -8%;
+  bottom: -27%;
+  width: clamp(25rem, 58vw, 58rem);
+}
+
+@media (max-width: 639px) {
+  .fondo-de-cancha--acceso svg {
+    top: -11rem;
+    right: -11rem;
+    bottom: auto;
+    width: 31rem;
+  }
+}
+
+html:active-view-transition-type(cambio-de-acceso)::view-transition-old(root),
+html:active-view-transition-type(cambio-de-acceso)::view-transition-new(root) {
+  animation: none;
+}
+
+html:active-view-transition-type(cambio-de-acceso)::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(.cancha-compartida) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: clip;
+}
+
+::view-transition-group(.formulario-entra),
+::view-transition-group(.formulario-sale) {
+  z-index: 1;
+}
+
+::view-transition-new(.formulario-entra) {
+  animation: formulario-entra 270ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-old(.formulario-sale) {
+  animation: formulario-sale 145ms ease-in both;
+}
+
+@keyframes formulario-entra {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes formulario-sale {
+  to { opacity: 0; transform: translateY(-6px); }
+}
+
+.espera-de-cancha {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  background: var(--color-cancha);
+  color: var(--color-capitan);
+}
+
+.espera-de-cancha__campo {
+  position: relative;
+  width: 11rem;
+  height: 7.5rem;
+  overflow: hidden;
+  border: 1px solid rgb(244 246 239 / 0.36);
+  border-radius: 1.1rem;
+  background: var(--color-cancha-clara);
+}
+
+.espera-de-cancha__campo::before {
+  position: absolute;
+  inset: 0 50% 0 auto;
+  border-left: 1px solid rgb(244 246 239 / 0.25);
+  content: "";
+}
+
+.espera-de-cancha__campo::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 0;
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 1px solid rgb(244 246 239 / 0.25);
+  border-radius: 50%;
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.espera-de-cancha__sombra {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 3.4rem;
+  width: 4.2rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.23);
+}
+
+.espera-de-cancha__pie {
+  position: absolute;
+  z-index: 1;
+  bottom: 0.75rem;
+  width: 2.65rem;
+  height: 1.75rem;
+}
+
+.espera-de-cancha__pie--izquierdo { left: 0.95rem; }
+.espera-de-cancha__pie--derecho { right: 0.95rem; transform: scaleX(-1); }
+
+.espera-de-cancha__pie > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.3rem 0.8rem 0.4rem 0.55rem;
+  background:
+    linear-gradient(111deg, transparent 45%, var(--color-cancha) 46% 50%, transparent 51% 56%, var(--color-cancha) 57% 61%, transparent 62%),
+    linear-gradient(to top, var(--color-tiza) 16%, currentColor 16% 72%, var(--color-tiza) 72%);
+  clip-path: polygon(0 0, 38% 0, 45% 40%, 88% 51%, 100% 72%, 100% 88%, 86% 100%, 0 100%);
+  transform-origin: 20% 85%;
+  animation: toque-de-balon 1220ms ease-out 4 both;
+}
+
+.espera-de-cancha__pie--derecho > span {
+  animation-delay: 610ms;
+}
+
+.espera-de-cancha__balon {
+  position: absolute;
+  z-index: 2;
+  bottom: 2rem;
+  left: 2.75rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  animation: dominadas 1220ms linear 4 both;
+}
+
+.espera-de-cancha__balon > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-cancha);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--color-papel) 35%, #cad4c3 100%);
+  box-shadow: inset -0.1rem -0.12rem 0.25rem rgb(8 36 27 / 0.25);
+  animation: giro-del-balon 1220ms linear 4 both;
+}
+
+.espera-de-cancha__balon > span::before,
+.espera-de-cancha__balon > span::after {
+  position: absolute;
+  background: var(--color-cancha);
+  clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%);
+  content: "";
+}
+
+.espera-de-cancha__balon > span::before {
+  inset: 26% 25%;
+}
+
+.espera-de-cancha__balon > span::after {
+  inset: -8% 54% 70% -8%;
+  box-shadow: 1rem 1.2rem 0 var(--color-cancha);
+}
+
+@keyframes dominadas {
+  0%, 100% { transform: translate(0, 0); animation-timing-function: cubic-bezier(0.15, 0.75, 0.4, 1); }
+  25%, 75% { transform: translate(1.84rem, -3.25rem); animation-timing-function: cubic-bezier(0.7, 0, 0.93, 0.48); }
+  50% { transform: translate(3.7rem, 0); animation-timing-function: cubic-bezier(0.15, 0.75, 0.4, 1); }
+}
+
+@keyframes giro-del-balon {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(160deg); }
+}
+
+@keyframes toque-de-balon {
+  0%, 100% { transform: rotate(-16deg); }
+  12%, 86% { transform: rotate(3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(.cancha-compartida),
+  ::view-transition-new(.formulario-entra),
+  ::view-transition-old(.formulario-sale),
+  .espera-de-cancha__pie > span,
+  .espera-de-cancha__balon,
+  .espera-de-cancha__balon > span {
+    animation: none !important;
+  }
+
+  .espera-de-cancha__balon {
+    bottom: 2.8rem;
+    left: calc(50% - 0.9rem);
+  }
+}

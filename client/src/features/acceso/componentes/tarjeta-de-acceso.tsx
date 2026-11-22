@@ -2,10 +2,11 @@ import type { ReactNode } from "react";
 import { MonogramaLaPrevia } from "@/compartido/ui/monograma-la-previa";
 
 /** Presenta los formularios con la identidad de La Previa. */
-export function TarjetaDeAcceso({ titulo, children }: { titulo: string; children: ReactNode }) {
+export function TarjetaDeAcceso({ titulo, children, sobreCancha = false }: { titulo: string; children: ReactNode; sobreCancha?: boolean }) {
+  const altura = sobreCancha ? "min-h-dvh py-7 sm:py-10" : "min-h-[85dvh] py-9";
   return (
-    <main className="mx-auto grid min-h-[85dvh] w-full max-w-115 content-center px-5 py-9 sm:px-8">
-      <div className="overflow-hidden rounded-3xl border border-linea bg-papel shadow-sm">
+    <main className={"mx-auto grid w-full max-w-115 content-center px-5 sm:px-8 " + altura}>
+      <div className="overflow-hidden rounded-3xl border border-linea bg-papel shadow-[0_18px_70px_-24px_rgb(0_0_0/0.7)]">
         <header className="flex items-center gap-3 bg-cancha px-6 py-5 text-capitan sm:px-8">
           <MonogramaLaPrevia className="h-10 w-auto shrink-0" aria-hidden="true" />
           <span className="font-titular text-2xl font-black tracking-wide">La Previa</span>

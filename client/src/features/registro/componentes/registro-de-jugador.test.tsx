@@ -28,6 +28,14 @@ describe("RegistroDeJugador", () => {
     expect(screen.queryByText(/te toma un minuto/i)).not.toBeInTheDocument();
   });
 
+  it("ofrece iniciar sesión en la cabecera, antes del formulario", () => {
+    mostrarRegistro();
+
+    const enlace = screen.getByRole("link", { name: "Inicia sesión" });
+    expect(screen.getByRole("banner")).toContainElement(enlace);
+    expect(enlace).toHaveAttribute("href", "/iniciar-sesion");
+  });
+
   describe("campos obligatorios", () => {
     it("marca los campos obligatorios", () => {
       mostrarRegistro();
