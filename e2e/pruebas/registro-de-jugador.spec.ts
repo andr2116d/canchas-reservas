@@ -44,12 +44,16 @@ test.describe("Registro de jugador", () => {
 
   test("deja revisar los documentos y exige la aceptación antes de crear la cuenta", async ({ page }) => {
     await page.goto("/registro");
-    await page.getByText("Términos y condiciones", { exact: true }).click();
-    await page.getByText("Política de privacidad", { exact: true }).click();
-    await expect(page.getByText(/el titular de la reserva debe tener 18 años/i)).toBeVisible();
-    await expect(page.getByText(/usamos tus nombres, apellidos y documento/i)).toBeVisible();
-    await expect(aceptacionLegal(page)).not.toBeChecked();
     await llenarRegistro(page, unJugadorNuevo());
+    const leerDocumentos = page.getByText("Leer términos y privacidad", { exact: true });
+    const terminos = page.getByText(/el titular de la reserva debe tener 18 años/i);
+    await expect(terminos).toBeHidden();
+    await leerDocumentos.click();
+    await expect(terminos).toBeVisible();
+    await expect(page.getByText(/usamos tus nombres, apellidos y documento/i)).toBeVisible();
+    await leerDocumentos.click();
+    await expect(terminos).toBeHidden();
+    await expect(aceptacionLegal(page)).not.toBeChecked();
 
     await crearCuenta(page).click();
 

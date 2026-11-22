@@ -8,7 +8,6 @@ import { AceptacionLegalDelRegistro } from "./aceptacion-legal-del-registro";
 import { CampoContrasena } from "./campo-contrasena";
 import { CampoDeTexto } from "./campo-de-texto";
 import { CamposDelDocumento } from "./campos-del-documento";
-import { DocumentosDelRegistro } from "./documentos-del-registro";
 
 interface GrupoProps {
   titulo: string;
@@ -68,7 +67,6 @@ export function FormularioRegistro({ alEnviarRegistro, errorGeneral }: Formulari
 
   return (
     <form noValidate onSubmit={alEnviarRegistro} className="flex flex-col gap-6">
-      <DocumentosDelRegistro />
       <GrupoDelJugador />
       <GrupoDeContactoYAcceso />
       <AceptacionLegalDelRegistro />

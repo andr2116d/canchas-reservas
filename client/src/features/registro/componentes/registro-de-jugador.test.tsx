@@ -52,12 +52,19 @@ describe("RegistroDeJugador", () => {
   });
 
   describe("envío", () => {
-    it("permite leer los documentos y pide aceptar antes de enviar", async () => {
+    it("abre los documentos junto a la casilla y pide aceptar antes de enviar", async () => {
       const persona = mostrarRegistro();
-      await persona.click(screen.getByText("Términos y condiciones", { exact: true }));
-      await persona.click(screen.getByText("Política de privacidad", { exact: true }));
-      expect(screen.getByText(/titular de la reserva debe tener 18 años/i)).toBeVisible();
+      const leerDocumentos = screen.getByText("Leer términos y privacidad", { exact: true });
+      const terminos = screen.getByText(/titular de la reserva debe tener 18 años/i);
+      expect(terminos).not.toBeVisible();
+
+      await persona.click(leerDocumentos);
+
+      expect(terminos).toBeVisible();
       expect(screen.getByText(/usamos tus nombres, apellidos y documento/i)).toBeVisible();
+      expect(screen.queryByText(/borrador para pruebas/i)).not.toBeInTheDocument();
+      await persona.click(leerDocumentos);
+      expect(terminos).not.toBeVisible();
       expect(casillaLegal()).not.toBeChecked();
       await llenarDatosValidos(persona);
 
