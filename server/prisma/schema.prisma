@@ -43,6 +43,20 @@ model Usuario {
   estado                 EstadoUsuario
   creadoEn               DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn          DateTime      @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  sesiones               Sesion[]
 
   @@map("usuario")
+}
+
+model Sesion {
+  id                Int      @id @default(autoincrement())
+  usuarioId         Int      @map("usuario_id")
+  tokenHash         String   @unique @map("token_hash")
+  ultimaActividadEn DateTime @map("ultima_actividad_en") @db.Timestamptz(3)
+  expiraEn          DateTime @map("expira_en") @db.Timestamptz(3)
+  creadaEn          DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("sesion")
 }
