@@ -18,8 +18,9 @@ export async function MarcoDelPanel({ rol, children }: { rol: Rol; children: Rea
 
   return (
     <div className="marco-interno" data-rol={rol}>
+      <a href="#contenido" className="saltar-al-contenido">Saltar al contenido</a>
       <BarraDeNavegacion rol={rol} venceEn={sesion.venceEn} />
-      <main className="mx-auto flex w-[min(72rem,calc(100%-1.5rem))] flex-col gap-8 px-1 pt-8 pb-16 sm:pt-12">
+      <main id="contenido" tabIndex={-1} className="contenido-interno">
         {sesion.requiereCambiarContrasena && (
           <AvisoDeContrasenaTemporal tiempoRestante={tiempoRestante(sesion.contrasenaTemporalVenceEn)} />
         )}

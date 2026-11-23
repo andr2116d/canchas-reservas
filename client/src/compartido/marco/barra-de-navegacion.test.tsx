@@ -25,6 +25,15 @@ describe("BarraDeNavegacion", () => {
     expect(within(navegacion).getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
   });
 
+  it("lleva a la cuenta propia desde cualquier panel", () => {
+    ruta.actual = "/recepcion/cuenta";
+    render(<BarraDeNavegacion rol="RECEPCIONISTA" venceEn={VENCE} />);
+
+    expect(screen.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("href", "/recepcion/cuenta");
+    expect(screen.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
+    ruta.actual = "/administracion/recepcionistas";
+  });
+
   it("identifica el panel del rol", () => {
     render(<BarraDeNavegacion rol="RECEPCIONISTA" venceEn={VENCE} />);
 

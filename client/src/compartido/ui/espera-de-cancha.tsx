@@ -52,17 +52,21 @@ function Pierna({ plano }: { plano: "atras" | "adelante" }) {
 }
 
 /**
- * Pantalla de carga de todo el sitio: cubre la pantalla con la cancha y, al
- * centro, un jugador de perfil hace dominadas alternando los pies. No muestra
- * texto; solo avisa «Cargando» a lectores de pantalla.
+ * Pantalla de carga: un jugador de perfil hace dominadas alternando los pies.
+ * Cubre la pantalla con la cancha (`pantalla`) o va dentro de la franja de
+ * cancha de un panel (`franja`). No muestra texto; solo avisa «Cargando» a
+ * lectores de pantalla.
  */
-export function EsperaDeCancha() {
+export function EsperaDeCancha({ variante = "pantalla" }: { variante?: "pantalla" | "franja" }) {
   const id = useId().replace(/[^a-zA-Z0-9-]/g, "");
   const desvanecido = `desvanecido-${id}`;
   const degradado = `degradado-${id}`;
 
   return (
-    <div role="status" className="cancha-completa espera-de-cancha">
+    <div
+      role="status"
+      className={variante === "pantalla" ? "cancha-completa espera-de-cancha" : "espera-de-cancha espera-de-cancha--franja"}
+    >
       <span className="sr-only">Cargando</span>
       <svg aria-hidden="true" className="espera-de-cancha__jugada" viewBox="0 -30 240 250" focusable="false">
         <defs>

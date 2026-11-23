@@ -17,9 +17,9 @@ function datosEditables(ficha: FichaDeRecepcionista): DatosDeEdicion {
 
 function SelloDeEstado({ activa }: { activa: boolean }) {
   return activa ? (
-    <span className="w-fit rounded-full bg-botella px-3 py-1 text-sm font-bold text-papel">Activa</span>
+    <span className="inline-block rounded-full bg-capitan px-3 py-1 text-sm font-bold text-tinta">Activa</span>
   ) : (
-    <span className="w-fit rounded-full bg-linea px-3 py-1 text-sm font-bold text-grava">Desactivada</span>
+    <span className="inline-block rounded-full bg-tiza/20 px-3 py-1 text-sm font-bold text-papel">Desactivada</span>
   );
 }
 
@@ -34,9 +34,9 @@ export async function FichaCompleta({ parametros }: { parametros: Promise<{ id: 
       <EncabezadoDeSeccion
         titulo={`${ficha.nombres} ${ficha.apellidos}`}
         descripcion={ficha.correo}
+        sello={<SelloDeEstado activa={activa} />}
         accion={<Link href="/administracion/recepcionistas" className={BOTON_SECUNDARIO}>Volver al listado</Link>}
       />
-      <SelloDeEstado activa={activa} />
       <div className="grid items-start gap-6 lg:grid-cols-[3fr_2fr]">
         <section aria-labelledby="titulo-datos" className={`${TARJETA} flex flex-col gap-5`}>
           <h2 id="titulo-datos" className="font-titular text-2xl font-black text-tinta">Datos</h2>

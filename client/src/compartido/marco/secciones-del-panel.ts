@@ -30,6 +30,13 @@ export const SECCIONES_DEL_PANEL: Record<Rol, Seccion[]> = {
   ],
 };
 
+/** Cuenta propia, dentro del panel de cada rol. */
+export const RUTA_DE_LA_CUENTA: Record<Rol, string> = {
+  JUGADOR: "/inicio/cuenta",
+  RECEPCIONISTA: "/recepcion/cuenta",
+  ADMINISTRADOR: "/administracion/cuenta",
+};
+
 /** El inicio del rol solo está activo en su ruta exacta; las demás, también en sus subrutas. */
 export function esSeccionActual(seccion: Seccion, inicio: string, rutaActual: string): boolean {
   if (seccion.ruta === inicio) return rutaActual === inicio;

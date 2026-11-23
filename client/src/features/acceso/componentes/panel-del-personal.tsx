@@ -32,6 +32,16 @@ function AccesoARecepcionistas() {
   );
 }
 
+/** Maqueta de la agenda de recepción: llegará con las reservas. */
+function AgendaEnPreparacion() {
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-white/80 bg-papel p-6 shadow-sm">
+      <span className="font-titular text-3xl leading-none font-black text-tinta">Agenda del día</span>
+      <span className="text-grava">Aquí verás quién llega, quién está en cancha y qué falta cobrar.</span>
+    </div>
+  );
+}
+
 /** Muestra el panel solo cuando la API confirma el permiso del personal. */
 export async function PanelDelPersonal({ rol }: { rol: keyof typeof PANELES_DEL_PERSONAL }) {
   const { recurso, titulo, descripcion } = PANELES_DEL_PERSONAL[rol];
@@ -44,7 +54,7 @@ export async function PanelDelPersonal({ rol }: { rol: keyof typeof PANELES_DEL_
   return (
     <>
       <EncabezadoDeSeccion titulo={titulo} descripcion={descripcion} />
-      {rol === "ADMINISTRADOR" && <AccesoARecepcionistas />}
+      {rol === "ADMINISTRADOR" ? <AccesoARecepcionistas /> : <AgendaEnPreparacion />}
       <p className="text-sm text-grava">
         Cómo cuidamos tus datos:{" "}
         <Link href={RUTA_DEL_AVISO_DEL_PERSONAL} className="font-bold text-botella underline underline-offset-4">

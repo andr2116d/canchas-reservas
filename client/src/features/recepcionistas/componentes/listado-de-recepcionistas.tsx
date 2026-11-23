@@ -56,9 +56,9 @@ function FilaDeRecepcionista({ ficha }: { ficha: FichaDeRecepcionista }) {
 /** Recepcionistas activas o desactivadas, con pestañas para cambiar de estado. */
 export function ListadoDeRecepcionistas({ estado, fichas }: { estado: EstadoDelListado; fichas: FichaDeRecepcionista[] }) {
   return (
-    <section className="flex flex-col gap-4">
+    <section className={`${TARJETA} flex flex-col gap-4`}>
       <PestanasDeEstado estado={estado} />
-      <div className={TARJETA}>
+      <div>
         {fichas.length === 0 ? (
           <p className="text-grava">{SIN_CUENTAS[estado]}</p>
         ) : (

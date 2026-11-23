@@ -11,6 +11,19 @@
   overflow: hidden;
 }
 
+/* Dentro de la franja de cancha de un panel: sin tapar la barra ni cambiar de color. */
+.espera-de-cancha--franja {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  justify-items: start;
+  overflow: visible;
+}
+
+.espera-de-cancha--franja .espera-de-cancha__jugada {
+  width: min(11rem, 45vw);
+}
+
 /*
  * Ciclo de 3,2 s con cuatro toques: adelante (0 %), atrás (22 %),
  * adelante fuerte (44 %, el balón sube más alto) y atrás (80 %).
