@@ -6,8 +6,10 @@ import { EtiquetaDeCampo } from "./etiqueta-de-campo";
 
 export interface CampoDeTextoProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "name" | "id"> {
-  /** Nombre del campo en el formulario; también es su id. */
+  /** Nombre del campo en el formulario. */
   nombre: string;
+  /** Id del campo; por defecto, su nombre. Sirve cuando hay varios formularios iguales en la pantalla. */
+  id?: string;
   etiqueta: string;
   /** Texto de ayuda permanente, debajo del campo. */
   ayuda?: string;
@@ -63,9 +65,26 @@ function eventosDeEntradaFiltrada(
   };
 }
 
+/** Ayuda permanente y error del campo; el error se anuncia al aparecer. */
+function MensajesDelCampo({ idAyuda, ayuda, idError, error }: { idAyuda: string; ayuda?: string; idError: string; error?: string }) {
+  return (
+    <>
+      {ayuda && (
+        <p id={idAyuda} className="text-sm text-grava">
+          {ayuda}
+        </p>
+      )}
+      <p id={idError} aria-live="polite" className="text-sm font-medium text-error empty:hidden">
+        {error}
+      </p>
+    </>
+  );
+}
+
 /** Campo de texto con su etiqueta, su ayuda y su error asociados. */
 export function CampoDeTexto({
   nombre,
+  id = nombre,
   etiqueta,
   ayuda,
   accesorio,
@@ -81,18 +100,18 @@ export function CampoDeTexto({
   );
   const mensaje = formState.errors[nombre]?.message;
   const error = typeof mensaje === "string" ? mensaje : undefined;
-  const idAyuda = `${nombre}-ayuda`;
-  const idError = `${nombre}-error`;
+  const idAyuda = `${id}-ayuda`;
+  const idError = `${id}-error`;
   const descripcion = [ayuda && idAyuda, error && idError].filter(Boolean).join(" ");
 
   return (
     <div className="flex flex-col gap-1.5">
-      <EtiquetaDeCampo htmlFor={nombre} opcional={opcional}>
+      <EtiquetaDeCampo htmlFor={id} opcional={opcional}>
         {etiqueta}
       </EtiquetaDeCampo>
       <div className="relative">
         <input
-          id={nombre}
+          id={id}
           required={!opcional}
           aria-invalid={Boolean(error)}
           aria-describedby={descripcion || undefined}
@@ -103,14 +122,7 @@ export function CampoDeTexto({
         />
         {accesorio}
       </div>
-      {ayuda && (
-        <p id={idAyuda} className="text-sm text-grava">
-          {ayuda}
-        </p>
-      )}
-      <p id={idError} aria-live="polite" className="text-sm font-medium text-error empty:hidden">
-        {error}
-      </p>
+      <MensajesDelCampo idAyuda={idAyuda} ayuda={ayuda} idError={idError} error={error} />
     </div>
   );
 }

@@ -19,7 +19,7 @@ export const ERROR_INESPERADO = "Ocurrió un error inesperado. Inténtalo de nue
 /** Envía JSON a la API del mismo sitio y traduce la respuesta, con o sin cuerpo. */
 export async function enviarJson<T = undefined>(
   ruta: string,
-  metodo: "POST" | "PATCH",
+  metodo: "GET" | "POST" | "PUT" | "PATCH",
   cuerpo?: unknown,
 ): Promise<RespuestaDeLaApi<T>> {
   let respuesta: Response;
