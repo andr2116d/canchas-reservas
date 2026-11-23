@@ -27,9 +27,7 @@ function usePublicarTarifa(tipo: string, valores: DatosDeTarifa) {
   const clave = JSON.stringify(valores);
   useEffect(() => {
     const leidos = esquemaDeTarifa.safeParse(JSON.parse(clave));
-    if (!leidos.success) return publicarTarifa(tipo, undefined);
-    const { precioDia, precioNoche, duracionDelTurno, ofreceTurnoCorto } = leidos.data;
-    publicarTarifa(tipo, { precioDia, precioNoche, horas: Number(duracionDelTurno), ofreceTurnoCorto });
+    publicarTarifa(tipo, leidos.success ? { tipo, ...leidos.data } : undefined);
   }, [clave, tipo, publicarTarifa]);
 }
 

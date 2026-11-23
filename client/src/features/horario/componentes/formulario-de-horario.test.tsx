@@ -9,6 +9,7 @@ import { FormularioDeHorario } from "./formulario-de-horario";
 const navegar = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navegar }));
 vi.mock("../servicios/horario.api", () => ({ guardarHorario: vi.fn() }));
+vi.mock("@/compartido/horario/simulacion.api", () => ({ simularTurnos: vi.fn().mockResolvedValue({ tipo: "simulado", simulacion: { tipos: {} } }) }));
 
 const DIAS = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"] as const;
 
@@ -35,7 +36,7 @@ const chip = (dia: string) => screen.getByRole("button", { name: `Abre el ${dia}
 const semana = () => screen.getByRole("list", { name: "Así queda la semana" });
 
 describe("FormularioDeHorario", () => {
-  beforeEach(() => vi.resetAllMocks());
+  beforeEach(() => vi.mocked(guardarHorario).mockReset());
 
   it("muestra un solo horario para los días que abre, el domingo cerrado y desde cuándo rige", () => {
     mostrar();

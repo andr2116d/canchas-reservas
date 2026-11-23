@@ -1,7 +1,10 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ProveedorDelBorrador, type SemanaEnBorrador } from "@/compartido/horario/borrador";
+import { ProveedorDelBorrador, useBorrador } from "@/compartido/horario/borrador";
+import { simularTurnos } from "@/compartido/horario/simulacion.api";
+import { LUNES_DE_PRUEBA, simulacionDePrueba } from "@/compartido/horario/simulacion-de-prueba";
 import { guardarTarifa } from "../servicios/tarifas.api";
 import type { TarifaDelTipo } from "../servicios/tarifas";
 import { TarjetaDeTarifa } from "./tarjeta-de-tarifa";
@@ -9,6 +12,7 @@ import { TarjetaDeTarifa } from "./tarjeta-de-tarifa";
 const navegar = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navegar }));
 vi.mock("../servicios/tarifas.api", () => ({ guardarTarifa: vi.fn() }));
+vi.mock("@/compartido/horario/simulacion.api", () => ({ simularTurnos: vi.fn() }));
 
 const VIGENTE = {
   precioDia: "50.00",
@@ -19,25 +23,32 @@ const VIGENTE = {
   guardadaPor: "Valeria León",
 };
 
-const SEMANA: SemanaEnBorrador = {
-  LUNES: { abre: "08:00", cierra: "22:00", inicioDeLaNoche: "18:00" },
-  MARTES: { abre: "08:00", cierra: "20:00", inicioDeLaNoche: "18:00" },
-};
+const MARTES = { ...LUNES_DE_PRUEBA, sinTurno: undefined };
 
-function mostrar(cambios: Partial<TarifaDelTipo> = {}, semana: SemanaEnBorrador | null = SEMANA) {
+/** El horario en edición que comparte la pantalla con la tarjeta. */
+function ConHorario() {
+  const { publicarHorario } = useBorrador();
+  useEffect(() => publicarHorario({ inicioDeLaNoche: "18:00", dias: [{ dia: "LUNES", abierto: true, abre: "08:00", cierra: "22:00" }] }), [publicarHorario]);
+  return null;
+}
+
+function mostrar(cambios: Partial<TarifaDelTipo> = {}) {
   const tarifa: TarifaDelTipo = { tipo: "FUTBOL_7", vigente: VIGENTE, historial: [VIGENTE], ...cambios };
   render(
-    <ProveedorDelBorrador semanaInicial={semana ?? undefined}>
+    <ProveedorDelBorrador>
+      <ConHorario />
       <TarjetaDeTarifa tarifa={tarifa} />
     </ProveedorDelBorrador>,
   );
 }
 
 const duracion = () => screen.getByRole("group", { name: "Cada turno dura" });
-const turnosPorDia = () => within(screen.getByRole("list", { name: "Turnos por día" })).getAllByRole("listitem");
 
 describe("TarjetaDeTarifa", () => {
-  beforeEach(() => vi.resetAllMocks());
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(simularTurnos).mockResolvedValue({ tipo: "simulado", simulacion: simulacionDePrueba("FUTBOL_7", { LUNES: LUNES_DE_PRUEBA, MARTES }) });
+  });
 
   it("muestra la tarifa vigente, quién la guardó y desde cuándo", () => {
     mostrar();
@@ -57,29 +68,29 @@ describe("TarjetaDeTarifa", () => {
     expect(screen.getByLabelText(/^Precio de día/)).toHaveValue("");
   });
 
-  it("cuenta los turnos de cada día y marca el día con rato sin turno", () => {
+  it("cuenta los turnos de cada día según el server y marca el día con rato sin turno", async () => {
     mostrar();
 
-    const [lunes, martes, miercoles] = turnosPorDia();
+    const lunes = await screen.findByRole("listitem", { name: "Lunes: 4 turnos; de 20:00 a 22:00 sin turno" });
     expect(lunes).toHaveTextContent("Lun4");
-    expect(lunes).toHaveAccessibleName("Lunes: 4 turnos; de 20:00 a 22:00 sin turno");
-    expect(martes).toHaveAccessibleName("Martes: 4 turnos");
-    expect(miercoles).toHaveAccessibleName("Miércoles: cerrado");
+    expect(screen.getByRole("listitem", { name: "Martes: 4 turnos" })).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: "Miércoles: cerrado" })).toBeInTheDocument();
   });
 
-  it("la duración se cambia con los botones y la cuenta se actualiza al momento", async () => {
+  it("la duración se cambia con los botones y se pide de nuevo la cuenta al server", async () => {
     mostrar();
+    await screen.findByRole("list", { name: "Turnos por día" });
 
     await userEvent.click(within(duracion()).getByRole("button", { name: "Una hora menos" }));
 
     expect(duracion()).toHaveTextContent("2 horas");
-    expect(turnosPorDia()[0]).toHaveAccessibleName("Lunes: 7 turnos");
+    await waitFor(() => expect(vi.mocked(simularTurnos).mock.lastCall?.[0].tarifas[0]).toMatchObject({ duracionDelTurno: "2" }));
   });
 
-  it("sin horario pide guardarlo para contar los turnos", () => {
-    mostrar({}, null);
+  it("un tipo sin tarifa válida pide completarla para contar los turnos", () => {
+    mostrar({ tipo: "FUTBOL_5", vigente: undefined, historial: [] });
 
-    expect(screen.getByText("Guarda el horario para contar los turnos de cada día.")).toBeInTheDocument();
+    expect(screen.getByText("Completa la tarifa para contar los turnos de cada día.")).toBeInTheDocument();
   });
 
   it("no deja guardar un monto en cero y explica por qué", async () => {

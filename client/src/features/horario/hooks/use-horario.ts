@@ -9,17 +9,18 @@ import type { HorarioConsultado } from "@/compartido/horario/horario";
 import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
 import { type DatosDelFormularioDeHorario, esquemaDeHorario } from "../esquemas/horario.schema";
 import { guardarHorario } from "../servicios/horario.api";
-import { datosParaGuardar, semanaDelFormulario, ubicarErrores, valoresDelFormulario } from "../utilidades/datos-del-horario";
+import { datosParaGuardar, ubicarErrores, valoresDelFormulario } from "../utilidades/datos-del-horario";
 
 export type AvisoDeGuardado = "guardado" | "sin-cambios";
 
-/** Comparte con la vista previa el horario que se está editando, aunque no se haya guardado. */
-function usePublicarSemana(valores: DatosDelFormularioDeHorario) {
-  const { publicarSemana } = useBorrador();
+/** Comparte con la vista previa el horario que se está editando, solo si es válido. */
+function usePublicarHorario(valores: DatosDelFormularioDeHorario) {
+  const { publicarHorario } = useBorrador();
   const clave = JSON.stringify(valores);
   useEffect(() => {
-    publicarSemana(semanaDelFormulario(JSON.parse(clave) as DatosDelFormularioDeHorario));
-  }, [clave, publicarSemana]);
+    const leido = esquemaDeHorario.safeParse(JSON.parse(clave));
+    publicarHorario(leido.success ? datosParaGuardar(leido.data) : undefined);
+  }, [clave, publicarHorario]);
 }
 
 /** Edita el horario de la semana y refresca la pantalla al guardar. */
@@ -32,7 +33,7 @@ export function useHorario(consultado: HorarioConsultado) {
     mode: "onTouched",
     defaultValues: valoresDelFormulario(consultado),
   });
-  usePublicarSemana(useWatch({ control: formulario.control }) as DatosDelFormularioDeHorario);
+  usePublicarHorario(useWatch({ control: formulario.control }) as DatosDelFormularioDeHorario);
 
   const enviar = formulario.handleSubmit(async (valores) => {
     setAviso(undefined);

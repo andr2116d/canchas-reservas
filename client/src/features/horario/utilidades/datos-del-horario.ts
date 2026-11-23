@@ -1,4 +1,3 @@
-import type { SemanaEnBorrador } from "@/compartido/horario/borrador";
 import { DIAS_DE_LA_SEMANA, type DiaDeLaSemana, type HorarioConsultado, type VistaDelDia } from "@/compartido/horario/horario";
 import type { DatosDelFormularioDeHorario, DiaDistinto } from "../esquemas/horario.schema";
 
@@ -46,8 +45,11 @@ export function datosParaGuardar(valores: DatosDelFormularioDeHorario) {
   };
 }
 
-/** Horario de cada día abierto, con su hora de noche resuelta, para la vista previa. */
-export function semanaDelFormulario(valores: DatosDelFormularioDeHorario): SemanaEnBorrador {
+/** Días abiertos con su horario; un día que falta está cerrado. */
+export type SemanaDelFormulario = Partial<Record<DiaDeLaSemana, { abre: string; cierra: string; inicioDeLaNoche: string }>>;
+
+/** Horario de cada día abierto, con su hora de noche resuelta, para el resumen de la semana. */
+export function semanaDelFormulario(valores: DatosDelFormularioDeHorario): SemanaDelFormulario {
   return Object.fromEntries(
     valores.abiertos.map((dia) => {
       const distinto = distintoDel(valores, dia);

@@ -1,39 +1,49 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useEffect } from "react";
-import { describe, expect, it } from "vitest";
-import { ProveedorDelBorrador, type SemanaEnBorrador, useBorrador } from "@/compartido/horario/borrador";
-import type { TarifaEnBorrador } from "@/compartido/horario/turnos";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ProveedorDelBorrador, useBorrador } from "@/compartido/horario/borrador";
+import type { HorarioParaSimular, TarifaParaSimular } from "@/compartido/horario/simulacion";
+import { simularTurnos } from "@/compartido/horario/simulacion.api";
+import { LUNES_DE_PRUEBA, simulacionDePrueba } from "@/compartido/horario/simulacion-de-prueba";
 import { TurnosDelDia } from "./turnos-del-dia";
 
-const SEMANA: SemanaEnBorrador = {
-  LUNES: { abre: "08:00", cierra: "22:00", inicioDeLaNoche: "18:00" },
-  SABADO: { abre: "08:00", cierra: "22:00", inicioDeLaNoche: "17:00" },
-};
-const FUTBOL_7: TarifaEnBorrador = { precioDia: "50", precioNoche: "100", horas: 3, ofreceTurnoCorto: false };
+vi.mock("@/compartido/horario/simulacion.api", () => ({ simularTurnos: vi.fn() }));
 
-function ConTarifa({ tarifa }: { tarifa?: TarifaEnBorrador }) {
-  const { publicarTarifa } = useBorrador();
-  useEffect(() => publicarTarifa("FUTBOL_7", tarifa), [publicarTarifa, tarifa]);
+const HORARIO: HorarioParaSimular = { inicioDeLaNoche: "18:00", dias: [{ dia: "LUNES", abierto: true, abre: "08:00", cierra: "22:00" }] };
+const FUTBOL_7: TarifaParaSimular = { tipo: "FUTBOL_7", precioDia: "50", precioNoche: "100", duracionDelTurno: "3", ofreceTurnoCorto: false };
+const SABADO = { ...LUNES_DE_PRUEBA, inicioDeLaNoche: "17:00" };
+
+function Editor() {
+  const { publicarHorario, publicarTarifa } = useBorrador();
+  useEffect(() => {
+    publicarHorario(HORARIO);
+    publicarTarifa("FUTBOL_7", FUTBOL_7);
+  }, [publicarHorario, publicarTarifa]);
   return null;
 }
 
-function mostrar(tarifa: TarifaEnBorrador | undefined = FUTBOL_7, semana: SemanaEnBorrador | undefined = SEMANA) {
+function mostrar() {
   render(
-    <ProveedorDelBorrador semanaInicial={semana}>
-      <ConTarifa tarifa={tarifa} />
+    <ProveedorDelBorrador>
+      <Editor />
       <TurnosDelDia />
     </ProveedorDelBorrador>,
   );
 }
 
 describe("TurnosDelDia", () => {
-  it("muestra los turnos del tipo y el día elegidos con su precio y su desglose", async () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(simularTurnos).mockResolvedValue({ tipo: "simulado", simulacion: simulacionDePrueba("FUTBOL_7", { LUNES: LUNES_DE_PRUEBA, SABADO }) });
+  });
+
+  it("muestra los turnos que calculó el server con su precio y su desglose", async () => {
     mostrar();
 
     await userEvent.click(screen.getByRole("button", { name: "Fútbol 7" }));
 
-    const turnos = screen.getAllByRole("listitem");
+    const turnos = await screen.findAllByRole("listitem");
     expect(turnos).toHaveLength(4);
     expect(turnos[3]).toHaveTextContent("17:00 a 20:00");
     expect(turnos[3]).toHaveTextContent("Día S/ 16.67 + noche S/ 66.66");
@@ -41,24 +51,21 @@ describe("TurnosDelDia", () => {
     expect(screen.getByText("De 20:00 a 22:00 no se ofrece turno: no alcanza para uno completo.")).toBeInTheDocument();
   });
 
-  it("usa la hora de noche propia del día", async () => {
+  it("usa la hora de noche del día elegido", async () => {
     mostrar();
-
     await userEvent.click(screen.getByRole("button", { name: "Fútbol 7" }));
     await userEvent.click(screen.getByRole("button", { name: "Sábado" }));
 
-    expect(screen.getByText(/precio de noche desde las 17:00/)).toBeInTheDocument();
-    expect(within(screen.getAllByRole("listitem")[3]).getByText("S/ 100.00")).toBeInTheDocument();
+    expect(await screen.findByText(/precio de noche desde las 17:00/)).toBeInTheDocument();
   });
 
-  it("avisa si el día está cerrado, si falta el horario o si el tipo no tiene tarifa", async () => {
+  it("avisa si el día está cerrado o si el tipo no tiene tarifa", async () => {
     mostrar();
     await userEvent.click(screen.getByRole("button", { name: "Fútbol 7" }));
     await userEvent.click(screen.getByRole("button", { name: "Domingo" }));
-    expect(screen.getByText("El domingo el local no abre.")).toBeInTheDocument();
+    expect(await screen.findByText("El domingo el local no abre.")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Fútbol 5" }));
-    await userEvent.click(screen.getByRole("button", { name: "Lunes" }));
     expect(screen.getByText("Fútbol 5 todavía no tiene tarifa.")).toBeInTheDocument();
   });
 });

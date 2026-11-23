@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useBorrador } from "@/compartido/horario/borrador";
 import { DIAS_DE_LA_SEMANA, type DiaDeLaSemana, NOMBRE_DEL_DIA } from "@/compartido/horario/horario";
-import { calcularTurnos, type TurnoCalculado } from "@/compartido/horario/turnos";
+import type { TurnoConPrecio } from "@/compartido/horario/simulacion";
 import { NOMBRE_DEL_TIPO, TIPOS_DE_CANCHA, type TipoDeCancha } from "../servicios/tarifas";
 import { SelectorSegmentado } from "./selector-segmentado";
 
@@ -11,8 +11,9 @@ const TIPOS = TIPOS_DE_CANCHA.map((valor) => ({ valor, texto: NOMBRE_DEL_TIPO[va
 // Dos letras para que la semana entre en una fila; el nombre completo queda para los lectores de pantalla.
 const DIAS = DIAS_DE_LA_SEMANA.map((valor) => ({ valor, texto: NOMBRE_DEL_DIA[valor].slice(0, 2), nombreAccesible: NOMBRE_DEL_DIA[valor] }));
 
-function FilaDelTurno({ turno }: { turno: TurnoCalculado }) {
-  const detalle = turno.corto ? "Turno corto" : turno.partes && `Día S/ ${turno.partes.dia} + noche S/ ${turno.partes.noche}`;
+function FilaDelTurno({ turno }: { turno: TurnoConPrecio }) {
+  const desglose = turno.tramos.length > 1 && turno.tramos.map((tramo) => `${tramo.franja === "DIA" ? "día" : "noche"} S/ ${tramo.monto}`).join(" + ");
+  const detalle = turno.corto ? "Turno corto" : desglose && desglose.charAt(0).toUpperCase() + desglose.slice(1);
   return (
     <li className="flex items-baseline justify-between gap-3 border-t border-linea/80 py-2 first:border-t-0">
       <span className="flex flex-col">
@@ -26,17 +27,16 @@ function FilaDelTurno({ turno }: { turno: TurnoCalculado }) {
 
 /** Lista de turnos del día elegido, o por qué no hay. */
 function ListaDeTurnos({ tipo, dia }: { tipo: TipoDeCancha; dia: DiaDeLaSemana }) {
-  const { semana, tarifas } = useBorrador();
-  const horario = semana?.[dia];
-  const tarifa = tarifas[tipo];
+  const { simulacion, tiposConTarifa } = useBorrador();
   const aviso = (texto: string) => <p className="text-sm text-grava">{texto}</p>;
-  if (!semana) return aviso("Todavía no hay horario de atención.");
-  if (!horario) return aviso(`El ${NOMBRE_DEL_DIA[dia].toLowerCase()} el local no abre.`);
-  if (!tarifa) return aviso(`${NOMBRE_DEL_TIPO[tipo]} todavía no tiene tarifa.`);
-  const { turnos, sinTurno } = calcularTurnos(horario, tarifa);
+  if (!tiposConTarifa.includes(tipo)) return aviso(`${NOMBRE_DEL_TIPO[tipo]} todavía no tiene tarifa.`);
+  const delDia = simulacion?.tipos[tipo]?.[dia];
+  if (!delDia) return aviso("Calculando los turnos…");
+  if (delDia.estado === "CERRADO") return aviso(`El ${NOMBRE_DEL_DIA[dia].toLowerCase()} el local no abre.`);
+  const { turnos, sinTurno, inicioDeLaNoche } = delDia;
   return (
     <>
-      <p className="text-sm text-grava">{turnos.length} {turnos.length === 1 ? "turno" : "turnos"} · precio de noche desde las {horario.inicioDeLaNoche}</p>
+      <p className="text-sm text-grava">{turnos.length} {turnos.length === 1 ? "turno" : "turnos"} · precio de noche desde las {inicioDeLaNoche}</p>
       <ul className="min-h-0 overflow-y-auto pr-1">{turnos.map((turno) => <FilaDelTurno key={turno.desde} turno={turno} />)}</ul>
       {sinTurno && (
         <p className="rounded-xl bg-alerta/10 px-3 py-2 text-xs font-medium text-alerta">
@@ -45,6 +45,13 @@ function ListaDeTurnos({ tipo, dia }: { tipo: TipoDeCancha; dia: DiaDeLaSemana }
       )}
     </>
   );
+}
+
+/** Indica que la vista previa se está poniendo al día o por qué no lo está. */
+function EstadoDeLaVistaPrevia() {
+  const { calculando, aviso } = useBorrador();
+  if (aviso) return <p role="alert" className="text-xs font-semibold text-alerta">{aviso}</p>;
+  return <p aria-live="polite" className="h-4 text-xs text-grava">{calculando ? "Actualizando…" : ""}</p>;
 }
 
 /** Vista previa de los turnos de un día, con lo que se está editando aunque no se haya guardado. */
@@ -60,6 +67,7 @@ export function TurnosDelDia() {
       <SelectorSegmentado nombre="Tipo de cancha" opciones={TIPOS} valor={tipo} elegir={setTipo} />
       <SelectorSegmentado nombre="Día" opciones={DIAS} valor={dia} elegir={setDia} />
       <ListaDeTurnos tipo={tipo} dia={dia} />
+      <EstadoDeLaVistaPrevia />
     </section>
   );
 }
