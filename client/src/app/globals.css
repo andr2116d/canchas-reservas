@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../compartido/ui/movimiento-de-acceso.css";
+@import "../compartido/ui/cancha-completa.css";
 @import "../compartido/ui/espera-de-cancha.css";
 
 @theme {
