@@ -129,6 +129,8 @@ model TarifaDeCancha {
   precioDia             Decimal      @map("precio_dia") @db.Decimal(10, 2)
   precioNoche           Decimal      @map("precio_noche") @db.Decimal(10, 2)
   duracionDelTurnoHoras Int          @map("duracion_del_turno_horas") @db.SmallInt
+  /// Si el rato final del día que no alcanza para un turno se ofrece como turno corto.
+  ofreceTurnoCorto      Boolean      @default(false) @map("ofrece_turno_corto")
   guardadaPorId         Int          @map("guardada_por_id")
   guardadaEn            DateTime     @default(now()) @map("guardada_en") @db.Timestamptz(3)
   guardadaPor           Usuario      @relation(fields: [guardadaPorId], references: [id])
