@@ -24,24 +24,45 @@ export function hashDeCorreo(correo: Correo, cifrador: Cifrador): string {
   return cifrador.hashParaBuscar(correo.direccion);
 }
 
+/** Datos personales que se guardan cifrados, con los hashes para buscarlos. */
+export type DatosPersonalesDeCuenta = Pick<
+  Usuario,
+  | 'nombres'
+  | 'apellidos'
+  | 'fechaNacimiento'
+  | 'documento'
+  | 'correo'
+  | 'celular'
+>;
+
+/** Columnas de los datos personales, cada uno cifrado. */
+export function aColumnasPersonales(
+  datos: DatosPersonalesDeCuenta,
+  cifrador: Cifrador,
+) {
+  return {
+    nombresCifrado: cifrador.cifrar(datos.nombres.texto),
+    apellidosCifrado: cifrador.cifrar(datos.apellidos.texto),
+    fechaNacimientoCifrada:
+      datos.fechaNacimiento && cifrador.cifrar(datos.fechaNacimiento.fecha),
+    tipoDocumento: datos.documento?.tipo,
+    numeroDocumentoCifrado:
+      datos.documento && cifrador.cifrar(datos.documento.numero),
+    documentoHash:
+      datos.documento && hashDeDocumento(datos.documento, cifrador),
+    correoCifrado: cifrador.cifrar(datos.correo.direccion),
+    correoHash: hashDeCorreo(datos.correo, cifrador),
+    celularCifrado: datos.celular && cifrador.cifrar(datos.celular.numero),
+  };
+}
+
 /** Convierte un usuario nuevo en la fila a guardar, con cada dato personal cifrado. */
 export function aFilaNueva(
   usuario: Usuario,
   cifrador: Cifrador,
 ): Prisma.UsuarioCreateInput {
   return {
-    nombresCifrado: cifrador.cifrar(usuario.nombres.texto),
-    apellidosCifrado: cifrador.cifrar(usuario.apellidos.texto),
-    fechaNacimientoCifrada:
-      usuario.fechaNacimiento && cifrador.cifrar(usuario.fechaNacimiento.fecha),
-    tipoDocumento: usuario.documento?.tipo,
-    numeroDocumentoCifrado:
-      usuario.documento && cifrador.cifrar(usuario.documento.numero),
-    documentoHash:
-      usuario.documento && hashDeDocumento(usuario.documento, cifrador),
-    correoCifrado: cifrador.cifrar(usuario.correo.direccion),
-    correoHash: hashDeCorreo(usuario.correo, cifrador),
-    celularCifrado: usuario.celular && cifrador.cifrar(usuario.celular.numero),
+    ...aColumnasPersonales(usuario, cifrador),
     contrasenaHash: usuario.contrasenaHash,
     dorsal: usuario.dorsal?.numero ?? null,
     rol: usuario.rol,

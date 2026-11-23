@@ -3,6 +3,7 @@ import type { Correo } from '../../src/modulos/usuarios/dominio/correo.value-obj
 import type { DocumentoIdentidad } from '../../src/modulos/usuarios/dominio/documento-identidad.value-object';
 import type {
   AccionRegistrada,
+  CambiosDeRecepcionista,
   CuentaCoincidente,
   FichaConHistorial,
   FichaDeRecepcionista,
@@ -10,8 +11,12 @@ import type {
 } from '../../src/modulos/usuarios/dominio/recepcionista.repository';
 import { Usuario } from '../../src/modulos/usuarios/dominio/usuario.entity';
 
-/** Copia del usuario con su id y, si se indica, otro estado. */
-function guardado(usuario: Usuario, id: number, estado = usuario.estado) {
+/** Copia del usuario con su id y, si se indican, otros valores. */
+function guardado(
+  usuario: Usuario,
+  id: number,
+  cambios: CambiosDeRecepcionista = {},
+) {
   return Usuario.restaurar({
     id,
     nombres: usuario.nombres,
@@ -20,10 +25,13 @@ function guardado(usuario: Usuario, id: number, estado = usuario.estado) {
     documento: usuario.documento,
     correo: usuario.correo,
     celular: usuario.celular,
-    contrasenaHash: usuario.contrasenaHash,
+    ...cambios.datos,
+    contrasenaHash: cambios.contrasenaHashTemporal ?? usuario.contrasenaHash,
     rol: usuario.rol,
-    estado,
-    requiereCambiarContrasena: usuario.requiereCambiarContrasena,
+    estado: cambios.estado ?? usuario.estado,
+    requiereCambiarContrasena:
+      cambios.contrasenaHashTemporal !== undefined ||
+      usuario.requiereCambiarContrasena,
   });
 }
 
@@ -47,11 +55,13 @@ function fichaDe(cuenta: Usuario): FichaDeRecepcionista {
 export class EnMemoriaRecepcionistaRepository implements RecepcionistaRepository {
   private readonly cuentas: Usuario[] = [];
   readonly acciones: (AccionRegistrada & { usuarioAfectadoId: number })[] = [];
+  /** Ids de las cuentas a las que se les cerraron las sesiones. */
+  readonly sesionesCerradas: number[] = [];
 
   /** Guarda una cuenta ya existente, para preparar una prueba. */
   agregar(usuario: Usuario, estado?: EstadoUsuario): number {
     const id = this.cuentas.length + 1;
-    this.cuentas.push(guardado(usuario, id, estado));
+    this.cuentas.push(guardado(usuario, id, { estado }));
     return id;
   }
 
@@ -94,6 +104,24 @@ export class EnMemoriaRecepcionistaRepository implements RecepcionistaRepository
       (candidata) => candidata.id === id && candidata.rol === 'RECEPCIONISTA',
     );
     return Promise.resolve(cuenta && { ficha: fichaDe(cuenta), historial: [] });
+  }
+
+  actualizar(
+    id: number,
+    cambios: CambiosDeRecepcionista,
+    accion: AccionRegistrada,
+  ): Promise<boolean> {
+    const indice = this.cuentas.findIndex(
+      (cuenta) =>
+        cuenta.id === id &&
+        cuenta.rol === 'RECEPCIONISTA' &&
+        (!cambios.estadoEsperado || cuenta.estado === cambios.estadoEsperado),
+    );
+    if (indice < 0) return Promise.resolve(false);
+    this.cuentas[indice] = guardado(this.cuentas[indice], id, cambios);
+    if (cambios.cerrarSesiones) this.sesionesCerradas.push(id);
+    this.acciones.push({ ...accion, usuarioAfectadoId: id });
+    return Promise.resolve(true);
   }
 
   crear(recepcionista: Usuario, accion: AccionRegistrada): Promise<number> {

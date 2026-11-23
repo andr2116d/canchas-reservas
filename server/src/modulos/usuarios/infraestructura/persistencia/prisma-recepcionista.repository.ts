@@ -12,6 +12,7 @@ import {
 import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
 import type {
   AccionRegistrada,
+  CambiosDeRecepcionista,
   CuentaCoincidente,
   FichaConHistorial,
   FichaDeRecepcionista,
@@ -21,7 +22,12 @@ import type { EstadoUsuario } from '../../../../compartido/dominio/rol-usuario';
 import type { Usuario } from '../../dominio/usuario.entity';
 import { aFicha } from './ficha-de-recepcionista.mapper';
 import { rechazarDuplicado } from './rechazar-duplicado';
-import { aFilaNueva, hashDeCorreo, hashDeDocumento } from './usuario.mapper';
+import {
+  aColumnasPersonales,
+  aFilaNueva,
+  hashDeCorreo,
+  hashDeDocumento,
+} from './usuario.mapper';
 
 /** Cuentas de recepción sobre PostgreSQL; cada cambio queda en la auditoría. */
 @Injectable()
@@ -101,6 +107,46 @@ export class PrismaRecepcionistaRepository implements RecepcionistaRepository {
             .join(' '),
         }),
       ),
+    };
+  }
+
+  async actualizar(
+    id: number,
+    cambios: CambiosDeRecepcionista,
+    { accion, ejecutadoPorId, ocurridoEn }: AccionRegistrada,
+  ): Promise<boolean> {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const { count } = await tx.usuario.updateMany({
+          where: {
+            id,
+            rol: 'RECEPCIONISTA',
+            ...(cambios.estadoEsperado && { estado: cambios.estadoEsperado }),
+          },
+          data: this.columnasCambiadas(cambios),
+        });
+        if (count === 0) return false;
+        if (cambios.cerrarSesiones) {
+          await tx.sesion.deleteMany({ where: { usuarioId: id } });
+        }
+        await tx.registroAuditoria.create({
+          data: { accion, usuarioAfectadoId: id, ejecutadoPorId, ocurridoEn },
+        });
+        return true;
+      });
+    } catch (error) {
+      rechazarDuplicado(error, MENSAJES_DEL_PERSONAL);
+    }
+  }
+
+  private columnasCambiadas(cambios: CambiosDeRecepcionista) {
+    return {
+      ...(cambios.datos && aColumnasPersonales(cambios.datos, this.cifrador)),
+      ...(cambios.estado && { estado: cambios.estado }),
+      ...(cambios.contrasenaHashTemporal && {
+        contrasenaHash: cambios.contrasenaHashTemporal,
+        requiereCambiarContrasena: true,
+      }),
     };
   }
 

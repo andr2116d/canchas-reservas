@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -17,6 +18,8 @@ import {
 import { RegistrarRecepcionistaUseCase } from '../../aplicacion/registrar-recepcionista.use-case';
 import { SugerirCorreoInstitucionalUseCase } from '../../aplicacion/sugerir-correo-institucional.use-case';
 import { ConsultarRecepcionistasUseCase } from '../../aplicacion/consultar-recepcionistas.use-case';
+import { EditarRecepcionistaUseCase } from '../../aplicacion/editar-recepcionista.use-case';
+import { EditarRecepcionistaDto } from './editar-recepcionista.dto';
 import type {
   FichaConHistorial,
   FichaDeRecepcionista,
@@ -37,6 +40,7 @@ export class RecepcionistasController {
     private readonly registrar: RegistrarRecepcionistaUseCase,
     private readonly sugerirCorreo: SugerirCorreoInstitucionalUseCase,
     private readonly consultar: ConsultarRecepcionistasUseCase,
+    private readonly editar: EditarRecepcionistaUseCase,
   ) {}
 
   @Get()
@@ -73,5 +77,15 @@ export class RecepcionistasController {
     @SesionDeLaSolicitud() sesion: SesionValida,
   ): Promise<{ id: number }> {
     return this.registrar.ejecutar(datos, sesion.usuarioId);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  actualizar(
+    @Param('id', ID_DE_RECEPCIONISTA) id: number,
+    @Body() datos: EditarRecepcionistaDto,
+    @SesionDeLaSolicitud() sesion: SesionValida,
+  ): Promise<void> {
+    return this.editar.ejecutar(id, datos, sesion.usuarioId);
   }
 }

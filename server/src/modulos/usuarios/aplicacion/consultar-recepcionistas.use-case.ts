@@ -1,5 +1,5 @@
 import type { EstadoUsuario } from '../../../compartido/dominio/rol-usuario';
-import { NoEncontradoError } from '../../../compartido/dominio/dominio.error';
+import { RecepcionistaNoEncontradaError } from '../dominio/recepcionista-no-encontrada.error';
 import type {
   FichaConHistorial,
   FichaDeRecepcionista,
@@ -29,9 +29,7 @@ export class ConsultarRecepcionistasUseCase {
 
   async ficha(id: number): Promise<FichaConHistorial> {
     const encontrada = await this.recepcionistas.buscar(id);
-    if (!encontrada) {
-      throw new NoEncontradoError('No encontramos a esa recepcionista.');
-    }
+    if (!encontrada) throw new RecepcionistaNoEncontradaError();
     return encontrada;
   }
 }
