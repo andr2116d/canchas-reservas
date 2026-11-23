@@ -6,3 +6,8 @@ export type TipoDeCancha = (typeof TIPOS_DE_CANCHA)[number];
 export function esTipoDeCancha(valor: string): valor is TipoDeCancha {
   return (TIPOS_DE_CANCHA as readonly string[]).includes(valor);
 }
+
+export const NOMBRE_DEL_TIPO: Record<TipoDeCancha, string> = {
+  FUTBOL_5: 'fútbol 5',
+  FUTBOL_7: 'fútbol 7',
+};
