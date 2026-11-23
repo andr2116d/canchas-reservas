@@ -71,6 +71,7 @@ describe("FormularioDeAlta", () => {
     expect(screen.getByText("rosa.quispe@laprevia.pe")).toBeInTheDocument();
     expect(screen.getByText("temporal2026")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver su ficha" })).toHaveAttribute("href", "/administracion/recepcionistas/7");
+    expect(screen.getByRole("button", { name: "Copiar datos" })).toBeInTheDocument();
   });
 
   it("marca junto a cada campo los datos repetidos", async () => {

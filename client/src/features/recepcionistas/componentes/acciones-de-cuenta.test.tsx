@@ -23,7 +23,7 @@ describe("AccionesDeCuenta", () => {
   it("pide confirmar antes de desactivar la cuenta", async () => {
     vi.mocked(desactivarRecepcionista).mockResolvedValue({ tipo: "hecho" });
     const usuario = userEvent.setup();
-    render(<AccionesDeCuenta id={7} nombres="Rosa" activa />);
+    render(<AccionesDeCuenta id={7} nombres="Rosa" correo="rosa@laprevia.pe" activa />);
 
     await usuario.click(screen.getByRole("button", { name: "Desactivar cuenta" }));
     expect(desactivarRecepcionista).not.toHaveBeenCalled();
@@ -37,7 +37,7 @@ describe("AccionesDeCuenta", () => {
   it("restablece la contraseña con una temporal generada y la muestra para entregarla", async () => {
     vi.mocked(restablecerContrasena).mockResolvedValue({ tipo: "hecho" });
     const usuario = userEvent.setup();
-    render(<AccionesDeCuenta id={7} nombres="Rosa" activa />);
+    render(<AccionesDeCuenta id={7} nombres="Rosa" correo="rosa@laprevia.pe" activa />);
 
     await usuario.click(screen.getByRole("button", { name: "Generar contraseña" }));
     const temporal = (screen.getByLabelText(/^Contraseña temporal/) as HTMLInputElement).value;
@@ -45,13 +45,14 @@ describe("AccionesDeCuenta", () => {
 
     expect(restablecerContrasena).toHaveBeenCalledWith(7, temporal);
     expect(await screen.findByText(temporal)).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Entrégale la nueva contraseña temporal");
+    expect(screen.getByText(/Entrégale la nueva contraseña temporal/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copiar datos" })).toBeInTheDocument();
   });
 
   it("a una cuenta desactivada solo le ofrece reactivarla con una temporal nueva", async () => {
     vi.mocked(reactivarRecepcionista).mockResolvedValue({ tipo: "hecho" });
     const usuario = userEvent.setup();
-    render(<AccionesDeCuenta id={7} nombres="Rosa" activa={false} />);
+    render(<AccionesDeCuenta id={7} nombres="Rosa" correo="rosa@laprevia.pe" activa={false} />);
     expect(screen.queryByRole("button", { name: "Desactivar cuenta" })).not.toBeInTheDocument();
 
     await usuario.type(screen.getByLabelText(/^Contraseña temporal/), "nueva2026");
@@ -64,7 +65,7 @@ describe("AccionesDeCuenta", () => {
   it("muestra el error si la acción no se pudo hacer", async () => {
     vi.mocked(desactivarRecepcionista).mockResolvedValue({ tipo: "error", mensaje: "Esta recepcionista ya está desactivada." });
     const usuario = userEvent.setup();
-    render(<AccionesDeCuenta id={7} nombres="Rosa" activa />);
+    render(<AccionesDeCuenta id={7} nombres="Rosa" correo="rosa@laprevia.pe" activa />);
 
     await usuario.click(screen.getByRole("button", { name: "Desactivar cuenta" }));
     await usuario.click(screen.getByRole("button", { name: "Sí, desactivar" }));

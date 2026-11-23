@@ -7,17 +7,19 @@ import { FormularioDeContrasenaTemporal } from "./formulario-de-contrasena-tempo
 interface AccionesDeCuentaProps {
   id: number;
   nombres: string;
+  correo: string;
   activa: boolean;
 }
 
 /** Acciones sobre el acceso: restablecer y desactivar si está activa; reactivar si no. */
-export function AccionesDeCuenta({ id, nombres, activa }: AccionesDeCuentaProps) {
+export function AccionesDeCuenta({ id, nombres, correo, activa }: AccionesDeCuentaProps) {
   if (!activa) {
     return (
       <section aria-labelledby="titulo-reactivar" className="flex flex-col gap-3">
         <h2 id="titulo-reactivar" className="font-titular text-2xl font-black text-tinta">Reactivar cuenta</h2>
         <p className="text-sm text-grava">Recupera sus datos y su historial con una contraseña temporal nueva.</p>
         <FormularioDeContrasenaTemporal
+          correo={correo}
           textoDelBoton="Reactivar cuenta"
           textoAlEnviar="Reactivando…"
           ejecutar={(contrasena) => reactivarRecepcionista(id, contrasena)}
@@ -31,6 +33,7 @@ export function AccionesDeCuenta({ id, nombres, activa }: AccionesDeCuentaProps)
         <h2 id="titulo-restablecer" className="font-titular text-2xl font-black text-tinta">Restablecer contraseña</h2>
         <p className="text-sm text-grava">Sus sesiones abiertas se cerrarán y deberá cambiarla al entrar.</p>
         <FormularioDeContrasenaTemporal
+          correo={correo}
           textoDelBoton="Restablecer contraseña"
           textoAlEnviar="Restableciendo…"
           ejecutar={(contrasena) => restablecerContrasena(id, contrasena)}

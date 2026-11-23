@@ -12,7 +12,10 @@ import type { ResultadoDeAccion } from "../servicios/recepcionistas.api";
  * Envía una contraseña temporal nueva (al reactivar o restablecer) y la guarda
  * para mostrarla y entregarla. Refresca la ficha para ver el cambio.
  */
-export function useContrasenaTemporalEntregada(ejecutar: (contrasena: string) => Promise<ResultadoDeAccion>) {
+export function useContrasenaTemporalEntregada(
+  ejecutar: (contrasena: string) => Promise<ResultadoDeAccion>,
+  alTerminar?: () => void,
+) {
   const router = useRouter();
   const [entregable, setEntregable] = useState<string>();
   const [errorGeneral, setErrorGeneral] = useState<string>();
@@ -28,7 +31,7 @@ export function useContrasenaTemporalEntregada(ejecutar: (contrasena: string) =>
     if (resultado.tipo === "hecho") {
       setEntregable(contrasena);
       formulario.reset({ contrasena: "" });
-      router.refresh();
+      (alTerminar ?? router.refresh)();
     } else if (resultado.tipo === "datos-rechazados") {
       marcarErroresDelServer(formulario, resultado.errores);
     } else {

@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { BotonDeCopiar } from "@/compartido/ui/boton-de-copiar";
+import { datosParaEntregar } from "../utilidades/datos-para-entregar";
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO, TARJETA } from "@/compartido/ui/estilos";
 
 interface CredencialesEntregablesProps {
@@ -20,6 +24,9 @@ export function CredencialesEntregables({ id, correo, contrasena, alCrearOtra }:
         <dt className="text-sm font-semibold text-grava">Contraseña temporal</dt>
         <dd className="font-mono text-lg font-bold tracking-wide text-tinta">{contrasena}</dd>
       </dl>
+      <div className="mt-4">
+        <BotonDeCopiar texto={() => datosParaEntregar({ correo, contrasena, sitio: window.location.origin })} />
+      </div>
       <div className="mt-5 flex flex-wrap gap-3">
         <Link href={`/administracion/recepcionistas/${id}`} className={BOTON_PRINCIPAL}>Ver su ficha</Link>
         <button type="button" onClick={alCrearOtra} className={BOTON_SECUNDARIO}>Crear otra cuenta</button>

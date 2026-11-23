@@ -48,7 +48,7 @@ export async function FichaCompleta({ parametros }: { parametros: Promise<{ id: 
         </section>
         <div className="flex flex-col gap-6">
           <div className={TARJETA}>
-            <AccionesDeCuenta id={ficha.id} nombres={ficha.nombres} activa={activa} />
+            <AccionesDeCuenta id={ficha.id} nombres={ficha.nombres} correo={ficha.correo} activa={activa} />
           </div>
           <section aria-labelledby="titulo-historial" className={`${TARJETA} flex flex-col gap-4`}>
             <h2 id="titulo-historial" className="font-titular text-2xl font-black text-tinta">Historial</h2>
