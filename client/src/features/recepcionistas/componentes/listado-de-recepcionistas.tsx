@@ -41,32 +41,42 @@ function PestanasDeEstado({ estado }: { estado: EstadoDelListado }) {
   );
 }
 
+/**
+ * Tarjeta de una recepcionista: toda la tarjeta abre su ficha (el nombre es el
+ * enlace y su área se estira a la tarjeta); las acciones van encima, aparte.
+ */
 function FilaDeRecepcionista({ ficha }: { ficha: FichaDeRecepcionista }) {
   return (
-    <li className="flex flex-col gap-3 py-5">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+    <li className="group relative flex flex-col gap-4 rounded-2xl border border-linea bg-papel p-4 transition-[border-color,box-shadow] hover:border-botella/40 hover:shadow-md has-[a:focus-visible]:outline-3 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-botella sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <div className="min-w-0">
           <Link
             href={`${RUTA}/${ficha.id}`}
-            className="text-lg font-bold text-tinta hover:text-botella hover:underline"
+            className="text-lg font-bold text-tinta outline-none group-hover:text-botella after:absolute after:inset-0 after:rounded-2xl after:content-['']"
           >
             {ficha.nombres} {ficha.apellidos}
           </Link>
           <p className="text-sm break-all text-grava">{ficha.correo}</p>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-grava">
-          <span>
-            {NOMBRE_DEL_DOCUMENTO[ficha.tipoDocumento]} {ficha.numeroDocumento}
-          </span>
+          <span>{NOMBRE_DEL_DOCUMENTO[ficha.tipoDocumento]} {ficha.numeroDocumento}</span>
           <span>{ficha.celular}</span>
           {ficha.requiereCambiarContrasena && (
-            <span className="rounded-full bg-[#fff6dc] px-2.5 py-0.5 text-xs font-bold text-alerta">
-              Contraseña temporal
-            </span>
+            <span className="rounded-full bg-[#fff6dc] px-2.5 py-0.5 text-xs font-bold text-alerta">Contraseña temporal</span>
           )}
         </div>
       </div>
-      <AccionesRapidas ficha={ficha} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative z-10">
+          <AccionesRapidas ficha={ficha} />
+        </div>
+        <span aria-hidden="true" className="inline-flex items-center gap-1 text-sm font-bold text-botella">
+          Ver ficha
+          <svg viewBox="0 0 16 16" className="size-4 transition-transform group-hover:translate-x-0.5" focusable="false">
+            <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
     </li>
   );
 }
@@ -86,7 +96,7 @@ export function ListadoDeRecepcionistas({
         {fichas.length === 0 ? (
           <p className="text-grava">{SIN_CUENTAS[estado]}</p>
         ) : (
-          <ul className="divide-y divide-linea">
+          <ul className="flex flex-col gap-3">
             {fichas.map((ficha) => (
               <FilaDeRecepcionista key={ficha.id} ficha={ficha} />
             ))}

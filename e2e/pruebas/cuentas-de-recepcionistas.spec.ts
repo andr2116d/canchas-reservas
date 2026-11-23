@@ -72,6 +72,17 @@ test("desde el listado se restablece la contraseña y se desactiva sin entrar a 
   await expect(page.getByRole("link", { name: nombre })).toBeVisible();
 });
 
+test("pulsar en cualquier parte de la tarjeta abre la ficha", async ({ page }) => {
+  await entrarComoAdministrador(page);
+  const recepcionista = await crearPorApi(page);
+  await page.goto("/administracion/recepcionistas");
+
+  // Se pulsa sobre la tarjeta, a la altura del correo: no es un enlace, pero la tarjeta entera lo es.
+  await page.getByRole("listitem").filter({ hasText: correoDe(recepcionista) }).click({ position: { x: 40, y: 55 } });
+
+  await expect(page).toHaveURL(`/administracion/recepcionistas/${recepcionista.id}`);
+});
+
 test("la recepcionista lee el aviso de privacidad del personal desde su panel", async ({ page }) => {
   await entrarComoAdministrador(page);
   const recepcionista = await crearPorApi(page);
