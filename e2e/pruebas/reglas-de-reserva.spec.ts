@@ -6,11 +6,11 @@ import { entrarComoAdministrador } from "../soporte/recepcionistas-de-prueba";
 // orden y en un solo proyecto; en celular solo se comprueba que la pantalla se usa bien.
 test.describe.configure({ mode: "serial" });
 
-const RUTA = "/administracion/horario-y-tarifas";
+const RUTA = "/administracion/reglas-de-reserva";
 
-async function abrirPantalla(pagina: Page, pestana: "Horario" | "Tarifas" = "Horario") {
+async function abrirPantalla(pagina: Page, pestana: "Horario" | "Tarifas" | "Cancelación" = "Horario") {
   await entrarComoAdministrador(pagina);
-  await pagina.getByRole("link", { name: "Horario y tarifas" }).first().click();
+  await pagina.getByRole("link", { name: "Reglas de reserva" }).first().click();
   await expect(pagina).toHaveURL(RUTA);
   await pagina.getByRole("tab", { name: pestana }).click();
 }
@@ -165,7 +165,7 @@ test("en celular las secciones van en pestañas y nada se sale de la pantalla", 
   await horario(page).getByRole("button", { name: "Subir horas de Cierra" }).first().click();
   await expect(horas).toHaveValue(String((antes + 1) % 25).padStart(2, "0"));
 
-  await page.getByRole("tab", { name: "Turnos del día" }).click();
+  await page.getByRole("tab", { name: "Turnos" }).click();
   await expect(vistaPrevia(page)).toBeVisible();
   await expect(horario(page)).toBeHidden();
   const desborde = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
