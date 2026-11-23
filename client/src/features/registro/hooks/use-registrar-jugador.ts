@@ -2,10 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { type UseFormReturn, useForm, useWatch } from "react-hook-form";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { useAjustarDocumentoAlCambiarTipo } from "@/compartido/formulario/use-ajustar-documento";
 import { type DatosRegistro, esquemaRegistro } from "../esquemas/registro.schema";
-import { type ErroresDeRegistro, registrarJugador } from "../servicios/registro.api";
+import { registrarJugador } from "../servicios/registro.api";
 
 const DATOS_INICIALES: DatosRegistro = {
   nombres: "",
@@ -19,38 +21,6 @@ const DATOS_INICIALES: DatosRegistro = {
   dorsal: "",
   versionLegalAceptada: "",
 };
-
-/** Muestra junto a cada campo lo que respondió el server y enfoca el primero. */
-function marcarErroresDelServer(
-  formulario: UseFormReturn<DatosRegistro>,
-  errores: ErroresDeRegistro,
-) {
-  const campos = Object.keys(errores) as (keyof DatosRegistro)[];
-  for (const campo of campos) {
-    formulario.setError(campo, { type: "server", message: errores[campo] });
-  }
-  if (campos[0]) formulario.setFocus(campos[0]);
-}
-
-/**
- * Al cambiar el tipo de documento: si pasa a DNI vacía el número (el DNI no
- * admite letras); si pasa a carné, revalida lo escrito con sus reglas.
- */
-function useAjustarDocumentoAlCambiarTipo(formulario: UseFormReturn<DatosRegistro>) {
-  const { control, getFieldState, setValue, clearErrors, trigger } = formulario;
-  const tipoDocumento = useWatch({ control, name: "tipoDocumento" });
-  const tipoAnterior = useRef(tipoDocumento);
-  useEffect(() => {
-    if (tipoAnterior.current === tipoDocumento) return;
-    tipoAnterior.current = tipoDocumento;
-    if (tipoDocumento === "DNI") {
-      setValue("numeroDocumento", "");
-      clearErrors("numeroDocumento");
-    } else if (getFieldState("numeroDocumento").isDirty) {
-      void trigger("numeroDocumento");
-    }
-  }, [tipoDocumento, getFieldState, setValue, clearErrors, trigger]);
-}
 
 /**
  * Estado y envío del formulario de registro: valida cada campo mientras se
