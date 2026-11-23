@@ -13,9 +13,13 @@ import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value
 import type {
   AccionRegistrada,
   CuentaCoincidente,
+  FichaConHistorial,
+  FichaDeRecepcionista,
   RecepcionistaRepository,
 } from '../../dominio/recepcionista.repository';
+import type { EstadoUsuario } from '../../../../compartido/dominio/rol-usuario';
 import type { Usuario } from '../../dominio/usuario.entity';
+import { aFicha } from './ficha-de-recepcionista.mapper';
 import { rechazarDuplicado } from './rechazar-duplicado';
 import { aFilaNueva, hashDeCorreo, hashDeDocumento } from './usuario.mapper';
 
@@ -58,6 +62,46 @@ export class PrismaRecepcionistaRepository implements RecepcionistaRepository {
         fila.correoHash === correoHash && 'correo',
       ].filter((dato): dato is DatoUnico => dato !== false),
     }));
+  }
+
+  async listar(estado: EstadoUsuario): Promise<FichaDeRecepcionista[]> {
+    const filas = await this.prisma.usuario.findMany({
+      where: { rol: 'RECEPCIONISTA', estado },
+    });
+    return filas.map((fila) => aFicha(fila, this.cifrador));
+  }
+
+  async buscar(id: number): Promise<FichaConHistorial | undefined> {
+    const fila = await this.prisma.usuario.findFirst({
+      where: { id, rol: 'RECEPCIONISTA' },
+      include: {
+        accionesRecibidas: {
+          orderBy: { ocurridoEn: 'desc' },
+          include: {
+            ejecutadoPor: {
+              select: { nombresCifrado: true, apellidosCifrado: true },
+            },
+          },
+        },
+      },
+    });
+    if (!fila) return undefined;
+    const { accionesRecibidas, ...datos } = fila;
+    return {
+      ficha: aFicha(datos, this.cifrador),
+      historial: accionesRecibidas.map(
+        ({ accion, ocurridoEn, ejecutadoPor }) => ({
+          accion,
+          ocurridoEn,
+          ejecutadoPor: [
+            ejecutadoPor.nombresCifrado,
+            ejecutadoPor.apellidosCifrado,
+          ]
+            .map((valor) => this.cifrador.descifrar(valor))
+            .join(' '),
+        }),
+      ),
+    };
   }
 
   async crear(

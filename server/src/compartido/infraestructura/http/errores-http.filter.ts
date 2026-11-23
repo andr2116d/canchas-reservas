@@ -11,6 +11,7 @@ import {
   ConflictoError,
   DominioError,
   type ErroresPorCampo,
+  NoEncontradoError,
 } from '../../dominio/dominio.error';
 
 /** Forma de toda respuesta de error de la API. */
@@ -39,6 +40,12 @@ function esCuerpoDeError(valor: unknown): valor is CuerpoDeError {
   );
 }
 
+function estadoDelError(error: DominioError): HttpStatus {
+  if (error instanceof ConflictoError) return HttpStatus.CONFLICT;
+  if (error instanceof NoEncontradoError) return HttpStatus.NOT_FOUND;
+  return HttpStatus.BAD_REQUEST;
+}
+
 /**
  * Convierte cualquier error en una respuesta en español con la forma
  * `{ mensaje, errores }`. Los errores inesperados se registran y responden 500
@@ -56,10 +63,7 @@ export class ErroresHttpFilter implements ExceptionFilter {
 
   private traducir(error: unknown): [number, CuerpoDeError] {
     if (error instanceof DominioError) {
-      const estado =
-        error instanceof ConflictoError
-          ? HttpStatus.CONFLICT
-          : HttpStatus.BAD_REQUEST;
+      const estado = estadoDelError(error);
       const datos = error instanceof ConflictoError ? error.datos : undefined;
       return [
         estado,

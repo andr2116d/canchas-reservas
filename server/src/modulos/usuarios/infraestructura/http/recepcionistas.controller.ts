@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
@@ -15,7 +16,17 @@ import {
 } from '../../../sesiones/api-sesiones';
 import { RegistrarRecepcionistaUseCase } from '../../aplicacion/registrar-recepcionista.use-case';
 import { SugerirCorreoInstitucionalUseCase } from '../../aplicacion/sugerir-correo-institucional.use-case';
+import { ConsultarRecepcionistasUseCase } from '../../aplicacion/consultar-recepcionistas.use-case';
+import type {
+  FichaConHistorial,
+  FichaDeRecepcionista,
+} from '../../dominio/recepcionista.repository';
 import { CorreoSugeridoDto } from './correo-sugerido.dto';
+import { ID_DE_RECEPCIONISTA } from './id-de-recepcionista.pipe';
+import {
+  ESTADOS_DEL_LISTADO,
+  ListarRecepcionistasDto,
+} from './listar-recepcionistas.dto';
 import { RegistrarRecepcionistaDto } from './registrar-recepcionista.dto';
 
 /** Gestión de las cuentas de recepción. Solo para el administrador. */
@@ -25,7 +36,15 @@ export class RecepcionistasController {
   constructor(
     private readonly registrar: RegistrarRecepcionistaUseCase,
     private readonly sugerirCorreo: SugerirCorreoInstitucionalUseCase,
+    private readonly consultar: ConsultarRecepcionistasUseCase,
   ) {}
+
+  @Get()
+  listar(
+    @Query() { estado }: ListarRecepcionistasDto,
+  ): Promise<FichaDeRecepcionista[]> {
+    return this.consultar.listar(ESTADOS_DEL_LISTADO[estado]);
+  }
 
   @Get('correo-sugerido')
   async sugerir(
@@ -38,6 +57,13 @@ export class RecepcionistasController {
       });
     }
     return sugerencia;
+  }
+
+  @Get(':id')
+  ficha(
+    @Param('id', ID_DE_RECEPCIONISTA) id: number,
+  ): Promise<FichaConHistorial> {
+    return this.consultar.ficha(id);
   }
 
   @Post()

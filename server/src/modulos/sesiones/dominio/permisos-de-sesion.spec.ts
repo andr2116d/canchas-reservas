@@ -37,7 +37,9 @@ describe('Permisos de sesión', () => {
     } as const;
 
     expect(puedeAcceder(acceso, 'panel:administracion')).toBe(false);
-    expect(puedeAcceder(acceso, 'personal:gestionar-recepcionistas')).toBe(false);
+    expect(puedeAcceder(acceso, 'personal:gestionar-recepcionistas')).toBe(
+      false,
+    );
     expect(puedeAcceder(acceso, 'sesion:cambiar-contrasena-temporal')).toBe(
       true,
     );

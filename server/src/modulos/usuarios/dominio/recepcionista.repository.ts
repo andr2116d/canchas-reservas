@@ -26,6 +26,33 @@ export interface CuentaCoincidente {
   coincideEn: DatoUnico[];
 }
 
+/** Datos de una recepcionista para mostrarlos al administrador. */
+export interface FichaDeRecepcionista {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  correo: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  fechaNacimiento: string;
+  celular: string;
+  estado: EstadoUsuario;
+  requiereCambiarContrasena: boolean;
+  creadaEn: Date;
+}
+
+/** Una acción de la auditoría con el nombre de quien la hizo. */
+export interface AccionDelHistorial {
+  accion: AccionAuditada;
+  ocurridoEn: Date;
+  ejecutadoPor: string;
+}
+
+export interface FichaConHistorial {
+  ficha: FichaDeRecepcionista;
+  historial: AccionDelHistorial[];
+}
+
 /** Puerto de persistencia de las cuentas de recepción y su auditoría. */
 export interface RecepcionistaRepository {
   /**
@@ -36,6 +63,11 @@ export interface RecepcionistaRepository {
     documento: DocumentoIdentidad,
     correo: Correo,
   ): Promise<CuentaCoincidente[]>;
+
+  listar(estado: EstadoUsuario): Promise<FichaDeRecepcionista[]>;
+
+  /** Ficha y acciones de la auditoría, de la más reciente a la más antigua. */
+  buscar(id: number): Promise<FichaConHistorial | undefined>;
 
   /** Guarda la cuenta y su alta en la auditoría en una sola operación. */
   crear(recepcionista: Usuario, accion: AccionRegistrada): Promise<number>;
