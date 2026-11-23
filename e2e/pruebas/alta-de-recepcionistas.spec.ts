@@ -81,9 +81,12 @@ test("la recepcionista puede dejar el cambio de su contraseña temporal, pero se
 
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
   await expect(page).toHaveURL("/cambiar-contrasena");
+  await expect(page.getByText(/Tu contraseña temporal vence en 7 días\./)).toBeVisible();
   await page.getByRole("button", { name: "Ahora no" }).click();
   await expect(page).toHaveURL("/recepcion");
-  await expect(page.getByText("Sigues con una contraseña temporal.")).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Sigues con una contraseña temporal." })).toContainText(
+    "Vence en 7 días.",
+  );
   await cerrarSesion(page);
 
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
