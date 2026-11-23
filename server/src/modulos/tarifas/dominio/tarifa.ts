@@ -1,5 +1,5 @@
 import type { DuracionDelTurno } from './duracion-del-turno.value-object';
-import type { Monto } from './monto.value-object';
+import type { Monto } from '../../../compartido/dominio/monto.value-object';
 import type { TipoDeCancha } from './tipo-de-cancha';
 
 export interface DatosDeLaTarifa {

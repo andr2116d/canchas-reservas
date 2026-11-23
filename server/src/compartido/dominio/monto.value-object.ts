@@ -1,4 +1,4 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import { ValorInvalidoError } from './valor-invalido.error';
 
 // Soles con hasta dos decimales; se acepta punto o coma.
 const FORMATO = /^(\d+)(?:[.,](\d+))?$/;

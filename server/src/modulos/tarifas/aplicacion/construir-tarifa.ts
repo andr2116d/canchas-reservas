@@ -1,6 +1,6 @@
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { DuracionDelTurno } from '../dominio/duracion-del-turno.value-object';
-import { Monto } from '../dominio/monto.value-object';
+import { Monto } from '../../../compartido/dominio/monto.value-object';
 import { Tarifa } from '../dominio/tarifa';
 import type { TipoDeCancha } from '../dominio/tipo-de-cancha';
 

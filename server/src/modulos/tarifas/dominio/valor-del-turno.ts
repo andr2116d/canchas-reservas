@@ -1,5 +1,5 @@
 import { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
-import { Monto } from './monto.value-object';
+import { Monto } from '../../../compartido/dominio/monto.value-object';
 import type { Tarifa } from './tarifa';
 
 export type Franja = 'DIA' | 'NOCHE';

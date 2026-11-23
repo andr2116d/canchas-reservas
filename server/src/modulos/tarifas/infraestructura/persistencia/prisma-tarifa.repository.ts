@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { Prisma } from '../../../../generated/prisma/client';
 import { DuracionDelTurno } from '../../dominio/duracion-del-turno.value-object';
-import { Monto } from '../../dominio/monto.value-object';
+import { Monto } from '../../../../compartido/dominio/monto.value-object';
 import { Tarifa } from '../../dominio/tarifa';
 import type {
   TarifaRepository,
