@@ -8,6 +8,7 @@ import { NOMBRE_DEL_TIPO, type TarifaDelTipo } from "../servicios/tarifas";
 import { CamposDeTarifa } from "./campos-de-tarifa";
 import { HistorialDeTarifa } from "./historial-de-tarifa";
 import { TurnosPorDia } from "./turnos-por-dia";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 const AVISOS: Record<AvisoDeGuardado, string> = {
   guardada: "Tarifa guardada. Rige para las reservas nuevas; las reservas ya hechas mantienen su precio.",
@@ -42,7 +43,7 @@ export function TarjetaDeTarifa({ tarifa }: { tarifa: TarifaDelTipo }) {
           {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
           <div className="flex flex-col items-start gap-2">
             <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} aria-label={`Guardar tarifa de ${nombre.toLowerCase()}`} className={BOTON_PRINCIPAL}>
-              {isSubmitting ? "Guardando…" : "Guardar tarifa"}
+              <TextoDeEnvio enviando={isSubmitting} texto="Guardar tarifa" textoAlEnviar="Guardando…" />
             </button>
             {aviso && <p role="status" className="text-sm font-semibold text-botella">{AVISOS[aviso]}</p>}
           </div>

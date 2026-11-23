@@ -5,6 +5,7 @@ import type { DatosDeEdicion } from "../esquemas/recepcionista.schema";
 import { useEdicionDeRecepcionista } from "../hooks/use-edicion-de-recepcionista";
 import { CamposDeRecepcionista } from "./campos-de-recepcionista";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 interface FormularioDeEdicionProps {
   id: number;
@@ -24,7 +25,7 @@ export function FormularioDeEdicion({ id, dominio, datos }: FormularioDeEdicionP
         {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
         <div className="flex flex-wrap items-center gap-4">
           <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
-            {isSubmitting ? "Guardando…" : "Guardar cambios"}
+            <TextoDeEnvio enviando={isSubmitting} texto="Guardar cambios" textoAlEnviar="Guardando…" />
           </button>
           {guardado && <p role="status" className="font-semibold text-botella">Cambios guardados.</p>}
         </div>

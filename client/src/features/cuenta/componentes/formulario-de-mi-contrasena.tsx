@@ -5,6 +5,7 @@ import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
 import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 import { useMiContrasena } from "../hooks/use-mi-contrasena";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 /** Cambio de contraseña desde la cuenta: pide la actual y la nueva dos veces. */
 export function FormularioDeMiContrasena() {
@@ -31,7 +32,7 @@ export function FormularioDeMiContrasena() {
           </p>
         )}
         <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={`${BOTON_PRINCIPAL} self-start`}>
-          {isSubmitting ? "Cambiando…" : "Cambiar contraseña"}
+          <TextoDeEnvio enviando={isSubmitting} texto="Cambiar contraseña" textoAlEnviar="Cambiando…" />
         </button>
       </form>
     </FormProvider>

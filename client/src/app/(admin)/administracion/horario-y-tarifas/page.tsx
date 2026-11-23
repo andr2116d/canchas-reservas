@@ -4,6 +4,7 @@ import { ProveedorDelBorrador } from "@/compartido/horario/borrador";
 import { consultarHorario } from "@/compartido/horario/horario.servidor";
 import { PanelDePestana, PestanasDeHorarioYTarifas, ProveedorDePestanas } from "@/compartido/horario/pestanas";
 import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
+import { CargaDeContenido } from "@/compartido/ui/carga-de-contenido";
 import { FormularioDeHorario } from "@/features/horario/componentes/formulario-de-horario";
 import { TarifasDelLocal } from "@/features/tarifas/componentes/tarifas-del-local";
 import { TurnosDelDia } from "@/features/tarifas/componentes/turnos-del-dia";
@@ -41,7 +42,7 @@ export default function PaginaDeHorarioYTarifas() {
         descripcion="Cuándo se puede jugar y cuánto cuesta cada turno. Los jugadores solo verán turnos dentro de este horario."
         accion={<PestanasDeHorarioYTarifas />}
       />
-      <Suspense fallback={<p className="text-grava">Cargando horario y tarifas…</p>}>
+      <Suspense fallback={<CargaDeContenido texto="Cargando horario y tarifas…" />}>
         <HorarioYTarifas />
       </Suspense>
     </ProveedorDePestanas>

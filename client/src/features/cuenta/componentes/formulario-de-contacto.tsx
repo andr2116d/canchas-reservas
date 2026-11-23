@@ -7,6 +7,7 @@ import { filtrarCelular, filtrarDorsal } from "@/compartido/formulario/filtros-d
 import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 import { useContacto } from "../hooks/use-contacto";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 /** Datos de contacto que la persona puede cambiar de su propia cuenta. */
 export function FormularioDeContacto({ cuenta }: { cuenta: Cuenta }) {
@@ -29,7 +30,7 @@ export function FormularioDeContacto({ cuenta }: { cuenta: Cuenta }) {
         {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
         <div className="flex flex-wrap items-center gap-4">
           <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
-            {isSubmitting ? "Guardando…" : "Guardar cambios"}
+            <TextoDeEnvio enviando={isSubmitting} texto="Guardar cambios" textoAlEnviar="Guardando…" />
           </button>
           {guardado && <p role="status" className="font-semibold text-botella">Cambios guardados.</p>}
         </div>

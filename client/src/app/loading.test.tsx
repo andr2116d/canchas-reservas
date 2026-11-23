@@ -7,6 +7,6 @@ describe("Carga de cualquier sección", () => {
     const { container } = render(<Cargando />);
 
     expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(container.querySelector(".espera-de-cancha__balon")).not.toBeNull();
+    expect(container.querySelector(".cancha-completa .pelota-que-rebota")).not.toBeNull();
   });
 });

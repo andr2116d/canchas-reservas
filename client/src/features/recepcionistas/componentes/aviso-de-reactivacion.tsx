@@ -1,4 +1,5 @@
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 interface AvisoDeReactivacionProps {
   nombres: string;
@@ -25,7 +26,7 @@ export function AvisoDeReactivacion({ nombres, reactivando, alReactivar, alCance
       </p>
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" onClick={alReactivar} disabled={reactivando} className={BOTON_PRINCIPAL}>
-          {reactivando ? "Reactivando…" : "Reactivar su cuenta"}
+          <TextoDeEnvio enviando={reactivando} texto="Reactivar su cuenta" textoAlEnviar="Reactivando…" />
         </button>
         <button type="button" onClick={alCancelar} disabled={reactivando} className={BOTON_SECUNDARIO}>
           Revisar los datos

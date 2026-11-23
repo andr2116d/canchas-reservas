@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
 import { desactivarRecepcionista } from "../servicios/recepcionistas.api";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 const BOTON_DE_PELIGRO =
   "inline-flex min-h-11 items-center justify-center rounded-xl bg-error px-4 py-2 text-sm font-bold text-papel " +
@@ -39,7 +40,7 @@ export function ConfirmacionDeDesactivacion({ id, nombres, alCancelar }: Confirm
       {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={desactivar} disabled={enviando} className={BOTON_DE_PELIGRO}>
-          {enviando ? "Desactivando…" : "Sí, desactivar"}
+          <TextoDeEnvio enviando={enviando} texto="Sí, desactivar" textoAlEnviar="Desactivando…" />
         </button>
         <button type="button" onClick={alCancelar} disabled={enviando} className={BOTON_SECUNDARIO}>Cancelar</button>
       </div>

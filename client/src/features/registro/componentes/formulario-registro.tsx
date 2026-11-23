@@ -10,6 +10,7 @@ import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
 import type { DatosRegistro } from "../esquemas/registro.schema";
 import { AceptacionLegalDelRegistro } from "./aceptacion-legal-del-registro";
 import { CampoContrasena } from "./campo-contrasena";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 interface GrupoProps {
   titulo: string;
@@ -86,7 +87,7 @@ export function FormularioRegistro({ alEnviarRegistro, errorGeneral }: Formulari
           aria-busy={formState.isSubmitting}
           className="rounded-xl bg-botella px-6 py-4 text-base font-bold text-papel transition-colors hover:bg-botella-oscura focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-botella disabled:cursor-wait disabled:opacity-70"
         >
-          {formState.isSubmitting ? "Creando tu cuenta…" : "Crear mi cuenta"}
+          <TextoDeEnvio enviando={formState.isSubmitting} texto="Crear mi cuenta" textoAlEnviar="Creando tu cuenta…" />
         </button>
         <p className="-mt-3 text-center text-sm text-grava">Guardamos tus datos personales cifrados.</p>
       </fieldset>

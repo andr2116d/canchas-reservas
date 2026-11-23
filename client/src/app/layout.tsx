@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { MarcaDeCargaInicial } from "@/compartido/ui/marca-de-carga-inicial";
 import "./globals.css";
 
 const bigShoulders = localFont({
@@ -24,7 +25,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${bigShoulders.variable} ${instrumentSans.variable}`}>
-      <body className="min-h-dvh font-texto antialiased">{children}</body>
+      <body className="min-h-dvh font-texto antialiased">
+        <MarcaDeCargaInicial />
+        {children}
+      </body>
     </html>
   );
 }

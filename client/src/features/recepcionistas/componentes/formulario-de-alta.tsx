@@ -9,6 +9,7 @@ import { CampoDeContrasenaTemporal } from "./campo-de-contrasena-temporal";
 import { CamposDeRecepcionista } from "./campos-de-recepcionista";
 import { CredencialesEntregables } from "./credenciales-entregables";
 import { BOTON_PRINCIPAL, TARJETA } from "@/compartido/ui/estilos";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 /** Formulario del administrador para crear la cuenta de una recepcionista. */
 export function FormularioDeAlta({ dominio }: { dominio: string }) {
@@ -50,7 +51,7 @@ export function FormularioDeAlta({ dominio }: { dominio: string }) {
           .
         </p>
         <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={`${BOTON_PRINCIPAL} self-start`}>
-          {isSubmitting ? "Creando cuenta…" : "Crear cuenta"}
+          <TextoDeEnvio enviando={isSubmitting} texto="Crear cuenta" textoAlEnviar="Creando cuenta…" />
         </button>
       </form>
     </FormProvider>

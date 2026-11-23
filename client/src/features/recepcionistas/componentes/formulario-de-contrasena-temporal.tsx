@@ -7,6 +7,7 @@ import { BotonDeCopiar } from "@/compartido/ui/boton-de-copiar";
 import { datosParaEntregar } from "../utilidades/datos-para-entregar";
 import { CampoDeContrasenaTemporal } from "./campo-de-contrasena-temporal";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
+import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 
 interface FormularioDeContrasenaTemporalProps {
   /** Correo de la recepcionista, para copiar sus datos de acceso. */
@@ -46,7 +47,7 @@ export function FormularioDeContrasenaTemporal({
           </div>
         )}
         <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={`${BOTON_PRINCIPAL} self-start`}>
-          {isSubmitting ? textoAlEnviar : textoDelBoton}
+          <TextoDeEnvio enviando={isSubmitting} texto={textoDelBoton} textoAlEnviar={textoAlEnviar} />
         </button>
       </form>
     </FormProvider>
