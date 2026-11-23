@@ -34,7 +34,7 @@ El personal usa el dominio de correo de `DOMINIO_CORPORATIVO` (por defecto `lapr
 
 Para probar en local, `npm run personal:admin-de-prueba -w server` crea un administrador con correo y contraseña temporal generados e imprime las credenciales. No funciona en producción.
 
-Un administrador que ya cambió su contraseña temporal puede dar de alta a un recepcionista con `POST /api/recepcionistas`. El cuerpo lleva `nombres`, `apellidos`, `correo` y `contrasena`. El recepcionista cambia la contraseña en su primer acceso.
+El administrador gestiona a las recepcionistas en `/administracion/recepcionistas`: las crea, edita, desactiva, reactiva y restablece su contraseña. Cada acción queda en la auditoría. Quien tiene una contraseña temporal puede dejar el cambio para después, pero se le vuelve a pedir en cada inicio de sesión.
 
 ## Comandos
 
