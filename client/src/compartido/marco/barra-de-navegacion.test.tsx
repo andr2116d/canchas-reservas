@@ -40,6 +40,14 @@ describe("BarraDeNavegacion", () => {
     expect(screen.getByText("Recepción")).toBeInTheDocument();
   });
 
+  it("sin secciones muestra el rol y solo ofrece cerrar la sesión", () => {
+    render(<BarraDeNavegacion rol="RECEPCIONISTA" conSecciones={false} venceEn={VENCE} />);
+
+    expect(screen.getByText("Recepción")).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Secciones" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Mi cuenta" })).not.toBeInTheDocument();
+  });
+
   it("sin rol solo ofrece cerrar la sesión", () => {
     render(<BarraDeNavegacion venceEn={VENCE} />);
 

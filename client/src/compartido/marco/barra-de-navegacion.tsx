@@ -50,11 +50,18 @@ function SeccionesDelRol({ rol }: { rol: Rol }) {
   );
 }
 
+interface BarraDeNavegacionProps {
+  rol?: Rol;
+  venceEn: string;
+  /** Sin secciones ni cuenta, como mientras se pide cambiar la contraseña temporal. */
+  conSecciones?: boolean;
+}
+
 /**
  * Barra de vidrio de las pantallas internas: identifica el panel del rol, lleva
- * a sus secciones y cierra la sesión. Sin rol, solo ofrece cerrar la sesión.
+ * a sus secciones y a la cuenta, y cierra la sesión.
  */
-export function BarraDeNavegacion({ rol, venceEn }: { rol?: Rol; venceEn: string }) {
+export function BarraDeNavegacion({ rol, venceEn, conSecciones = true }: BarraDeNavegacionProps) {
   const { cerrar, cerrando, error } = useCerrarSesion();
   useVigenciaDeSesion(venceEn);
 
@@ -66,9 +73,9 @@ export function BarraDeNavegacion({ rol, venceEn }: { rol?: Rol; venceEn: string
           <span className="font-titular text-xl leading-none font-black text-papel max-sm:sr-only">La Previa</span>
           {rol && <span className="sello-del-rol">{NOMBRE_DEL_PANEL[rol]}</span>}
         </div>
-        {rol && <SeccionesDelRol rol={rol} />}
+        {rol && conSecciones && <SeccionesDelRol rol={rol} />}
         <div className="flex items-center gap-1">
-          {rol && <EnlaceALaCuenta rol={rol} />}
+          {rol && conSecciones && <EnlaceALaCuenta rol={rol} />}
           <button type="button" onClick={cerrar} disabled={cerrando} className="barra-de-vidrio__salir">
             {cerrando ? "Cerrando sesión…" : "Cerrar sesión"}
           </button>

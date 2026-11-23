@@ -1,26 +1,25 @@
-import { BarraDeNavegacion } from "@/compartido/marco/barra-de-navegacion";
 import Link from "next/link";
+import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
+import { MarcoInterno } from "@/compartido/marco/marco-interno";
 import { PANELES } from "@/compartido/sesion/destino-de-sesion";
-import { RUTA_DEL_AVISO_DEL_PERSONAL } from "@/features/legal/ruta-del-aviso-del-personal";
 import { exigirCambioDeContrasena } from "@/compartido/sesion/sesion.servidor";
 import { describirTiempoRestante } from "@/compartido/sesion/tiempo-restante";
+import { TARJETA } from "@/compartido/ui/estilos";
+import { RUTA_DEL_AVISO_DEL_PERSONAL } from "@/features/legal/ruta-del-aviso-del-personal";
 import { FormularioDeCambio } from "./formulario-de-cambio";
-import { TarjetaDeAcceso } from "./tarjeta-de-acceso";
 
-/** Pide cambiar la contraseña temporal; se puede dejar para después. */
+/** Pide cambiar la contraseña temporal, en el mismo marco que los paneles; se puede dejar para después. */
 export async function PantallaDeCambio() {
   const sesion = await exigirCambioDeContrasena();
+  const vence = sesion.contrasenaTemporalVenceEn;
+  const descripcion =
+    "Por seguridad, elige una contraseña que solo tú conozcas." +
+    (vence ? ` Tu contraseña temporal vence en ${describirTiempoRestante(vence, new Date())}.` : "");
 
   return (
-    <>
-      <BarraDeNavegacion venceEn={sesion.venceEn} />
-      <TarjetaDeAcceso titulo="Cambia tu contraseña temporal">
-        <p className="mb-4 text-grava">
-          Por seguridad, elige una contraseña que solo tú conozcas.
-          {sesion.contrasenaTemporalVenceEn && (
-            <> Tu contraseña temporal vence en {describirTiempoRestante(sesion.contrasenaTemporalVenceEn, new Date())}.</>
-          )}
-        </p>
+    <MarcoInterno rol={sesion.rol} venceEn={sesion.venceEn} conSecciones={false}>
+      <EncabezadoDeSeccion titulo="Cambia tu contraseña temporal" descripcion={descripcion} />
+      <section aria-label="Contraseña nueva" className={`${TARJETA} w-full max-w-xl`}>
         <FormularioDeCambio panel={PANELES[sesion.rol]} />
         {sesion.rol !== "JUGADOR" && (
           <p className="mt-5 text-center text-sm">
@@ -29,7 +28,7 @@ export async function PantallaDeCambio() {
             </Link>
           </p>
         )}
-      </TarjetaDeAcceso>
-    </>
+      </section>
+    </MarcoInterno>
   );
 }

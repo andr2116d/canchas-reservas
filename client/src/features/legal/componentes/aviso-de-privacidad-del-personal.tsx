@@ -40,13 +40,6 @@ const SECCIONES = [
 export function AvisoDePrivacidadDelPersonal() {
   return (
     <article className="flex max-w-2xl flex-col gap-7 leading-relaxed text-pretty text-tinta">
-      <header className="flex flex-col gap-3">
-        <h1 className="font-titular text-5xl leading-none font-black">Aviso de privacidad del personal</h1>
-        <p className="text-lg text-grava">
-          Para quienes atienden la recepción y administran La Previa. Te explica cómo tratamos tus datos personales por tu
-          trabajo con nosotros.
-        </p>
-      </header>
       {SECCIONES.map(({ titulo, texto }) => (
         <section key={titulo} className="flex flex-col gap-2">
           <h2 className="font-titular text-2xl font-black text-tinta">{titulo}</h2>

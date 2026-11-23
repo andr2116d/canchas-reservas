@@ -8,7 +8,6 @@ describe("AvisoDePrivacidadDelPersonal", () => {
   it("informa qué datos se usan, para qué, cómo se protegen, cuánto se guardan y los derechos", () => {
     render(<AvisoDePrivacidadDelPersonal />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Aviso de privacidad del personal" })).toBeInTheDocument();
     for (const seccion of [
       "Qué datos usamos",
       "Para qué los usamos",
