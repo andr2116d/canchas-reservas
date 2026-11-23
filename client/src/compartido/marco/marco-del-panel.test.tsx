@@ -10,6 +10,8 @@ vi.mock("../sesion/sesion.servidor", () => ({
   }),
 }));
 vi.mock("../sesion/sesion.api", () => ({ cerrarSesion: vi.fn(), consultarSesion: vi.fn() }));
+// Fuera de una petición de Next no hay conexión que esperar.
+vi.mock("next/server", () => ({ connection: async () => undefined }));
 
 describe("MarcoDelPanel", () => {
   afterEach(cleanup);

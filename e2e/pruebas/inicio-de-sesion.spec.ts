@@ -131,16 +131,16 @@ async function esperarSinPermiso(pagina: Page) {
 
 test("lleva al acceso si falta la sesión y bloquea paneles ajenos por URL directa", async ({ page }) => {
   const jugador = await crearJugador(page);
-  await page.goto("/administracion");
+  await page.goto("/administracion", { waitUntil: "commit" });
   await expect(page).toHaveURL(RUTA_DE_ACCESO);
   await iniciar(page, jugador.correo, jugador.contrasena);
   await expect(page).toHaveURL("/inicio");
 
-  await page.goto("/recepcion");
+  await page.goto("/recepcion", { waitUntil: "commit" });
 
   await esperarSinPermiso(page);
   await expect(page.getByRole("heading", { name: "Recepción" })).toHaveCount(0);
-  await page.goto("/administracion");
+  await page.goto("/administracion", { waitUntil: "commit" });
   await esperarSinPermiso(page);
   await expect(page.getByRole("heading", { name: "Administración" })).toHaveCount(0);
   await page.getByRole("link", { name: "Ir a mi panel" }).click();
@@ -159,7 +159,8 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
   await expect(page).toHaveURL("/administracion");
   await expect(page.getByRole("heading", { name: "Administración" })).toBeVisible();
   for (const ajena of ["/inicio", "/recepcion"]) {
-    await page.goto(ajena);
+    // El panel ajeno redirige mientras carga: basta con que la navegación empiece.
+    await page.goto(ajena, { waitUntil: "commit" });
     await esperarSinPermiso(page);
   }
   await page.getByRole("link", { name: "Ir a mi panel" }).click();
@@ -183,7 +184,8 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
   await expect(page).toHaveURL("/recepcion");
   await expect(page.getByRole("heading", { name: "Recepción" })).toBeVisible();
   for (const ajena of ["/administracion", "/inicio"]) {
-    await page.goto(ajena);
+    // El panel ajeno redirige mientras carga: basta con que la navegación empiece.
+    await page.goto(ajena, { waitUntil: "commit" });
     await esperarSinPermiso(page);
   }
 });

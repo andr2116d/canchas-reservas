@@ -3,6 +3,7 @@ import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
 import { MarcoInterno } from "@/compartido/marco/marco-interno";
 import { PANELES, type Rol } from "@/compartido/sesion/destino-de-sesion";
 import { exigirCambioDeContrasena } from "@/compartido/sesion/sesion.servidor";
+import { ahoraDeLaPeticion } from "@/compartido/sesion/ahora-de-la-peticion";
 import { describirTiempoRestante } from "@/compartido/sesion/tiempo-restante";
 import { TARJETA } from "@/compartido/ui/estilos";
 import { RUTA_DEL_AVISO_DEL_PERSONAL } from "@/features/legal/ruta-del-aviso-del-personal";
@@ -15,7 +16,7 @@ export async function PantallaDeCambio() {
   const descripcion =
     "Por seguridad, elige una contraseña que solo tú conozcas." +
     (vence
-      ? ` Tu contraseña temporal vence en ${describirTiempoRestante(vence, new Date())}.`
+      ? ` Tu contraseña temporal vence en ${describirTiempoRestante(vence, await ahoraDeLaPeticion())}.`
       : "");
 
   return (

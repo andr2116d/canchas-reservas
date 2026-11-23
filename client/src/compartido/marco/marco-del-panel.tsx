@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Rol } from "../sesion/destino-de-sesion";
 import { exigirPanel } from "../sesion/sesion.servidor";
+import { ahoraDeLaPeticion } from "../sesion/ahora-de-la-peticion";
 import { describirTiempoRestante } from "../sesion/tiempo-restante";
 import { AvisoDeContrasenaTemporal } from "./aviso-de-contrasena-temporal";
 import { MarcoInterno } from "./marco-interno";
@@ -12,11 +13,8 @@ import { MarcoInterno } from "./marco-interno";
 export async function MarcoDelPanel({ rol, children }: { rol: Rol; children: ReactNode }) {
   const { sesion } = await exigirPanel(rol);
   const venceLaTemporal = sesion.contrasenaTemporalVenceEn;
-  const aviso = sesion.requiereCambiarContrasena && (
-    <AvisoDeContrasenaTemporal
-      tiempoRestante={venceLaTemporal && describirTiempoRestante(venceLaTemporal, new Date())}
-    />
-  );
+  const tiempoRestante = venceLaTemporal && describirTiempoRestante(venceLaTemporal, await ahoraDeLaPeticion());
+  const aviso = sesion.requiereCambiarContrasena && <AvisoDeContrasenaTemporal tiempoRestante={tiempoRestante} />;
 
   return (
     <MarcoInterno rol={rol} venceEn={sesion.venceEn} aviso={aviso}>
