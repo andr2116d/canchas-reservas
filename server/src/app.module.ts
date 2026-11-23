@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { leerLimiteGeneral } from './compartido/infraestructura/configuracion/configuracion';
 import { CompartidoModule } from './compartido/compartido.module';
+import { HorarioModule } from './modulos/horario/horario.module';
 import { TarifasModule } from './modulos/tarifas/tarifas.module';
 import { UsuariosModule } from './modulos/usuarios/usuarios.module';
 
@@ -19,6 +20,7 @@ const LIMITE_GENERAL = {
     ThrottlerModule.forRoot([LIMITE_GENERAL]),
     CompartidoModule,
     UsuariosModule,
+    HorarioModule,
     TarifasModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
