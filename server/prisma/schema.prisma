@@ -32,28 +32,30 @@ enum EstadoUsuario {
 }
 
 model Usuario {
-  id                        Int              @id @default(autoincrement())
-  nombresCifrado            String           @map("nombres_cifrado")
-  apellidosCifrado          String           @map("apellidos_cifrado")
-  fechaNacimientoCifrada    String?          @map("fecha_nacimiento_cifrada")
-  dorsal                    Int?             @db.SmallInt
-  tipoDocumento             TipoDocumento?   @map("tipo_documento")
-  numeroDocumentoCifrado    String?          @map("numero_documento_cifrado")
-  documentoHash             String?          @map("documento_hash")
-  correoCifrado             String           @map("correo_cifrado")
-  correoHash                String           @unique @map("correo_hash")
-  celularCifrado            String?          @map("celular_cifrado")
-  contrasenaHash            String           @map("contrasena_hash")
+  id                        Int                 @id @default(autoincrement())
+  nombresCifrado            String              @map("nombres_cifrado")
+  apellidosCifrado          String              @map("apellidos_cifrado")
+  fechaNacimientoCifrada    String?             @map("fecha_nacimiento_cifrada")
+  dorsal                    Int?                @db.SmallInt
+  tipoDocumento             TipoDocumento?      @map("tipo_documento")
+  numeroDocumentoCifrado    String?             @map("numero_documento_cifrado")
+  documentoHash             String?             @map("documento_hash")
+  correoCifrado             String              @map("correo_cifrado")
+  correoHash                String              @unique @map("correo_hash")
+  celularCifrado            String?             @map("celular_cifrado")
+  contrasenaHash            String              @map("contrasena_hash")
   rol                       RolUsuario
   estado                    EstadoUsuario
-  creadoEn                  DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
-  actualizadoEn             DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(3)
-  versionLegalAceptada      String?          @map("version_legal_aceptada")
-  aceptacionLegalEn         DateTime?        @map("aceptacion_legal_en") @db.Timestamptz(3)
-  canalAceptacionLegal      String?          @map("canal_aceptacion_legal")
+  creadoEn                  DateTime            @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn             DateTime            @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  versionLegalAceptada      String?             @map("version_legal_aceptada")
+  aceptacionLegalEn         DateTime?           @map("aceptacion_legal_en") @db.Timestamptz(3)
+  canalAceptacionLegal      String?             @map("canal_aceptacion_legal")
   sesiones                  Sesion[]
-  requiereCambiarContrasena Boolean          @default(false) @map("requiere_cambiar_contrasena")
+  requiereCambiarContrasena Boolean             @default(false) @map("requiere_cambiar_contrasena")
   accesos                   RegistroAcceso[]
+  accionesRecibidas         RegistroAuditoria[] @relation("AccionesRecibidas")
+  accionesEjecutadas        RegistroAuditoria[] @relation("AccionesEjecutadas")
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -81,4 +83,28 @@ model RegistroAcceso {
 
   @@index([usuarioId, ocurridoEn])
   @@map("registro_acceso")
+}
+
+enum AccionAuditada {
+  ALTA                           @map("alta")
+  EDICION                        @map("edicion")
+  DESACTIVACION                  @map("desactivacion")
+  REACTIVACION                   @map("reactivacion")
+  RESTABLECIMIENTO_DE_CONTRASENA @map("restablecimiento_de_contrasena")
+
+  @@map("accion_auditada")
+}
+
+/// Acción del personal sobre una cuenta: quién la hizo, a quién y cuándo.
+model RegistroAuditoria {
+  id                Int            @id @default(autoincrement())
+  accion            AccionAuditada
+  usuarioAfectadoId Int            @map("usuario_afectado_id")
+  ejecutadoPorId    Int            @map("ejecutado_por_id")
+  ocurridoEn        DateTime       @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  usuarioAfectado   Usuario        @relation("AccionesRecibidas", fields: [usuarioAfectadoId], references: [id])
+  ejecutadoPor      Usuario        @relation("AccionesEjecutadas", fields: [ejecutadoPorId], references: [id])
+
+  @@index([usuarioAfectadoId, ocurridoEn])
+  @@map("registro_auditoria")
 }
