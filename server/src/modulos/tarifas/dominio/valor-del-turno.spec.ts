@@ -1,5 +1,5 @@
 import { DuracionDelTurno } from './duracion-del-turno.value-object';
-import { HoraDelDia } from './hora-del-dia.value-object';
+import { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
 import { Monto } from './monto.value-object';
 import { Tarifa } from './tarifa';
 import { calcularValorDelTurno } from './valor-del-turno';

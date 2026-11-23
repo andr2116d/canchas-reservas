@@ -1,5 +1,5 @@
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
-import { HoraDelDia } from './hora-del-dia.value-object';
+import { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
 import { Monto } from './monto.value-object';
 import type { Tarifa } from './tarifa';
 

@@ -1,4 +1,4 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import { ValorInvalidoError } from './valor-invalido.error';
 
 const FORMATO = /^([01]\d|2[0-3]):([0-5]\d)$/;
 

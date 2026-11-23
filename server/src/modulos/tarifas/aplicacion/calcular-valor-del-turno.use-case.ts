@@ -1,7 +1,7 @@
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
-import { HoraDelDia } from '../dominio/hora-del-dia.value-object';
+import { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
 import { TarifaSinDefinirError } from '../dominio/tarifa-sin-definir.error';
 import type { TarifaRepository } from '../dominio/tarifa.repository';
 import { calcularValorDelTurno, type Tramo } from '../dominio/valor-del-turno';

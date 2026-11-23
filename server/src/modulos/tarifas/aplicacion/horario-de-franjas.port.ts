@@ -1,4 +1,4 @@
-import type { HoraDelDia } from '../dominio/hora-del-dia.value-object';
+import type { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
 
 export const HORARIO_DE_FRANJAS = Symbol('HORARIO_DE_FRANJAS');
 

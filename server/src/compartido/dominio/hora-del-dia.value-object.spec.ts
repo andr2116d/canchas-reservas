@@ -1,4 +1,4 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import { ValorInvalidoError } from './valor-invalido.error';
 import { HoraDelDia } from './hora-del-dia.value-object';
 
 describe('HoraDelDia', () => {

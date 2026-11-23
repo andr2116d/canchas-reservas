@@ -4,7 +4,7 @@ import {
   NoEncontradoError,
   ReglaInvalidaError,
 } from '../../../compartido/dominio/dominio.error';
-import { HoraDelDia } from '../dominio/hora-del-dia.value-object';
+import { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
 import { TarifaSinDefinirError } from '../dominio/tarifa-sin-definir.error';
 import { CalcularValorDelTurnoUseCase } from './calcular-valor-del-turno.use-case';
 import { ConsultarTarifasUseCase } from './consultar-tarifas.use-case';

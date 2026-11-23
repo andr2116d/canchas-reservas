@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { HorarioDeFranjas } from '../../aplicacion/horario-de-franjas.port';
-import { HoraDelDia } from '../../dominio/hora-del-dia.value-object';
+import { HoraDelDia } from '../../../../compartido/dominio/hora-del-dia.value-object';
 
 /** La noche empieza a las 18:00 hasta que el horario del local sea configurable. */
 @Injectable()
