@@ -32,34 +32,35 @@ enum EstadoUsuario {
 }
 
 model Usuario {
-  id                        Int                 @id @default(autoincrement())
-  nombresCifrado            String              @map("nombres_cifrado")
-  apellidosCifrado          String              @map("apellidos_cifrado")
-  fechaNacimientoCifrada    String?             @map("fecha_nacimiento_cifrada")
-  dorsal                    Int?                @db.SmallInt
-  tipoDocumento             TipoDocumento?      @map("tipo_documento")
-  numeroDocumentoCifrado    String?             @map("numero_documento_cifrado")
-  documentoHash             String?             @map("documento_hash")
-  correoCifrado             String              @map("correo_cifrado")
-  correoHash                String              @unique @map("correo_hash")
-  celularCifrado            String?             @map("celular_cifrado")
-  contrasenaHash            String              @map("contrasena_hash")
-  rol                       RolUsuario
-  estado                    EstadoUsuario
-  creadoEn                  DateTime            @default(now()) @map("creado_en") @db.Timestamptz(3)
-  actualizadoEn             DateTime            @updatedAt @map("actualizado_en") @db.Timestamptz(3)
-  versionLegalAceptada      String?             @map("version_legal_aceptada")
-  aceptacionLegalEn         DateTime?           @map("aceptacion_legal_en") @db.Timestamptz(3)
-  canalAceptacionLegal      String?             @map("canal_aceptacion_legal")
-  sesiones                  Sesion[]
-  requiereCambiarContrasena Boolean             @default(false) @map("requiere_cambiar_contrasena")
+  id                           Int                  @id @default(autoincrement())
+  nombresCifrado               String               @map("nombres_cifrado")
+  apellidosCifrado             String               @map("apellidos_cifrado")
+  fechaNacimientoCifrada       String?              @map("fecha_nacimiento_cifrada")
+  dorsal                       Int?                 @db.SmallInt
+  tipoDocumento                TipoDocumento?       @map("tipo_documento")
+  numeroDocumentoCifrado       String?              @map("numero_documento_cifrado")
+  documentoHash                String?              @map("documento_hash")
+  correoCifrado                String               @map("correo_cifrado")
+  correoHash                   String               @unique @map("correo_hash")
+  celularCifrado               String?              @map("celular_cifrado")
+  contrasenaHash               String               @map("contrasena_hash")
+  rol                          RolUsuario
+  estado                       EstadoUsuario
+  creadoEn                     DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn                DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  versionLegalAceptada         String?              @map("version_legal_aceptada")
+  aceptacionLegalEn            DateTime?            @map("aceptacion_legal_en") @db.Timestamptz(3)
+  canalAceptacionLegal         String?              @map("canal_aceptacion_legal")
+  sesiones                     Sesion[]
+  requiereCambiarContrasena    Boolean              @default(false) @map("requiere_cambiar_contrasena")
   /// Hasta cuándo sirve la contraseña temporal; vacío si la contraseña ya no es temporal.
-  contrasenaTemporalVenceEn DateTime?           @map("contrasena_temporal_vence_en") @db.Timestamptz(3)
-  accesos                   RegistroAcceso[]
-  accionesRecibidas         RegistroAuditoria[] @relation("AccionesRecibidas")
-  accionesEjecutadas        RegistroAuditoria[] @relation("AccionesEjecutadas")
-  tarifasGuardadas          TarifaDeCancha[]
-  horariosGuardados         HorarioDeAtencion[]
+  contrasenaTemporalVenceEn    DateTime?            @map("contrasena_temporal_vence_en") @db.Timestamptz(3)
+  accesos                      RegistroAcceso[]
+  accionesRecibidas            RegistroAuditoria[]  @relation("AccionesRecibidas")
+  accionesEjecutadas           RegistroAuditoria[]  @relation("AccionesEjecutadas")
+  tarifasGuardadas             TarifaDeCancha[]
+  horariosGuardados            HorarioDeAtencion[]
+  reglasDeCancelacionGuardadas ReglaDeCancelacion[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -176,4 +177,28 @@ model HorarioDelDia {
 
   @@id([horarioId, dia])
   @@map("horario_del_dia")
+}
+
+/// Cada versión guardada de la regla de cancelación del local; la vigente es la más reciente.
+model ReglaDeCancelacion {
+  id            Int                  @id @default(autoincrement())
+  guardadaPorId Int                  @map("guardada_por_id")
+  guardadaEn    DateTime             @default(now()) @map("guardada_en") @db.Timestamptz(3)
+  guardadaPor   Usuario              @relation(fields: [guardadaPorId], references: [id])
+  rangos        RangoDeCancelacion[]
+
+  @@index([guardadaEn])
+  @@map("regla_de_cancelacion")
+}
+
+/// Un rango de una versión de la regla: desde cuántas horas antes rige y cuánto del anticipo devuelve.
+model RangoDeCancelacion {
+  reglaId       Int                @map("regla_id")
+  desdeHoras    Int                @map("desde_horas") @db.SmallInt
+  porcentaje    Int                @db.SmallInt
+  ofreceCredito Boolean            @map("ofrece_credito")
+  regla         ReglaDeCancelacion @relation(fields: [reglaId], references: [id], onDelete: Cascade)
+
+  @@id([reglaId, desdeHoras])
+  @@map("rango_de_cancelacion")
 }
