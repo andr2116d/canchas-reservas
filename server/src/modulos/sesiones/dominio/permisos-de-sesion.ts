@@ -11,9 +11,11 @@ const PERMISOS_POR_ROL = {
     'panel:administracion',
     'personal:gestionar-recepcionistas',
     'cuenta:propia',
+    'tarifas:gestionar',
+    'tarifas:calcular',
   ],
-  RECEPCIONISTA: ['panel:recepcion', 'cuenta:propia'],
-  JUGADOR: ['panel:jugador', 'cuenta:propia'],
+  RECEPCIONISTA: ['panel:recepcion', 'cuenta:propia', 'tarifas:calcular'],
+  JUGADOR: ['panel:jugador', 'cuenta:propia', 'tarifas:calcular'],
 } as const satisfies Record<RolUsuario, readonly string[]>;
 
 export type Permiso =

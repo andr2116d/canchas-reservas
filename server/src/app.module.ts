@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { leerLimiteGeneral } from './compartido/infraestructura/configuracion/configuracion';
 import { CompartidoModule } from './compartido/compartido.module';
+import { TarifasModule } from './modulos/tarifas/tarifas.module';
 import { UsuariosModule } from './modulos/usuarios/usuarios.module';
 
 // Límite general por IP; las rutas sensibles fijan uno más estricto.
@@ -18,6 +19,7 @@ const LIMITE_GENERAL = {
     ThrottlerModule.forRoot([LIMITE_GENERAL]),
     CompartidoModule,
     UsuariosModule,
+    TarifasModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
