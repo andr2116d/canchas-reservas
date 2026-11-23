@@ -68,6 +68,8 @@ model Sesion {
   ultimaActividadEn DateTime @map("ultima_actividad_en") @db.Timestamptz(3)
   expiraEn          DateTime @map("expira_en") @db.Timestamptz(3)
   creadaEn          DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+  /// En esta sesión la persona eligió cambiar su contraseña temporal más tarde.
+  cambioOmitido     Boolean  @default(false) @map("cambio_omitido")
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
 
