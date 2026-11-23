@@ -27,6 +27,7 @@ import { PROVIDERS_DE_RECEPCIONISTAS } from './recepcionistas.providers';
 import { CuentaController } from './infraestructura/http/cuenta.controller';
 import { InicioDeSesionController } from './infraestructura/http/inicio-de-sesion.controller';
 import { RecepcionistasController } from './infraestructura/http/recepcionistas.controller';
+import { CuentaDeRecepcionistaController } from './infraestructura/http/cuenta-de-recepcionista.controller';
 import { JugadoresController } from './infraestructura/http/jugadores.controller';
 import { LimiteDeInicios } from './infraestructura/http/limite-de-inicios';
 import { PrismaAccesoRepository } from './infraestructura/persistencia/prisma-acceso.repository';
@@ -43,6 +44,7 @@ const CONTEXTO_DEL_REGISTRO = Symbol('CONTEXTO_DEL_REGISTRO');
     CuentaController,
     InicioDeSesionController,
     RecepcionistasController,
+    CuentaDeRecepcionistaController,
   ],
   exports: [RegistrarPersonalUseCase],
   providers: [

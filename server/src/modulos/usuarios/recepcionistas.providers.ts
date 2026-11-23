@@ -5,6 +5,9 @@ import {
   type HasheadorContrasena,
 } from './aplicacion/hasheador-contrasena.port';
 import { ConsultarRecepcionistasUseCase } from './aplicacion/consultar-recepcionistas.use-case';
+import { DesactivarRecepcionistaUseCase } from './aplicacion/desactivar-recepcionista.use-case';
+import { ReactivarRecepcionistaUseCase } from './aplicacion/reactivar-recepcionista.use-case';
+import { RestablecerContrasenaUseCase } from './aplicacion/restablecer-contrasena.use-case';
 import { EditarRecepcionistaUseCase } from './aplicacion/editar-recepcionista.use-case';
 import { RegistrarRecepcionistaUseCase } from './aplicacion/registrar-recepcionista.use-case';
 import { SugerirCorreoInstitucionalUseCase } from './aplicacion/sugerir-correo-institucional.use-case';
@@ -53,6 +56,23 @@ export const PROVIDERS_DE_RECEPCIONISTAS: Provider[] = [
     ) => new EditarRecepcionistaUseCase(recepcionistas, contexto),
     inject: [RECEPCIONISTA_REPOSITORY, CONTEXTO_DEL_PERSONAL],
   },
+  {
+    provide: DesactivarRecepcionistaUseCase,
+    useFactory: (recepcionistas: RecepcionistaRepository, reloj: Reloj) =>
+      new DesactivarRecepcionistaUseCase(recepcionistas, reloj),
+    inject: [RECEPCIONISTA_REPOSITORY, RELOJ],
+  },
+  ...[ReactivarRecepcionistaUseCase, RestablecerContrasenaUseCase].map(
+    (CasoDeUso): Provider => ({
+      provide: CasoDeUso,
+      useFactory: (
+        recepcionistas: RecepcionistaRepository,
+        hasheador: HasheadorContrasena,
+        reloj: Reloj,
+      ) => new CasoDeUso(recepcionistas, hasheador, reloj),
+      inject: [RECEPCIONISTA_REPOSITORY, HASHEADOR_CONTRASENA, RELOJ],
+    }),
+  ),
   {
     provide: ConsultarRecepcionistasUseCase,
     useFactory: (recepcionistas: RecepcionistaRepository) =>
