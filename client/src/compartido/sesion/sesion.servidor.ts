@@ -1,4 +1,5 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { cabecerasParaLaApi } from "./cabeceras-para-la-api";
 import { redirect } from "next/navigation";
 import {
   debePedirCambioDeContrasena,
@@ -9,9 +10,10 @@ import {
   type Rol,
 } from "./destino-de-sesion";
 
-export function consultarApiPrivada(ruta: string, cookie: string): Promise<Response> {
+export async function consultarApiPrivada(ruta: string, cookie: string): Promise<Response> {
   const url = process.env.API_URL ?? "http://localhost:3001";
-  return fetch(`${url}/api/${ruta}`, { headers: { cookie }, cache: "no-store" });
+  const ipReenviada = (await headers()).get("x-forwarded-for") ?? undefined;
+  return fetch(`${url}/api/${ruta}`, { headers: cabecerasParaLaApi(cookie, ipReenviada), cache: "no-store" });
 }
 
 export async function consultarSesionEnServidor(cookie: string): Promise<EstadoDeSesion | undefined> {
