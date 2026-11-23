@@ -25,6 +25,18 @@ function unJugador(documento = '45678912', correo = 'valeria@gmail.com') {
   });
 }
 
+function unaRecepcionista(documento: string) {
+  return Usuario.registrarRecepcionista({
+    nombres: NombrePersona.crear('Rosa', 'nombres'),
+    apellidos: NombrePersona.crear('Quispe', 'apellidos'),
+    fechaNacimiento: FechaNacimiento.restaurar('1995-02-01'),
+    documento: DocumentoIdentidad.crear('DNI', documento),
+    correo: Correo.crear('rosa.quispe@laprevia.pe'),
+    celular: Celular.crear('912345678'),
+    contrasenaHash: '$argon2id$hash-de-prueba',
+  });
+}
+
 async function capturarError(promesa: Promise<unknown>) {
   return promesa.then(
     () => {
@@ -90,6 +102,7 @@ describe('PrismaUsuarioRepository', () => {
     await expect(
       repositorio.existeConDocumento(
         DocumentoIdentidad.crear('DNI', '45678912'),
+        'JUGADOR',
       ),
     ).resolves.toBe(true);
     await expect(
@@ -127,6 +140,26 @@ describe('PrismaUsuarioRepository', () => {
     expect((error as CuentaYaExisteError).repetidos).toEqual([
       'numeroDocumento',
     ]);
+  });
+
+  it('busca el documento solo entre las cuentas del mismo rol', async () => {
+    await guardarJugador();
+    const documento = DocumentoIdentidad.crear('DNI', '45678912');
+
+    await expect(
+      repositorio.existeConDocumento(documento, 'JUGADOR'),
+    ).resolves.toBe(true);
+    await expect(
+      repositorio.existeConDocumento(documento, 'RECEPCIONISTA'),
+    ).resolves.toBe(false);
+  });
+
+  it('permite el mismo documento en una cuenta de jugador y en una de personal', async () => {
+    await guardarJugador();
+
+    await repositorio.crearPersonal(unaRecepcionista('45678912'));
+
+    expect(await prisma.usuario.count()).toBe(2);
   });
 
   it('traduce un correo repetido que llega a la base en CuentaYaExisteError', async () => {

@@ -39,6 +39,28 @@ describe('Usuario', () => {
     });
   });
 
+  describe('registrarRecepcionista', () => {
+    it('crea la cuenta activa con rol recepcionista y sus datos personales', () => {
+      const datos = {
+        ...datosDeUnJugador(),
+        correo: Correo.crear('valeria.leon@laprevia.pe'),
+      };
+
+      const usuario = Usuario.registrarRecepcionista(datos);
+
+      expect(usuario.rol).toBe('RECEPCIONISTA');
+      expect(usuario.estaActivo()).toBe(true);
+      expect(usuario.documento?.identificador()).toBe('DNI:45678912');
+      expect(usuario.dorsal).toBeUndefined();
+    });
+
+    it('exige cambiar la contraseña temporal en su primer acceso', () => {
+      const usuario = Usuario.registrarRecepcionista(datosDeUnJugador());
+
+      expect(usuario.requiereCambiarContrasena).toBe(true);
+    });
+  });
+
   it('conserva el id al restaurarse desde la persistencia', () => {
     const usuario = Usuario.restaurar({
       ...datosDeUnJugador(),

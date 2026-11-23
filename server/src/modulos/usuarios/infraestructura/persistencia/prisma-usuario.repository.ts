@@ -5,6 +5,7 @@ import {
 } from '../../../../compartido/aplicacion/cifrador.port';
 import { indiceUnicoViolado } from '../../../../compartido/infraestructura/prisma/indice-unico-violado';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
+import type { RolUsuario } from '../../../../compartido/dominio/rol-usuario';
 import type { Correo } from '../../dominio/correo.value-object';
 import {
   CuentaYaExisteError,
@@ -25,7 +26,7 @@ import {
 
 // Índice único de la base que corresponde a cada dato que no puede repetirse.
 const DATO_POR_INDICE: Record<string, DatoUnico> = {
-  usuario_documento_hash_key: 'numeroDocumento',
+  usuario_documento_hash_rol_key: 'numeroDocumento',
   usuario_correo_hash_key: 'correo',
 };
 
@@ -37,9 +38,12 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     @Inject(CIFRADOR) private readonly cifrador: Cifrador,
   ) {}
 
-  async existeConDocumento(documento: DocumentoIdentidad): Promise<boolean> {
+  async existeConDocumento(
+    documento: DocumentoIdentidad,
+    rol: RolUsuario,
+  ): Promise<boolean> {
     const total = await this.prisma.usuario.count({
-      where: { documentoHash: hashDeDocumento(documento, this.cifrador) },
+      where: { documentoHash: hashDeDocumento(documento, this.cifrador), rol },
     });
     return total > 0;
   }

@@ -1,3 +1,4 @@
+import type { RolUsuario } from '../../src/compartido/dominio/rol-usuario';
 import type { Correo } from '../../src/modulos/usuarios/dominio/correo.value-object';
 import { CuentaYaExisteError } from '../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
 import type { DocumentoIdentidad } from '../../src/modulos/usuarios/dominio/documento-identidad.value-object';
@@ -8,10 +9,15 @@ import type { UsuarioRepository } from '../../src/modulos/usuarios/dominio/usuar
 export class EnMemoriaUsuarioRepository implements UsuarioRepository {
   private readonly usuarios: Usuario[] = [];
 
-  existeConDocumento(documento: DocumentoIdentidad): Promise<boolean> {
+  existeConDocumento(
+    documento: DocumentoIdentidad,
+    rol: RolUsuario,
+  ): Promise<boolean> {
     const identificador = documento.identificador();
     return Promise.resolve(
-      this.usuarios.some((u) => u.documento?.identificador() === identificador),
+      this.usuarios.some(
+        (u) => u.rol === rol && u.documento?.identificador() === identificador,
+      ),
     );
   }
 
@@ -27,7 +33,8 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
 
   async crear(usuario: Usuario): Promise<number> {
     const [documentoUsado, correoUsado] = await Promise.all([
-      usuario.documento && this.existeConDocumento(usuario.documento),
+      usuario.documento &&
+        this.existeConDocumento(usuario.documento, usuario.rol),
       this.existeConCorreo(usuario.correo),
     ]);
     if (documentoUsado) throw new CuentaYaExisteError(['numeroDocumento']);

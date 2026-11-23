@@ -1,3 +1,4 @@
+import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
 import type { SesionNueva } from '../../sesiones/api-sesiones';
 import type { Correo } from './correo.value-object';
 import type { DocumentoIdentidad } from './documento-identidad.value-object';
@@ -12,7 +13,11 @@ export interface DatosDelAlta {
 
 /** Puerto de persistencia de usuarios. */
 export interface UsuarioRepository {
-  existeConDocumento(documento: DocumentoIdentidad): Promise<boolean>;
+  /** Una persona puede tener una cuenta por rol con el mismo documento. */
+  existeConDocumento(
+    documento: DocumentoIdentidad,
+    rol: RolUsuario,
+  ): Promise<boolean>;
 
   existeConCorreo(correo: Correo): Promise<boolean>;
 

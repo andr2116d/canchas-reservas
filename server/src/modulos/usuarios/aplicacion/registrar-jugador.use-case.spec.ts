@@ -3,7 +3,13 @@ import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugado
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
 import type { Contrasena } from '../dominio/contrasena.value-object';
+import { Celular } from '../dominio/celular.value-object';
+import { Correo } from '../dominio/correo.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
+import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
+import { NombrePersona } from '../dominio/nombre-persona.value-object';
+import { Usuario } from '../dominio/usuario.entity';
 import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
 import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
@@ -29,6 +35,19 @@ function prepararRegistro() {
     { reloj, correos: new ReglasDeCorreo('laprevia.pe') },
   );
   return { usuarios, registrar };
+}
+
+/** Datos ya validados del jugador de la fábrica, para crear cuentas directamente. */
+function datosDeDominio() {
+  return {
+    nombres: NombrePersona.crear('Valeria', 'nombres'),
+    apellidos: NombrePersona.crear('León', 'apellidos'),
+    fechaNacimiento: FechaNacimiento.restaurar('1998-05-14'),
+    documento: DocumentoIdentidad.crear('DNI', '45678912'),
+    correo: Correo.crear('valeria@gmail.com'),
+    celular: Celular.crear('987654321'),
+    contrasenaHash: 'hash',
+  };
 }
 
 async function capturarError(promesa: Promise<unknown>) {
@@ -72,6 +91,23 @@ describe('RegistrarJugadorUseCase', () => {
     await registrar.ejecutar(unJugadorValido({ contrasena: 'pichanga10' }));
 
     expect(usuarios.todos()[0].contrasenaHash).toBe('hash(pichanga10)');
+  });
+
+  it('registra al jugador aunque su documento ya tenga una cuenta de personal', async () => {
+    const { usuarios, registrar } = prepararRegistro();
+    await usuarios.crearPersonal(
+      Usuario.registrarRecepcionista({
+        ...datosDeDominio(),
+        correo: Correo.crear('valeria.leon@laprevia.pe'),
+      }),
+    );
+
+    await registrar.ejecutar(unJugadorValido());
+
+    expect(usuarios.todos().map((usuario) => usuario.rol)).toEqual([
+      'RECEPCIONISTA',
+      'JUGADOR',
+    ]);
   });
 
   it('rechaza un documento que ya tiene cuenta', async () => {

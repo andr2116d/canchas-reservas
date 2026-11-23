@@ -42,6 +42,16 @@ export class Usuario {
     return new Usuario({ ...datos, rol: 'JUGADOR', estado: 'ACTIVO' });
   }
 
+  /** Crea la cuenta de una recepcionista: activa y con una contraseña temporal que debe cambiar. */
+  static registrarRecepcionista(datos: Omit<DatosDeCuenta, 'dorsal'>): Usuario {
+    return new Usuario({
+      ...datos,
+      rol: 'RECEPCIONISTA',
+      estado: 'ACTIVO',
+      requiereCambiarContrasena: true,
+    });
+  }
+
   static registrarPersonal(
     datos: Pick<
       DatosDeCuenta,

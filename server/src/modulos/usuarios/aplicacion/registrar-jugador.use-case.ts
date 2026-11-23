@@ -90,7 +90,7 @@ export class RegistrarJugadorUseCase {
     correo: Correo,
   ): Promise<void> {
     const [documentoUsado, correoUsado] = await Promise.all([
-      this.usuarios.existeConDocumento(documento),
+      this.usuarios.existeConDocumento(documento, 'JUGADOR'),
       this.usuarios.existeConCorreo(correo),
     ]);
     const repetidos: DatoUnico[] = [];
