@@ -1,16 +1,41 @@
+import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
+import { type DatoEditable, DATOS_EDITABLES } from '../dominio/datos-editables';
 import type { UsuarioRepository } from '../dominio/usuario.repository';
 
-/** Lo que la persona ve de su propia cuenta. */
+/** Lo que la persona ve de su propia cuenta y lo que puede cambiar. */
 export interface Cuenta {
+  rol: RolUsuario;
   nombres: string;
+  apellidos: string;
+  tipoDocumento?: string;
+  numeroDocumento?: string;
+  fechaNacimiento?: string;
+  correo: string;
+  celular?: string;
+  dorsal?: number;
+  editables: DatoEditable[];
 }
 
 /** Datos de la cuenta del usuario con sesión iniciada. */
 export class ConsultarCuentaUseCase {
-  constructor(private readonly usuarios: UsuarioRepository) {}
+  constructor(
+    private readonly usuarios: Pick<UsuarioRepository, 'buscarPorId'>,
+  ) {}
 
   async ejecutar(usuarioId: number): Promise<Cuenta | undefined> {
     const usuario = await this.usuarios.buscarPorId(usuarioId);
-    return usuario ? { nombres: usuario.nombres.texto } : undefined;
+    if (!usuario) return undefined;
+    return {
+      rol: usuario.rol,
+      nombres: usuario.nombres.texto,
+      apellidos: usuario.apellidos.texto,
+      tipoDocumento: usuario.documento?.tipo,
+      numeroDocumento: usuario.documento?.numero,
+      fechaNacimiento: usuario.fechaNacimiento?.fecha,
+      correo: usuario.correo.direccion,
+      celular: usuario.celular?.numero,
+      dorsal: usuario.dorsal?.numero,
+      editables: DATOS_EDITABLES[usuario.rol],
+    };
   }
 }

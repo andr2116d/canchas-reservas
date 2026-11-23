@@ -7,9 +7,13 @@ const PERMISOS_TEMPORALES = [
 ] as const;
 
 const PERMISOS_POR_ROL = {
-  ADMINISTRADOR: ['panel:administracion', 'personal:gestionar-recepcionistas'],
-  RECEPCIONISTA: ['panel:recepcion'],
-  JUGADOR: ['panel:jugador'],
+  ADMINISTRADOR: [
+    'panel:administracion',
+    'personal:gestionar-recepcionistas',
+    'cuenta:propia',
+  ],
+  RECEPCIONISTA: ['panel:recepcion', 'cuenta:propia'],
+  JUGADOR: ['panel:jugador', 'cuenta:propia'],
 } as const satisfies Record<RolUsuario, readonly string[]>;
 
 export type Permiso =

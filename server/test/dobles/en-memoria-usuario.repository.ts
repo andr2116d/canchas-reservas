@@ -3,7 +3,10 @@ import type { Correo } from '../../src/modulos/usuarios/dominio/correo.value-obj
 import { CuentaYaExisteError } from '../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
 import type { DocumentoIdentidad } from '../../src/modulos/usuarios/dominio/documento-identidad.value-object';
 import { Usuario } from '../../src/modulos/usuarios/dominio/usuario.entity';
-import type { UsuarioRepository } from '../../src/modulos/usuarios/dominio/usuario.repository';
+import type {
+  ContactoNuevo,
+  UsuarioRepository,
+} from '../../src/modulos/usuarios/dominio/usuario.repository';
 
 /** Repositorio en memoria para probar casos de uso sin base de datos. */
 export class EnMemoriaUsuarioRepository implements UsuarioRepository {
@@ -55,9 +58,34 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
         rol: usuario.rol,
         estado: usuario.estado,
         requiereCambiarContrasena: usuario.requiereCambiarContrasena,
+        contrasenaTemporalVenceEn: usuario.contrasenaTemporalVenceEn,
       }),
     );
     return id;
+  }
+
+  actualizarContacto(id: number, contacto: ContactoNuevo): Promise<void> {
+    const indice = this.usuarios.findIndex((u) => u.id === id);
+    const actual = this.usuarios[indice];
+    this.usuarios[indice] = Usuario.restaurar({
+      id,
+      nombres: actual.nombres,
+      apellidos: actual.apellidos,
+      fechaNacimiento: actual.fechaNacimiento,
+      documento: actual.documento,
+      correo: contacto.correo ?? actual.correo,
+      celular: contacto.celular ?? actual.celular,
+      dorsal:
+        contacto.dorsal === undefined
+          ? actual.dorsal
+          : (contacto.dorsal ?? undefined),
+      contrasenaHash: actual.contrasenaHash,
+      rol: actual.rol,
+      estado: actual.estado,
+      requiereCambiarContrasena: actual.requiereCambiarContrasena,
+      contrasenaTemporalVenceEn: actual.contrasenaTemporalVenceEn,
+    });
+    return Promise.resolve();
   }
 
   async crearPersonal(usuario: Usuario): Promise<void> {

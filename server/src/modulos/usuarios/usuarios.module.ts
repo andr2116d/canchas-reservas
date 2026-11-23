@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type Provider } from '@nestjs/common';
 import { RELOJ, type Reloj } from '../../compartido/aplicacion/reloj.port';
 import {
   CONFIGURACION,
@@ -10,6 +10,8 @@ import {
 } from './aplicacion/hasheador-contrasena.port';
 import { ConsultarCuentaUseCase } from './aplicacion/consultar-cuenta.use-case';
 import { CambiarContrasenaTemporalUseCase } from './aplicacion/cambiar-contrasena-temporal.use-case';
+import { CambiarMiContrasenaUseCase } from './aplicacion/cambiar-mi-contrasena.use-case';
+import { ActualizarMiCuentaUseCase } from './aplicacion/actualizar-mi-cuenta.use-case';
 import { IniciarSesionUseCase } from './aplicacion/iniciar-sesion.use-case';
 import { RegistrarPersonalUseCase } from './aplicacion/registrar-personal.use-case';
 import { RegistrarJugadorUseCase } from './aplicacion/registrar-jugador.use-case';
@@ -116,24 +118,32 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
         CONTEXTO_DE_CUENTAS,
       ],
     },
+    ...[CambiarContrasenaTemporalUseCase, CambiarMiContrasenaUseCase].map(
+      (CasoDeUso): Provider => ({
+        provide: CasoDeUso,
+        useFactory: (
+          accesos: AccesoRepository,
+          hasheador: Argon2HasheadorContrasenaAdapter,
+          abrirSesion: AbrirSesionUseCase,
+        ) =>
+          new CasoDeUso(
+            accesos,
+            hasheador,
+            (texto, hash) => hasheador.verificar(texto, hash),
+            abrirSesion,
+          ),
+        inject: [
+          ACCESO_REPOSITORY,
+          Argon2HasheadorContrasenaAdapter,
+          AbrirSesionUseCase,
+        ],
+      }),
+    ),
     {
-      provide: CambiarContrasenaTemporalUseCase,
-      useFactory: (
-        accesos: AccesoRepository,
-        hasheador: Argon2HasheadorContrasenaAdapter,
-        abrirSesion: AbrirSesionUseCase,
-      ) =>
-        new CambiarContrasenaTemporalUseCase(
-          accesos,
-          hasheador,
-          (texto, hash) => hasheador.verificar(texto, hash),
-          abrirSesion,
-        ),
-      inject: [
-        ACCESO_REPOSITORY,
-        Argon2HasheadorContrasenaAdapter,
-        AbrirSesionUseCase,
-      ],
+      provide: ActualizarMiCuentaUseCase,
+      useFactory: (usuarios: UsuarioRepository, contexto: ContextoDeCuentas) =>
+        new ActualizarMiCuentaUseCase(usuarios, contexto),
+      inject: [USUARIO_REPOSITORY, CONTEXTO_DE_CUENTAS],
     },
     {
       provide: RegistrarPersonalUseCase,

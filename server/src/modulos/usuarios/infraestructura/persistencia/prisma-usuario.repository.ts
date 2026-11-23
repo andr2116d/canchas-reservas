@@ -9,6 +9,7 @@ import type { Correo } from '../../dominio/correo.value-object';
 import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
 import type { Usuario } from '../../dominio/usuario.entity';
 import type {
+  ContactoNuevo,
   DatosDelAlta,
   UsuarioRepository,
 } from '../../dominio/usuario.repository';
@@ -69,6 +70,29 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
       return fila.id;
     } catch (error) {
       // Otro registro con el mismo dato pudo guardarse entre la verificación y esta escritura.
+      rechazarDuplicado(error);
+    }
+  }
+
+  async actualizarContacto(
+    id: number,
+    { correo, celular, dorsal }: ContactoNuevo,
+  ): Promise<void> {
+    try {
+      await this.prisma.usuario.update({
+        where: { id },
+        data: {
+          ...(correo && {
+            correoCifrado: this.cifrador.cifrar(correo.direccion),
+            correoHash: hashDeCorreo(correo, this.cifrador),
+          }),
+          ...(celular && {
+            celularCifrado: this.cifrador.cifrar(celular.numero),
+          }),
+          ...(dorsal !== undefined && { dorsal: dorsal?.numero ?? null }),
+        },
+      });
+    } catch (error) {
       rechazarDuplicado(error);
     }
   }

@@ -29,7 +29,7 @@ describe('ConsultarCuentaUseCase', () => {
 
     const cuenta = await new ConsultarCuentaUseCase(usuarios).ejecutar(id);
 
-    expect(cuenta).toEqual({ nombres: 'Valeria' });
+    expect(cuenta).toMatchObject({ nombres: 'Valeria', rol: 'JUGADOR' });
   });
 
   it('no devuelve nada si el usuario no existe', async () => {

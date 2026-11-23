@@ -97,7 +97,7 @@ describe('Sesión del jugador', () => {
       const respuesta = await consultarCuenta(cookie.split(';')[0]);
 
       expect(respuesta.status).toBe(200);
-      expect(respuesta.body).toEqual({ nombres: 'Valeria' });
+      expect(respuesta.body).toMatchObject({ nombres: 'Valeria' });
     });
 
     it('responde 401 sin sesión', async () => {

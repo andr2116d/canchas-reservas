@@ -1,23 +1,11 @@
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
-import type {
-  AbrirSesionUseCase,
-  SesionAbierta,
-  SesionValida,
-} from '../../sesiones/api-sesiones';
-import type { AccesoRepository } from '../dominio/acceso.repository';
+import type { SesionAbierta, SesionValida } from '../../sesiones/api-sesiones';
 import { Contrasena } from '../dominio/contrasena.value-object';
-import type { HasheadorContrasena } from './hasheador-contrasena.port';
-import type { VerificarContrasena } from './iniciar-sesion.use-case';
+import { CambioDeContrasenaBase } from './cambio-de-contrasena.base';
 
-export class CambiarContrasenaTemporalUseCase {
-  constructor(
-    private readonly accesos: AccesoRepository,
-    private readonly hasheador: HasheadorContrasena,
-    private readonly verificarContrasena: VerificarContrasena,
-    private readonly abrirSesion: AbrirSesionUseCase,
-  ) {}
-
+/** Reemplaza la contraseña temporal por una elegida por la persona. */
+export class CambiarContrasenaTemporalUseCase extends CambioDeContrasenaBase {
   async ejecutar(
     sesion: SesionValida,
     texto: string,
@@ -33,15 +21,6 @@ export class CambiarContrasenaTemporalUseCase {
         contrasena: 'Elige una contraseña distinta a la temporal.',
       });
     }
-
-    const contrasenaHashNueva = await this.hasheador.hashear(contrasena);
-    const { datosDeSesion, credencial } = this.abrirSesion.preparar();
-    const cambiada = await this.accesos.cambiarContrasena({
-      usuario,
-      tokenHash: sesion.tokenHash,
-      contrasenaHashNueva,
-      sesion: datosDeSesion,
-    });
-    return cambiada ? credencial : undefined;
+    return this.guardar(sesion, usuario, contrasena);
   }
 }
