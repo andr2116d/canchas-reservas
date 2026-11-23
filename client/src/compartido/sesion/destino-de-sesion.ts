@@ -25,6 +25,8 @@ export function debePedirCambioDeContrasena(
 
 export interface EstadoDeSesion extends DestinoDeSesion {
   venceEn: string;
+  /** Hasta cuándo sirve la contraseña temporal, si la contraseña es temporal. */
+  contrasenaTemporalVenceEn?: string;
 }
 
 export function destinoDeSesion(sesion: DestinoDeSesion): string {

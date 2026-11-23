@@ -6,9 +6,10 @@ describe("AvisoDeContrasenaTemporal", () => {
   afterEach(cleanup);
 
   it("recuerda cambiar la contraseña temporal y lleva a cambiarla", () => {
-    render(<AvisoDeContrasenaTemporal />);
+    render(<AvisoDeContrasenaTemporal tiempoRestante="6 días" />);
 
     expect(screen.getByRole("status")).toHaveTextContent("Sigues con una contraseña temporal.");
+    expect(screen.getByRole("status")).toHaveTextContent("Vence en 6 días.");
     expect(screen.getByRole("link", { name: "Cambiarla ahora" })).toHaveAttribute("href", "/cambiar-contrasena");
   });
 });
