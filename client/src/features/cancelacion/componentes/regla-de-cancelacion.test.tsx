@@ -56,6 +56,14 @@ describe("Regla de cancelación", () => {
     expect(screen.getByText(/Vigente desde/)).toHaveTextContent("Vigente desde 23 nov 2026, 09:10 · por Valeria León");
   });
 
+  it("muestra plegadas las reglas anteriores con sus valores, quién y cuándo", () => {
+    const anterior = { ...VIGENTE, rangos: [{ desdeHoras: 0, porcentaje: 100, ofreceCredito: false }], guardadaEn: "2026-11-22T14:10:00.000Z" };
+    mostrar({ ...CONSULTADA, historial: [VIGENTE, anterior] });
+
+    expect(screen.getByText("Reglas anteriores (1)")).toBeInTheDocument();
+    expect(screen.getByText("0 h: 100 %")).toBeInTheDocument();
+  });
+
   it("agrega y quita rangos", async () => {
     const usuario = userEvent.setup();
     mostrar();

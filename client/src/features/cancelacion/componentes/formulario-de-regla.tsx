@@ -7,6 +7,7 @@ import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 import { type AvisoDeGuardado, useReglaDeCancelacion } from "../hooks/use-regla-de-cancelacion";
 import type { ReglaConsultada } from "../servicios/cancelacion";
 import { FilaDelRango } from "./fila-del-rango";
+import { HistorialDeLaRegla } from "./historial-de-la-regla";
 import { LineaDeTiempo } from "./linea-de-tiempo";
 import { useReglaEnEdicion } from "./proveedor-de-la-regla";
 
@@ -64,6 +65,7 @@ export function FormularioDeRegla({ consultada }: { consultada: ReglaConsultada 
           </div>
         </form>
       </FormProvider>
+      <HistorialDeLaRegla anteriores={consultada.historial.slice(1)} />
     </section>
   );
 }
