@@ -68,6 +68,22 @@
   padding-bottom: 1.5rem;
 }
 
+/* Con una tarjeta al lado: el título arriba a la izquierda y la tarjeta a la derecha. */
+.encabezado-de-seccion--con-tarjeta {
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.encabezado-de-seccion--con-tarjeta > :last-child {
+  flex: 1 1 24rem;
+  max-width: 30rem;
+}
+
+.encabezado-de-seccion--con-tarjeta > :first-child {
+  flex: 1 1 20rem;
+  padding-top: 1rem;
+}
+
 .encabezado-de-seccion::before {
   position: absolute;
   inset: -20rem calc(50% - 50vw) -3rem;
