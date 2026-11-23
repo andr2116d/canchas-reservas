@@ -22,7 +22,7 @@ test("el administrador crea una recepcionista con correo y contraseña generados
   const recepcionista = unaRecepcionistaNueva();
   await entrarComoAdministrador(page);
   await page.getByRole("link", { name: "Recepcionistas" }).first().click();
-  await page.getByRole("link", { name: "Nueva recepcionista" }).click();
+  await page.getByRole("link", { name: "Agregar recepcionista" }).click();
   await llenarDatos(page, recepcionista);
 
   await page.getByRole("button", { name: "Generar correo" }).click();
@@ -66,7 +66,7 @@ test("con los datos de una cuenta desactivada ofrece reactivarla y conserva su h
   await page.getByRole("button", { name: "Reactivar su cuenta" }).click();
 
   await expect(page).toHaveURL(`/administracion/recepcionistas/${anterior.id}`);
-  await expect(page.getByText("Activa", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cuenta activa", { exact: true })).toBeVisible();
   const historial = page.getByRole("region", { name: "Historial" }).getByRole("listitem");
   await expect(historial).toHaveText([/Reactivación/, /Desactivación/, /Alta de la cuenta/]);
   await cerrarSesion(page);

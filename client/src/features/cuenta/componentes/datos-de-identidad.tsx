@@ -9,7 +9,7 @@ function fechaLegible(fecha: string): string {
 
 /** Datos que identifican a la persona: se ven, pero no se cambian desde la cuenta. */
 export function DatosDeIdentidad({ cuenta }: { cuenta: Cuenta }) {
-  const quienCorrige = cuenta.rol === "JUGADOR" ? "pide a recepción que los corrija" : "pide al administrador que los corrija";
+  const quienCorrige = cuenta.rol === "JUGADOR" ? "pide a recepción que los corrija" : "pide a administración que los corrija";
   const filas = [
     ["Nombre", `${cuenta.nombres} ${cuenta.apellidos}`],
     ["Documento", cuenta.tipoDocumento && `${NOMBRE_DEL_DOCUMENTO[cuenta.tipoDocumento]} ${cuenta.numeroDocumento}`],

@@ -52,7 +52,7 @@ describe('DesactivarRecepcionistaUseCase', () => {
     ).ejecutar(id, ADMINISTRADOR);
 
     await expect(desactivar).rejects.toThrow(
-      new ConflictoError('Esta recepcionista ya está desactivada.', {}),
+      new ConflictoError('Esta cuenta ya está desactivada.', {}),
     );
     expect(recepcionistas.acciones).toHaveLength(0);
   });

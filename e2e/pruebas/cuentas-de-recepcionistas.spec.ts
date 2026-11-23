@@ -16,11 +16,11 @@ test("una cuenta desactivada no inicia sesión y pasa al listado de desactivadas
   await page.getByRole("button", { name: "Desactivar cuenta" }).click();
   await page.getByRole("button", { name: "Sí, desactivar" }).click();
 
-  await expect(page.getByText("Desactivada", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cuenta desactivada", { exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "Historial" })).toContainText("Desactivación");
   await page.goto("/administracion/recepcionistas");
   await expect(page.getByRole("link", { name: nombre })).toHaveCount(0);
-  await page.getByRole("link", { name: "Desactivadas" }).click();
+  await page.getByRole("link", { name: "Cuentas desactivadas" }).click();
   await expect(page.getByRole("link", { name: nombre })).toBeVisible();
   await cerrarSesion(page);
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
@@ -68,7 +68,7 @@ test("desde el listado se restablece la contraseña y se desactiva sin entrar a 
   await page.getByRole("button", { name: `Desactivar a ${nombre}` }).click();
   await page.getByRole("dialog", { name: "Desactivar cuenta" }).getByRole("button", { name: "Sí, desactivar" }).click();
   await expect(page.getByRole("link", { name: nombre })).toHaveCount(0);
-  await page.getByRole("link", { name: "Desactivadas" }).click();
+  await page.getByRole("link", { name: "Cuentas desactivadas" }).click();
   await expect(page.getByRole("link", { name: nombre })).toBeVisible();
 });
 

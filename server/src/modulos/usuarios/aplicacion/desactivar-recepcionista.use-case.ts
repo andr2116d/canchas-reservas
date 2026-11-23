@@ -27,7 +27,7 @@ export class DesactivarRecepcionistaUseCase {
         ejecutadoPorId: administradorId,
         ocurridoEn: this.reloj.ahora(),
       },
-      siNoAplica: 'Esta recepcionista ya está desactivada.',
+      siNoAplica: 'Esta cuenta ya está desactivada.',
     });
   }
 }

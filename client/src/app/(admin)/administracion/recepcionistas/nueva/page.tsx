@@ -5,13 +5,13 @@ import { FormularioDeAlta } from "@/features/recepcionistas/componentes/formular
 import { BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
 import { dominioCorporativo } from "@/features/recepcionistas/servicios/dominio-corporativo";
 
-export const metadata: Metadata = { title: "Nueva recepcionista · La Previa" };
+export const metadata: Metadata = { title: "Agregar recepcionista · La Previa" };
 
 export default function PaginaDeNuevaRecepcionista() {
   return (
     <>
       <EncabezadoDeSeccion
-        titulo="Nueva recepcionista"
+        titulo="Agregar recepcionista"
         descripcion="Sus datos personales, su correo institucional y una contraseña temporal para su primer acceso."
         accion={<Link href="/administracion/recepcionistas" className={BOTON_SECUNDARIO}>Volver al listado</Link>}
       />

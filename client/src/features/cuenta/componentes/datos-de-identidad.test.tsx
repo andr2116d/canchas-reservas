@@ -17,7 +17,7 @@ describe("DatosDeIdentidad", () => {
 
   it.each([
     ["JUGADOR", "pide a recepción que los corrija"],
-    ["RECEPCIONISTA", "pide al administrador que los corrija"],
+    ["RECEPCIONISTA", "pide a administración que los corrija"],
   ] as const)("explica a %s a quién pedir una corrección", (rol, texto) => {
     render(<DatosDeIdentidad cuenta={unaCuenta({ rol })} />);
 

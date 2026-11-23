@@ -46,7 +46,7 @@ test("la recepcionista solo puede cambiar su celular y ve el aviso del personal"
 
   await expect(page.getByLabel(/^Celular/)).toBeVisible();
   await expect(page.getByLabel(/^Correo/)).toHaveCount(0);
-  await expect(page.getByText(/pide al administrador que los corrija/)).toBeVisible();
+  await expect(page.getByText(/pide a administración que los corrija/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Cámbiala ahora" })).toBeVisible();
   await expect(page.getByRole("link", { name: "aviso de privacidad del personal" })).toBeVisible();
 });

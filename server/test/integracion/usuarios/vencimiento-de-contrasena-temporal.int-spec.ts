@@ -58,7 +58,7 @@ describe('Vencimiento de la contraseña temporal', () => {
 
     expect(inicio.status).toBe(403);
     expect(inicio.body.mensaje).toBe(
-      'La contraseña temporal venció. Pide al administrador una nueva.',
+      'La contraseña temporal venció. Pide una nueva a administración.',
     );
     expect(inicio.headers['set-cookie']).toBeUndefined();
   });

@@ -63,13 +63,13 @@ describe("AccionesDeCuenta", () => {
   });
 
   it("muestra el error si la acción no se pudo hacer", async () => {
-    vi.mocked(desactivarRecepcionista).mockResolvedValue({ tipo: "error", mensaje: "Esta recepcionista ya está desactivada." });
+    vi.mocked(desactivarRecepcionista).mockResolvedValue({ tipo: "error", mensaje: "Esta cuenta ya está desactivada." });
     const usuario = userEvent.setup();
     render(<AccionesDeCuenta id={7} nombres="Rosa" correo="rosa@laprevia.pe" activa />);
 
     await usuario.click(screen.getByRole("button", { name: "Desactivar cuenta" }));
     await usuario.click(screen.getByRole("button", { name: "Sí, desactivar" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Esta recepcionista ya está desactivada.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Esta cuenta ya está desactivada.");
   });
 });

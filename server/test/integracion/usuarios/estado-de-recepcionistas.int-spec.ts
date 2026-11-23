@@ -66,7 +66,7 @@ describe('Desactivar, reactivar y restablecer la contraseña de recepcionistas',
     const otra = await accion('desactivacion').set('Cookie', administrador);
 
     expect(otra.status).toBe(409);
-    expect(otra.body.mensaje).toBe('Esta recepcionista ya está desactivada.');
+    expect(otra.body.mensaje).toBe('Esta cuenta ya está desactivada.');
     expect(await historial()).toEqual(['DESACTIVACION', 'ALTA']);
   });
 

@@ -17,9 +17,9 @@ function datosEditables(ficha: FichaDeRecepcionista): DatosDeEdicion {
 
 function SelloDeEstado({ activa }: { activa: boolean }) {
   return activa ? (
-    <span className="inline-block rounded-full bg-capitan px-3 py-1 text-sm font-bold text-tinta">Activa</span>
+    <span className="inline-block rounded-full bg-capitan px-3 py-1 text-sm font-bold text-tinta">Cuenta activa</span>
   ) : (
-    <span className="inline-block rounded-full bg-tiza/20 px-3 py-1 text-sm font-bold text-papel">Desactivada</span>
+    <span className="inline-block rounded-full bg-tiza/20 px-3 py-1 text-sm font-bold text-papel">Cuenta desactivada</span>
   );
 }
 

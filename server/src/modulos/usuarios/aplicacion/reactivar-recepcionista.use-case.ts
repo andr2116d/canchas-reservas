@@ -39,7 +39,7 @@ export class ReactivarRecepcionistaUseCase {
         ejecutadoPorId: administradorId,
         ocurridoEn: this.reloj.ahora(),
       },
-      siNoAplica: 'Esta recepcionista ya está activa.',
+      siNoAplica: 'Esta cuenta ya está activa.',
     });
   }
 }

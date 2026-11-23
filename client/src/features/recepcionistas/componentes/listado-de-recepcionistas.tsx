@@ -9,15 +9,15 @@ import { AccionesRapidas } from "./acciones-rapidas";
 
 const RUTA = "/administracion/recepcionistas";
 const PESTANAS: { estado: EstadoDelListado; texto: string; ruta: string }[] = [
-  { estado: "activas", texto: "Activas", ruta: RUTA },
+  { estado: "activas", texto: "Cuentas activas", ruta: RUTA },
   {
     estado: "desactivadas",
-    texto: "Desactivadas",
+    texto: "Cuentas desactivadas",
     ruta: `${RUTA}?estado=desactivadas`,
   },
 ];
 const SIN_CUENTAS: Record<EstadoDelListado, string> = {
-  activas: "Todavía no hay recepcionistas activas.",
+  activas: "Todavía no hay cuentas de recepción activas.",
   desactivadas: "No hay cuentas desactivadas.",
 };
 

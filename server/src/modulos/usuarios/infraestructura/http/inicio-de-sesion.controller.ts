@@ -71,7 +71,7 @@ export class InicioDeSesionController {
     if (resultado.tipo === 'contrasena-temporal-vencida') {
       throw new ForbiddenException({
         mensaje:
-          'La contraseña temporal venció. Pide al administrador una nueva.',
+          'La contraseña temporal venció. Pide una nueva a administración.',
         errores: {},
       });
     }

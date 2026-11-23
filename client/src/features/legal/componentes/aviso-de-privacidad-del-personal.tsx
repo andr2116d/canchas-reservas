@@ -3,7 +3,7 @@ const SECCIONES = [
   {
     titulo: "Qué datos usamos",
     texto:
-      "Tus nombres y apellidos, tu documento de identidad, tu fecha de nacimiento, tu celular, tu correo institucional y una huella protegida de tu contraseña. También registramos cuándo entras al sistema y las acciones que el administrador hace sobre tu cuenta.",
+      "Tus nombres y apellidos, tu documento de identidad, tu fecha de nacimiento, tu celular, tu correo institucional y una huella protegida de tu contraseña. También registramos cuándo entras al sistema y las acciones que administración hace sobre tu cuenta.",
   },
   {
     titulo: "Para qué los usamos",
@@ -18,7 +18,7 @@ const SECCIONES = [
   {
     titulo: "Cómo los protegemos",
     texto:
-      "Tus datos de identificación y contacto se guardan cifrados y tu contraseña nunca se guarda tal cual. Solo el administrador puede ver y gestionar las cuentas del personal.",
+      "Tus datos de identificación y contacto se guardan cifrados y tu contraseña nunca se guarda tal cual. Solo administración puede ver y gestionar las cuentas del personal.",
   },
   {
     titulo: "Cuánto tiempo los guardamos",
@@ -28,7 +28,7 @@ const SECCIONES = [
   {
     titulo: "Tus derechos",
     texto:
-      "Puedes pedir acceder a tus datos, corregirlos, cancelarlos u oponerte a su uso cuando la ley lo permita. Por ahora, pídelo al administrador. Los datos del responsable, el canal formal de atención y la inscripción del banco de datos de trabajadores ante la Autoridad Nacional de Protección de Datos Personales se precisarán en la versión para publicación.",
+      "Puedes pedir acceder a tus datos, corregirlos, cancelarlos u oponerte a su uso cuando la ley lo permita. Por ahora, pídelo a administración. Los datos del responsable, el canal formal de atención y la inscripción del banco de datos de trabajadores ante la Autoridad Nacional de Protección de Datos Personales se precisarán en la versión para publicación.",
   },
 ];
 

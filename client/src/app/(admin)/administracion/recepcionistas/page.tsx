@@ -17,7 +17,7 @@ export default function PaginaDeRecepcionistas({
       <EncabezadoDeSeccion
         titulo="Recepcionistas"
         descripcion="Quién opera la caja y las reservas. Las cuentas desactivadas conservan sus datos y su historial."
-        accion={<Link href="/administracion/recepcionistas/nueva" className={BOTON_SOBRE_CANCHA}>Nueva recepcionista</Link>}
+        accion={<Link href="/administracion/recepcionistas/nueva" className={BOTON_SOBRE_CANCHA}>Agregar recepcionista</Link>}
       />
       <Suspense fallback={<p className="text-grava">Cargando recepcionistas…</p>}>
         <RecepcionistasDelEstado parametros={searchParams} />

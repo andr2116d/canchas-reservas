@@ -61,8 +61,6 @@ describe('ReactivarRecepcionistaUseCase', () => {
 
     await expect(
       reactivar.ejecutar(id, 'nueva2026', ADMINISTRADOR),
-    ).rejects.toThrow(
-      new ConflictoError('Esta recepcionista ya está activa.', {}),
-    );
+    ).rejects.toThrow(new ConflictoError('Esta cuenta ya está activa.', {}));
   });
 });

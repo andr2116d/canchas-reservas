@@ -68,15 +68,15 @@ describe("ListadoDeRecepcionistas", () => {
     render(<ListadoDeRecepcionistas estado="desactivadas" fichas={[]} />);
 
     const pestanas = screen.getByRole("navigation", { name: "Estado de las cuentas" });
-    expect(within(pestanas).getByRole("link", { name: "Desactivadas" })).toHaveAttribute("aria-current", "page");
-    expect(within(pestanas).getByRole("link", { name: "Activas" })).toHaveAttribute(
+    expect(within(pestanas).getByRole("link", { name: "Cuentas desactivadas" })).toHaveAttribute("aria-current", "page");
+    expect(within(pestanas).getByRole("link", { name: "Cuentas activas" })).toHaveAttribute(
       "href",
       "/administracion/recepcionistas",
     );
   });
 
   it.each([
-    ["activas", "Todavía no hay recepcionistas activas."],
+    ["activas", "Todavía no hay cuentas de recepción activas."],
     ["desactivadas", "No hay cuentas desactivadas."],
   ] as const)("explica el listado vacío de %s", (estado, mensaje) => {
     render(<ListadoDeRecepcionistas estado={estado} fichas={[]} />);
