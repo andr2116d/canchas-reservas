@@ -24,7 +24,12 @@ export class ReglaInvalidaError extends DominioError {
 
 /** Los datos chocan con información que ya existe. */
 export class ConflictoError extends DominioError {
-  constructor(mensaje: string, errores: ErroresPorCampo) {
+  /** @param datos información extra para resolver el conflicto, como la cuenta que se puede reactivar. */
+  constructor(
+    mensaje: string,
+    errores: ErroresPorCampo,
+    readonly datos?: Record<string, unknown>,
+  ) {
     super(mensaje, errores);
   }
 }

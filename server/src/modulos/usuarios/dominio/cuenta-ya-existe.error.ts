@@ -8,12 +8,21 @@ const MENSAJES: Record<DatoUnico, string> = {
   correo: 'Ya existe una cuenta con este correo.',
 };
 
+/** Mensajes cuando el dato repetido pertenece a una cuenta del personal. */
+export const MENSAJES_DEL_PERSONAL: Record<DatoUnico, string> = {
+  numeroDocumento: 'Este documento ya tiene una cuenta de recepción activa.',
+  correo: 'Este correo ya fue registrado para otra cuenta del personal.',
+};
+
 /** Ya hay una cuenta con el mismo documento o el mismo correo. */
 export class CuentaYaExisteError extends ConflictoError {
-  constructor(readonly repetidos: DatoUnico[]) {
+  constructor(
+    readonly repetidos: DatoUnico[],
+    mensajes: Record<DatoUnico, string> = MENSAJES,
+  ) {
     super(
       'Ya existe una cuenta con estos datos.',
-      Object.fromEntries(repetidos.map((dato) => [dato, MENSAJES[dato]])),
+      Object.fromEntries(repetidos.map((dato) => [dato, mensajes[dato]])),
     );
   }
 }
