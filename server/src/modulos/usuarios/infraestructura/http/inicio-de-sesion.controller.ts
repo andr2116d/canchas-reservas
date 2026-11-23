@@ -36,6 +36,7 @@ import { LIMITE_DE_INICIOS_POR_IP, LimiteDeInicios } from './limite-de-inicios';
 interface DestinoDeSesion {
   rol: RolUsuario;
   requiereCambiarContrasena: boolean;
+  contrasenaTemporalVenceEn?: Date;
 }
 
 @Controller('sesiones')
@@ -67,6 +68,13 @@ export class InicioDeSesionController {
     if (resultado.tipo !== 'credenciales-invalidas') {
       this.limite.reiniciar(datos.correo);
     }
+    if (resultado.tipo === 'contrasena-temporal-vencida') {
+      throw new ForbiddenException({
+        mensaje:
+          'La contraseña temporal venció. Pide al administrador una nueva.',
+        errores: {},
+      });
+    }
     if (resultado.tipo === 'cuenta-inactiva') {
       throw new ForbiddenException({
         mensaje: 'Tu cuenta está inactiva. Contacta a La Previa.',
@@ -88,6 +96,7 @@ export class InicioDeSesionController {
     return {
       rol: resultado.rol,
       requiereCambiarContrasena: resultado.requiereCambiarContrasena,
+      contrasenaTemporalVenceEn: resultado.contrasenaTemporalVenceEn,
     };
   }
 

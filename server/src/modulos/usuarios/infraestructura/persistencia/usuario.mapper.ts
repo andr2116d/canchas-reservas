@@ -68,6 +68,7 @@ export function aFilaNueva(
     rol: usuario.rol,
     estado: usuario.estado,
     requiereCambiarContrasena: usuario.requiereCambiarContrasena,
+    contrasenaTemporalVenceEn: usuario.contrasenaTemporalVenceEn ?? null,
   };
 }
 
@@ -100,5 +101,6 @@ export function aEntidad(fila: FilaUsuario, cifrador: Cifrador): Usuario {
     rol: fila.rol,
     estado: fila.estado,
     requiereCambiarContrasena: fila.requiereCambiarContrasena,
+    contrasenaTemporalVenceEn: fila.contrasenaTemporalVenceEn ?? undefined,
   });
 }

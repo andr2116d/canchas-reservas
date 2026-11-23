@@ -26,15 +26,18 @@ function unJugador(documento = '45678912', correo = 'valeria@gmail.com') {
 }
 
 function unaRecepcionista(documento: string) {
-  return Usuario.registrarRecepcionista({
-    nombres: NombrePersona.crear('Rosa', 'nombres'),
-    apellidos: NombrePersona.crear('Quispe', 'apellidos'),
-    fechaNacimiento: FechaNacimiento.restaurar('1995-02-01'),
-    documento: DocumentoIdentidad.crear('DNI', documento),
-    correo: Correo.crear('rosa.quispe@laprevia.pe'),
-    celular: Celular.crear('912345678'),
-    contrasenaHash: '$argon2id$hash-de-prueba',
-  });
+  return Usuario.registrarRecepcionista(
+    {
+      nombres: NombrePersona.crear('Rosa', 'nombres'),
+      apellidos: NombrePersona.crear('Quispe', 'apellidos'),
+      fechaNacimiento: FechaNacimiento.restaurar('1995-02-01'),
+      documento: DocumentoIdentidad.crear('DNI', documento),
+      correo: Correo.crear('rosa.quispe@laprevia.pe'),
+      celular: Celular.crear('912345678'),
+      contrasenaHash: '$argon2id$hash-de-prueba',
+    },
+    new Date('2026-11-29T15:00:00.000Z'),
+  );
 }
 
 async function capturarError(promesa: Promise<unknown>) {

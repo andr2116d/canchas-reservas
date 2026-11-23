@@ -1,4 +1,6 @@
+import type { ContextoDeCuentas } from './contexto-de-cuentas';
 import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
+import { temporalVencida } from '../dominio/contrasena-temporal';
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
 import type {
   AbrirSesionUseCase,
@@ -6,7 +8,6 @@ import type {
 } from '../../sesiones/api-sesiones';
 import type { AccesoRepository } from '../dominio/acceso.repository';
 import { Correo } from '../dominio/correo.value-object';
-import type { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 
 export interface DatosInicioSesion {
   correo: string;
@@ -23,10 +24,12 @@ export type ResultadoInicioSesion =
       tipo: 'sesion-abierta';
       rol: RolUsuario;
       requiereCambiarContrasena: boolean;
+      contrasenaTemporalVenceEn?: Date;
       sesion: SesionAbierta;
     }
   | { tipo: 'credenciales-invalidas' }
-  | { tipo: 'cuenta-inactiva' };
+  | { tipo: 'cuenta-inactiva' }
+  | { tipo: 'contrasena-temporal-vencida' };
 
 /** Comprueba credenciales y registra la apertura de sesión. */
 export class IniciarSesionUseCase {
@@ -37,7 +40,7 @@ export class IniciarSesionUseCase {
     >,
     private readonly verificarContrasena: VerificarContrasena,
     private readonly abrirSesion: AbrirSesionUseCase,
-    private readonly correos: ReglasDeCorreo,
+    private readonly contexto: ContextoDeCuentas,
   ) {}
 
   async ejecutar(datos: DatosInicioSesion): Promise<ResultadoInicioSesion> {
@@ -51,11 +54,20 @@ export class IniciarSesionUseCase {
       !valida ||
       !usuario ||
       !correo ||
-      !this.correos.correspondeAlRol(usuario.rol, correo)
+      !this.contexto.correos.correspondeAlRol(usuario.rol, correo)
     ) {
       return { tipo: 'credenciales-invalidas' };
     }
     if (usuario.estado !== 'ACTIVO') return { tipo: 'cuenta-inactiva' };
+    if (
+      usuario.requiereCambiarContrasena &&
+      temporalVencida(
+        usuario.contrasenaTemporalVenceEn,
+        this.contexto.reloj.ahora(),
+      )
+    ) {
+      return { tipo: 'contrasena-temporal-vencida' };
+    }
 
     const { datosDeSesion, credencial } = this.abrirSesion.preparar();
     if (
@@ -67,6 +79,7 @@ export class IniciarSesionUseCase {
       tipo: 'sesion-abierta',
       rol: usuario.rol,
       requiereCambiarContrasena: usuario.requiereCambiarContrasena,
+      contrasenaTemporalVenceEn: usuario.contrasenaTemporalVenceEn,
       sesion: credencial,
     };
   }

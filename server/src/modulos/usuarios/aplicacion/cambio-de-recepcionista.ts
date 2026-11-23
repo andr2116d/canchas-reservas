@@ -1,6 +1,10 @@
 import { ConflictoError } from '../../../compartido/dominio/dominio.error';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { Contrasena } from '../dominio/contrasena.value-object';
+import {
+  type ContrasenaTemporal,
+  vencimientoDeTemporal,
+} from '../dominio/contrasena-temporal';
 import { RecepcionistaNoEncontradaError } from '../dominio/recepcionista-no-encontrada.error';
 import type {
   AccionRegistrada,
@@ -34,13 +38,20 @@ export async function aplicarCambioAuditado(
   throw new ConflictoError(siNoAplica, {});
 }
 
-/** Valida la contraseña temporal que escribe o genera el administrador y la hashea. */
-export async function hashearContrasenaTemporal(
+/**
+ * Valida la contraseña temporal que escribe o genera el administrador, la
+ * hashea y fija hasta cuándo sirve.
+ */
+export async function prepararContrasenaTemporal(
   texto: string,
   hasheador: HasheadorContrasena,
-): Promise<string> {
+  ahora: Date,
+): Promise<ContrasenaTemporal> {
   const { contrasena } = validarCampos({
     contrasena: () => Contrasena.crear(texto),
   });
-  return hasheador.hashear(contrasena);
+  return {
+    hash: await hasheador.hashear(contrasena),
+    venceEn: vencimientoDeTemporal(ahora),
+  };
 }

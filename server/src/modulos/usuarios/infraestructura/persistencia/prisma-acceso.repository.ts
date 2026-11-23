@@ -20,6 +20,7 @@ const CAMPOS_DE_ACCESO = {
   rol: true,
   estado: true,
   requiereCambiarContrasena: true,
+  contrasenaTemporalVenceEn: true,
 } as const satisfies Prisma.UsuarioSelect;
 
 @Injectable()
@@ -87,6 +88,7 @@ export class PrismaAccesoRepository implements AccesoRepository {
         data: {
           contrasenaHash: contrasenaHashNueva,
           requiereCambiarContrasena: false,
+          contrasenaTemporalVenceEn: null,
         },
       });
       await base.sesion.deleteMany({ where: { usuarioId } });
@@ -104,8 +106,12 @@ function aCredenciales(
   fila: FilaDeAcceso | null,
 ): CredencialesGuardadas | undefined {
   if (!fila) return undefined;
-  const { id, ...credenciales } = fila;
-  return { usuarioId: id, ...credenciales };
+  const { id, contrasenaTemporalVenceEn, ...credenciales } = fila;
+  return {
+    usuarioId: id,
+    ...credenciales,
+    contrasenaTemporalVenceEn: contrasenaTemporalVenceEn ?? undefined,
+  };
 }
 
 async function bloquearCuentaVigente(

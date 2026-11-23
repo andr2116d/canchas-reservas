@@ -47,12 +47,10 @@ function preparar(credenciales?: Partial<CredencialesGuardadas>) {
     async (texto: string, hash?: string) =>
       texto === CONTRASENA && hash === 'hash guardado',
   );
-  const iniciar = new IniciarSesionUseCase(
-    accesos,
-    verificar,
-    abrirSesion,
-    new ReglasDeCorreo(DOMINIO_CORPORATIVO),
-  );
+  const iniciar = new IniciarSesionUseCase(accesos, verificar, abrirSesion, {
+    correos: new ReglasDeCorreo(DOMINIO_CORPORATIVO),
+    reloj,
+  });
   return { accesos, iniciar, reloj, verificar };
 }
 
@@ -140,6 +138,45 @@ describe('IniciarSesionUseCase', () => {
       iniciar.ejecutar({ correo: CORREO, contrasena: CONTRASENA }),
     ).resolves.toEqual({ tipo: 'cuenta-inactiva' });
     expect(accesos.registrarInicio).not.toHaveBeenCalled();
+  });
+
+  it('rechaza una contraseña temporal vencida sin abrir sesión', async () => {
+    const { iniciar, accesos, reloj } = preparar({
+      requiereCambiarContrasena: true,
+    });
+    accesos.buscarPorCorreo.mockResolvedValue({
+      usuarioId: 7,
+      rol: 'RECEPCIONISTA',
+      estado: 'ACTIVO',
+      requiereCambiarContrasena: true,
+      contrasenaHash: 'hash guardado',
+      contrasenaTemporalVenceEn: reloj.ahora(),
+    });
+
+    await expect(
+      iniciar.ejecutar({ correo: CORREO, contrasena: CONTRASENA }),
+    ).resolves.toEqual({ tipo: 'contrasena-temporal-vencida' });
+    expect(accesos.registrarInicio).not.toHaveBeenCalled();
+  });
+
+  it('informa hasta cuándo sirve una contraseña temporal vigente', async () => {
+    const { iniciar, accesos, reloj } = preparar();
+    const vence = new Date(reloj.ahora().getTime() + 60 * 60 * 1000);
+    accesos.buscarPorCorreo.mockResolvedValue({
+      usuarioId: 7,
+      rol: 'RECEPCIONISTA',
+      estado: 'ACTIVO',
+      requiereCambiarContrasena: true,
+      contrasenaHash: 'hash guardado',
+      contrasenaTemporalVenceEn: vence,
+    });
+
+    await expect(
+      iniciar.ejecutar({ correo: CORREO, contrasena: CONTRASENA }),
+    ).resolves.toMatchObject({
+      tipo: 'sesion-abierta',
+      contrasenaTemporalVenceEn: vence,
+    });
   });
 
   it('no emite una sesión si la cuenta cambió antes de persistir el acceso', async () => {

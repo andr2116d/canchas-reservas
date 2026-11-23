@@ -43,7 +43,10 @@ function unaCuenta(rol: 'RECEPCIONISTA' | 'JUGADOR', correo: string) {
   };
   return rol === 'JUGADOR'
     ? Usuario.registrarJugador(datos)
-    : Usuario.registrarRecepcionista(datos);
+    : Usuario.registrarRecepcionista(
+        datos,
+        new Date('2026-11-29T15:00:00.000Z'),
+      );
 }
 
 async function capturarError(promesa: Promise<unknown>) {
@@ -67,6 +70,16 @@ describe('RegistrarRecepcionistaUseCase', () => {
     expect(guardada.correo.direccion).toBe('rosa.quispe@laprevia.pe');
     expect(guardada.contrasenaHash).toBe('hash(temporal2026)');
     expect(guardada.requiereCambiarContrasena).toBe(true);
+  });
+
+  it('la contraseña temporal sirve por 7 días', async () => {
+    const { recepcionistas, registrar, reloj } = preparar();
+
+    await registrar.ejecutar(unaRecepcionistaValida(), ADMINISTRADOR);
+
+    expect(recepcionistas.todas()[0].contrasenaTemporalVenceEn).toEqual(
+      new Date(reloj.ahora().getTime() + 7 * 24 * 60 * 60 * 1000),
+    );
   });
 
   it('registra el alta en la auditoría con el administrador y la hora', async () => {

@@ -26,12 +26,14 @@ function guardado(
     correo: usuario.correo,
     celular: usuario.celular,
     ...cambios.datos,
-    contrasenaHash: cambios.contrasenaHashTemporal ?? usuario.contrasenaHash,
+    contrasenaHash: cambios.contrasenaTemporal?.hash ?? usuario.contrasenaHash,
     rol: usuario.rol,
     estado: cambios.estado ?? usuario.estado,
     requiereCambiarContrasena:
-      cambios.contrasenaHashTemporal !== undefined ||
+      cambios.contrasenaTemporal !== undefined ||
       usuario.requiereCambiarContrasena,
+    contrasenaTemporalVenceEn:
+      cambios.contrasenaTemporal?.venceEn ?? usuario.contrasenaTemporalVenceEn,
   });
 }
 

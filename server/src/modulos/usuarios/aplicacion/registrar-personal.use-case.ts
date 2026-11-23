@@ -1,4 +1,6 @@
+import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
 import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
+import { vencimientoDeTemporal } from '../dominio/contrasena-temporal';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { Contrasena } from '../dominio/contrasena.value-object';
 import { Correo } from '../dominio/correo.value-object';
@@ -21,6 +23,7 @@ export class RegistrarPersonalUseCase {
     private readonly usuarios: UsuarioRepository,
     private readonly hasheador: HasheadorContrasena,
     private readonly correos: ReglasDeCorreo,
+    private readonly reloj: Reloj,
   ) {}
 
   async ejecutar(
@@ -35,7 +38,11 @@ export class RegistrarPersonalUseCase {
     });
     const contrasenaHash = await this.hasheador.hashear(contrasena);
     await this.usuarios.crearPersonal(
-      Usuario.registrarPersonal({ ...identidad, contrasenaHash }, rol),
+      Usuario.registrarPersonal(
+        { ...identidad, contrasenaHash },
+        rol,
+        vencimientoDeTemporal(this.reloj.ahora()),
+      ),
     );
   }
 }

@@ -6,10 +6,8 @@ import {
 import { RecepcionistaNoEncontradaError } from '../dominio/recepcionista-no-encontrada.error';
 import type { RecepcionistaRepository } from '../dominio/recepcionista.repository';
 import { construirDatosPersonales } from './datos-personales';
-import type {
-  ContextoDelPersonal,
-  DatosDeRecepcionista,
-} from './registrar-recepcionista.use-case';
+import type { ContextoDeCuentas } from './contexto-de-cuentas';
+import type { DatosDeRecepcionista } from './registrar-recepcionista.use-case';
 
 export type DatosEditados = Omit<DatosDeRecepcionista, 'contrasena'>;
 
@@ -25,7 +23,7 @@ export class EditarRecepcionistaUseCase {
       RecepcionistaRepository,
       'buscar' | 'buscarCoincidencias' | 'actualizar'
     >,
-    private readonly contexto: ContextoDelPersonal,
+    private readonly contexto: ContextoDeCuentas,
   ) {}
 
   async ejecutar(

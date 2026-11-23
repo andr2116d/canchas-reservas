@@ -121,6 +121,7 @@ describe('POST /api/recepcionistas', () => {
       expect(inicio.body).toEqual({
         rol: 'RECEPCIONISTA',
         requiereCambiarContrasena: true,
+        contrasenaTemporalVenceEn: expect.any(String),
       });
     });
 

@@ -31,6 +31,7 @@ interface EstadoCompleto extends DatosDeUsuario {
   rol: RolUsuario;
   estado: EstadoUsuario;
   requiereCambiarContrasena?: boolean;
+  contrasenaTemporalVenceEn?: Date;
 }
 
 /** Persona con cuenta en La Previa. */
@@ -43,12 +44,16 @@ export class Usuario {
   }
 
   /** Crea la cuenta de una recepcionista: activa y con una contraseña temporal que debe cambiar. */
-  static registrarRecepcionista(datos: Omit<DatosDeCuenta, 'dorsal'>): Usuario {
+  static registrarRecepcionista(
+    datos: Omit<DatosDeCuenta, 'dorsal'>,
+    contrasenaTemporalVenceEn: Date,
+  ): Usuario {
     return new Usuario({
       ...datos,
       rol: 'RECEPCIONISTA',
       estado: 'ACTIVO',
       requiereCambiarContrasena: true,
+      contrasenaTemporalVenceEn,
     });
   }
 
@@ -58,12 +63,14 @@ export class Usuario {
       'nombres' | 'apellidos' | 'correo' | 'contrasenaHash'
     >,
     rol: Exclude<RolUsuario, 'JUGADOR'>,
+    contrasenaTemporalVenceEn: Date,
   ): Usuario {
     return new Usuario({
       ...datos,
       rol,
       estado: 'ACTIVO',
       requiereCambiarContrasena: true,
+      contrasenaTemporalVenceEn,
     });
   }
 
@@ -118,6 +125,11 @@ export class Usuario {
 
   get requiereCambiarContrasena(): boolean {
     return this.datos.requiereCambiarContrasena ?? false;
+  }
+
+  /** Hasta cuándo sirve la contraseña temporal; nada si no es temporal. */
+  get contrasenaTemporalVenceEn(): Date | undefined {
+    return this.datos.contrasenaTemporalVenceEn;
   }
 
   /** Solo los usuarios activos pueden iniciar sesión. */

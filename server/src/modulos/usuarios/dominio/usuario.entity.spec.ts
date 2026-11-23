@@ -46,7 +46,10 @@ describe('Usuario', () => {
         correo: Correo.crear('valeria.leon@laprevia.pe'),
       };
 
-      const usuario = Usuario.registrarRecepcionista(datos);
+      const usuario = Usuario.registrarRecepcionista(
+        datos,
+        new Date('2026-11-29T15:00:00.000Z'),
+      );
 
       expect(usuario.rol).toBe('RECEPCIONISTA');
       expect(usuario.estaActivo()).toBe(true);
@@ -55,7 +58,10 @@ describe('Usuario', () => {
     });
 
     it('exige cambiar la contraseña temporal en su primer acceso', () => {
-      const usuario = Usuario.registrarRecepcionista(datosDeUnJugador());
+      const usuario = Usuario.registrarRecepcionista(
+        datosDeUnJugador(),
+        new Date('2026-11-29T15:00:00.000Z'),
+      );
 
       expect(usuario.requiereCambiarContrasena).toBe(true);
     });

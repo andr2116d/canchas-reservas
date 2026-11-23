@@ -29,7 +29,12 @@ export class PrismaSesionRepository implements SesionRepository {
       where: { tokenHash },
       include: {
         usuario: {
-          select: { rol: true, estado: true, requiereCambiarContrasena: true },
+          select: {
+            rol: true,
+            estado: true,
+            requiereCambiarContrasena: true,
+            contrasenaTemporalVenceEn: true,
+          },
         },
       },
     });
@@ -40,6 +45,8 @@ export class PrismaSesionRepository implements SesionRepository {
       activa: fila.usuario.estado === 'ACTIVO',
       requiereCambiarContrasena: fila.usuario.requiereCambiarContrasena,
       cambioOmitido: fila.cambioOmitido,
+      contrasenaTemporalVenceEn:
+        fila.usuario.contrasenaTemporalVenceEn ?? undefined,
     };
   }
 

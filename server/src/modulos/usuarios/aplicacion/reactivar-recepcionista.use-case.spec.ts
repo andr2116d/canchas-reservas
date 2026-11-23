@@ -35,6 +35,9 @@ describe('ReactivarRecepcionistaUseCase', () => {
     expect(cuenta.correo.direccion).toBe('rosa.quispe@laprevia.pe');
     expect(cuenta.contrasenaHash).toBe('hash(nueva2026)');
     expect(cuenta.requiereCambiarContrasena).toBe(true);
+    expect(cuenta.contrasenaTemporalVenceEn).toEqual(
+      new Date(reloj.ahora().getTime() + 7 * 24 * 60 * 60 * 1000),
+    );
     expect(recepcionistas.acciones).toEqual([
       {
         accion: 'REACTIVACION',

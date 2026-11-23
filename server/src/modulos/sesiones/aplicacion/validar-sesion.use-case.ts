@@ -5,6 +5,7 @@ import type { GeneradorTokenSesion } from './generador-token-sesion.port';
 
 export interface SesionValida extends AccesoDeSesion {
   cambioOmitido: boolean;
+  contrasenaTemporalVenceEn?: Date;
   usuarioId: number;
   tokenHash: string;
   venceEn: Date;
@@ -45,6 +46,7 @@ export class ValidarSesionUseCase {
       rol,
       requiereCambiarContrasena,
       cambioOmitido,
+      contrasenaTemporalVenceEn: acceso.contrasenaTemporalVenceEn,
       venceEn: sesion.venceEn(),
     };
   }

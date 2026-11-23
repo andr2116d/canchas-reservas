@@ -96,10 +96,13 @@ describe('RegistrarJugadorUseCase', () => {
   it('registra al jugador aunque su documento ya tenga una cuenta de personal', async () => {
     const { usuarios, registrar } = prepararRegistro();
     await usuarios.crearPersonal(
-      Usuario.registrarRecepcionista({
-        ...datosDeDominio(),
-        correo: Correo.crear('valeria.leon@laprevia.pe'),
-      }),
+      Usuario.registrarRecepcionista(
+        {
+          ...datosDeDominio(),
+          correo: Correo.crear('valeria.leon@laprevia.pe'),
+        },
+        new Date('2026-11-29T15:00:00.000Z'),
+      ),
     );
 
     await registrar.ejecutar(unJugadorValido());

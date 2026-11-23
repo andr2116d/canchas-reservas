@@ -35,7 +35,14 @@ export class SesionesController {
   @RequerirPermiso('sesion:consultar')
   consultar(@SesionDeLaSolicitud() sesion: SesionValida) {
     const { rol, requiereCambiarContrasena, cambioOmitido, venceEn } = sesion;
-    return { rol, requiereCambiarContrasena, cambioOmitido, venceEn };
+    const { contrasenaTemporalVenceEn } = sesion;
+    return {
+      rol,
+      requiereCambiarContrasena,
+      cambioOmitido,
+      contrasenaTemporalVenceEn,
+      venceEn,
+    };
   }
 
   @Post('actual/cambio-omitido')

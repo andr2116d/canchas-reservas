@@ -6,6 +6,8 @@ export const SESION_REPOSITORY = Symbol('SESION_REPOSITORY');
 export interface SesionConAcceso extends AccesoDeSesion {
   sesion: Sesion;
   activa: boolean;
+  /** Hasta cuándo sirve la contraseña temporal; nada si no es temporal. */
+  contrasenaTemporalVenceEn?: Date;
 }
 
 /** Puerto de persistencia de sesiones. Las sesiones se buscan por el hash de su token. */

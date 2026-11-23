@@ -143,8 +143,9 @@ export class PrismaRecepcionistaRepository implements RecepcionistaRepository {
     return {
       ...(cambios.datos && aColumnasPersonales(cambios.datos, this.cifrador)),
       ...(cambios.estado && { estado: cambios.estado }),
-      ...(cambios.contrasenaHashTemporal && {
-        contrasenaHash: cambios.contrasenaHashTemporal,
+      ...(cambios.contrasenaTemporal && {
+        contrasenaHash: cambios.contrasenaTemporal.hash,
+        contrasenaTemporalVenceEn: cambios.contrasenaTemporal.venceEn,
         requiereCambiarContrasena: true,
       }),
     };

@@ -1,7 +1,7 @@
 import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
 import {
   aplicarCambioAuditado,
-  hashearContrasenaTemporal,
+  prepararContrasenaTemporal,
   type RepositorioDeCambios,
 } from './cambio-de-recepcionista';
 import type { HasheadorContrasena } from './hasheador-contrasena.port';
@@ -22,14 +22,15 @@ export class RestablecerContrasenaUseCase {
     contrasenaTemporal: string,
     administradorId: number,
   ): Promise<void> {
-    const contrasenaHashTemporal = await hashearContrasenaTemporal(
+    const temporal = await prepararContrasenaTemporal(
       contrasenaTemporal,
       this.hasheador,
+      this.reloj.ahora(),
     );
     await aplicarCambioAuditado(this.recepcionistas, {
       id,
       cambios: {
-        contrasenaHashTemporal,
+        contrasenaTemporal: temporal,
         estadoEsperado: 'ACTIVO',
         cerrarSesiones: true,
       },

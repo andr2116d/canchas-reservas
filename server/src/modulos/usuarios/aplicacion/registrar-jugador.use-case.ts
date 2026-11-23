@@ -1,4 +1,4 @@
-import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
+import type { ContextoDeCuentas } from './contexto-de-cuentas';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import type {
   AbrirSesionUseCase,
@@ -13,7 +13,6 @@ import {
 } from '../dominio/cuenta-ya-existe.error';
 import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
 import { Dorsal } from '../dominio/dorsal.value-object';
-import type { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { Usuario } from '../dominio/usuario.entity';
 import type { UsuarioRepository } from '../dominio/usuario.repository';
 import {
@@ -37,19 +36,13 @@ export interface JugadorRegistrado {
   sesion: SesionAbierta;
 }
 
-/** Reloj para validar la edad y reglas del correo según el tipo de cuenta. */
-export interface ContextoDelRegistro {
-  reloj: Reloj;
-  correos: ReglasDeCorreo;
-}
-
 /** Crea la cuenta de un jugador nuevo, mayor de edad, activa y con rol jugador. */
 export class RegistrarJugadorUseCase {
   constructor(
     private readonly usuarios: UsuarioRepository,
     private readonly hasheador: HasheadorContrasena,
     private readonly abrirSesion: Pick<AbrirSesionUseCase, 'preparar'>,
-    private readonly contexto: ContextoDelRegistro,
+    private readonly contexto: ContextoDeCuentas,
   ) {}
 
   /** Valida todos los datos, comprueba que no estén repetidos y guarda la cuenta. */
@@ -96,7 +89,7 @@ export class RegistrarJugadorUseCase {
 
 function validarDatosDeRegistro(
   datos: DatosRegistroJugador,
-  { reloj, correos }: ContextoDelRegistro,
+  { reloj, correos }: ContextoDeCuentas,
 ) {
   return validarCampos({
     ...construirDatosPersonales(datos, reloj.ahora()),

@@ -13,6 +13,8 @@ export interface CredencialesGuardadas {
   rol: RolUsuario;
   estado: EstadoUsuario;
   requiereCambiarContrasena: boolean;
+  /** Hasta cuándo sirve la contraseña temporal; nada si no es temporal. */
+  contrasenaTemporalVenceEn?: Date;
 }
 
 export interface InicioAutenticado {

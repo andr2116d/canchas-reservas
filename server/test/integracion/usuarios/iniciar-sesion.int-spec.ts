@@ -146,7 +146,11 @@ describe('Inicio de sesión y autorización por rol', () => {
     async (rol, panel, panelAjeno) => {
       const correo = await crearPersonal(rol);
       const inicio = await iniciar(correo).expect(200);
-      expect(inicio.body).toEqual({ rol, requiereCambiarContrasena: true });
+      expect(inicio.body).toEqual({
+        rol,
+        requiereCambiarContrasena: true,
+        contrasenaTemporalVenceEn: expect.any(String),
+      });
       const temporal = cookieDe(inicio);
       const otroTemporal = cookieDe(await iniciar(correo));
       await api().get(panel).set('Cookie', temporal).expect(403);

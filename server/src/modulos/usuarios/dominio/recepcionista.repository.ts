@@ -3,6 +3,7 @@ import type {
   RolUsuario,
 } from '../../../compartido/dominio/rol-usuario';
 import type { AccionAuditada } from './accion-auditada';
+import type { ContrasenaTemporal } from './contrasena-temporal';
 import type { Correo } from './correo.value-object';
 import type { DatoUnico } from './cuenta-ya-existe.error';
 import type { DocumentoIdentidad } from './documento-identidad.value-object';
@@ -64,7 +65,7 @@ export interface CambiosDeRecepcionista {
   datos?: DatosDeRecepcionistaValidados;
   estado?: EstadoUsuario;
   /** Contraseña temporal nueva: la recepcionista deberá cambiarla al entrar. */
-  contrasenaHashTemporal?: string;
+  contrasenaTemporal?: ContrasenaTemporal;
   /** Cierra sus sesiones abiertas para que el cambio rija de inmediato. */
   cerrarSesiones?: boolean;
   /** Solo se aplica si la cuenta sigue en este estado. */

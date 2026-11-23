@@ -1,6 +1,7 @@
-import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
+import type { ContextoDeCuentas } from './contexto-de-cuentas';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { Contrasena } from '../dominio/contrasena.value-object';
+import { vencimientoDeTemporal } from '../dominio/contrasena-temporal';
 import {
   CuentaYaExisteError,
   MENSAJES_DEL_PERSONAL,
@@ -10,7 +11,6 @@ import type {
   CuentaCoincidente,
   RecepcionistaRepository,
 } from '../dominio/recepcionista.repository';
-import type { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { Usuario } from '../dominio/usuario.entity';
 import {
   construirDatosPersonales,
@@ -26,11 +26,6 @@ export interface DatosDeRecepcionista extends DatosPersonalesEscritos {
   contrasena: string;
 }
 
-export interface ContextoDelPersonal {
-  reloj: Reloj;
-  correos: ReglasDeCorreo;
-}
-
 /**
  * Da de alta a una recepcionista con correo institucional y contraseña
  * temporal. Si sus datos coinciden con una cuenta desactivada, ofrece
@@ -40,7 +35,7 @@ export class RegistrarRecepcionistaUseCase {
   constructor(
     private readonly recepcionistas: RecepcionistaRepository,
     private readonly hasheador: HasheadorContrasena,
-    private readonly contexto: ContextoDelPersonal,
+    private readonly contexto: ContextoDeCuentas,
   ) {}
 
   async ejecutar(
@@ -60,11 +55,14 @@ export class RegistrarRecepcionistaUseCase {
       ),
     );
 
-    const recepcionista = Usuario.registrarRecepcionista({
-      ...campos,
-      documento: numeroDocumento,
-      contrasenaHash: await this.hasheador.hashear(contrasena),
-    });
+    const recepcionista = Usuario.registrarRecepcionista(
+      {
+        ...campos,
+        documento: numeroDocumento,
+        contrasenaHash: await this.hasheador.hashear(contrasena),
+      },
+      vencimientoDeTemporal(reloj.ahora()),
+    );
     const id = await this.recepcionistas.crear(recepcionista, {
       accion: 'ALTA',
       ejecutadoPorId: administradorId,

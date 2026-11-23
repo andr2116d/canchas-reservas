@@ -23,6 +23,10 @@ import {
   type AccesoRepository,
 } from './dominio/acceso.repository';
 import { ReglasDeCorreo } from './dominio/reglas-de-correo';
+import {
+  CONTEXTO_DE_CUENTAS,
+  type ContextoDeCuentas,
+} from './aplicacion/contexto-de-cuentas';
 import { PROVIDERS_DE_RECEPCIONISTAS } from './recepcionistas.providers';
 import { CuentaController } from './infraestructura/http/cuenta.controller';
 import { InicioDeSesionController } from './infraestructura/http/inicio-de-sesion.controller';
@@ -33,8 +37,6 @@ import { LimiteDeInicios } from './infraestructura/http/limite-de-inicios';
 import { PrismaAccesoRepository } from './infraestructura/persistencia/prisma-acceso.repository';
 import { PrismaUsuarioRepository } from './infraestructura/persistencia/prisma-usuario.repository';
 import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/argon2-hasheador-contrasena.adapter';
-
-const CONTEXTO_DEL_REGISTRO = Symbol('CONTEXTO_DEL_REGISTRO');
 
 /** Cuentas de usuario: registro de jugadores y consulta de la propia cuenta. */
 @Module({
@@ -69,18 +71,18 @@ const CONTEXTO_DEL_REGISTRO = Symbol('CONTEXTO_DEL_REGISTRO');
         usuarios: UsuarioRepository,
         hasheador: HasheadorContrasena,
         abrirSesion: AbrirSesionUseCase,
-        contexto: { reloj: Reloj; correos: ReglasDeCorreo },
+        contexto: ContextoDeCuentas,
       ) =>
         new RegistrarJugadorUseCase(usuarios, hasheador, abrirSesion, contexto),
       inject: [
         USUARIO_REPOSITORY,
         HASHEADOR_CONTRASENA,
         AbrirSesionUseCase,
-        CONTEXTO_DEL_REGISTRO,
+        CONTEXTO_DE_CUENTAS,
       ],
     },
     {
-      provide: CONTEXTO_DEL_REGISTRO,
+      provide: CONTEXTO_DE_CUENTAS,
       useFactory: (reloj: Reloj, correos: ReglasDeCorreo) => ({
         reloj,
         correos,
@@ -99,19 +101,19 @@ const CONTEXTO_DEL_REGISTRO = Symbol('CONTEXTO_DEL_REGISTRO');
         accesos: AccesoRepository,
         hasheador: Argon2HasheadorContrasenaAdapter,
         abrirSesion: AbrirSesionUseCase,
-        correos: ReglasDeCorreo,
+        contexto: ContextoDeCuentas,
       ) =>
         new IniciarSesionUseCase(
           accesos,
           (texto, hash) => hasheador.verificar(texto, hash),
           abrirSesion,
-          correos,
+          contexto,
         ),
       inject: [
         ACCESO_REPOSITORY,
         Argon2HasheadorContrasenaAdapter,
         AbrirSesionUseCase,
-        ReglasDeCorreo,
+        CONTEXTO_DE_CUENTAS,
       ],
     },
     {
@@ -139,8 +141,9 @@ const CONTEXTO_DEL_REGISTRO = Symbol('CONTEXTO_DEL_REGISTRO');
         usuarios: UsuarioRepository,
         hasheador: HasheadorContrasena,
         correos: ReglasDeCorreo,
-      ) => new RegistrarPersonalUseCase(usuarios, hasheador, correos),
-      inject: [USUARIO_REPOSITORY, HASHEADOR_CONTRASENA, ReglasDeCorreo],
+        reloj: Reloj,
+      ) => new RegistrarPersonalUseCase(usuarios, hasheador, correos, reloj),
+      inject: [USUARIO_REPOSITORY, HASHEADOR_CONTRASENA, ReglasDeCorreo, RELOJ],
     },
   ],
 })

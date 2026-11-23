@@ -1,3 +1,7 @@
+import {
+  CONTEXTO_DE_CUENTAS,
+  type ContextoDeCuentas,
+} from './aplicacion/contexto-de-cuentas';
 import type { Provider } from '@nestjs/common';
 import { RELOJ, type Reloj } from '../../compartido/aplicacion/reloj.port';
 import {
@@ -22,8 +26,6 @@ import {
 import { ReglasDeCorreo } from './dominio/reglas-de-correo';
 import { PrismaRecepcionistaRepository } from './infraestructura/persistencia/prisma-recepcionista.repository';
 
-const CONTEXTO_DEL_PERSONAL = Symbol('CONTEXTO_DEL_PERSONAL');
-
 /** Casos de uso de la gestión de recepcionistas y sus dependencias. */
 export const PROVIDERS_DE_RECEPCIONISTAS: Provider[] = [
   {
@@ -31,30 +33,25 @@ export const PROVIDERS_DE_RECEPCIONISTAS: Provider[] = [
     useClass: PrismaRecepcionistaRepository,
   },
   {
-    provide: CONTEXTO_DEL_PERSONAL,
-    useFactory: (reloj: Reloj, correos: ReglasDeCorreo) => ({ reloj, correos }),
-    inject: [RELOJ, ReglasDeCorreo],
-  },
-  {
     provide: RegistrarRecepcionistaUseCase,
     useFactory: (
       recepcionistas: RecepcionistaRepository,
       hasheador: HasheadorContrasena,
-      contexto: { reloj: Reloj; correos: ReglasDeCorreo },
+      contexto: ContextoDeCuentas,
     ) => new RegistrarRecepcionistaUseCase(recepcionistas, hasheador, contexto),
     inject: [
       RECEPCIONISTA_REPOSITORY,
       HASHEADOR_CONTRASENA,
-      CONTEXTO_DEL_PERSONAL,
+      CONTEXTO_DE_CUENTAS,
     ],
   },
   {
     provide: EditarRecepcionistaUseCase,
     useFactory: (
       recepcionistas: RecepcionistaRepository,
-      contexto: { reloj: Reloj; correos: ReglasDeCorreo },
+      contexto: ContextoDeCuentas,
     ) => new EditarRecepcionistaUseCase(recepcionistas, contexto),
-    inject: [RECEPCIONISTA_REPOSITORY, CONTEXTO_DEL_PERSONAL],
+    inject: [RECEPCIONISTA_REPOSITORY, CONTEXTO_DE_CUENTAS],
   },
   {
     provide: DesactivarRecepcionistaUseCase,
