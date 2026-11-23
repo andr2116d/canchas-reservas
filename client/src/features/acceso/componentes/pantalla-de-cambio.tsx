@@ -1,4 +1,4 @@
-import { BarraDeSesion } from "@/compartido/sesion/barra-de-sesion";
+import { BarraDeNavegacion } from "@/compartido/marco/barra-de-navegacion";
 import { PANELES } from "@/compartido/sesion/destino-de-sesion";
 import { exigirCambioDeContrasena } from "@/compartido/sesion/sesion.servidor";
 import { FormularioDeCambio } from "./formulario-de-cambio";
@@ -10,7 +10,7 @@ export async function PantallaDeCambio() {
 
   return (
     <>
-      <BarraDeSesion venceEn={sesion.venceEn} />
+      <BarraDeNavegacion venceEn={sesion.venceEn} />
       <TarjetaDeAcceso titulo="Cambia tu contraseña temporal">
         <p className="mb-4 text-grava">Por seguridad, elige una contraseña que solo tú conozcas.</p>
         <FormularioDeCambio panel={PANELES[sesion.rol]} />
