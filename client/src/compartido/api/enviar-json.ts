@@ -16,11 +16,12 @@ export const SIN_CONEXION =
   "No pudimos conectar con La Previa. Revisa tu conexión e inténtalo de nuevo.";
 export const ERROR_INESPERADO = "Ocurrió un error inesperado. Inténtalo de nuevo.";
 
-/** Envía JSON a la API del mismo sitio y traduce la respuesta, con o sin cuerpo. */
+/** Envía JSON a la API del mismo sitio y traduce la respuesta, con o sin cuerpo. Se puede cancelar con `senal`. */
 export async function enviarJson<T = undefined>(
   ruta: string,
   metodo: "GET" | "POST" | "PUT" | "PATCH",
   cuerpo?: unknown,
+  senal?: AbortSignal,
 ): Promise<RespuestaDeLaApi<T>> {
   let respuesta: Response;
   try {
@@ -29,6 +30,7 @@ export async function enviarJson<T = undefined>(
       headers: cuerpo === undefined ? undefined : { "Content-Type": "application/json" },
       body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
       credentials: "same-origin",
+      signal: senal,
     });
   } catch {
     return { tipo: "sin-conexion", mensaje: SIN_CONEXION };
