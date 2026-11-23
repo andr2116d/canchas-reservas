@@ -53,6 +53,8 @@ model Usuario {
   canalAceptacionLegal      String?             @map("canal_aceptacion_legal")
   sesiones                  Sesion[]
   requiereCambiarContrasena Boolean             @default(false) @map("requiere_cambiar_contrasena")
+  /// Hasta cuándo sirve la contraseña temporal; vacío si la contraseña ya no es temporal.
+  contrasenaTemporalVenceEn DateTime?           @map("contrasena_temporal_vence_en") @db.Timestamptz(3)
   accesos                   RegistroAcceso[]
   accionesRecibidas         RegistroAuditoria[] @relation("AccionesRecibidas")
   accionesEjecutadas        RegistroAuditoria[] @relation("AccionesEjecutadas")
