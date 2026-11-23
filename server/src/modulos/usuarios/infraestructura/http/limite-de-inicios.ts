@@ -3,6 +3,7 @@ import {
   CIFRADOR,
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
+import { leerLimiteDeInicios } from '../../../../compartido/infraestructura/configuracion/configuracion';
 import {
   RELOJ,
   type Reloj,
@@ -14,7 +15,10 @@ const FALLOS_POR_CORREO = 8;
 const REGISTROS_ANTES_DE_LIMPIAR = 10_000;
 
 export const LIMITE_DE_INICIOS_POR_IP = {
-  default: { limit: 20, ttl: VENTANA_DE_INTENTOS },
+  default: {
+    limit: () => leerLimiteDeInicios(process.env),
+    ttl: VENTANA_DE_INTENTOS,
+  },
 };
 
 interface IntentosFallidos {

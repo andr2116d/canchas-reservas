@@ -1,4 +1,4 @@
-import { leerConfiguracion } from './configuracion';
+import { leerConfiguracion, leerLimiteDeInicios } from './configuracion';
 
 const CLAVE_DE_32_BYTES = Buffer.alloc(32, 7).toString('base64');
 
@@ -29,6 +29,13 @@ describe('leerConfiguracion', () => {
         unEntornoValido({ DOMINIO_CORPORATIVO: ' Empresa.TEST ' }),
       ).dominioCorporativo,
     ).toBe('empresa.test');
+  });
+
+  it('lee el límite de inicios de sesión por IP con 20 por defecto', () => {
+    expect(leerLimiteDeInicios(unEntornoValido())).toBe(20);
+    expect(
+      leerLimiteDeInicios(unEntornoValido({ LIMITE_INICIOS_POR_IP: '500' })),
+    ).toBe(500);
   });
 
   it('permite ajustar el límite de registros por hora', () => {

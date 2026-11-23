@@ -50,6 +50,11 @@ export function leerLimiteDeRegistros(entorno: Entorno): number {
 
 const DOMINIO_CORPORATIVO_POR_DEFECTO = 'laprevia.pe';
 
+/** Inicios de sesión permitidos desde una IP cada 15 minutos; 20 si no se configura. */
+export function leerLimiteDeInicios(entorno: Entorno): number {
+  return leerEntero(entorno, 'LIMITE_INICIOS_POR_IP', 20);
+}
+
 function leerDominioCorporativo(entorno: Entorno): string {
   const dominio = entorno.DOMINIO_CORPORATIVO?.trim().toLowerCase();
   if (!dominio) return DOMINIO_CORPORATIVO_POR_DEFECTO;

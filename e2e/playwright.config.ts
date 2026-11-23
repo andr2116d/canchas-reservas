@@ -36,6 +36,7 @@ export default defineConfig({
         DOMINIO_CORPORATIVO: DOMINIO_DE_PRUEBA,
         // Todas las pruebas registran desde la misma IP.
         LIMITE_REGISTROS_POR_HORA: "1000",
+        LIMITE_INICIOS_POR_IP: "1000",
       },
       reuseExistingServer: false,
       timeout: 120_000,
