@@ -40,9 +40,10 @@ export async function iniciarSesion(pagina: Page, correo: string, contrasena: st
 export async function entrarComoAdministrador(pagina: Page) {
   const admin = crearAdministradorDePrueba();
   await iniciarSesion(pagina, admin.correo, admin.contrasena);
-  await expect(pagina).toHaveURL("/cambiar-contrasena");
+  // Con varias pruebas en paralelo, verificar la contraseña (argon2) puede tardar más de 5 s.
+  await expect(pagina).toHaveURL("/cambiar-contrasena", { timeout: 20_000 });
   await pagina.getByRole("button", { name: "Ahora no" }).click();
-  await expect(pagina).toHaveURL("/administracion");
+  await expect(pagina).toHaveURL("/administracion", { timeout: 20_000 });
 }
 
 /** Crea la recepcionista con la sesión del administrador abierta en la página y devuelve su id. */
