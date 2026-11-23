@@ -4,7 +4,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
 import type { DatosDeTarifa } from "../esquemas/tarifa.schema";
 import type { TipoDeCancha } from "../servicios/tarifas";
-import { filtrarMonto } from "../utilidades/filtrar-monto";
+import { filtrarMonto } from "@/compartido/formulario/filtrar-monto";
 import { SelectorDeDuracion } from "./selector-de-duracion";
 
 const OPCIONES_DEL_SOBRANTE = [
