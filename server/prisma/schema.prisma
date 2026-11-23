@@ -58,6 +58,7 @@ model Usuario {
   accesos                   RegistroAcceso[]
   accionesRecibidas         RegistroAuditoria[] @relation("AccionesRecibidas")
   accionesEjecutadas        RegistroAuditoria[] @relation("AccionesEjecutadas")
+  tarifasGuardadas          TarifaDeCancha[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -111,4 +112,26 @@ model RegistroAuditoria {
 
   @@index([usuarioAfectadoId, ocurridoEn])
   @@map("registro_auditoria")
+}
+
+enum TipoDeCancha {
+  FUTBOL_5 @map("futbol_5")
+  FUTBOL_7 @map("futbol_7")
+
+  @@map("tipo_de_cancha")
+}
+
+/// Cada versión guardada de la tarifa de un tipo de cancha; la vigente es la más reciente.
+model TarifaDeCancha {
+  id                    Int          @id @default(autoincrement())
+  tipoDeCancha          TipoDeCancha @map("tipo_de_cancha")
+  precioDia             Decimal      @map("precio_dia") @db.Decimal(10, 2)
+  precioNoche           Decimal      @map("precio_noche") @db.Decimal(10, 2)
+  duracionDelTurnoHoras Int          @map("duracion_del_turno_horas") @db.SmallInt
+  guardadaPorId         Int          @map("guardada_por_id")
+  guardadaEn            DateTime     @default(now()) @map("guardada_en") @db.Timestamptz(3)
+  guardadaPor           Usuario      @relation(fields: [guardadaPorId], references: [id])
+
+  @@index([tipoDeCancha, guardadaEn])
+  @@map("tarifa_de_cancha")
 }
