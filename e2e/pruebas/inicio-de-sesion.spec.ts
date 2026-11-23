@@ -122,6 +122,13 @@ test("rechaza credenciales inválidas con un mensaje genérico", async ({ page }
   await expect(page).toHaveURL(RUTA_DE_ACCESO);
 });
 
+/** Comprueba que la cuenta ve el aviso de que no puede entrar a esa pantalla. */
+async function esperarSinPermiso(pagina: Page) {
+  await expect(pagina).toHaveURL("/acceso-no-autorizado");
+  await expect(pagina.getByRole("heading", { level: 1, name: "Esta zona no es para tu cuenta" })).toBeVisible();
+  await expect(pagina.getByText("Tu cuenta no tiene permiso para abrir esta pantalla.")).toBeVisible();
+}
+
 test("lleva al acceso si falta la sesión y bloquea paneles ajenos por URL directa", async ({ page }) => {
   const jugador = await crearJugador(page);
   await page.goto("/administracion");
@@ -131,10 +138,12 @@ test("lleva al acceso si falta la sesión y bloquea paneles ajenos por URL direc
 
   await page.goto("/recepcion");
 
-  await expect(page).toHaveURL("/acceso-no-autorizado");
-  await expect(page.getByRole("heading", { name: "Acceso no autorizado" })).toBeVisible();
+  await esperarSinPermiso(page);
   await expect(page.getByRole("heading", { name: "Recepción" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Volver a mi panel" }).click();
+  await page.goto("/administracion");
+  await esperarSinPermiso(page);
+  await expect(page.getByRole("heading", { name: "Administración" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Ir a mi panel" }).click();
   await expect(page).toHaveURL("/inicio");
 });
 
@@ -149,6 +158,12 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
   await cambiarContrasena(page);
   await expect(page).toHaveURL("/administracion");
   await expect(page.getByRole("heading", { name: "Administración" })).toBeVisible();
+  for (const ajena of ["/inicio", "/recepcion"]) {
+    await page.goto(ajena);
+    await esperarSinPermiso(page);
+  }
+  await page.getByRole("link", { name: "Ir a mi panel" }).click();
+  await expect(page).toHaveURL("/administracion");
   const recepcion = { correo: "turno." + randomUUID() + "@externo.test", contrasena: CONTRASENA_TEMPORAL };
   const creada = await page.request.post("/api/recepcionistas", {
     data: { ...recepcion, nombres: "Mateo", apellidos: "Paz León" },
@@ -162,8 +177,10 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
   await cambiarContrasena(page);
   await expect(page).toHaveURL("/recepcion");
   await expect(page.getByRole("heading", { name: "Recepción" })).toBeVisible();
-  await page.goto("/administracion");
-  await expect(page).toHaveURL("/acceso-no-autorizado");
+  for (const ajena of ["/administracion", "/inicio"]) {
+    await page.goto(ajena);
+    await esperarSinPermiso(page);
+  }
 });
 
 test("regresa al acceso cuando vence la sesión abierta", async ({ page }) => {

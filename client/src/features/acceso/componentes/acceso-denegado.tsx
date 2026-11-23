@@ -3,17 +3,22 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { destinoDeSesion, RUTA_DE_ACCESO } from "@/compartido/sesion/destino-de-sesion";
 import { consultarSesionEnServidor } from "@/compartido/sesion/sesion.servidor";
-import { TarjetaDeAcceso } from "./tarjeta-de-acceso";
+import { ACCION_PRINCIPAL_DEL_AVISO, PantallaDeAviso } from "@/compartido/ui/pantalla-de-aviso";
 
-/** Informa el rechazo y ofrece volver al panel de la sesión. */
+/** Avisa que la cuenta no puede abrir esa pantalla y la lleva de vuelta a su panel. */
 export async function AccesoDenegado() {
   const sesion = await consultarSesionEnServidor((await cookies()).toString());
   if (!sesion) redirect(RUTA_DE_ACCESO);
 
   return (
-    <TarjetaDeAcceso titulo="Acceso no autorizado">
-      <p className="mb-5 text-grava">Tu cuenta no tiene permiso para abrir esa pantalla.</p>
-      <Link href={destinoDeSesion(sesion)} prefetch={false} className="font-bold text-botella underline underline-offset-4">Volver a mi panel</Link>
-    </TarjetaDeAcceso>
+    <PantallaDeAviso
+      codigo="403"
+      titulo="Esta zona no es para tu cuenta"
+      mensaje="Tu cuenta no tiene permiso para abrir esta pantalla."
+    >
+      <Link href={destinoDeSesion(sesion)} prefetch={false} className={ACCION_PRINCIPAL_DEL_AVISO}>
+        Ir a mi panel
+      </Link>
+    </PantallaDeAviso>
   );
 }
