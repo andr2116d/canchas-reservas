@@ -16,6 +16,13 @@ export class HoraDelDia {
     return new HoraDelDia(Number(partes[1]) * 60 + Number(partes[2]));
   }
 
+  /** Hora de cierre: además de las horas del día, admite 24:00 (medianoche). */
+  static crearHastaMedianoche(texto: string): HoraDelDia {
+    return texto.trim() === '24:00'
+      ? new HoraDelDia(24 * 60)
+      : HoraDelDia.crear(texto);
+  }
+
   /** Admite 24:00 para el final de un turno que termina a medianoche. */
   static desdeMinutos(minutos: number): HoraDelDia {
     return new HoraDelDia(minutos);
