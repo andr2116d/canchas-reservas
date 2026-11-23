@@ -1,14 +1,14 @@
-import { enviarJson, type RespuestaDeLaApi } from "@/compartido/api/enviar-json";
+import { enviarJson } from "@/compartido/api/enviar-json";
+import {
+  type ErroresPorCampo,
+  type ResultadoDeAccion,
+  resultadoDeAccion,
+} from "@/compartido/api/resultado-de-accion";
 import type { DatosDeAlta, DatosDeEdicion } from "../esquemas/recepcionista.schema";
 
 const RUTA = "/api/recepcionistas";
 
-export type ErroresPorCampo = Record<string, string>;
-
-export type ResultadoDeAccion =
-  | { tipo: "hecho" }
-  | { tipo: "datos-rechazados"; errores: ErroresPorCampo }
-  | { tipo: "error"; mensaje: string };
+export type { ResultadoDeAccion };
 
 export type ResultadoDeAlta =
   | { tipo: "creada"; id: number }
@@ -20,24 +20,17 @@ function erroresDelFormulario({ correo, ...errores }: ErroresPorCampo): ErroresP
   return correo ? { ...errores, usuarioDeCorreo: correo } : errores;
 }
 
-function aResultado<T>(respuesta: RespuestaDeLaApi<T>): Exclude<ResultadoDeAccion, { tipo: "hecho" }> | undefined {
-  if (respuesta.tipo === "aceptado") return undefined;
-  if (respuesta.tipo === "rechazado" && Object.keys(respuesta.errores).length > 0) {
-    return { tipo: "datos-rechazados", errores: erroresDelFormulario(respuesta.errores) };
-  }
-  return { tipo: "error", mensaje: respuesta.mensaje };
-}
 
 export async function crearRecepcionista(datos: DatosDeAlta): Promise<ResultadoDeAlta> {
   const respuesta = await enviarJson<{ id: number }>(RUTA, "POST", datos);
   if (respuesta.tipo === "aceptado") return { tipo: "creada", id: respuesta.cuerpo.id };
   const reactivable = respuesta.tipo === "rechazado" ? respuesta.datos?.reactivable : undefined;
   if (reactivable) return { tipo: "reactivable", ...(reactivable as { id: number; nombres: string }) };
-  return aResultado(respuesta)!;
+  return resultadoDeAccion(respuesta, erroresDelFormulario) as Exclude<ResultadoDeAccion, { tipo: "hecho" }>;
 }
 
 async function accion(ruta: string, metodo: "POST" | "PATCH", cuerpo?: unknown): Promise<ResultadoDeAccion> {
-  return aResultado(await enviarJson(ruta, metodo, cuerpo)) ?? { tipo: "hecho" };
+  return resultadoDeAccion(await enviarJson(ruta, metodo, cuerpo), erroresDelFormulario);
 }
 
 export const editarRecepcionista = (id: number, datos: DatosDeEdicion) => accion(`${RUTA}/${id}`, "PATCH", datos);
