@@ -59,6 +59,7 @@ model Usuario {
   accionesRecibidas         RegistroAuditoria[] @relation("AccionesRecibidas")
   accionesEjecutadas        RegistroAuditoria[] @relation("AccionesEjecutadas")
   tarifasGuardadas          TarifaDeCancha[]
+  horariosGuardados         HorarioDeAtencion[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -134,4 +135,43 @@ model TarifaDeCancha {
 
   @@index([tipoDeCancha, guardadaEn])
   @@map("tarifa_de_cancha")
+}
+
+enum DiaDeLaSemana {
+  LUNES     @map("lunes")
+  MARTES    @map("martes")
+  MIERCOLES @map("miercoles")
+  JUEVES    @map("jueves")
+  VIERNES   @map("viernes")
+  SABADO    @map("sabado")
+  DOMINGO   @map("domingo")
+
+  @@map("dia_de_la_semana")
+}
+
+/// Cada versión guardada del horario de atención; la vigente es la más reciente.
+/// Las horas se guardan en minutos desde la medianoche.
+model HorarioDeAtencion {
+  id                      Int             @id @default(autoincrement())
+  minutoDeInicioDeLaNoche Int             @map("minuto_de_inicio_de_la_noche") @db.SmallInt
+  guardadoPorId           Int             @map("guardado_por_id")
+  guardadoEn              DateTime        @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  guardadoPor             Usuario         @relation(fields: [guardadoPorId], references: [id])
+  dias                    HorarioDelDia[]
+
+  @@index([guardadoEn])
+  @@map("horario_de_atencion")
+}
+
+/// Un día abierto de una versión del horario. Un día sin fila está cerrado.
+model HorarioDelDia {
+  horarioId               Int               @map("horario_id")
+  dia                     DiaDeLaSemana
+  minutoDeApertura        Int               @map("minuto_de_apertura") @db.SmallInt
+  minutoDeCierre          Int               @map("minuto_de_cierre") @db.SmallInt
+  minutoDeInicioDeLaNoche Int?              @map("minuto_de_inicio_de_la_noche") @db.SmallInt
+  horario                 HorarioDeAtencion @relation(fields: [horarioId], references: [id], onDelete: Cascade)
+
+  @@id([horarioId, dia])
+  @@map("horario_del_dia")
 }
