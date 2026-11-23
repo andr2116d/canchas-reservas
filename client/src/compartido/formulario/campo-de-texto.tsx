@@ -2,12 +2,12 @@
 
 import type { ChangeEvent, ClipboardEvent, InputHTMLAttributes, ReactNode } from "react";
 import { useFormContext, type UseFormRegisterReturn } from "react-hook-form";
-import type { DatosRegistro } from "../esquemas/registro.schema";
 import { EtiquetaDeCampo } from "./etiqueta-de-campo";
 
 export interface CampoDeTextoProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "name" | "id"> {
-  nombre: keyof DatosRegistro;
+  /** Nombre del campo en el formulario; también es su id. */
+  nombre: string;
   etiqueta: string;
   /** Texto de ayuda permanente, debajo del campo. */
   ayuda?: string;
@@ -74,12 +74,13 @@ export function CampoDeTexto({
   className = "",
   ...entrada
 }: CampoDeTextoProps) {
-  const { register, setValue, formState } = useFormContext<DatosRegistro>();
+  const { register, setValue, formState } = useFormContext();
   const registro = register(nombre);
   const eventos = eventosDeEntradaFiltrada(registro, filtrarEntrada, (valor) =>
     setValue(nombre, valor, { shouldDirty: true, shouldValidate: true }),
   );
-  const error = formState.errors[nombre]?.message;
+  const mensaje = formState.errors[nombre]?.message;
+  const error = typeof mensaje === "string" ? mensaje : undefined;
   const idAyuda = `${nombre}-ayuda`;
   const idError = `${nombre}-error`;
   const descripcion = [ayuda && idAyuda, error && idError].filter(Boolean).join(" ");

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { LARGOS } from "../esquemas/registro.schema";
-import { CampoDeTexto } from "./campo-de-texto";
+import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
+import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
 import { IndicadorDeSeguridad } from "./indicador-de-seguridad";
 
 /** Contraseña nueva con un botón para mostrarla y un indicador de qué tan segura es. */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import type { DatosRegistro, TipoDocumento } from "../esquemas/registro.schema";
+import type { TipoDocumento } from "./reglas-de-datos-personales";
 
 const OPCIONES: { valor: TipoDocumento; texto: string }[] = [
   { valor: "DNI", texto: "DNI" },
@@ -10,7 +10,7 @@ const OPCIONES: { valor: TipoDocumento; texto: string }[] = [
 
 /** Elección entre DNI y carné de extranjería, a un toque y sin lista desplegable. */
 export function SelectorTipoDocumento() {
-  const { register } = useFormContext<DatosRegistro>();
+  const { register } = useFormContext();
 
   return (
     <fieldset className="flex flex-col gap-1.5">

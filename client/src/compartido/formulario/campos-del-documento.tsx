@@ -1,8 +1,7 @@
 "use client";
 
 import { useFormContext, useWatch } from "react-hook-form";
-import type { DatosRegistro } from "../esquemas/registro.schema";
-import { filtrarCarneExtranjeria, filtrarDni } from "../utilidades/filtros-de-entrada";
+import { filtrarCarneExtranjeria, filtrarDni } from "./filtros-de-entrada";
 import { CampoDeTexto } from "./campo-de-texto";
 import { SelectorTipoDocumento } from "./selector-tipo-documento";
 
@@ -11,7 +10,7 @@ import { SelectorTipoDocumento } from "./selector-tipo-documento";
  * con carné de extranjería, hasta 12 letras o números.
  */
 export function CamposDelDocumento() {
-  const { control } = useFormContext<DatosRegistro>();
+  const { control } = useFormContext();
   const tipoDocumento = useWatch({ control, name: "tipoDocumento" });
 
   return (

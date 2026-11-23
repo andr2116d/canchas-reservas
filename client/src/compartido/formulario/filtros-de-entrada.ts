@@ -1,4 +1,4 @@
-import { LARGOS } from "../esquemas/registro.schema";
+import { LARGOS } from "./reglas-de-datos-personales";
 
 /** Solo dígitos y hasta un largo: lo que sobra se descarta al escribir o pegar. */
 const digitosHasta =

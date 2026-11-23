@@ -3,12 +3,13 @@
 import type { FormEventHandler, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 import { usePaginaActiva } from "../hooks/use-pagina-activa";
-import { type DatosRegistro, LARGOS } from "../esquemas/registro.schema";
-import { filtrarCelular, filtrarDorsal } from "../utilidades/filtros-de-entrada";
+import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
+import { CamposDelDocumento } from "@/compartido/formulario/campos-del-documento";
+import { filtrarCelular, filtrarDorsal } from "@/compartido/formulario/filtros-de-entrada";
+import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
+import type { DatosRegistro } from "../esquemas/registro.schema";
 import { AceptacionLegalDelRegistro } from "./aceptacion-legal-del-registro";
 import { CampoContrasena } from "./campo-contrasena";
-import { CampoDeTexto } from "./campo-de-texto";
-import { CamposDelDocumento } from "./campos-del-documento";
 
 interface GrupoProps {
   titulo: string;
