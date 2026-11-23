@@ -20,7 +20,7 @@ describe('Celular', () => {
     ['812345678', 'El celular debe empezar con 9.'],
     ['98765432', 'El celular debe tener 9 dígitos.'],
     ['9876543210', 'El celular debe tener 9 dígitos.'],
-    ['', 'Ingresa tu número de celular.'],
+    ['', 'Ingresa el número de celular.'],
   ])('rechaza "%s" con el mensaje: %s', (numero, mensaje) => {
     expect(() => Celular.crear(numero)).toThrow(
       new ValorInvalidoError(mensaje),

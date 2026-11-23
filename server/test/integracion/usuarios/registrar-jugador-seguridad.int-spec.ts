@@ -29,7 +29,7 @@ describe('POST /api/jugadores · seguridad', () => {
 
     expect(respuesta.status).toBe(429);
     expect(respuesta.body.mensaje).toBe(
-      'Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.',
+      'Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.',
     );
   });
 

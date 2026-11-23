@@ -15,9 +15,7 @@ describe('FechaNacimiento', () => {
 
   it('rechaza a quien cumple 18 años mañana', () => {
     expect(() => FechaNacimiento.crear('2008-11-23', HOY)).toThrow(
-      new ValorInvalidoError(
-        'Debes tener al menos 18 años para crear tu cuenta.',
-      ),
+      new ValorInvalidoError('Debe tener al menos 18 años.'),
     );
   });
 
@@ -26,9 +24,7 @@ describe('FechaNacimiento', () => {
     const nocheEnLima = new Date('2026-11-23T02:00:00.000Z');
 
     expect(() => FechaNacimiento.crear('2008-11-23', nocheEnLima)).toThrow(
-      new ValorInvalidoError(
-        'Debes tener al menos 18 años para crear tu cuenta.',
-      ),
+      new ValorInvalidoError('Debe tener al menos 18 años.'),
     );
   });
 
@@ -45,12 +41,12 @@ describe('FechaNacimiento', () => {
   });
 
   it.each([
-    ['', 'Ingresa tu fecha de nacimiento.'],
+    ['', 'Ingresa la fecha de nacimiento.'],
     ['14/05/1998', 'La fecha de nacimiento no es válida.'],
     ['1998-02-30', 'La fecha de nacimiento no es válida.'],
     ['1998-13-01', 'La fecha de nacimiento no es válida.'],
     ['2027-01-01', 'La fecha de nacimiento no puede ser futura.'],
-    ['1899-12-31', 'Revisa el año de tu fecha de nacimiento.'],
+    ['1899-12-31', 'Revisa el año de la fecha de nacimiento.'],
   ])('rechaza "%s": %s', (fecha, mensaje) => {
     expect(() => FechaNacimiento.crear(fecha, HOY)).toThrow(
       new ValorInvalidoError(mensaje),

@@ -33,7 +33,7 @@ export class FechaNacimiento {
   static crear(fecha: string, ahora: Date): FechaNacimiento {
     const limpia = fecha.trim();
     if (limpia === '') {
-      throw new ValorInvalidoError('Ingresa tu fecha de nacimiento.');
+      throw new ValorInvalidoError('Ingresa la fecha de nacimiento.');
     }
     const partes = FORMATO_FECHA.exec(limpia);
     if (!partes || !esFechaReal(+partes[1], +partes[2], +partes[3])) {
@@ -46,12 +46,10 @@ export class FechaNacimiento {
       );
     }
     if (+partes[1] < ANIO_MINIMO) {
-      throw new ValorInvalidoError('Revisa el año de tu fecha de nacimiento.');
+      throw new ValorInvalidoError('Revisa el año de la fecha de nacimiento.');
     }
     if (edadCumplida(limpia, hoy) < EDAD_MINIMA) {
-      throw new ValorInvalidoError(
-        `Debes tener al menos ${EDAD_MINIMA} años para crear tu cuenta.`,
-      );
+      throw new ValorInvalidoError(`Debe tener al menos ${EDAD_MINIMA} años.`);
     }
     return new FechaNacimiento(limpia);
   }

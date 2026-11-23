@@ -23,7 +23,7 @@ export class ReglasDeCorreo {
     if (this.correspondeAlRol(rol, correo)) return correo;
     throw new ValorInvalidoError(
       rol === 'JUGADOR'
-        ? `Usa tu correo personal: @${this.dominioCorporativo} es solo para el personal del local.`
+        ? `Usa un correo personal: @${this.dominioCorporativo} es solo para el personal del local.`
         : `Usa un correo @${this.dominioCorporativo}.`,
     );
   }

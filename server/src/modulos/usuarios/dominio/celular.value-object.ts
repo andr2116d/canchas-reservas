@@ -7,7 +7,7 @@ export class Celular {
   static crear(numero: string): Celular {
     const limpio = numero.trim();
     if (limpio === '') {
-      throw new ValorInvalidoError('Ingresa tu número de celular.');
+      throw new ValorInvalidoError('Ingresa el número de celular.');
     }
     if (!/^\d+$/.test(limpio)) {
       throw new ValorInvalidoError('El celular solo debe contener números.');

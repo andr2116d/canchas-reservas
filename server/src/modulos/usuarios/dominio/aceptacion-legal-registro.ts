@@ -1,7 +1,7 @@
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
 
 export const MENSAJE_ACEPTACION_LEGAL =
-  'Acepta los términos y la política de privacidad para crear tu cuenta.';
+  'Acepta los términos y la política de privacidad para crear la cuenta.';
 const VERSION_LEGAL_DEL_REGISTRO = 'registro-1';
 
 /** Comprueba que el jugador aceptó la versión mostrada en el formulario. */

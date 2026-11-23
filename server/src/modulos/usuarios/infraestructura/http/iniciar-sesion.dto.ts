@@ -14,7 +14,7 @@ export class IniciarSesionDto implements DatosInicioSesion {
 }
 
 export class CambiarContrasenaTemporalDto {
-  @IsString({ message: 'Ingresa tu nueva contraseña.' })
+  @IsString({ message: 'Ingresa la nueva contraseña.' })
   @Length(1, 64, {
     message: 'La contraseña no puede tener más de 64 caracteres.',
   })

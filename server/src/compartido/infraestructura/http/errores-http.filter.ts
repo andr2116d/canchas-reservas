@@ -28,7 +28,7 @@ const MENSAJES_POR_ESTADO: Record<number, string> = {
   403: 'No tienes permiso para hacer esto.',
   404: 'No encontramos lo que buscas.',
   413: 'Los datos enviados son demasiado grandes.',
-  429: 'Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.',
+  429: 'Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.',
 };
 const MENSAJE_INESPERADO = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
 

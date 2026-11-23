@@ -14,7 +14,7 @@ export class Correo {
   /** Guarda la dirección en minúscula para que la búsqueda no dependa de mayúsculas. */
   static crear(direccion: string): Correo {
     const normalizada = direccion.trim().toLowerCase();
-    if (normalizada === '') throw new ValorInvalidoError('Ingresa tu correo.');
+    if (normalizada === '') throw new ValorInvalidoError('Ingresa el correo.');
     if (normalizada.length > LARGO_MAXIMO) {
       throw new ValorInvalidoError(
         'El correo no puede tener más de 254 caracteres.',

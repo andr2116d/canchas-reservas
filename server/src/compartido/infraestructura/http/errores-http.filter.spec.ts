@@ -80,7 +80,7 @@ describe('ErroresHttpFilter', () => {
     [
       new HttpException('Too Many Requests', HttpStatus.TOO_MANY_REQUESTS),
       429,
-      'Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.',
+      'Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.',
     ],
   ])('traduce %s a un mensaje en español', (error, estado, mensaje) => {
     expect(capturarRespuesta(error)).toEqual({

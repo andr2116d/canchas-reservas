@@ -32,7 +32,7 @@ describe('ReglasDeCorreo', () => {
       reglas.exigirParaRol('JUGADOR', Correo.crear('ana@laprevia.pe')),
     ).toThrow(
       new ValorInvalidoError(
-        'Usa tu correo personal: @laprevia.pe es solo para el personal del local.',
+        'Usa un correo personal: @laprevia.pe es solo para el personal del local.',
       ),
     );
   });

@@ -15,8 +15,8 @@ describe('NombrePersona', () => {
   });
 
   it.each([
-    ['nombres', 'Ingresa tus nombres.'],
-    ['apellidos', 'Ingresa tus apellidos.'],
+    ['nombres', 'Ingresa los nombres.'],
+    ['apellidos', 'Ingresa los apellidos.'],
   ] as const)('pide %s cuando llegan vacíos', (etiqueta, mensaje) => {
     expect(() => NombrePersona.crear('   ', etiqueta)).toThrow(
       new ValorInvalidoError(mensaje),

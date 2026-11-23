@@ -33,7 +33,7 @@ describe('Correo', () => {
 
   it('rechaza un correo vacío', () => {
     expect(() => Correo.crear('  ')).toThrow(
-      new ValorInvalidoError('Ingresa tu correo.'),
+      new ValorInvalidoError('Ingresa el correo.'),
     );
   });
 

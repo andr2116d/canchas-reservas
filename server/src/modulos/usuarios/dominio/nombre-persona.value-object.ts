@@ -12,7 +12,7 @@ export class NombrePersona {
     etiqueta: 'nombres' | 'apellidos',
   ): NombrePersona {
     const limpio = texto.trim().replace(/\s+/g, ' ');
-    if (limpio === '') throw new ValorInvalidoError(`Ingresa tus ${etiqueta}.`);
+    if (limpio === '') throw new ValorInvalidoError(`Ingresa los ${etiqueta}.`);
     if (limpio.length > LARGO_MAXIMO) {
       throw new ValorInvalidoError(
         `Tus ${etiqueta} no pueden tener más de ${LARGO_MAXIMO} caracteres.`,

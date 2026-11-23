@@ -203,7 +203,7 @@ describe('POST /api/jugadores', () => {
 
       expect(respuesta.status).toBe(400);
       expect(respuesta.body.errores).toEqual({
-        fechaNacimiento: 'Debes tener al menos 18 años para crear tu cuenta.',
+        fechaNacimiento: 'Debe tener al menos 18 años.',
       });
       expect(await prisma.usuario.count()).toBe(0);
     });
@@ -216,7 +216,7 @@ describe('POST /api/jugadores', () => {
       expect(respuesta.status).toBe(400);
       expect(respuesta.body.errores).toEqual({
         correo:
-          'Usa tu correo personal: @laprevia.pe es solo para el personal del local.',
+          'Usa un correo personal: @laprevia.pe es solo para el personal del local.',
       });
       expect(await prisma.usuario.count()).toBe(0);
     });
@@ -228,7 +228,7 @@ describe('POST /api/jugadores', () => {
 
       expect(respuesta.status).toBe(400);
       expect(respuesta.body.errores.tipoDocumento).toBe(
-        'Elige tu tipo de documento.',
+        'Elige el tipo de documento.',
       );
     });
 

@@ -189,7 +189,7 @@ describe('RegistrarJugadorUseCase', () => {
 
     expect((error as ReglaInvalidaError).errores).toEqual({
       correo:
-        'Usa tu correo personal: @laprevia.pe es solo para el personal del local.',
+        'Usa un correo personal: @laprevia.pe es solo para el personal del local.',
     });
     expect(usuarios.todos()).toHaveLength(0);
   });
@@ -202,7 +202,7 @@ describe('RegistrarJugadorUseCase', () => {
     );
 
     expect((error as ReglaInvalidaError).errores).toEqual({
-      fechaNacimiento: 'Debes tener al menos 18 años para crear tu cuenta.',
+      fechaNacimiento: 'Debe tener al menos 18 años.',
     });
     expect(usuarios.todos()).toHaveLength(0);
   });

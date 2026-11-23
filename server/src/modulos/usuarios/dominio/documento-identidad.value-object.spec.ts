@@ -22,8 +22,8 @@ describe('DocumentoIdentidad', () => {
       ['4567-891', 'El DNI solo debe contener números.'],
       ['1234567', 'El DNI debe tener 8 dígitos.'],
       ['123456789', 'El DNI debe tener 8 dígitos.'],
-      ['', 'Ingresa tu número de documento.'],
-      ['   ', 'Ingresa tu número de documento.'],
+      ['', 'Ingresa el número de documento.'],
+      ['   ', 'Ingresa el número de documento.'],
     ])('rechaza "%s" con el mensaje: %s', (numero, mensaje) => {
       expect(() => DocumentoIdentidad.crear('DNI', numero)).toThrow(
         new ValorInvalidoError(mensaje),
@@ -80,7 +80,7 @@ describe('DocumentoIdentidad', () => {
 
   it('rechaza un tipo de documento que no existe', () => {
     expect(() => DocumentoIdentidad.crear('PASAPORTE', '123456789')).toThrow(
-      new ValorInvalidoError('Elige tu tipo de documento.'),
+      new ValorInvalidoError('Elige el tipo de documento.'),
     );
   });
 });
