@@ -50,6 +50,11 @@ export function leerLimiteDeRegistros(entorno: Entorno): number {
 
 const DOMINIO_CORPORATIVO_POR_DEFECTO = 'laprevia.pe';
 
+/** Peticiones a la API permitidas por minuto desde una IP; 100 si no se configura. */
+export function leerLimiteGeneral(entorno: Entorno): number {
+  return leerEntero(entorno, 'LIMITE_GENERAL_POR_MINUTO', 100);
+}
+
 /** Inicios de sesión permitidos desde una IP cada 15 minutos; 20 si no se configura. */
 export function leerLimiteDeInicios(entorno: Entorno): number {
   return leerEntero(entorno, 'LIMITE_INICIOS_POR_IP', 20);

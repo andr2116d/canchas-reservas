@@ -37,6 +37,7 @@ export default defineConfig({
         // Todas las pruebas registran desde la misma IP.
         LIMITE_REGISTROS_POR_HORA: "1000",
         LIMITE_INICIOS_POR_IP: "1000",
+        LIMITE_GENERAL_POR_MINUTO: "100000",
       },
       reuseExistingServer: false,
       timeout: 120_000,

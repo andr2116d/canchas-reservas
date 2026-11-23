@@ -1,4 +1,8 @@
-import { leerConfiguracion, leerLimiteDeInicios } from './configuracion';
+import {
+  leerConfiguracion,
+  leerLimiteDeInicios,
+  leerLimiteGeneral,
+} from './configuracion';
 
 const CLAVE_DE_32_BYTES = Buffer.alloc(32, 7).toString('base64');
 
@@ -29,6 +33,13 @@ describe('leerConfiguracion', () => {
         unEntornoValido({ DOMINIO_CORPORATIVO: ' Empresa.TEST ' }),
       ).dominioCorporativo,
     ).toBe('empresa.test');
+  });
+
+  it('lee el límite general de peticiones por minuto con 100 por defecto', () => {
+    expect(leerLimiteGeneral(unEntornoValido())).toBe(100);
+    expect(
+      leerLimiteGeneral(unEntornoValido({ LIMITE_GENERAL_POR_MINUTO: '900' })),
+    ).toBe(900);
   });
 
   it('lee el límite de inicios de sesión por IP con 20 por defecto', () => {
