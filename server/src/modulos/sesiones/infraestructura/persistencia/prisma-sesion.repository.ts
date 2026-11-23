@@ -39,6 +39,7 @@ export class PrismaSesionRepository implements SesionRepository {
       rol: fila.usuario.rol,
       activa: fila.usuario.estado === 'ACTIVO',
       requiereCambiarContrasena: fila.usuario.requiereCambiarContrasena,
+      cambioOmitido: fila.cambioOmitido,
     };
   }
 
@@ -49,6 +50,13 @@ export class PrismaSesionRepository implements SesionRepository {
       WHERE token_hash = ${sesion.tokenHash} AND expira_en > ${sesion.ultimaActividadEn}
         AND EXISTS (SELECT 1 FROM usuario WHERE id = sesion.usuario_id AND estado = 'activo')`;
     return actualizadas === 1;
+  }
+
+  async omitirCambio(tokenHash: string): Promise<void> {
+    await this.prisma.sesion.updateMany({
+      where: { tokenHash },
+      data: { cambioOmitido: true },
+    });
   }
 
   async eliminar(tokenHash: string): Promise<void> {

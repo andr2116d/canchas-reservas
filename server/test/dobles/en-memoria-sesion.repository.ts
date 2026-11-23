@@ -1,4 +1,5 @@
 import type { Sesion } from '../../src/modulos/sesiones/dominio/sesion.entity';
+import type { AccesoDeSesion } from '../../src/modulos/sesiones/dominio/permisos-de-sesion';
 import type {
   SesionConAcceso,
   SesionRepository,
@@ -7,6 +8,15 @@ import type {
 /** Repositorio en memoria para probar casos de uso sin base de datos. */
 export class EnMemoriaSesionRepository implements SesionRepository {
   private readonly sesiones = new Map<string, Sesion>();
+  private readonly omitidas = new Set<string>();
+
+  /** @param acceso rol y estado de la contraseña de la persona de todas las sesiones. */
+  constructor(
+    private readonly acceso: AccesoDeSesion = {
+      rol: 'JUGADOR',
+      requiereCambiarContrasena: false,
+    },
+  ) {}
 
   guardar(sesion: Sesion): Promise<void> {
     this.sesiones.set(sesion.tokenHash, sesion);
@@ -19,8 +29,8 @@ export class EnMemoriaSesionRepository implements SesionRepository {
       sesion && {
         sesion,
         activa: true,
-        rol: 'JUGADOR',
-        requiereCambiarContrasena: false,
+        ...this.acceso,
+        cambioOmitido: this.omitidas.has(tokenHash),
       },
     );
   }
@@ -29,6 +39,11 @@ export class EnMemoriaSesionRepository implements SesionRepository {
     if (!this.sesiones.has(sesion.tokenHash)) return false;
     await this.guardar(sesion);
     return true;
+  }
+
+  omitirCambio(tokenHash: string): Promise<void> {
+    this.omitidas.add(tokenHash);
+    return Promise.resolve();
   }
 
   eliminar(tokenHash: string): Promise<void> {

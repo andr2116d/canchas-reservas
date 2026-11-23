@@ -17,4 +17,7 @@ export interface SesionRepository {
   actualizarActividad(sesion: Sesion): Promise<boolean>;
 
   eliminar(tokenHash: string): Promise<void>;
+
+  /** Marca que en esta sesión se cambiará la contraseña temporal más tarde. */
+  omitirCambio(tokenHash: string): Promise<void>;
 }

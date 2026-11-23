@@ -67,6 +67,33 @@ describe('Permisos de sesión', () => {
     ).toBe(false);
   });
 
+  it('al omitir el cambio, abre el panel del rol y sigue permitiendo cambiar la contraseña', () => {
+    const acceso = {
+      rol: 'RECEPCIONISTA',
+      requiereCambiarContrasena: true,
+      cambioOmitido: true,
+    } as const;
+
+    expect(puedeAcceder(acceso, 'panel:recepcion')).toBe(true);
+    expect(puedeAcceder(acceso, 'panel:administracion')).toBe(false);
+    expect(puedeAcceder(acceso, 'sesion:cambiar-contrasena-temporal')).toBe(
+      true,
+    );
+  });
+
+  it('ignora la omisión si la contraseña ya no es temporal', () => {
+    expect(
+      puedeAcceder(
+        {
+          rol: 'RECEPCIONISTA',
+          requiereCambiarContrasena: false,
+          cambioOmitido: true,
+        },
+        'sesion:cambiar-contrasena-temporal',
+      ),
+    ).toBe(false);
+  });
+
   it('deniega el cambio temporal a una cuenta que completó el primer acceso', () => {
     expect(
       puedeAcceder(

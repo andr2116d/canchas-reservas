@@ -4,6 +4,7 @@ import type { SesionRepository } from '../dominio/sesion.repository';
 import type { GeneradorTokenSesion } from './generador-token-sesion.port';
 
 export interface SesionValida extends AccesoDeSesion {
+  cambioOmitido: boolean;
   usuarioId: number;
   tokenHash: string;
   venceEn: Date;
@@ -31,7 +32,7 @@ export class ValidarSesionUseCase {
     const ahora = this.reloj.ahora();
     if (!acceso?.activa || !acceso.sesion.estaVigente(ahora)) return undefined;
 
-    const { rol, requiereCambiarContrasena } = acceso;
+    const { rol, requiereCambiarContrasena, cambioOmitido = false } = acceso;
     let sesion = acceso.sesion;
     if (renovar(acceso)) {
       sesion = sesion.registrarActividad(ahora);
@@ -43,6 +44,7 @@ export class ValidarSesionUseCase {
       tokenHash: sesion.tokenHash,
       rol,
       requiereCambiarContrasena,
+      cambioOmitido,
       venceEn: sesion.venceEn(),
     };
   }

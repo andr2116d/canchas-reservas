@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Post,
   Req,
   Res,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   type Configuracion,
 } from '../../../../compartido/infraestructura/configuracion/configuracion';
 import { CerrarSesionUseCase } from '../../aplicacion/cerrar-sesion.use-case';
+import { OmitirCambioDeContrasenaUseCase } from '../../aplicacion/omitir-cambio-de-contrasena.use-case';
 import type { SesionValida } from '../../aplicacion/validar-sesion.use-case';
 import { borrarCookieDeSesion, leerTokenDeSesion } from './cookie-de-sesion';
 import { Publico } from './publico.decorator';
@@ -25,14 +27,22 @@ import { SesionDeLaSolicitud } from './sesion-de-la-solicitud.decorator';
 export class SesionesController {
   constructor(
     private readonly cerrarSesion: CerrarSesionUseCase,
+    private readonly omitirCambioDeContrasena: OmitirCambioDeContrasenaUseCase,
     @Inject(CONFIGURACION) private readonly configuracion: Configuracion,
   ) {}
 
   @Get('actual')
   @RequerirPermiso('sesion:consultar')
   consultar(@SesionDeLaSolicitud() sesion: SesionValida) {
-    const { rol, requiereCambiarContrasena, venceEn } = sesion;
-    return { rol, requiereCambiarContrasena, venceEn };
+    const { rol, requiereCambiarContrasena, cambioOmitido, venceEn } = sesion;
+    return { rol, requiereCambiarContrasena, cambioOmitido, venceEn };
+  }
+
+  @Post('actual/cambio-omitido')
+  @RequerirPermiso('sesion:cambiar-contrasena-temporal')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  omitirCambio(@SesionDeLaSolicitud() sesion: SesionValida): Promise<void> {
+    return this.omitirCambioDeContrasena.ejecutar(sesion);
   }
 
   @Delete('actual')

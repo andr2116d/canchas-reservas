@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { RELOJ, type Reloj } from '../../compartido/aplicacion/reloj.port';
 import { AbrirSesionUseCase } from './aplicacion/abrir-sesion.use-case';
 import { CerrarSesionUseCase } from './aplicacion/cerrar-sesion.use-case';
+import { OmitirCambioDeContrasenaUseCase } from './aplicacion/omitir-cambio-de-contrasena.use-case';
 import {
   GENERADOR_TOKEN_SESION,
   type GeneradorTokenSesion,
@@ -54,6 +55,12 @@ const DEPENDENCIAS = [SESION_REPOSITORY, GENERADOR_TOKEN_SESION, RELOJ];
         generador: GeneradorTokenSesion,
       ) => new CerrarSesionUseCase(sesiones, generador),
       inject: [SESION_REPOSITORY, GENERADOR_TOKEN_SESION],
+    },
+    {
+      provide: OmitirCambioDeContrasenaUseCase,
+      useFactory: (sesiones: SesionRepository) =>
+        new OmitirCambioDeContrasenaUseCase(sesiones),
+      inject: [SESION_REPOSITORY],
     },
     { provide: APP_GUARD, useClass: SesionGuard },
   ],
