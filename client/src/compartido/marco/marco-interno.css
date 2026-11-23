@@ -107,8 +107,14 @@
   margin: 0 auto;
   width: min(72rem, calc(100% - 1.5rem));
   padding: 0.45rem 0.45rem 0.45rem 0.7rem;
-  border: 1px solid rgb(255 255 255 / 0.16);
   border-radius: 1.25rem;
+}
+
+/* Vidrio verde: la barra y cualquier control que flote sobre la cancha. */
+.barra-de-vidrio,
+.vidrio-verde {
+  position: relative;
+  border: 1px solid rgb(255 255 255 / 0.16);
   background: linear-gradient(180deg, rgb(28 84 66 / 0.66), rgb(14 59 46 / 0.54));
   color: var(--color-tiza);
   box-shadow:
@@ -119,8 +125,24 @@
   -webkit-backdrop-filter: blur(20px) saturate(170%);
 }
 
+.barra-de-vidrio {
+  position: sticky;
+}
+
+/* Vidrio claro: paneles que flotan sobre el fondo de franjas. */
+.vidrio-claro {
+  border: 1px solid rgb(255 255 255 / 0.9);
+  background: linear-gradient(180deg, rgb(251 252 248 / 0.84), rgb(244 246 239 / 0.72));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 18px 40px -26px rgb(19 38 30 / 0.45);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
 /* Reflejo del vidrio: una luz diagonal muy suave que no tapa nada. */
-.barra-de-vidrio::before {
+.barra-de-vidrio::before,
+.vidrio-verde::before {
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -131,8 +153,13 @@
 
 /* Sin desenfoque disponible, el vidrio se vuelve casi opaco para que se lea bien. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .barra-de-vidrio {
+  .barra-de-vidrio,
+  .vidrio-verde {
     background: rgb(14 59 46 / 0.97);
+  }
+
+  .vidrio-claro {
+    background: var(--color-papel);
   }
 }
 
