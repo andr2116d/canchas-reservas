@@ -40,6 +40,7 @@ test("la recepcionista solo puede cambiar su celular y ve el aviso del personal"
   await cerrarSesion(page);
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
   await page.getByRole("button", { name: "Ahora no" }).click();
+  await expect(page).toHaveURL("/recepcion");
 
   await page.goto("/recepcion/cuenta");
 
