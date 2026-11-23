@@ -61,13 +61,13 @@ describe("registrarJugador", () => {
 
   it("devuelve el mensaje general de otros rechazos, como el límite de intentos", async () => {
     responderCon(429, {
-      mensaje: "Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.",
+      mensaje: "Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.",
       errores: {},
     });
 
     await expect(registrarJugador(DATOS)).resolves.toEqual({
       tipo: "error",
-      mensaje: "Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.",
+      mensaje: "Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.",
     });
   });
 

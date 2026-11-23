@@ -156,7 +156,7 @@ describe("RegistroDeJugador", () => {
     it("muestra el aviso general cuando el server rechaza el intento", async () => {
       registrarJugadorSimulado.mockResolvedValue({
         tipo: "error",
-        mensaje: "Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.",
+        mensaje: "Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.",
       });
       const persona = mostrarRegistro();
       await llenarYaceptar(persona);
@@ -164,7 +164,7 @@ describe("RegistroDeJugador", () => {
       await persona.click(botonCrearCuenta());
 
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "Hiciste demasiados intentos. Espera un momento y vuelve a intentarlo.",
+        "Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.",
       );
     });
   });
