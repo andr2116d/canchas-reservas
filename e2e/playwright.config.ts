@@ -44,7 +44,11 @@ export default defineConfig({
       command: `npm run build -w client && npm run start -w client -- --port ${PUERTO_WEB}`,
       cwd: "..",
       url: `http://localhost:${PUERTO_WEB}/registro`,
-      env: { API_URL: `http://localhost:${PUERTO_API}`, CARPETA_DE_BUILD: ".next-e2e" },
+      env: {
+        API_URL: `http://localhost:${PUERTO_API}`,
+        CARPETA_DE_BUILD: ".next-e2e",
+        DOMINIO_CORPORATIVO: DOMINIO_DE_PRUEBA,
+      },
       reuseExistingServer: false,
       timeout: 180_000,
     },
