@@ -1,65 +1,64 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { consultarTurnosDelDia } from "../servicios/tarifas.api";
+import { useEffect } from "react";
+import { describe, expect, it } from "vitest";
+import { ProveedorDelBorrador, type SemanaEnBorrador, useBorrador } from "@/compartido/horario/borrador";
+import type { TarifaEnBorrador } from "@/compartido/horario/turnos";
 import { TurnosDelDia } from "./turnos-del-dia";
 
-vi.mock("../servicios/tarifas.api", () => ({ consultarTurnosDelDia: vi.fn() }));
-
-const ABIERTO = {
-  tipo: "consultado" as const,
-  turnos: {
-    estado: "ABIERTO" as const,
-    duracionDelTurnoHoras: 3,
-    inicioDeLaNoche: "18:00",
-    turnos: [
-      { desde: "14:00", hasta: "17:00", corto: false, total: "50.00", tramos: [{ franja: "DIA" as const, desde: "14:00", hasta: "17:00", monto: "50.00" }] },
-      {
-        desde: "17:00",
-        hasta: "20:00",
-        corto: false,
-        total: "83.33",
-        tramos: [
-          { franja: "DIA" as const, desde: "17:00", hasta: "18:00", monto: "16.67" },
-          { franja: "NOCHE" as const, desde: "18:00", hasta: "20:00", monto: "66.66" },
-        ],
-      },
-      { desde: "20:00", hasta: "22:00", corto: true, total: "66.67", tramos: [{ franja: "NOCHE" as const, desde: "20:00", hasta: "22:00", monto: "66.67" }] },
-    ],
-  },
+const SEMANA: SemanaEnBorrador = {
+  LUNES: { abre: "08:00", cierra: "22:00", inicioDeLaNoche: "18:00" },
+  SABADO: { abre: "08:00", cierra: "22:00", inicioDeLaNoche: "17:00" },
 };
+const FUTBOL_7: TarifaEnBorrador = { precioDia: "50", precioNoche: "100", horas: 3, ofreceTurnoCorto: false };
+
+function ConTarifa({ tarifa }: { tarifa?: TarifaEnBorrador }) {
+  const { publicarTarifa } = useBorrador();
+  useEffect(() => publicarTarifa("FUTBOL_7", tarifa), [publicarTarifa, tarifa]);
+  return null;
+}
+
+function mostrar(tarifa: TarifaEnBorrador | undefined = FUTBOL_7, semana: SemanaEnBorrador | undefined = SEMANA) {
+  render(
+    <ProveedorDelBorrador semanaInicial={semana}>
+      <ConTarifa tarifa={tarifa} />
+      <TurnosDelDia />
+    </ProveedorDelBorrador>,
+  );
+}
 
 describe("TurnosDelDia", () => {
-  beforeEach(() => vi.resetAllMocks());
-
   it("muestra los turnos del tipo y el día elegidos con su precio y su desglose", async () => {
-    vi.mocked(consultarTurnosDelDia).mockResolvedValue(ABIERTO);
-    const usuario = userEvent.setup();
-    render(<TurnosDelDia />);
+    mostrar();
 
-    await usuario.click(screen.getByRole("radio", { name: "Fútbol 7" }));
-    await usuario.click(screen.getByRole("radio", { name: "Sáb" }));
+    await userEvent.click(screen.getByRole("button", { name: "Fútbol 7" }));
 
-    expect(consultarTurnosDelDia).toHaveBeenLastCalledWith("FUTBOL_7", "SABADO");
-    const turnos = await screen.findAllByRole("listitem");
-    expect(turnos).toHaveLength(3);
-    expect(turnos[1]).toHaveTextContent("17:00 a 20:00");
-    expect(turnos[1]).toHaveTextContent("S/ 83.33");
-    expect(turnos[1]).toHaveTextContent("Día S/ 16.67 + noche S/ 66.66");
-    expect(within(turnos[2]).getByText("Turno corto")).toBeInTheDocument();
+    const turnos = screen.getAllByRole("listitem");
+    expect(turnos).toHaveLength(4);
+    expect(turnos[3]).toHaveTextContent("17:00 a 20:00");
+    expect(turnos[3]).toHaveTextContent("Día S/ 16.67 + noche S/ 66.66");
+    expect(turnos[3]).toHaveTextContent("S/ 83.33");
+    expect(screen.getByText("De 20:00 a 22:00 no se ofrece turno: no alcanza para uno completo.")).toBeInTheDocument();
   });
 
-  it("avisa si el día está cerrado o si falta el horario", async () => {
-    vi.mocked(consultarTurnosDelDia).mockResolvedValueOnce({ tipo: "consultado", turnos: { estado: "CERRADO" } });
-    render(<TurnosDelDia />);
+  it("usa la hora de noche propia del día", async () => {
+    mostrar();
 
-    expect(await screen.findByText("Ese día el local no abre.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Fútbol 7" }));
+    await userEvent.click(screen.getByRole("button", { name: "Sábado" }));
+
+    expect(screen.getByText(/precio de noche desde las 17:00/)).toBeInTheDocument();
+    expect(within(screen.getAllByRole("listitem")[3]).getByText("S/ 100.00")).toBeInTheDocument();
   });
 
-  it("explica por qué no pudo consultar", async () => {
-    vi.mocked(consultarTurnosDelDia).mockResolvedValue({ tipo: "error", mensaje: "Todavía no hay tarifa para fútbol 5." });
-    render(<TurnosDelDia />);
+  it("avisa si el día está cerrado, si falta el horario o si el tipo no tiene tarifa", async () => {
+    mostrar();
+    await userEvent.click(screen.getByRole("button", { name: "Fútbol 7" }));
+    await userEvent.click(screen.getByRole("button", { name: "Domingo" }));
+    expect(screen.getByText("El domingo el local no abre.")).toBeInTheDocument();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Todavía no hay tarifa para fútbol 5.");
+    await userEvent.click(screen.getByRole("button", { name: "Fútbol 5" }));
+    await userEvent.click(screen.getByRole("button", { name: "Lunes" }));
+    expect(screen.getByText("Fútbol 5 todavía no tiene tarifa.")).toBeInTheDocument();
   });
 });

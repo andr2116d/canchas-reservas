@@ -1,30 +1,25 @@
 "use client";
 
 const OPCION =
-  "cursor-pointer rounded-lg px-3 py-2 text-center text-sm font-semibold text-grava transition-colors " +
-  "has-checked:bg-papel has-checked:text-botella has-checked:shadow-sm has-focus-visible:outline-2 has-focus-visible:outline-botella";
+  "rounded-[0.6rem] px-2.5 py-1.5 text-[0.8rem] font-bold text-grava transition-colors hover:text-botella " +
+  "aria-pressed:bg-papel aria-pressed:text-botella aria-pressed:shadow-sm focus-visible:outline-2 focus-visible:outline-botella";
 
 interface SelectorSegmentadoProps<T extends string> {
-  leyenda: string;
   nombre: string;
   opciones: { valor: T; texto: string; nombreAccesible?: string }[];
   valor: T;
   elegir: (valor: T) => void;
 }
 
-/** Elección entre pocas opciones, a un toque y sin lista desplegable. */
-export function SelectorSegmentado<T extends string>({ leyenda, nombre, opciones, valor, elegir }: SelectorSegmentadoProps<T>) {
+/** Elección entre pocas opciones, a un toque y con el ancho de su contenido. */
+export function SelectorSegmentado<T extends string>({ nombre, opciones, valor, elegir }: SelectorSegmentadoProps<T>) {
   return (
-    <fieldset className="flex flex-col gap-1.5">
-      <legend className="mb-1.5 text-sm font-semibold text-tinta">{leyenda}</legend>
-      <div className="flex flex-wrap gap-1 rounded-xl bg-linea/60 p-1">
-        {opciones.map((opcion) => (
-          <label key={opcion.valor} className={`${OPCION} flex-1`}>
-            <input type="radio" name={nombre} value={opcion.valor} checked={valor === opcion.valor} onChange={() => elegir(opcion.valor)} aria-label={opcion.nombreAccesible} className="sr-only" />
-            {opcion.texto}
-          </label>
-        ))}
-      </div>
-    </fieldset>
+    <div role="group" aria-label={nombre} className="flex w-fit max-w-full flex-wrap gap-0.5 rounded-xl bg-linea/55 p-[3px]">
+      {opciones.map((opcion) => (
+        <button key={opcion.valor} type="button" aria-pressed={valor === opcion.valor} aria-label={opcion.nombreAccesible} onClick={() => elegir(opcion.valor)} className={OPCION}>
+          {opcion.texto}
+        </button>
+      ))}
+    </div>
   );
 }

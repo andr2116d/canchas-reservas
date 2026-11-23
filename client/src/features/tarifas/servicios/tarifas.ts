@@ -28,30 +28,3 @@ export interface TarifaDelTipo {
 export interface TarifasVigentes {
   tarifas: TarifaDelTipo[];
 }
-
-export interface Tramo {
-  franja: "DIA" | "NOCHE";
-  desde: string;
-  hasta: string;
-  monto: string;
-}
-
-export interface TurnoConPrecio {
-  desde: string;
-  hasta: string;
-  /** Rato final del día ofrecido aunque no alcance para un turno completo. */
-  corto: boolean;
-  total: string;
-  tramos: Tramo[];
-}
-
-/** Turnos de un tipo de cancha en un día, o por qué no hay. */
-export type TurnosConsultados =
-  | { estado: "SIN_HORARIO" | "CERRADO" }
-  | {
-      estado: "ABIERTO";
-      duracionDelTurnoHoras: number;
-      inicioDeLaNoche: string;
-      turnos: TurnoConPrecio[];
-      sinTurno?: { desde: string; hasta: string };
-    };

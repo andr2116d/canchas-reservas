@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { VistaDeHorario } from "@/compartido/horario/horario";
+import { ProveedorDelBorrador, type SemanaEnBorrador } from "@/compartido/horario/borrador";
 import { guardarTarifa } from "../servicios/tarifas.api";
 import type { TarifaDelTipo } from "../servicios/tarifas";
 import { TarjetaDeTarifa } from "./tarjeta-de-tarifa";
@@ -19,68 +19,72 @@ const VIGENTE = {
   guardadaPor: "Valeria León",
 };
 
-const HORARIO: VistaDeHorario = {
-  inicioDeLaNoche: "18:00",
-  dias: [
-    { dia: "LUNES", abierto: true, abre: "08:00", cierra: "22:00" },
-    { dia: "MARTES", abierto: true, abre: "08:00", cierra: "20:00" },
-    { dia: "DOMINGO", abierto: false },
-  ],
-  guardadoEn: "2026-11-23T01:30:00.000Z",
-  guardadoPor: "Valeria León",
+const SEMANA: SemanaEnBorrador = {
+  LUNES: { abre: "08:00", cierra: "22:00", inicioDeLaNoche: "18:00" },
+  MARTES: { abre: "08:00", cierra: "20:00", inicioDeLaNoche: "18:00" },
 };
 
-function unaTarifa(cambios: Partial<TarifaDelTipo> = {}): TarifaDelTipo {
-  return { tipo: "FUTBOL_7", vigente: VIGENTE, historial: [VIGENTE], ...cambios };
+function mostrar(cambios: Partial<TarifaDelTipo> = {}, semana: SemanaEnBorrador | null = SEMANA) {
+  const tarifa: TarifaDelTipo = { tipo: "FUTBOL_7", vigente: VIGENTE, historial: [VIGENTE], ...cambios };
+  render(
+    <ProveedorDelBorrador semanaInicial={semana ?? undefined}>
+      <TarjetaDeTarifa tarifa={tarifa} />
+    </ProveedorDelBorrador>,
+  );
 }
 
-const resumen = () => screen.getByRole("list", { name: "Turnos de cada día" });
+const duracion = () => screen.getByRole("group", { name: "Cada turno dura" });
+const turnosPorDia = () => within(screen.getByRole("list", { name: "Turnos por día" })).getAllByRole("listitem");
 
 describe("TarjetaDeTarifa", () => {
   beforeEach(() => vi.resetAllMocks());
 
   it("muestra la tarifa vigente, quién la guardó y desde cuándo", () => {
-    render(<TarjetaDeTarifa tarifa={unaTarifa()} horario={HORARIO} />);
+    mostrar();
 
     expect(screen.getByRole("heading", { name: "Fútbol 7" })).toBeInTheDocument();
     expect(screen.getByLabelText(/^Precio de día/)).toHaveValue("50.00");
     expect(screen.getByLabelText(/^Precio de noche/)).toHaveValue("100.00");
-    expect(screen.getByLabelText(/^Duración del turno/)).toHaveValue("3");
-    expect(screen.getByRole("radio", { name: /No ofrecer ese rato/ })).toBeChecked();
+    expect(duracion()).toHaveTextContent("3 horas");
+    expect(screen.getByRole("radio", { name: "No se ofrece" })).toBeChecked();
     expect(screen.getByText(/Vigente desde/)).toHaveTextContent("Vigente desde 22 nov 2026, 20:30 · por Valeria León");
   });
 
   it("avisa cuando el tipo todavía no tiene tarifa", () => {
-    render(<TarjetaDeTarifa tarifa={unaTarifa({ tipo: "FUTBOL_5", vigente: undefined, historial: [] })} horario={HORARIO} />);
+    mostrar({ tipo: "FUTBOL_5", vigente: undefined, historial: [] });
 
     expect(screen.getByText(/Todavía no tiene tarifa/)).toBeInTheDocument();
     expect(screen.getByLabelText(/^Precio de día/)).toHaveValue("");
   });
 
-  it("resume los turnos de cada día y el rato que queda sin turno", () => {
-    render(<TarjetaDeTarifa tarifa={unaTarifa()} horario={HORARIO} />);
+  it("cuenta los turnos de cada día y marca el día con rato sin turno", () => {
+    mostrar();
 
-    const dias = within(resumen()).getAllByRole("listitem").map((dia) => dia.textContent);
-    expect(dias).toEqual(["Lunes4 turnos · sin turno de 20:00 a 22:00", "Martes4 turnos", "DomingoCerrado"]);
+    const [lunes, martes, miercoles] = turnosPorDia();
+    expect(lunes).toHaveTextContent("Lun4");
+    expect(lunes).toHaveAccessibleName("Lunes: 4 turnos; de 20:00 a 22:00 sin turno");
+    expect(martes).toHaveAccessibleName("Martes: 4 turnos");
+    expect(miercoles).toHaveAccessibleName("Miércoles: cerrado");
   });
 
-  it("el resumen cambia al elegir ofrecer el rato final como turno corto", async () => {
-    render(<TarjetaDeTarifa tarifa={unaTarifa()} horario={HORARIO} />);
+  it("la duración se cambia con los botones y la cuenta se actualiza al momento", async () => {
+    mostrar();
 
-    await userEvent.click(screen.getByRole("radio", { name: /Ofrecerlo como turno corto/ }));
+    await userEvent.click(within(duracion()).getByRole("button", { name: "Una hora menos" }));
 
-    expect(within(resumen()).getAllByRole("listitem")[0]).toHaveTextContent("4 turnos + 1 corto de 20:00 a 22:00");
+    expect(duracion()).toHaveTextContent("2 horas");
+    expect(turnosPorDia()[0]).toHaveAccessibleName("Lunes: 7 turnos");
   });
 
-  it("sin horario guardado pide guardarlo para ver los turnos", () => {
-    render(<TarjetaDeTarifa tarifa={unaTarifa()} />);
+  it("sin horario pide guardarlo para contar los turnos", () => {
+    mostrar({}, null);
 
-    expect(screen.getByText("Guarda el horario de atención para ver los turnos de cada día.")).toBeInTheDocument();
+    expect(screen.getByText("Guarda el horario para contar los turnos de cada día.")).toBeInTheDocument();
   });
 
   it("no deja guardar un monto en cero y explica por qué", async () => {
     const usuario = userEvent.setup();
-    render(<TarjetaDeTarifa tarifa={unaTarifa()} horario={HORARIO} />);
+    mostrar();
 
     await usuario.clear(screen.getByLabelText(/^Precio de día/));
     await usuario.type(screen.getByLabelText(/^Precio de día/), "0");
@@ -90,14 +94,14 @@ describe("TarjetaDeTarifa", () => {
     expect(guardarTarifa).not.toHaveBeenCalled();
   });
 
-  it("guarda la tarifa con la opción del turno corto y avisa que rige para las reservas nuevas", async () => {
+  it("guarda con la opción del turno corto y avisa que las reservas ya hechas no cambian", async () => {
     vi.mocked(guardarTarifa).mockResolvedValue({ tipo: "guardada", cambio: true });
     const usuario = userEvent.setup();
-    render(<TarjetaDeTarifa tarifa={unaTarifa()} horario={HORARIO} />);
+    mostrar();
 
     await usuario.clear(screen.getByLabelText(/^Precio de noche/));
     await usuario.type(screen.getByLabelText(/^Precio de noche/), "120");
-    await usuario.click(screen.getByRole("radio", { name: /Ofrecerlo como turno corto/ }));
+    await usuario.click(screen.getByRole("radio", { name: /Se ofrece como turno corto/ }));
     await usuario.click(screen.getByRole("button", { name: "Guardar tarifa de fútbol 7" }));
 
     expect(guardarTarifa).toHaveBeenCalledWith("FUTBOL_7", {
@@ -106,13 +110,13 @@ describe("TarjetaDeTarifa", () => {
       duracionDelTurno: "3",
       ofreceTurnoCorto: true,
     });
-    expect(await screen.findByRole("status")).toHaveTextContent("Rige para las reservas nuevas");
+    expect(await screen.findByRole("status")).toHaveTextContent("las reservas ya hechas mantienen su precio");
     await waitFor(() => expect(navegar.refresh).toHaveBeenCalled());
   });
 
   it("avisa cuando no había nada que cambiar", async () => {
     vi.mocked(guardarTarifa).mockResolvedValue({ tipo: "guardada", cambio: false });
-    render(<TarjetaDeTarifa tarifa={unaTarifa()} horario={HORARIO} />);
+    mostrar();
 
     await userEvent.click(screen.getByRole("button", { name: "Guardar tarifa de fútbol 7" }));
 

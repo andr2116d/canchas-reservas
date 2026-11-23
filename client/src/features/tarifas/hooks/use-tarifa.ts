@@ -2,8 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { useBorrador } from "@/compartido/horario/borrador";
 import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
 import { type DatosDeTarifa, esquemaDeTarifa } from "../esquemas/tarifa.schema";
 import { guardarTarifa } from "../servicios/tarifas.api";
@@ -20,6 +21,18 @@ function valoresIniciales({ vigente }: TarifaDelTipo): DatosDeTarifa {
   };
 }
 
+/** Comparte con la vista previa la tarifa que se está editando, solo si sus datos son válidos. */
+function usePublicarTarifa(tipo: string, valores: DatosDeTarifa) {
+  const { publicarTarifa } = useBorrador();
+  const clave = JSON.stringify(valores);
+  useEffect(() => {
+    const leidos = esquemaDeTarifa.safeParse(JSON.parse(clave));
+    if (!leidos.success) return publicarTarifa(tipo, undefined);
+    const { precioDia, precioNoche, duracionDelTurno, ofreceTurnoCorto } = leidos.data;
+    publicarTarifa(tipo, { precioDia, precioNoche, horas: Number(duracionDelTurno), ofreceTurnoCorto });
+  }, [clave, tipo, publicarTarifa]);
+}
+
 /** Edita la tarifa de un tipo de cancha y refresca la pantalla al guardar. */
 export function useTarifa(tarifa: TarifaDelTipo) {
   const router = useRouter();
@@ -30,6 +43,7 @@ export function useTarifa(tarifa: TarifaDelTipo) {
     mode: "onTouched",
     defaultValues: valoresIniciales(tarifa),
   });
+  usePublicarTarifa(tarifa.tipo, useWatch({ control: formulario.control }) as DatosDeTarifa);
 
   const enviar = formulario.handleSubmit(async (datos) => {
     setAviso(undefined);

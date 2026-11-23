@@ -13,6 +13,8 @@ export interface CampoDeTextoProps
   etiqueta: string;
   /** Texto de ayuda permanente, debajo del campo. */
   ayuda?: string;
+  /** Texto fijo al inicio del campo, como «S/». */
+  prefijo?: string;
   /** Contenido al final del campo, por ejemplo un botón para mostrar la contraseña. */
   accesorio?: ReactNode;
   /** Los campos son obligatorios salvo que se indique lo contrario. */
@@ -88,6 +90,7 @@ export function CampoDeTexto({
   etiqueta,
   ayuda,
   accesorio,
+  prefijo,
   opcional = false,
   filtrarEntrada,
   className = "",
@@ -110,12 +113,17 @@ export function CampoDeTexto({
         {etiqueta}
       </EtiquetaDeCampo>
       <div className="relative">
+        {prefijo && (
+          <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3 flex items-center font-semibold text-grava">
+            {prefijo}
+          </span>
+        )}
         <input
           id={id}
           required={!opcional}
           aria-invalid={Boolean(error)}
           aria-describedby={descripcion || undefined}
-          className={`${ESTILO_ENTRADA} ${className}`}
+          className={`${ESTILO_ENTRADA} ${prefijo ? "pl-9" : ""} ${className}`}
           {...entrada}
           {...registro}
           {...eventos}
