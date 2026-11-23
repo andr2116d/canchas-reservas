@@ -12,6 +12,15 @@ export type Rol = keyof typeof PANELES;
 export interface DestinoDeSesion {
   rol: Rol;
   requiereCambiarContrasena: boolean;
+  /** En esta sesión se eligió cambiar la contraseña temporal más tarde. */
+  cambioOmitido?: boolean;
+}
+
+/** La contraseña es temporal y en esta sesión todavía no se eligió cambiarla después. */
+export function debePedirCambioDeContrasena(
+  sesion: Pick<DestinoDeSesion, "requiereCambiarContrasena" | "cambioOmitido">,
+): boolean {
+  return sesion.requiereCambiarContrasena && !sesion.cambioOmitido;
 }
 
 export interface EstadoDeSesion extends DestinoDeSesion {
@@ -19,5 +28,5 @@ export interface EstadoDeSesion extends DestinoDeSesion {
 }
 
 export function destinoDeSesion(sesion: DestinoDeSesion): string {
-  return sesion.requiereCambiarContrasena ? RUTA_DE_CAMBIO : PANELES[sesion.rol];
+  return debePedirCambioDeContrasena(sesion) ? RUTA_DE_CAMBIO : PANELES[sesion.rol];
 }

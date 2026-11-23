@@ -1,6 +1,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { destinoDeSesion, RUTA_DE_ACCESO, RUTA_DE_CAMBIO, type EstadoDeSesion, type Rol } from "./destino-de-sesion";
+import {
+  debePedirCambioDeContrasena,
+  destinoDeSesion,
+  RUTA_DE_ACCESO,
+  RUTA_DE_CAMBIO,
+  type EstadoDeSesion,
+  type Rol,
+} from "./destino-de-sesion";
 
 export function consultarApiPrivada(ruta: string, cookie: string): Promise<Response> {
   const url = process.env.API_URL ?? "http://localhost:3001";
@@ -19,7 +26,7 @@ export async function exigirPanel(rol: Rol) {
   const cookie = (await cookies()).toString();
   const sesion = await consultarSesionEnServidor(cookie);
   if (!sesion) redirect(RUTA_DE_ACCESO);
-  if (sesion.requiereCambiarContrasena) redirect(RUTA_DE_CAMBIO);
+  if (debePedirCambioDeContrasena(sesion)) redirect(RUTA_DE_CAMBIO);
   if (sesion.rol !== rol) redirect("/acceso-no-autorizado");
   return { cookie, sesion };
 }

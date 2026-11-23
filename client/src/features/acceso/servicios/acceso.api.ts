@@ -22,6 +22,25 @@ export function cambiarContrasenaTemporal(contrasena: string): Promise<Resultado
   return enviarAcceso("/api/sesiones/contrasena-temporal", "PATCH", { contrasena });
 }
 
+export type ResultadoDeOmision =
+  | { tipo: "omitido" }
+  | { tipo: "error"; mensaje: string; sesionVencida?: boolean };
+
+/** Deja el cambio de la contraseña temporal para después, solo en esta sesión. */
+export async function omitirCambioDeContrasena(): Promise<ResultadoDeOmision> {
+  try {
+    const respuesta = await fetch("/api/sesiones/actual/cambio-omitido", { method: "POST" });
+    if (respuesta.ok) return { tipo: "omitido" };
+    return {
+      tipo: "error",
+      mensaje: "No pudimos dejar el cambio para después. Inténtalo de nuevo.",
+      sesionVencida: respuesta.status === 401,
+    };
+  } catch {
+    return { tipo: "error", mensaje: "No pudimos conectar con La Previa. Inténtalo de nuevo." };
+  }
+}
+
 async function enviarAcceso(ruta: string, method: "POST" | "PATCH", datos: Credenciales | { contrasena: string }): Promise<ResultadoAcceso> {
   try {
     const respuesta = await fetch(ruta, {
