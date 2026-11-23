@@ -5,6 +5,11 @@ import {
   type HasheadorContrasena,
 } from './aplicacion/hasheador-contrasena.port';
 import { RegistrarRecepcionistaUseCase } from './aplicacion/registrar-recepcionista.use-case';
+import { SugerirCorreoInstitucionalUseCase } from './aplicacion/sugerir-correo-institucional.use-case';
+import {
+  USUARIO_REPOSITORY,
+  type UsuarioRepository,
+} from './dominio/usuario.repository';
 import {
   RECEPCIONISTA_REPOSITORY,
   type RecepcionistaRepository,
@@ -37,5 +42,11 @@ export const PROVIDERS_DE_RECEPCIONISTAS: Provider[] = [
       HASHEADOR_CONTRASENA,
       CONTEXTO_DEL_PERSONAL,
     ],
+  },
+  {
+    provide: SugerirCorreoInstitucionalUseCase,
+    useFactory: (usuarios: UsuarioRepository, correos: ReglasDeCorreo) =>
+      new SugerirCorreoInstitucionalUseCase(usuarios, correos),
+    inject: [USUARIO_REPOSITORY, ReglasDeCorreo],
   },
 ];
