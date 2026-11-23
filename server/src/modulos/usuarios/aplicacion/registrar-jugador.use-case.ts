@@ -5,7 +5,6 @@ import type {
   SesionAbierta,
 } from '../../sesiones/api-sesiones';
 import { validarVersionLegal } from '../dominio/aceptacion-legal-registro';
-import { Celular } from '../dominio/celular.value-object';
 import { Contrasena } from '../dominio/contrasena.value-object';
 import { Correo } from '../dominio/correo.value-object';
 import {
@@ -14,23 +13,18 @@ import {
 } from '../dominio/cuenta-ya-existe.error';
 import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
 import { Dorsal } from '../dominio/dorsal.value-object';
-import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
-import { NombrePersona } from '../dominio/nombre-persona.value-object';
 import type { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { Usuario } from '../dominio/usuario.entity';
 import type { UsuarioRepository } from '../dominio/usuario.repository';
+import {
+  construirDatosPersonales,
+  type DatosPersonalesEscritos,
+} from './datos-personales';
 import type { HasheadorContrasena } from './hasheador-contrasena.port';
 
 /** Datos tal como los escribe la persona en el formulario de registro. */
-export interface DatosRegistroJugador {
-  nombres: string;
-  apellidos: string;
-  /** AAAA-MM-DD, como la entrega un campo de fecha del navegador. */
-  fechaNacimiento: string;
-  tipoDocumento: string;
-  numeroDocumento: string;
+export interface DatosRegistroJugador extends DatosPersonalesEscritos {
   correo: string;
-  celular: string;
   contrasena: string;
   /** Opcional, del 1 al 99. */
   dorsal?: string;
@@ -105,14 +99,8 @@ function validarDatosDeRegistro(
   { reloj, correos }: ContextoDelRegistro,
 ) {
   return validarCampos({
-    nombres: () => NombrePersona.crear(datos.nombres, 'nombres'),
-    apellidos: () => NombrePersona.crear(datos.apellidos, 'apellidos'),
-    fechaNacimiento: () =>
-      FechaNacimiento.crear(datos.fechaNacimiento, reloj.ahora()),
-    numeroDocumento: () =>
-      DocumentoIdentidad.crear(datos.tipoDocumento, datos.numeroDocumento),
+    ...construirDatosPersonales(datos, reloj.ahora()),
     correo: () => correos.exigirParaRol('JUGADOR', Correo.crear(datos.correo)),
-    celular: () => Celular.crear(datos.celular),
     contrasena: () => Contrasena.crear(datos.contrasena),
     dorsal: () => Dorsal.crearOpcional(datos.dorsal),
     versionLegalAceptada: () => validarVersionLegal(datos.versionLegalAceptada),
