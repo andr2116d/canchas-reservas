@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
+import { RUTA_DEL_AVISO_DEL_PERSONAL } from "@/features/legal/ruta-del-aviso-del-personal";
 import { RUTA_DE_ACCESO } from "@/compartido/sesion/destino-de-sesion";
 import { consultarApiPrivada, exigirPanel } from "@/compartido/sesion/sesion.servidor";
 
@@ -44,6 +45,13 @@ export async function PanelDelPersonal({ rol }: { rol: keyof typeof PANELES_DEL_
     <>
       <EncabezadoDeSeccion titulo={titulo} descripcion={descripcion} />
       {rol === "ADMINISTRADOR" && <AccesoARecepcionistas />}
+      <p className="text-sm text-grava">
+        Cómo cuidamos tus datos:{" "}
+        <Link href={RUTA_DEL_AVISO_DEL_PERSONAL} className="font-bold text-botella underline underline-offset-4">
+          aviso de privacidad del personal
+        </Link>
+        .
+      </p>
     </>
   );
 }

@@ -51,6 +51,21 @@ test("el administrador edita sus datos y restablece su contraseña", async ({ pa
   await expect(page).toHaveURL("/cambiar-contrasena");
 });
 
+test("la recepcionista lee el aviso de privacidad del personal desde su panel", async ({ page }) => {
+  await entrarComoAdministrador(page);
+  const recepcionista = await crearPorApi(page);
+  await cerrarSesion(page);
+  await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
+  await page.getByRole("button", { name: "Ahora no" }).click();
+  await expect(page).toHaveURL("/recepcion");
+
+  await page.getByRole("link", { name: "aviso de privacidad del personal" }).click();
+
+  await expect(page).toHaveURL("/legal/privacidad-del-personal");
+  await expect(page.getByRole("heading", { name: "Aviso de privacidad del personal" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tus derechos" })).toBeVisible();
+});
+
 test("solo el administrador entra a la gestión de recepcionistas", async ({ page }) => {
   await entrarComoAdministrador(page);
   const recepcionista = await crearPorApi(page);

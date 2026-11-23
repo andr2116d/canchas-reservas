@@ -40,6 +40,15 @@ describe("FormularioDeAlta", () => {
     expect(screen.getByText("@laprevia.pe")).toBeInTheDocument();
   });
 
+  it("recuerda entregarle el aviso de privacidad del personal", () => {
+    render(<FormularioDeAlta dominio="laprevia.pe" />);
+
+    expect(screen.getByRole("link", { name: "aviso de privacidad del personal" })).toHaveAttribute(
+      "href",
+      "/legal/privacidad-del-personal",
+    );
+  });
+
   it("genera una contraseña temporal válida", async () => {
     const usuario = userEvent.setup();
     render(<FormularioDeAlta dominio="laprevia.pe" />);

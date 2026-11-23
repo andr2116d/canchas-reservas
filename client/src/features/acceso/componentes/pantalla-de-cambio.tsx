@@ -1,5 +1,7 @@
 import { BarraDeNavegacion } from "@/compartido/marco/barra-de-navegacion";
+import Link from "next/link";
 import { PANELES } from "@/compartido/sesion/destino-de-sesion";
+import { RUTA_DEL_AVISO_DEL_PERSONAL } from "@/features/legal/ruta-del-aviso-del-personal";
 import { exigirCambioDeContrasena } from "@/compartido/sesion/sesion.servidor";
 import { describirTiempoRestante } from "@/compartido/sesion/tiempo-restante";
 import { FormularioDeCambio } from "./formulario-de-cambio";
@@ -20,6 +22,13 @@ export async function PantallaDeCambio() {
           )}
         </p>
         <FormularioDeCambio panel={PANELES[sesion.rol]} />
+        {sesion.rol !== "JUGADOR" && (
+          <p className="mt-5 text-center text-sm">
+            <Link href={RUTA_DEL_AVISO_DEL_PERSONAL} className="font-bold text-botella underline underline-offset-4">
+              Aviso de privacidad del personal
+            </Link>
+          </p>
+        )}
       </TarjetaDeAcceso>
     </>
   );
