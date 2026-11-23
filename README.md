@@ -30,7 +30,9 @@ npm run dev
 
 ## Acceso del personal
 
-Configura `DOMINIO_CORPORATIVO` en el entorno del servidor con el dominio de correo de la empresa. Con las migraciones aplicadas, ejecuta `npm run personal:crear-administrador -w server -- correo nombres apellidos`. Entrega `CONTRASENA_TEMPORAL_ADMINISTRADOR` al proceso desde el entorno de ejecución y comparte la contraseña temporal por un canal privado.
+El personal usa el dominio de correo de `DOMINIO_CORPORATIVO` (por defecto `laprevia.pe`). Con las migraciones aplicadas, ejecuta `npm run personal:crear-administrador -w server -- correo nombres apellidos`. Entrega `CONTRASENA_TEMPORAL_ADMINISTRADOR` al proceso desde el entorno de ejecución y comparte la contraseña temporal por un canal privado. La contraseña temporal vence en 7 días.
+
+Para probar en local, `npm run personal:admin-de-prueba -w server` crea un administrador con correo y contraseña temporal generados e imprime las credenciales. No funciona en producción.
 
 Un administrador que ya cambió su contraseña temporal puede dar de alta a un recepcionista con `POST /api/recepcionistas`. El cuerpo lleva `nombres`, `apellidos`, `correo` y `contrasena`. El recepcionista cambia la contraseña en su primer acceso.
 
