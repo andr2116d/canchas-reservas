@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { obtenerCuenta } from "./cuenta.api";
+import { obtenerCuenta } from "./cuenta.servidor";
 
 // Fuera de una petición de Next no hay cabeceras entrantes: la consulta no reenvía ninguna IP.
 vi.mock("next/headers", () => ({ headers: async () => new Headers(), cookies: async () => new Headers() }));

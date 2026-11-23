@@ -1,8 +1,21 @@
 import { consultarApiPrivada } from "@/compartido/sesion/sesion.servidor";
 
-/** Lo que la persona ve de su propia cuenta. */
+import type { Rol } from "@/compartido/sesion/destino-de-sesion";
+
+export type DatoEditable = "correo" | "celular" | "dorsal";
+
+/** Lo que la persona ve de su propia cuenta y lo que puede cambiar. */
 export interface Cuenta {
+  rol: Rol;
   nombres: string;
+  apellidos: string;
+  tipoDocumento?: "DNI" | "CARNE_EXTRANJERIA";
+  numeroDocumento?: string;
+  fechaNacimiento?: string;
+  correo: string;
+  celular?: string;
+  dorsal?: number;
+  editables: DatoEditable[];
 }
 
 /**
