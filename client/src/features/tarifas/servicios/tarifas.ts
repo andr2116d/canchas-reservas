@@ -12,6 +12,7 @@ export interface VistaDeTarifa {
   precioDia: string;
   precioNoche: string;
   duracionDelTurnoHoras: number;
+  ofreceTurnoCorto: boolean;
   guardadaEn: string;
   guardadaPor: string;
 }
@@ -25,7 +26,6 @@ export interface TarifaDelTipo {
 }
 
 export interface TarifasVigentes {
-  inicioDeLaNoche: string;
   tarifas: TarifaDelTipo[];
 }
 
@@ -36,8 +36,22 @@ export interface Tramo {
   monto: string;
 }
 
-export interface ValorCalculado {
+export interface TurnoConPrecio {
+  desde: string;
+  hasta: string;
+  /** Rato final del día ofrecido aunque no alcance para un turno completo. */
+  corto: boolean;
   total: string;
-  duracionDelTurnoHoras: number;
   tramos: Tramo[];
 }
+
+/** Turnos de un tipo de cancha en un día, o por qué no hay. */
+export type TurnosConsultados =
+  | { estado: "SIN_HORARIO" | "CERRADO" }
+  | {
+      estado: "ABIERTO";
+      duracionDelTurnoHoras: number;
+      inicioDeLaNoche: string;
+      turnos: TurnoConPrecio[];
+      sinTurno?: { desde: string; hasta: string };
+    };

@@ -31,6 +31,7 @@ export const esquemaDeTarifa = z.object({
   precioDia: campoCon(reglaDeMonto),
   precioNoche: campoCon(reglaDeMonto),
   duracionDelTurno: campoCon(reglaDeDuracion),
+  ofreceTurnoCorto: z.boolean(),
 });
 
 export type DatosDeTarifa = z.infer<typeof esquemaDeTarifa>;

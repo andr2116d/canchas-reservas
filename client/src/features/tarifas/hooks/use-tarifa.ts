@@ -16,6 +16,7 @@ function valoresIniciales({ vigente }: TarifaDelTipo): DatosDeTarifa {
     precioDia: vigente?.precioDia ?? "",
     precioNoche: vigente?.precioNoche ?? "",
     duracionDelTurno: vigente?.duracionDelTurnoHoras.toString() ?? "",
+    ofreceTurnoCorto: vigente?.ofreceTurnoCorto ?? false,
   };
 }
 

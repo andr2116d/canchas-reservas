@@ -19,7 +19,7 @@ describe("BarraDeNavegacion", () => {
     expect(within(navegacion).getAllByRole("link").map((enlace) => enlace.textContent)).toEqual([
       "Resumen",
       "Recepcionistas",
-      "Tarifas",
+      "Horario y tarifas",
       "Canchas",
     ]);
     expect(within(navegacion).getByRole("link", { name: "Recepcionistas" })).toHaveAttribute("aria-current", "page");

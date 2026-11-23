@@ -2,11 +2,13 @@
 
 import { FormProvider } from "react-hook-form";
 import { BOTON_PRINCIPAL, TARJETA } from "@/compartido/ui/estilos";
+import type { VistaDeHorario } from "@/compartido/horario/horario";
 import { fechaEnLima } from "@/compartido/ui/fecha-en-lima";
 import { type AvisoDeGuardado, useTarifa } from "../hooks/use-tarifa";
 import { NOMBRE_DEL_TIPO, type TarifaDelTipo } from "../servicios/tarifas";
 import { CamposDeTarifa } from "./campos-de-tarifa";
 import { HistorialDeTarifa } from "./historial-de-tarifa";
+import { ResumenSemanal } from "./resumen-semanal";
 
 const AVISOS: Record<AvisoDeGuardado, string> = {
   guardada: "Tarifa guardada. Rige para las reservas nuevas; las ya hechas conservan su precio.",
@@ -26,7 +28,7 @@ function Vigencia({ tarifa }: { tarifa: TarifaDelTipo }) {
 }
 
 /** Tarifa de un tipo de cancha: precio del turno de día y de noche, y cuánto dura el turno. */
-export function TarjetaDeTarifa({ tarifa, inicioDeLaNoche }: { tarifa: TarifaDelTipo; inicioDeLaNoche: string }) {
+export function TarjetaDeTarifa({ tarifa, horario }: { tarifa: TarifaDelTipo; horario?: VistaDeHorario }) {
   const { formulario, enviar, aviso, errorGeneral } = useTarifa(tarifa);
   const { isSubmitting } = formulario.formState;
   const nombre = NOMBRE_DEL_TIPO[tarifa.tipo];
@@ -39,7 +41,8 @@ export function TarjetaDeTarifa({ tarifa, inicioDeLaNoche }: { tarifa: TarifaDel
       </header>
       <FormProvider {...formulario}>
         <form noValidate onSubmit={enviar} className="flex flex-col gap-5">
-          <CamposDeTarifa tipo={tarifa.tipo} inicioDeLaNoche={inicioDeLaNoche} />
+          <CamposDeTarifa tipo={tarifa.tipo} />
+          <ResumenSemanal horario={horario} idTitulo={`${tarifa.tipo}-resumen`} />
           {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
           <div className="flex flex-wrap items-center gap-4">
             <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} aria-label={`Guardar tarifa de ${nombre.toLowerCase()}`} className={BOTON_PRINCIPAL}>

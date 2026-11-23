@@ -25,7 +25,7 @@ function useCopiarALosDemas(indice: number) {
 
 /** Un día de la semana: si abre, a qué hora abre y cierra, y si tiene su propia hora de noche. */
 export function FilaDelDia({ indice }: { indice: number }) {
-  const { register, control } = useFormContext<DatosDelFormularioDeHorario>();
+  const { register, control, getValues } = useFormContext<DatosDelFormularioDeHorario>();
   const dia = useWatch({ control, name: `dias.${indice}` });
   const nocheGeneral = useWatch({ control, name: "inicioDeLaNoche" });
   const copiarALosDemas = useCopiarALosDemas(indice);
@@ -33,10 +33,15 @@ export function FilaDelDia({ indice }: { indice: number }) {
   const id = (campo: string) => `${dia.dia}-${campo}`;
 
   return (
-    <div role="group" aria-labelledby={id("nombre")} className="grid gap-4 border-t border-linea py-5 first:border-t-0 md:grid-cols-[9rem_1fr] md:items-start">
-      <div className="flex items-center justify-between gap-3 md:flex-col md:items-start">
+    <div role="group" aria-labelledby={id("nombre")} className="grid gap-4 border-t border-linea py-5 first:border-t-0 md:grid-cols-[11rem_1fr] md:items-start">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 md:flex-col md:items-start">
         <h3 id={id("nombre")} className="font-titular text-2xl font-black text-tinta">{nombre}</h3>
         <InterruptorDeApertura indice={indice} nombre={nombre} />
+        {dia.abierto && (
+          <button type="button" onClick={copiarALosDemas} className={`${ACCION_DISCRETA} -ml-2 text-left`}>
+            Copiar a los demás días abiertos
+          </button>
+        )}
       </div>
       {dia.abierto ? (
         <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
@@ -44,7 +49,7 @@ export function FilaDelDia({ indice }: { indice: number }) {
           <CampoDeHora nombre={`dias.${indice}.cierra`} id={id("cierra")} etiqueta="Cierra" hastaMedianoche />
           <div className="flex flex-col gap-2">
             <label className="flex items-center gap-2 text-sm font-semibold text-tinta">
-              <input type="checkbox" className="size-4 accent-botella" {...register(`dias.${indice}.nochePropia`)} />
+              <input type="checkbox" className="size-4 accent-botella" defaultChecked={getValues(`dias.${indice}.nochePropia`)} {...register(`dias.${indice}.nochePropia`)} />
               Otra hora de noche este día
             </label>
             {dia.nochePropia ? (
@@ -53,9 +58,6 @@ export function FilaDelDia({ indice }: { indice: number }) {
               <p className="text-sm text-grava">La noche empieza a las {nocheGeneral}.</p>
             )}
           </div>
-          <button type="button" onClick={copiarALosDemas} className={`${ACCION_DISCRETA} self-end`}>
-            Copiar a los demás días abiertos
-          </button>
         </div>
       ) : (
         <p className="self-center text-grava">Cerrado: este día no se ofrecen turnos.</p>

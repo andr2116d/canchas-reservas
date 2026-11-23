@@ -6,6 +6,7 @@ function errores(datos: Record<string, string>) {
     precioDia: "50",
     precioNoche: "100",
     duracionDelTurno: "3",
+    ofreceTurnoCorto: false,
     ...datos,
   });
   return resultado.success
