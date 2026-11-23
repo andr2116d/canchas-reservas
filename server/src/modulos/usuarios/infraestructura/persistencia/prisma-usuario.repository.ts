@@ -3,14 +3,9 @@ import {
   CIFRADOR,
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
-import { indiceUnicoViolado } from '../../../../compartido/infraestructura/prisma/indice-unico-violado';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { RolUsuario } from '../../../../compartido/dominio/rol-usuario';
 import type { Correo } from '../../dominio/correo.value-object';
-import {
-  CuentaYaExisteError,
-  type DatoUnico,
-} from '../../dominio/cuenta-ya-existe.error';
 import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
 import type { Usuario } from '../../dominio/usuario.entity';
 import type {
@@ -23,12 +18,7 @@ import {
   hashDeCorreo,
   hashDeDocumento,
 } from './usuario.mapper';
-
-// Índice único de la base que corresponde a cada dato que no puede repetirse.
-const DATO_POR_INDICE: Record<string, DatoUnico> = {
-  usuario_documento_hash_rol_key: 'numeroDocumento',
-  usuario_correo_hash_key: 'correo',
-};
+import { rechazarDuplicado } from './rechazar-duplicado';
 
 /** Repositorio de usuarios sobre PostgreSQL, con los datos personales cifrados. */
 @Injectable()
@@ -93,10 +83,4 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
       rechazarDuplicado(error);
     }
   }
-}
-
-function rechazarDuplicado(error: unknown): never {
-  const dato = DATO_POR_INDICE[indiceUnicoViolado(error) ?? ''];
-  if (dato) throw new CuentaYaExisteError([dato]);
-  throw error;
 }

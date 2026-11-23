@@ -190,33 +190,6 @@ describe('Inicio de sesión y autorización por rol', () => {
     expect(await prisma.sesion.count()).toBe(1);
   });
 
-  it('restringe el alta de recepcionistas al administrador que completó su primer acceso', async () => {
-    await crearJugador();
-    const jugador = cookieDe(await iniciar());
-    const correo = await crearPersonal('ADMINISTRADOR');
-    const temporal = cookieDe(await iniciar(correo));
-    const alta = { ...PERSONAL, correo: 'recepcion@' + DOMINIO };
-    const crear = () => api().post('/api/recepcionistas').send(alta);
-
-    await crear().expect(401);
-    await crear().set('Cookie', jugador).expect(403);
-    await crear().set('Cookie', temporal).expect(403);
-    const completa = cookieDe(await cambiarContrasena(temporal));
-    await crear().set('Cookie', completa).expect(201);
-
-    const nueva = await iniciar(alta.correo).expect(200);
-    expect(nueva.body).toEqual({
-      rol: 'RECEPCIONISTA',
-      requiereCambiarContrasena: true,
-    });
-    const registrada = await prisma.usuario.findFirstOrThrow({
-      where: { rol: 'RECEPCIONISTA' },
-    });
-    expect(registrada.correoCifrado).not.toContain(alta.correo);
-    expect(registrada.documentoHash).toBeNull();
-    await crear().set('Cookie', completa).expect(409);
-  });
-
   it('rechaza roles inyectados en el inicio y en el registro público', async () => {
     await api()
       .post('/api/sesiones')

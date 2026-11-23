@@ -164,9 +164,14 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
   }
   await page.getByRole("link", { name: "Ir a mi panel" }).click();
   await expect(page).toHaveURL("/administracion");
-  const recepcion = { correo: "turno." + randomUUID() + "@" + DOMINIO_DE_PRUEBA, contrasena: CONTRASENA_TEMPORAL };
+  const usuarioDeCorreo = "turno." + randomUUID().slice(0, 8);
+  const recepcion = { correo: usuarioDeCorreo + "@" + DOMINIO_DE_PRUEBA, contrasena: CONTRASENA_TEMPORAL };
   const creada = await page.request.post("/api/recepcionistas", {
-    data: { ...recepcion, nombres: "Mateo", apellidos: "Paz León" },
+    data: {
+      nombres: "Mateo", apellidos: "Paz León", fechaNacimiento: "1994-06-12", tipoDocumento: "DNI",
+      numeroDocumento: String(40000000 + Math.floor(Math.random() * 9999999)), celular: "912345678",
+      usuarioDeCorreo, contrasena: CONTRASENA_TEMPORAL,
+    },
   });
   expect(creada.status()).toBe(201);
   await page.getByRole("button", { name: "Cerrar sesión" }).click();

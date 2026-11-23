@@ -17,6 +17,8 @@ import {
 export interface CuerpoDeError {
   mensaje: string;
   errores: ErroresPorCampo;
+  /** Información para resolver un conflicto, como la cuenta que se puede reactivar. */
+  datos?: Record<string, unknown>;
 }
 
 const MENSAJES_POR_ESTADO: Record<number, string> = {
@@ -58,7 +60,15 @@ export class ErroresHttpFilter implements ExceptionFilter {
         error instanceof ConflictoError
           ? HttpStatus.CONFLICT
           : HttpStatus.BAD_REQUEST;
-      return [estado, { mensaje: error.message, errores: error.errores }];
+      const datos = error instanceof ConflictoError ? error.datos : undefined;
+      return [
+        estado,
+        {
+          mensaje: error.message,
+          errores: error.errores,
+          ...(datos && { datos }),
+        },
+      ];
     }
     if (error instanceof HttpException) {
       const estado = error.getStatus();

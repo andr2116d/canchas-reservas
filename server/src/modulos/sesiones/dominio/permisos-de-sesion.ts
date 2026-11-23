@@ -7,7 +7,7 @@ const PERMISOS_TEMPORALES = [
 ] as const;
 
 const PERMISOS_POR_ROL = {
-  ADMINISTRADOR: ['panel:administracion', 'personal:crear-recepcionista'],
+  ADMINISTRADOR: ['panel:administracion', 'personal:gestionar-recepcionistas'],
   RECEPCIONISTA: ['panel:recepcion'],
   JUGADOR: ['panel:jugador'],
 } as const satisfies Record<RolUsuario, readonly string[]>;

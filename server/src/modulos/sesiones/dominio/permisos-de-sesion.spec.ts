@@ -37,7 +37,7 @@ describe('Permisos de sesión', () => {
     } as const;
 
     expect(puedeAcceder(acceso, 'panel:administracion')).toBe(false);
-    expect(puedeAcceder(acceso, 'personal:crear-recepcionista')).toBe(false);
+    expect(puedeAcceder(acceso, 'personal:gestionar-recepcionistas')).toBe(false);
     expect(puedeAcceder(acceso, 'sesion:cambiar-contrasena-temporal')).toBe(
       true,
     );
@@ -48,19 +48,19 @@ describe('Permisos de sesión', () => {
     expect(
       puedeAcceder(
         { rol: 'ADMINISTRADOR', requiereCambiarContrasena: false },
-        'personal:crear-recepcionista',
+        'personal:gestionar-recepcionistas',
       ),
     ).toBe(true);
     expect(
       puedeAcceder(
         { rol: 'RECEPCIONISTA', requiereCambiarContrasena: false },
-        'personal:crear-recepcionista',
+        'personal:gestionar-recepcionistas',
       ),
     ).toBe(false);
     expect(
       puedeAcceder(
         { rol: 'JUGADOR', requiereCambiarContrasena: false },
-        'personal:crear-recepcionista',
+        'personal:gestionar-recepcionistas',
       ),
     ).toBe(false);
   });

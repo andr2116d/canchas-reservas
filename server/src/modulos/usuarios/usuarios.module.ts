@@ -23,6 +23,7 @@ import {
   type AccesoRepository,
 } from './dominio/acceso.repository';
 import { ReglasDeCorreo } from './dominio/reglas-de-correo';
+import { PROVIDERS_DE_RECEPCIONISTAS } from './recepcionistas.providers';
 import { CuentaController } from './infraestructura/http/cuenta.controller';
 import { InicioDeSesionController } from './infraestructura/http/inicio-de-sesion.controller';
 import { RecepcionistasController } from './infraestructura/http/recepcionistas.controller';
@@ -45,6 +46,7 @@ const CONTEXTO_DEL_REGISTRO = Symbol('CONTEXTO_DEL_REGISTRO');
   ],
   exports: [RegistrarPersonalUseCase],
   providers: [
+    ...PROVIDERS_DE_RECEPCIONISTAS,
     LimiteDeInicios,
     Argon2HasheadorContrasenaAdapter,
     { provide: ACCESO_REPOSITORY, useClass: PrismaAccesoRepository },
