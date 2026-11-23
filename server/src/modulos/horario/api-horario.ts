@@ -12,4 +12,9 @@ export {
   type Rango,
   type Turno,
 } from './dominio/turnos-del-dia';
+export {
+  construirHorario,
+  type DatosDelHorario,
+} from './aplicacion/construir-horario';
+export type { HorarioSemanal } from './dominio/horario-semanal';
 export { HorarioModule } from './horario.module';
