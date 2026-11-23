@@ -4,6 +4,7 @@ import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
+import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
 import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
 import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';
@@ -24,8 +25,8 @@ function prepararRegistro() {
   const registrar = new RegistrarJugadorUseCase(
     usuarios,
     new HasheadorDePrueba(),
-    reloj,
     new AbrirSesionUseCase(sesiones, new GeneradorTokenDePrueba(), reloj),
+    { reloj, correos: new ReglasDeCorreo('laprevia.pe') },
   );
   return { usuarios, registrar };
 }
@@ -141,6 +142,20 @@ describe('RegistrarJugadorUseCase', () => {
     await registrar.ejecutar(unJugadorValido({ dorsal: undefined }));
 
     expect(usuarios.todos()[0].dorsal).toBeUndefined();
+  });
+
+  it('pide un correo personal si el jugador usa el dominio del local', async () => {
+    const { usuarios, registrar } = prepararRegistro();
+
+    const error = await capturarError(
+      registrar.ejecutar(unJugadorValido({ correo: 'valeria@laprevia.pe' })),
+    );
+
+    expect((error as ReglaInvalidaError).errores).toEqual({
+      correo:
+        'Usa tu correo personal: @laprevia.pe es solo para el personal del local.',
+    });
+    expect(usuarios.todos()).toHaveLength(0);
   });
 
   it('rechaza a un menor de 18 años y no guarda nada', async () => {

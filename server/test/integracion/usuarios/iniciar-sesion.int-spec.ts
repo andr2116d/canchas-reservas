@@ -53,8 +53,7 @@ describe('Inicio de sesión y autorización por rol', () => {
   }
 
   async function crearPersonal(rol: Exclude<RolUsuario, 'JUGADOR'>) {
-    const dominio = rol === 'ADMINISTRADOR' ? DOMINIO : 'externo.test';
-    const correo = rol.toLowerCase() + '@' + dominio;
+    const correo = rol.toLowerCase() + '@' + DOMINIO;
     await app
       .get(RegistrarPersonalUseCase)
       .ejecutar({ ...PERSONAL, correo }, rol);
@@ -196,7 +195,7 @@ describe('Inicio de sesión y autorización por rol', () => {
     const jugador = cookieDe(await iniciar());
     const correo = await crearPersonal('ADMINISTRADOR');
     const temporal = cookieDe(await iniciar(correo));
-    const alta = { ...PERSONAL, correo: 'recepcion@afuera.test' };
+    const alta = { ...PERSONAL, correo: 'recepcion@' + DOMINIO };
     const crear = () => api().post('/api/recepcionistas').send(alta);
 
     await crear().expect(401);

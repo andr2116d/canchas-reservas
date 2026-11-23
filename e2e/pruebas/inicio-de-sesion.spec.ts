@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { unJugadorNuevo } from "../soporte/jugador-de-prueba";
-import { CONTRASENA_TEMPORAL, crearAdministradorDePrueba } from "../soporte/personal-de-prueba";
+import { CONTRASENA_TEMPORAL, crearAdministradorDePrueba, DOMINIO_DE_PRUEBA } from "../soporte/personal-de-prueba";
 
 const RUTA_DE_ACCESO = "/iniciar-sesion";
 const CONTRASENA_NUEVA = "definitiva2026";
@@ -164,7 +164,7 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
   }
   await page.getByRole("link", { name: "Ir a mi panel" }).click();
   await expect(page).toHaveURL("/administracion");
-  const recepcion = { correo: "turno." + randomUUID() + "@externo.test", contrasena: CONTRASENA_TEMPORAL };
+  const recepcion = { correo: "turno." + randomUUID() + "@" + DOMINIO_DE_PRUEBA, contrasena: CONTRASENA_TEMPORAL };
   const creada = await page.request.post("/api/recepcionistas", {
     data: { ...recepcion, nombres: "Mateo", apellidos: "Paz León" },
   });

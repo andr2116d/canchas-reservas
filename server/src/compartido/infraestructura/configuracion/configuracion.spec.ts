@@ -20,6 +20,15 @@ describe('leerConfiguracion', () => {
     expect(configuracion.cookieSegura).toBe(true);
     expect(configuracion.saltosDeProxy).toBe(1);
     expect(configuracion.limiteDeRegistrosPorHora).toBe(10);
+    expect(configuracion.dominioCorporativo).toBe('laprevia.pe');
+  });
+
+  it('permite cambiar el dominio corporativo del correo del personal', () => {
+    expect(
+      leerConfiguracion(
+        unEntornoValido({ DOMINIO_CORPORATIVO: ' Empresa.TEST ' }),
+      ).dominioCorporativo,
+    ).toBe('empresa.test');
   });
 
   it('permite ajustar el límite de registros por hora', () => {

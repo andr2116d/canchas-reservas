@@ -12,7 +12,8 @@ export interface Configuracion {
   saltosDeProxy: number;
   /** Registros permitidos por hora desde una misma IP. */
   limiteDeRegistrosPorHora: number;
-  dominioCorporativo?: string;
+  /** Dominio del correo del personal; los jugadores no pueden usarlo. */
+  dominioCorporativo: string;
 }
 
 type Entorno = Record<string, string | undefined>;
@@ -47,9 +48,11 @@ export function leerLimiteDeRegistros(entorno: Entorno): number {
   return leerEntero(entorno, 'LIMITE_REGISTROS_POR_HORA', 10);
 }
 
-function leerDominioCorporativo(entorno: Entorno): string | undefined {
+const DOMINIO_CORPORATIVO_POR_DEFECTO = 'laprevia.pe';
+
+function leerDominioCorporativo(entorno: Entorno): string {
   const dominio = entorno.DOMINIO_CORPORATIVO?.trim().toLowerCase();
-  if (!dominio) return undefined;
+  if (!dominio) return DOMINIO_CORPORATIVO_POR_DEFECTO;
   if (
     !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(
       dominio,

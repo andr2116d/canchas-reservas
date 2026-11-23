@@ -6,7 +6,7 @@ import type {
 } from '../../sesiones/api-sesiones';
 import type { AccesoRepository } from '../dominio/acceso.repository';
 import { Correo } from '../dominio/correo.value-object';
-import { admiteDominio } from '../dominio/dominio-corporativo';
+import type { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 
 export interface DatosInicioSesion {
   correo: string;
@@ -37,7 +37,7 @@ export class IniciarSesionUseCase {
     >,
     private readonly verificarContrasena: VerificarContrasena,
     private readonly abrirSesion: AbrirSesionUseCase,
-    private readonly dominioCorporativo?: string,
+    private readonly correos: ReglasDeCorreo,
   ) {}
 
   async ejecutar(datos: DatosInicioSesion): Promise<ResultadoInicioSesion> {
@@ -51,7 +51,7 @@ export class IniciarSesionUseCase {
       !valida ||
       !usuario ||
       !correo ||
-      !admiteDominio(usuario.rol, correo, this.dominioCorporativo)
+      !this.correos.correspondeAlRol(usuario.rol, correo)
     ) {
       return { tipo: 'credenciales-invalidas' };
     }

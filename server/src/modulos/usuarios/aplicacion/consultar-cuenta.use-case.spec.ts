@@ -3,6 +3,7 @@ import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugado
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
 import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
+import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { ConsultarCuentaUseCase } from './consultar-cuenta.use-case';
 import { RegistrarJugadorUseCase } from './registrar-jugador.use-case';
 
@@ -22,8 +23,8 @@ describe('ConsultarCuentaUseCase', () => {
     const { id } = await new RegistrarJugadorUseCase(
       usuarios,
       hasheador,
-      reloj,
       abrirSesion,
+      { reloj, correos: new ReglasDeCorreo('laprevia.pe') },
     ).ejecutar(unJugadorValido());
 
     const cuenta = await new ConsultarCuentaUseCase(usuarios).ejecutar(id);

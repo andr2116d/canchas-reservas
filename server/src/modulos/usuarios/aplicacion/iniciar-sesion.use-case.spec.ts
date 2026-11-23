@@ -2,6 +2,7 @@ import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-se
 import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';
 import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
 import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
+import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import type {
   AccesoRepository,
   CredencialesGuardadas,
@@ -28,7 +29,7 @@ function preparar(credenciales?: Partial<CredencialesGuardadas>) {
       .mockResolvedValue(
         credenciales && {
           usuarioId: 7,
-          rol: 'JUGADOR',
+          rol: 'RECEPCIONISTA',
           estado: 'ACTIVO',
           requiereCambiarContrasena: false,
           contrasenaHash: 'hash guardado',
@@ -50,7 +51,7 @@ function preparar(credenciales?: Partial<CredencialesGuardadas>) {
     accesos,
     verificar,
     abrirSesion,
-    DOMINIO_CORPORATIVO,
+    new ReglasDeCorreo(DOMINIO_CORPORATIVO),
   );
   return { accesos, iniciar, reloj, verificar };
 }
@@ -58,7 +59,7 @@ function preparar(credenciales?: Partial<CredencialesGuardadas>) {
 describe('IniciarSesionUseCase', () => {
   it.each([
     ['ADMINISTRADOR', CORREO, true],
-    ['RECEPCIONISTA', 'turno@correo.test', true],
+    ['RECEPCIONISTA', 'turno@empresa.test', true],
     ['JUGADOR', 'jugador@correo.test', false],
   ] as const)(
     'abre la sesión de %s y devuelve el estado del cambio de contraseña',
@@ -105,8 +106,8 @@ describe('IniciarSesionUseCase', () => {
     'persona@empresa.test.otro.test',
     'persona@falsaempresa.test',
     'persona@correo.test',
-  ])('deniega el acceso de administración con %s', async (correo) => {
-    const { iniciar, accesos } = preparar({ rol: 'ADMINISTRADOR' });
+  ])('deniega el acceso del personal con %s', async (correo) => {
+    const { iniciar, accesos } = preparar({ rol: 'RECEPCIONISTA' });
 
     await expect(
       iniciar.ejecutar({ correo, contrasena: CONTRASENA }),
