@@ -1,0 +1,52 @@
+/* Código del aviso: cifras grandes en amarillo capitán, con el balón en lugar del cero. */
+.pantalla-de-aviso__codigo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.06em;
+  font-family: var(--font-titular);
+  font-size: clamp(7rem, 30vw, 12rem);
+  font-weight: 900;
+  line-height: 0.9;
+  color: var(--color-capitan);
+  text-shadow: 0 0.04em 0 rgb(0 0 0 / 0.25);
+}
+
+/* El balón mide lo mismo que las cifras para leerse como un cero. */
+.pantalla-de-aviso__balon {
+  width: 0.72em;
+  height: 0.72em;
+  overflow: visible;
+  filter: drop-shadow(0 0.04em 0 rgb(0 0 0 / 0.25));
+  transform-origin: 50% 100%;
+  animation: balon-del-aviso 950ms 120ms both;
+}
+
+.pantalla-de-aviso__gajos {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  animation: gajos-del-aviso 950ms cubic-bezier(0.2, 0.7, 0.3, 1) 120ms both;
+}
+
+/* Cae desde arriba, rebota dos veces cada vez más bajo y se queda como el cero. */
+@keyframes balon-del-aviso {
+  0% { opacity: 0; transform: translateY(-130%); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  12% { opacity: 1; }
+  44% { transform: translateY(0) scale(1.1, 0.88); animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1); }
+  64% { transform: translateY(-24%); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  80% { transform: translateY(0) scale(1.05, 0.95); animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1); }
+  90% { transform: translateY(-6%); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes gajos-del-aviso {
+  from { transform: rotate(-220deg); }
+  to { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pantalla-de-aviso__balon,
+  .pantalla-de-aviso__gajos {
+    animation: none;
+  }
+}

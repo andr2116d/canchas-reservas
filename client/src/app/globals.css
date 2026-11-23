@@ -2,6 +2,7 @@
 @import "../compartido/ui/movimiento-de-acceso.css";
 @import "../compartido/ui/cancha-completa.css";
 @import "../compartido/ui/espera-de-cancha.css";
+@import "../compartido/ui/pantalla-de-aviso.css";
 
 @theme {
   --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;
