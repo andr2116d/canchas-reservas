@@ -8,7 +8,7 @@ import { AvisoDeReactivacion } from "./aviso-de-reactivacion";
 import { CampoDeContrasenaTemporal } from "./campo-de-contrasena-temporal";
 import { CamposDeRecepcionista } from "./campos-de-recepcionista";
 import { CredencialesEntregables } from "./credenciales-entregables";
-import { BOTON_PRINCIPAL, TARJETA } from "./estilos";
+import { BOTON_PRINCIPAL, TARJETA } from "@/compartido/ui/estilos";
 
 /** Formulario del administrador para crear la cuenta de una recepcionista. */
 export function FormularioDeAlta({ dominio }: { dominio: string }) {

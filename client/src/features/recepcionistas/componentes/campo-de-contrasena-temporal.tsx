@@ -4,7 +4,7 @@ import { useFormContext } from "react-hook-form";
 import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
 import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
 import { generarContrasenaTemporal } from "../utilidades/generar-contrasena-temporal";
-import { BOTON_SECUNDARIO } from "./estilos";
+import { BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
 
 /** Contraseña temporal a la vista, para dictarla o copiarla; se escribe o se genera. */
 export function CampoDeContrasenaTemporal() {

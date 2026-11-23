@@ -4,7 +4,7 @@ import {
   type FichaDeRecepcionista,
   NOMBRE_DEL_DOCUMENTO,
 } from "../servicios/ficha-de-recepcionista";
-import { TARJETA } from "./estilos";
+import { TARJETA } from "@/compartido/ui/estilos";
 
 const RUTA = "/administracion/recepcionistas";
 const PESTANAS: { estado: EstadoDelListado; texto: string; ruta: string }[] = [

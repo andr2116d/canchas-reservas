@@ -1,4 +1,4 @@
-/** Acción principal de las pantallas de recepcionistas. */
+/** Acción principal de las pantallas internas. */
 export const BOTON_PRINCIPAL =
   "inline-flex min-h-12 items-center justify-center rounded-xl bg-botella px-6 py-3 font-bold text-papel " +
   "transition-colors hover:bg-botella-oscura focus-visible:outline-3 focus-visible:outline-offset-2 " +

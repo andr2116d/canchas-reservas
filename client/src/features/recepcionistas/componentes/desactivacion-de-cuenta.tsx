@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { desactivarRecepcionista } from "../servicios/recepcionistas.api";
-import { BOTON_SECUNDARIO } from "./estilos";
+import { BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
 
 const BOTON_DE_PELIGRO =
   "inline-flex min-h-11 items-center justify-center rounded-xl bg-error px-4 py-2 text-sm font-bold text-papel " +

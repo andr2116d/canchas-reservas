@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BOTON_PRINCIPAL, BOTON_SECUNDARIO, TARJETA } from "./estilos";
+import { BOTON_PRINCIPAL, BOTON_SECUNDARIO, TARJETA } from "@/compartido/ui/estilos";
 
 interface CredencialesEntregablesProps {
   id: number;

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
-import { BOTON_SOBRE_CANCHA } from "@/features/recepcionistas/componentes/estilos";
+import { BOTON_SOBRE_CANCHA } from "@/compartido/ui/estilos";
 import { RecepcionistasDelEstado } from "@/features/recepcionistas/componentes/recepcionistas-del-estado";
 
 export const metadata: Metadata = { title: "Recepcionistas · La Previa" };

@@ -5,7 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
 import { LARGO_DEL_USUARIO_DE_CORREO } from "../esquemas/recepcionista.schema";
 import { sugerirCorreo } from "../servicios/recepcionistas.api";
-import { BOTON_SECUNDARIO } from "./estilos";
+import { BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
 
 /**
  * Lo que va antes de la @ del correo institucional; el dominio es fijo. Se

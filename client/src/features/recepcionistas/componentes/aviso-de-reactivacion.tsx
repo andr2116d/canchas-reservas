@@ -1,4 +1,4 @@
-import { BOTON_PRINCIPAL, BOTON_SECUNDARIO } from "./estilos";
+import { BOTON_PRINCIPAL, BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
 
 interface AvisoDeReactivacionProps {
   nombres: string;

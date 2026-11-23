@@ -4,7 +4,7 @@ import { FormProvider } from "react-hook-form";
 import type { DatosDeEdicion } from "../esquemas/recepcionista.schema";
 import { useEdicionDeRecepcionista } from "../hooks/use-edicion-de-recepcionista";
 import { CamposDeRecepcionista } from "./campos-de-recepcionista";
-import { BOTON_PRINCIPAL } from "./estilos";
+import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 
 interface FormularioDeEdicionProps {
   id: number;

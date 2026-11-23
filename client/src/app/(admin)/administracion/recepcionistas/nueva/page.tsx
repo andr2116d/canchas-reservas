@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
 import { FormularioDeAlta } from "@/features/recepcionistas/componentes/formulario-de-alta";
-import { BOTON_SECUNDARIO } from "@/features/recepcionistas/componentes/estilos";
+import { BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
 import { dominioCorporativo } from "@/features/recepcionistas/servicios/dominio-corporativo";
 
 export const metadata: Metadata = { title: "Nueva recepcionista · La Previa" };

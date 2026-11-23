@@ -4,7 +4,7 @@ import { FormProvider } from "react-hook-form";
 import { useContrasenaTemporalEntregada } from "../hooks/use-contrasena-temporal-entregada";
 import type { ResultadoDeAccion } from "../servicios/recepcionistas.api";
 import { CampoDeContrasenaTemporal } from "./campo-de-contrasena-temporal";
-import { BOTON_PRINCIPAL } from "./estilos";
+import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 
 interface FormularioDeContrasenaTemporalProps {
   textoDelBoton: string;

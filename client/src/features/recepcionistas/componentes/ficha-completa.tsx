@@ -5,7 +5,7 @@ import { dominioCorporativo } from "../servicios/dominio-corporativo";
 import type { FichaDeRecepcionista } from "../servicios/ficha-de-recepcionista";
 import { obtenerFicha } from "../servicios/recepcionistas.servidor";
 import { AccionesDeCuenta } from "./acciones-de-cuenta";
-import { BOTON_SECUNDARIO, TARJETA } from "./estilos";
+import { BOTON_SECUNDARIO, TARJETA } from "@/compartido/ui/estilos";
 import { FormularioDeEdicion } from "./formulario-de-edicion";
 import { HistorialDeCuenta } from "./historial-de-cuenta";
 
