@@ -51,6 +51,27 @@ test("el administrador edita sus datos y restablece su contraseña", async ({ pa
   await expect(page).toHaveURL("/cambiar-contrasena");
 });
 
+test("desde el listado se restablece la contraseña y se desactiva sin entrar a la ficha", async ({ page }) => {
+  await entrarComoAdministrador(page);
+  const recepcionista = await crearPorApi(page);
+  const nombre = `Rosa ${recepcionista.apellidos}`;
+  await page.goto("/administracion/recepcionistas");
+
+  await page.getByRole("button", { name: `Restablecer la contraseña de ${nombre}` }).click();
+  const tarjeta = page.getByRole("dialog", { name: "Restablecer contraseña" });
+  await tarjeta.getByRole("button", { name: "Generar contraseña" }).click();
+  await tarjeta.getByRole("button", { name: "Restablecer contraseña" }).click();
+  await expect(tarjeta.getByText(/Entrégale la nueva contraseña temporal/)).toBeVisible();
+  await expect(tarjeta.getByRole("button", { name: "Copiar datos" })).toBeVisible();
+  await tarjeta.getByRole("button", { name: "Cerrar" }).click();
+
+  await page.getByRole("button", { name: `Desactivar a ${nombre}` }).click();
+  await page.getByRole("dialog", { name: "Desactivar cuenta" }).getByRole("button", { name: "Sí, desactivar" }).click();
+  await expect(page.getByRole("link", { name: nombre })).toHaveCount(0);
+  await page.getByRole("link", { name: "Desactivadas" }).click();
+  await expect(page.getByRole("link", { name: nombre })).toBeVisible();
+});
+
 test("la recepcionista lee el aviso de privacidad del personal desde su panel", async ({ page }) => {
   await entrarComoAdministrador(page);
   const recepcionista = await crearPorApi(page);

@@ -1,7 +1,10 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FichaDeRecepcionista } from "../servicios/ficha-de-recepcionista";
 import { ListadoDeRecepcionistas } from "./listado-de-recepcionistas";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 function unaFicha(cambios: Partial<FichaDeRecepcionista> = {}): FichaDeRecepcionista {
   return {
@@ -34,6 +37,25 @@ describe("ListadoDeRecepcionistas", () => {
     expect(fila).toHaveTextContent("rosa.quispe@laprevia.pe");
     expect(fila).toHaveTextContent("DNI 41234567");
     expect(fila).toHaveTextContent("912345678");
+  });
+
+  it("ofrece restablecer y desactivar sin entrar a la ficha", async () => {
+    render(<ListadoDeRecepcionistas estado="activas" fichas={[unaFicha()]} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Restablecer la contraseña de Rosa Quispe Lozano" }));
+
+    const tarjeta = screen.getByRole("dialog", { name: "Restablecer contraseña" });
+    expect(within(tarjeta).getByLabelText(/^Contraseña temporal/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Desactivar a Rosa Quispe Lozano" })).toBeInTheDocument();
+  });
+
+  it("a una desactivada le ofrece reactivarla", async () => {
+    render(<ListadoDeRecepcionistas estado="desactivadas" fichas={[unaFicha({ estado: "INACTIVO" })]} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Reactivar a Rosa Quispe Lozano" }));
+
+    expect(screen.getByRole("dialog", { name: "Reactivar cuenta" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Desactivar/ })).not.toBeInTheDocument();
   });
 
   it("señala a quien aún no cambió su contraseña temporal", () => {
