@@ -4,21 +4,21 @@ import {
   SesionDeLaSolicitud,
   type SesionValida,
 } from '../../../sesiones/api-sesiones';
-import {
-  CalcularValorDelTurnoUseCase,
-  type ValorCalculado,
-} from '../../aplicacion/calcular-valor-del-turno.use-case';
 import { ConsultarTarifasUseCase } from '../../aplicacion/consultar-tarifas.use-case';
 import { DefinirTarifaUseCase } from '../../aplicacion/definir-tarifa.use-case';
-import { DefinirTarifaDto, ValorDelTurnoDto } from './tarifas.dto';
+import {
+  type TurnosConsultados,
+  TurnosDelDiaUseCase,
+} from '../../aplicacion/turnos-del-dia.use-case';
+import { DefinirTarifaDto, TurnosDelDiaDto } from './tarifas.dto';
 
-/** Tarifas por tipo de cancha: las define el administrador; el valor lo calcula cualquier sesión. */
+/** Tarifas por tipo de cancha: las define el administrador; los turnos con su precio los ve cualquier sesión. */
 @Controller('tarifas')
 export class TarifasController {
   constructor(
     private readonly consultar: ConsultarTarifasUseCase,
     private readonly definir: DefinirTarifaUseCase,
-    private readonly calcular: CalcularValorDelTurnoUseCase,
+    private readonly turnos: TurnosDelDiaUseCase,
   ) {}
 
   @Get()
@@ -27,12 +27,12 @@ export class TarifasController {
     return this.consultar.ejecutar();
   }
 
-  @Get('valor-del-turno')
+  @Get('turnos')
   @RequerirPermiso('tarifas:calcular')
-  valorDelTurno(
-    @Query() { tipo, inicio }: ValorDelTurnoDto,
-  ): Promise<ValorCalculado> {
-    return this.calcular.ejecutar(tipo, inicio);
+  turnosDelDia(
+    @Query() { tipo, dia }: TurnosDelDiaDto,
+  ): Promise<TurnosConsultados> {
+    return this.turnos.ejecutar(tipo, dia);
   }
 
   @Put(':tipo')

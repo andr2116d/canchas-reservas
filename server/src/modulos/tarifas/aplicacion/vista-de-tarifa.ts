@@ -5,6 +5,7 @@ export interface VistaDeTarifa {
   precioDia: string;
   precioNoche: string;
   duracionDelTurnoHoras: number;
+  ofreceTurnoCorto: boolean;
   guardadaEn: Date;
   guardadaPor: string;
 }
@@ -18,6 +19,7 @@ export function aVista({
     precioDia: tarifa.precioDia.enSoles(),
     precioNoche: tarifa.precioNoche.enSoles(),
     duracionDelTurnoHoras: tarifa.duracion.horas,
+    ofreceTurnoCorto: tarifa.ofreceTurnoCorto,
     guardadaEn,
     guardadaPor,
   };

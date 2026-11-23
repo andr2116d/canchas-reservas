@@ -1,9 +1,6 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
 import { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
 import { Monto } from './monto.value-object';
 import type { Tarifa } from './tarifa';
-
-const MEDIANOCHE = 24 * 60;
 
 export type Franja = 'DIA' | 'NOCHE';
 
@@ -27,30 +24,25 @@ interface Parte {
   precio: Monto;
 }
 
+/** Turno del día en minutos desde la medianoche; nunca pasa de medianoche. */
+export interface RangoDelTurno {
+  desde: number;
+  hasta: number;
+}
+
 /** Divide el turno en su parte de día y su parte de noche, sin partes vacías. */
 function partesDelTurno(
   tarifa: Tarifa,
-  inicio: number,
+  { desde, hasta }: RangoDelTurno,
   inicioDeLaNoche: number,
 ): Parte[] {
-  const fin = inicio + tarifa.duracion.minutos;
-  if (fin > MEDIANOCHE) {
-    throw new ValorInvalidoError(
-      'El turno debe terminar antes de la medianoche.',
-    );
-  }
-  const corte = Math.min(Math.max(inicio, inicioDeLaNoche), fin);
+  const corte = Math.min(Math.max(desde, inicioDeLaNoche), hasta);
   return [
-    {
-      franja: 'DIA' as const,
-      desde: inicio,
-      hasta: corte,
-      precio: tarifa.precioDia,
-    },
+    { franja: 'DIA' as const, desde, hasta: corte, precio: tarifa.precioDia },
     {
       franja: 'NOCHE' as const,
       desde: corte,
-      hasta: fin,
+      hasta,
       precio: tarifa.precioNoche,
     },
   ].filter((parte) => parte.hasta > parte.desde);
@@ -81,19 +73,16 @@ function repartir(partes: Parte[], duracion: number): ValorDelTurno {
 }
 
 /**
- * Valor de un turno que empieza a una hora: cada parte vale la tarifa de su
- * franja por la fracción del turno que ocupa. El total se redondea a céntimos
- * y el último tramo se ajusta para que el desglose sume exactamente el total.
+ * Valor de un turno: cada parte vale la tarifa de su franja por la fracción
+ * del turno completo que ocupa, así un turno corto se cobra en proporción. El
+ * total se redondea a céntimos y el último tramo se ajusta para que el
+ * desglose sume exactamente el total.
  */
 export function calcularValorDelTurno(
   tarifa: Tarifa,
-  inicio: HoraDelDia,
+  turno: RangoDelTurno,
   inicioDeLaNoche: HoraDelDia,
 ): ValorDelTurno {
-  const partes = partesDelTurno(
-    tarifa,
-    inicio.minutos,
-    inicioDeLaNoche.minutos,
-  );
+  const partes = partesDelTurno(tarifa, turno, inicioDeLaNoche.minutos);
   return repartir(partes, tarifa.duracion.minutos);
 }

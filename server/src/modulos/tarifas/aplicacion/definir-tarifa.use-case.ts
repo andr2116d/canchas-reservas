@@ -12,6 +12,7 @@ export interface DatosDeTarifa {
   precioDia: string;
   precioNoche: string;
   duracionDelTurno: string;
+  ofreceTurnoCorto: boolean;
 }
 
 /**
@@ -35,12 +36,13 @@ export class DefinirTarifaUseCase {
       precioNoche: () => Monto.crear(datos.precioNoche),
       duracionDelTurno: () => DuracionDelTurno.crear(datos.duracionDelTurno),
     });
-    const tarifa = new Tarifa(
+    const tarifa = new Tarifa({
       tipo,
-      campos.precioDia,
-      campos.precioNoche,
-      campos.duracionDelTurno,
-    );
+      precioDia: campos.precioDia,
+      precioNoche: campos.precioNoche,
+      duracion: campos.duracionDelTurno,
+      ofreceTurnoCorto: datos.ofreceTurnoCorto,
+    });
     const { cambio, version } = await this.tarifas.guardarSiCambia(
       tarifa,
       administradorId,

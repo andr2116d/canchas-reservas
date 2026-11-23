@@ -79,6 +79,7 @@ export class PrismaTarifaRepository implements TarifaRepository {
           precioDia: tarifa.precioDia.enSoles(),
           precioNoche: tarifa.precioNoche.enSoles(),
           duracionDelTurnoHoras: tarifa.duracion.horas,
+          ofreceTurnoCorto: tarifa.ofreceTurnoCorto,
           guardadaPorId,
           guardadaEn,
         },
@@ -91,12 +92,13 @@ export class PrismaTarifaRepository implements TarifaRepository {
   private aVersion(fila: FilaDeTarifa): VersionDeTarifa {
     const { nombresCifrado, apellidosCifrado } = fila.guardadaPor;
     return {
-      tarifa: new Tarifa(
-        fila.tipoDeCancha,
-        Monto.desdeCentimos(fila.precioDia.mul(100).toNumber()),
-        Monto.desdeCentimos(fila.precioNoche.mul(100).toNumber()),
-        DuracionDelTurno.restaurar(fila.duracionDelTurnoHoras),
-      ),
+      tarifa: new Tarifa({
+        tipo: fila.tipoDeCancha,
+        precioDia: Monto.desdeCentimos(fila.precioDia.mul(100).toNumber()),
+        precioNoche: Monto.desdeCentimos(fila.precioNoche.mul(100).toNumber()),
+        duracion: DuracionDelTurno.restaurar(fila.duracionDelTurnoHoras),
+        ofreceTurnoCorto: fila.ofreceTurnoCorto,
+      }),
       guardadaEn: fila.guardadaEn,
       guardadaPor: [nombresCifrado, apellidosCifrado]
         .map((valor) => this.cifrador.descifrar(valor))
