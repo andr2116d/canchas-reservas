@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { DatosDeIdentidad } from "./datos-de-identidad";
-import { unaCuenta } from "./pruebas-de-cuenta";
+import { unaCuenta } from "../../../../test/compartido/cuenta/una-cuenta";
 
 describe("DatosDeIdentidad", () => {
   afterEach(cleanup);

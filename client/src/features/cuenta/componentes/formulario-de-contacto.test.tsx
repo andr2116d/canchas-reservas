@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { actualizarMiCuenta } from "../servicios/cuenta.api";
 import { FormularioDeContacto } from "./formulario-de-contacto";
-import { unaCuenta } from "./pruebas-de-cuenta";
+import { unaCuenta } from "../../../../test/compartido/cuenta/una-cuenta";
 
 const navegar = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navegar }));
