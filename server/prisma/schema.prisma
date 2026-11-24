@@ -61,6 +61,7 @@ model Usuario {
   tarifasGuardadas             TarifaDeCancha[]
   horariosGuardados            HorarioDeAtencion[]
   reglasDeCancelacionGuardadas ReglaDeCancelacion[]
+  cambiosDeCanchas             CambioDeCancha[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -201,4 +202,68 @@ model RangoDeCancelacion {
 
   @@id([reglaId, desdeHoras])
   @@map("rango_de_cancelacion")
+}
+
+enum EstadoDeCancha {
+  OPERATIVA   @map("operativa")
+  DESACTIVADA @map("desactivada")
+
+  @@map("estado_de_cancha")
+}
+
+enum CaracteristicaDeCancha {
+  TECHADA          @map("techada")
+  BANCAS           @map("bancas")
+  JUNTO_A_LA_PARED @map("junto_a_la_pared")
+  GRADERIAS        @map("graderias")
+  MALLA_ALTA       @map("malla_alta")
+  VESTUARIO_CERCA  @map("vestuario_cerca")
+
+  @@map("caracteristica_de_cancha")
+}
+
+/// Una cancha del local. El nombre normalizado (minúsculas, sin tildes ni espacios de más) no se repite.
+model Cancha {
+  id                Int                      @id @default(autoincrement())
+  nombre            String
+  nombreNormalizado String                   @unique @map("nombre_normalizado")
+  tipo              TipoDeCancha
+  /// Sin iluminación solo se ofrecen turnos de día.
+  tieneIluminacion  Boolean                  @map("tiene_iluminacion")
+  caracteristicas   CaracteristicaDeCancha[]
+  nota              String?
+  estado            EstadoDeCancha           @default(OPERATIVA)
+  creadoEn          DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn     DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  cambios           CambioDeCancha[]
+
+  @@map("cancha")
+}
+
+enum AccionSobreCancha {
+  ALTA          @map("alta")
+  EDICION       @map("edicion")
+  DESACTIVACION @map("desactivacion")
+  REACTIVACION  @map("reactivacion")
+  ELIMINACION   @map("eliminacion")
+
+  @@map("accion_sobre_cancha")
+}
+
+/// Auditoría de las canchas: quién hizo cada acción y cuándo. Conserva el nombre si la cancha se elimina.
+model CambioDeCancha {
+  id               Int               @id @default(autoincrement())
+  canchaId         Int?              @map("cancha_id")
+  nombreDeLaCancha String            @map("nombre_de_la_cancha")
+  accion           AccionSobreCancha
+  /// En una edición, el valor anterior y el nuevo de cada dato que cambió.
+  detalle          Json?
+  ejecutadoPorId   Int               @map("ejecutado_por_id")
+  ocurridoEn       DateTime          @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  cancha           Cancha?           @relation(fields: [canchaId], references: [id], onDelete: SetNull)
+  ejecutadoPor     Usuario           @relation(fields: [ejecutadoPorId], references: [id])
+
+  @@index([ocurridoEn])
+  @@index([canchaId])
+  @@map("cambio_de_cancha")
 }
