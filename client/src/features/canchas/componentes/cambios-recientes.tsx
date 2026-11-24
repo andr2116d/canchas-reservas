@@ -7,6 +7,9 @@ const VERBO: Record<AccionSobreCancha, string> = {
   DESACTIVACION: "desactivó",
   REACTIVACION: "reactivó",
   ELIMINACION: "eliminó",
+  BLOQUEO: "bloqueó por mantenimiento",
+  LIBERACION_DE_BLOQUEO: "liberó antes el mantenimiento de",
+  RETIRO_DE_BLOQUEO: "quitó un bloqueo de",
 };
 
 /** Historial plegado: quién hizo cada cambio en las canchas y cuándo. */

@@ -32,9 +32,21 @@ export interface Cancha extends Required<Omit<DatosDeCancha, "nota">> {
   estado: "OPERATIVA" | "DESACTIVADA";
   /** Solo si nunca tuvo reservas. */
   sePuedeEliminar: boolean;
+  /** Bloqueo por mantenimiento en curso; solo viene en la lista. */
+  mantenimiento?: { hasta: string; tipo: "PROGRAMADO" | "EMERGENCIA" } | null;
+  /** El siguiente bloqueo que aún no empieza; solo viene en la lista. */
+  proximoMantenimiento?: { inicio: string; fin: string } | null;
 }
 
-export type AccionSobreCancha = "ALTA" | "EDICION" | "DESACTIVACION" | "REACTIVACION" | "ELIMINACION";
+export type AccionSobreCancha =
+  | "ALTA"
+  | "EDICION"
+  | "DESACTIVACION"
+  | "REACTIVACION"
+  | "ELIMINACION"
+  | "BLOQUEO"
+  | "LIBERACION_DE_BLOQUEO"
+  | "RETIRO_DE_BLOQUEO";
 
 export interface CambioDeCancha {
   accion: AccionSobreCancha;
