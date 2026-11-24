@@ -47,14 +47,8 @@
   }
 }
 
-/*
- * Al pasar entre acceso y registro:
- * 1. La página anterior se desvanece y la nueva aparece en un fundido corto.
- * 2. La cancha cambia de panel lateral a pantalla completa, o al revés: arranca
- *    rápido y frena al final (520 ms).
- * 3. Lo que llega empieza a entrar mientras la cancha frena, para que todo se
- *    acomode junto: primero el título o la tarjeta, después la ficha.
- */
+/* Entre acceso y registro: fundido de página, la cancha cambia de tamaño en 520 ms
+ * y lo nuevo entra mientras la cancha frena. */
 html:active-view-transition-type(cambio-de-acceso)::view-transition-old(root) {
   animation: pagina-sale 180ms ease-out both;
 }

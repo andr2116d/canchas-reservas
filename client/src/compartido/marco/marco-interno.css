@@ -1,9 +1,5 @@
-/*
- * Pantallas internas de jugador, recepción y administración. Abren con la
- * misma cancha del acceso, detrás del título; el contenido sigue en tarjetas
- * claras que suben sobre ella. La barra es de vidrio verde: se lee igual sobre
- * la cancha y sobre el fondo claro. Cada rol cambia solo su color de acento.
- */
+/* Pantallas internas: la cancha detrás del título, tarjetas claras encima y la barra de
+ * vidrio verde. Cada rol cambia solo su color de acento. */
 .marco-interno {
   --acento: var(--color-capitan);
   --sobre-acento: var(--color-tinta);
