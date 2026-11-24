@@ -1,3 +1,4 @@
+import { idDeRuta } from '../../../../compartido/infraestructura/http/id-de-ruta.pipe';
 import {
   Body,
   Controller,
@@ -6,7 +7,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import {
@@ -26,9 +26,7 @@ import { BloqueoNoEncontradoError } from '../../dominio/bloqueo-no-encontrado.er
 import { BloquearCanchasDto } from './bloqueo.dto';
 
 /** Un id que no es número responde igual que uno que no existe. */
-const ID_DE_BLOQUEO = new ParseIntPipe({
-  exceptionFactory: () => new BloqueoNoEncontradoError(),
-});
+const ID_DE_BLOQUEO = idDeRuta(() => new BloqueoNoEncontradoError());
 
 /** Bloqueos de canchas por mantenimiento. Solo administración. */
 @Controller('bloqueos')

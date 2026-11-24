@@ -89,6 +89,17 @@ describe('Adicionales · seguridad', () => {
       ).rejects.toThrow();
     });
 
+    it('un id fuera de rango o negativo responde que no existe, sin error interno', async () => {
+      for (const id of ['99999999999', '-5', '1e3']) {
+        const { body } = await api()
+          .put(`/api/adicionales/${id}`)
+          .set('Cookie', administrador)
+          .send(unAdicionalValido())
+          .expect(404);
+        expect(body.mensaje).toBe('No encontramos el adicional.');
+      }
+    });
+
     it('la respuesta no expone campos internos', async () => {
       await registrar(unAdicionalValido()).expect(201);
 
