@@ -7,6 +7,11 @@ const NOMBRE_DE_LA_ACCION: Record<AccionAuditada, string> = {
   DESACTIVACION: "Desactivación",
   REACTIVACION: "Reactivación",
   RESTABLECIMIENTO_DE_CONTRASENA: "Restablecimiento de contraseña",
+  CONFIRMACION_DE_DATOS: "Confirmó sus datos",
+  EDICION_PROPIA: "Corrigió sus datos",
+  CAMBIO_DE_CONTRASENA: "Cambió su contraseña",
+  CAMBIO_DE_CORREO: "Cambió su correo",
+  CAMBIO_DE_DOCUMENTO: "Cambió su tipo de documento",
 };
 
 /** Acciones de la auditoría sobre la cuenta, de la más reciente a la más antigua. */

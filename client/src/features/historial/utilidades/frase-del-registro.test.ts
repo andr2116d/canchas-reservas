@@ -11,6 +11,7 @@ describe("fraseDelRegistro", () => {
     { categoria: "CANCHAS", accion: "ELIMINACION", sujeto: "Cancha 3", verbo: "eliminó la cancha", destacado: "Cancha 3" },
     { categoria: "MANTENIMIENTO", accion: "BLOQUEO", sujeto: "Cancha 2", verbo: "bloqueó por mantenimiento", destacado: "Cancha 2" },
     { categoria: "ADICIONALES", accion: "EDICION", sujeto: "Balón", verbo: "editó el adicional", destacado: "Balón" },
+    { categoria: "CUENTAS", accion: "CAMBIO_DE_CORREO", sujeto: "Valeria León", verbo: "cambió su correo", destacado: null },
     { categoria: "ACCESOS", accion: "INICIO_DE_SESION", sujeto: null, verbo: "inició sesión", destacado: null },
   ] as const)("$categoria · $accion", ({ categoria, accion, sujeto, verbo, destacado }) => {
     expect(fraseDelRegistro({ categoria, accion, sujeto })).toEqual({ verbo, sujeto: destacado });

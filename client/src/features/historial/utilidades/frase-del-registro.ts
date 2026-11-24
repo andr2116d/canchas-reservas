@@ -37,6 +37,13 @@ const SIN_SUJETO: Partial<Record<Categoria, Verbos>> = {
   HORARIO: { ALTA: "definió el horario de atención", EDICION: "cambió el horario de atención" },
   CANCELACION: { ALTA: "definió la regla de cancelación", EDICION: "cambió la regla de cancelación" },
   ACCESOS: { INICIO_DE_SESION: "inició sesión" },
+  CUENTAS: {
+    CONFIRMACION_DE_DATOS: "confirmó sus datos",
+    EDICION_PROPIA: "corrigió sus datos",
+    CAMBIO_DE_CONTRASENA: "cambió su contraseña",
+    CAMBIO_DE_CORREO: "cambió su correo",
+    CAMBIO_DE_DOCUMENTO: "cambió su tipo de documento",
+  },
 };
 
 /** Qué hizo la persona, en palabras, y qué resaltar: «cambió la tarifa de» **Fútbol 7**. */

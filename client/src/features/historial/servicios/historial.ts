@@ -7,6 +7,11 @@ export type Accion =
   | "REACTIVACION"
   | "ELIMINACION"
   | "RESTABLECIMIENTO_DE_CONTRASENA"
+  | "CONFIRMACION_DE_DATOS"
+  | "EDICION_PROPIA"
+  | "CAMBIO_DE_CONTRASENA"
+  | "CAMBIO_DE_CORREO"
+  | "CAMBIO_DE_DOCUMENTO"
   | "BLOQUEO"
   | "LIBERACION_DE_BLOQUEO"
   | "RETIRO_DE_BLOQUEO"
@@ -62,6 +67,11 @@ export const ACCIONES: { valor: Accion; texto: string }[] = [
   { valor: "REACTIVACION", texto: "Reactivación" },
   { valor: "ELIMINACION", texto: "Eliminación" },
   { valor: "RESTABLECIMIENTO_DE_CONTRASENA", texto: "Contraseña restablecida" },
+  { valor: "CONFIRMACION_DE_DATOS", texto: "Datos confirmados" },
+  { valor: "EDICION_PROPIA", texto: "Datos propios corregidos" },
+  { valor: "CAMBIO_DE_CONTRASENA", texto: "Contraseña cambiada" },
+  { valor: "CAMBIO_DE_CORREO", texto: "Correo cambiado" },
+  { valor: "CAMBIO_DE_DOCUMENTO", texto: "Tipo de documento cambiado" },
   { valor: "BLOQUEO", texto: "Bloqueo" },
   { valor: "LIBERACION_DE_BLOQUEO", texto: "Liberación de bloqueo" },
   { valor: "RETIRO_DE_BLOQUEO", texto: "Retiro de bloqueo" },
@@ -70,7 +80,18 @@ export const ACCIONES: { valor: Accion; texto: string }[] = [
 
 /** Las acciones que puede tener cada categoría, para no ofrecer combinaciones vacías. */
 export const ACCIONES_POR_CATEGORIA: Record<Categoria, Accion[]> = {
-  CUENTAS: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "RESTABLECIMIENTO_DE_CONTRASENA"],
+  CUENTAS: [
+    "ALTA",
+    "EDICION",
+    "DESACTIVACION",
+    "REACTIVACION",
+    "RESTABLECIMIENTO_DE_CONTRASENA",
+    "CONFIRMACION_DE_DATOS",
+    "EDICION_PROPIA",
+    "CAMBIO_DE_CONTRASENA",
+    "CAMBIO_DE_CORREO",
+    "CAMBIO_DE_DOCUMENTO",
+  ],
   TARIFAS: ["ALTA", "EDICION"],
   HORARIO: ["ALTA", "EDICION"],
   CANCELACION: ["ALTA", "EDICION"],
