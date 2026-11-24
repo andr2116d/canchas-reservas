@@ -2,18 +2,8 @@ import {
   ConflictoError,
   ReglaInvalidaError,
 } from '../../../compartido/dominio/dominio.error';
+import { unaCanchaValida } from '../../../../test/fabricas/datos-cancha';
 import { Cancha, type DatosDeCancha } from './cancha.entity';
-
-function unaCanchaValida(cambios: Partial<DatosDeCancha> = {}): DatosDeCancha {
-  return {
-    nombre: 'Cancha 1',
-    tipo: 'FUTBOL_5',
-    tieneIluminacion: true,
-    caracteristicas: ['BANCAS'],
-    nota: '',
-    ...cambios,
-  };
-}
 
 function erroresAlCrear(datos: DatosDeCancha): Record<string, string> {
   try {
