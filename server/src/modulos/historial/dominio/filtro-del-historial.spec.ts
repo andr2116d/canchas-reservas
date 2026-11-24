@@ -77,6 +77,7 @@ describe('leerFiltroDelHistorial', () => {
         orden: 'AL_AZAR',
         pagina: '0',
         porPagina: '1000',
+        soloImportantes: 'quizas',
       }),
     ).toEqual({
       autor: 'Elige una persona de la lista.',
@@ -86,6 +87,7 @@ describe('leerFiltroDelHistorial', () => {
       orden: 'Elige más recientes o más antiguos.',
       pagina: 'Elige una página del 1 al 100000.',
       porPagina: 'Muestra 10, 25 o 50 registros por página.',
+      soloImportantes: 'Elige ver todos o solo los importantes.',
     });
   });
 

@@ -74,6 +74,9 @@ function elegir<T>(
 const esOrden = (valor: string): valor is Orden =>
   valor === 'RECIENTES' || valor === 'ANTIGUOS';
 
+const esSiONo = (valor: string): valor is 'true' | 'false' =>
+  valor === 'true' || valor === 'false';
+
 function leerTamano(texto: string): number {
   const tamano = Number(texto);
   if (!(TAMANOS_DE_PAGINA as readonly number[]).includes(tamano))
@@ -111,6 +114,10 @@ export function leerFiltroDelHistorial(
         entero(t, `Elige una página del 1 al ${MAXIMA_PAGINA}.`, MAXIMA_PAGINA),
       ) ?? 1,
     porPagina: () => opcional(datos.porPagina, leerTamano) ?? 25,
+    soloImportantes: () =>
+      opcional(datos.soloImportantes, (t) =>
+        elegir(t, esSiONo, 'Elige ver todos o solo los importantes.'),
+      ) === 'true',
   });
   const { autor, categoria, accion, desde, hasta, ...pagina } = leidos;
   if (desde && hasta && hasta < desde)
@@ -125,7 +132,6 @@ export function leerFiltroDelHistorial(
     ...(hasta && {
       antesDe: momentoEnLima(sumarAFecha(hasta, { dias: 1 }), '00:00'),
     }),
-    soloImportantes: datos.soloImportantes === 'true',
     ...pagina,
   };
 }
