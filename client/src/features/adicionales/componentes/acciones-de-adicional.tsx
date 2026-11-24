@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
-import { useAccionDeAdicional } from "../hooks/use-accion-de-adicional";
+import { useAccionConAviso } from "@/compartido/ui/use-accion-con-aviso";
 import { desactivarAdicional, eliminarAdicional, reactivarAdicional } from "../servicios/adicionales.api";
 import type { Adicional } from "../servicios/adicionales";
 
@@ -17,7 +17,7 @@ interface AccionesDeAdicionalProps {
 /** Editar, desactivar o reactivar, y eliminar si nunca se usó; eliminar pide confirmar. */
 export function AccionesDeAdicional({ adicional, alEditar }: AccionesDeAdicionalProps) {
   const [confirmando, setConfirmando] = useState(false);
-  const { estado, ejecutar, reiniciar } = useAccionDeAdicional();
+  const { estado, ejecutar, reiniciar } = useAccionConAviso();
   const { id, nombre } = adicional;
   const eliminar = async () => {
     if (await ejecutar(() => eliminarAdicional(id), `${nombre} se eliminó.`)) setConfirmando(false);
