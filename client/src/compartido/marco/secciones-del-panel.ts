@@ -39,6 +39,13 @@ export const RUTA_DE_LA_CUENTA: Record<Rol, string> = {
   ADMINISTRADOR: "/administracion/cuenta",
 };
 
+/** Opciones del menú de la cuenta de cada rol; «Cerrar sesión» va siempre al final. */
+export const OPCIONES_DE_LA_CUENTA: Record<Rol, Seccion[]> = {
+  JUGADOR: [{ ruta: RUTA_DE_LA_CUENTA.JUGADOR, texto: "Ver mi cuenta" }],
+  RECEPCIONISTA: [{ ruta: RUTA_DE_LA_CUENTA.RECEPCIONISTA, texto: "Ver mi cuenta" }],
+  ADMINISTRADOR: [{ ruta: RUTA_DE_LA_CUENTA.ADMINISTRADOR, texto: "Ver mi cuenta" }],
+};
+
 /** El inicio del rol solo está activo en su ruta exacta; las demás, también en sus subrutas. */
 export function esSeccionActual(seccion: Seccion, inicio: string, rutaActual: string): boolean {
   if (seccion.ruta === inicio) return rutaActual === inicio;

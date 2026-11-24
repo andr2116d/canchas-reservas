@@ -289,3 +289,89 @@
     animation: none;
   }
 }
+
+/* Menú de la cuenta: un vidrio verde casi opaco, porque dentro de la barra el desenfoque no alcanza la página. */
+.menu-de-la-cuenta {
+  position: relative;
+}
+
+.barra-de-vidrio__cuenta[data-actual] {
+  background: var(--acento);
+  color: var(--sobre-acento);
+}
+
+.barra-de-vidrio__cuenta[aria-expanded="true"] .menu-de-la-cuenta__flecha {
+  rotate: 180deg;
+}
+
+.menu-de-la-cuenta__flecha {
+  transition: rotate 200ms ease;
+}
+
+.menu-de-la-cuenta__panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 14rem;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 1rem;
+  padding: 0.4rem;
+  background: linear-gradient(180deg, rgb(28 84 66 / 0.97), rgb(14 59 46 / 0.97));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 22px 44px -18px rgb(8 31 25 / 0.75);
+  transform-origin: top right;
+}
+
+.menu-de-la-cuenta__opcion {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  border-radius: 0.7rem;
+  padding: 0 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgb(244 246 239 / 0.86);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.menu-de-la-cuenta__opcion:hover,
+.menu-de-la-cuenta__opcion[aria-current="page"] {
+  background: rgb(255 255 255 / 0.1);
+  color: var(--color-papel);
+}
+
+.menu-de-la-cuenta__opcion:focus-visible {
+  outline: 2px solid var(--color-capitan);
+  outline-offset: -2px;
+}
+
+.menu-de-la-cuenta__salir {
+  margin-top: 0.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 0 0 0.7rem 0.7rem;
+  padding-top: 0.25rem;
+  color: #ffd2cf;
+}
+
+.menu-de-la-cuenta__salir:disabled {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-de-la-cuenta__panel {
+    animation: abrir-menu-de-la-cuenta 180ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+}
+
+@keyframes abrir-menu-de-la-cuenta {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}

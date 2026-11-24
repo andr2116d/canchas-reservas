@@ -14,7 +14,8 @@ test("el jugador cambia su celular y su contraseña desde Mi cuenta", async ({ p
     data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: "registro-1" },
   });
   await page.goto("/inicio");
-  await page.getByRole("link", { name: "Mi cuenta" }).click();
+  await page.getByRole("button", { name: "Mi cuenta" }).click();
+  await page.getByRole("link", { name: "Ver mi cuenta" }).click();
   await expect(page).toHaveURL("/inicio/cuenta");
   await expect(page.getByText(`DNI ${jugador.numeroDocumento}`)).toBeVisible();
   await expect(page.getByLabel(/^Nombres/)).toHaveCount(0);

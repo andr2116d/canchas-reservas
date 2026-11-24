@@ -81,8 +81,9 @@ test("recuerda el correo al cerrar sesión y permite que el navegador complete l
   await expect(page.getByRole("heading", { name: "Hola, Valeria." })).toBeVisible();
   const segundaPestana = await page.context().newPage();
   await segundaPestana.goto("/inicio");
-  await expect(segundaPestana.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
+  await expect(segundaPestana.getByRole("button", { name: "Mi cuenta" })).toBeVisible();
 
+  await page.getByRole("button", { name: "Mi cuenta" }).click();
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
 
   await expect(page).toHaveURL(RUTA_DE_ACCESO);
@@ -175,6 +176,7 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
     },
   });
   expect(creada.status()).toBe(201);
+  await page.getByRole("button", { name: "Mi cuenta" }).click();
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
 
   await expect(page).toHaveURL(RUTA_DE_ACCESO);
@@ -195,7 +197,7 @@ test("regresa al acceso cuando vence la sesión abierta", async ({ page }) => {
   await page.clock.install();
   await page.goto(RUTA_DE_ACCESO);
   await iniciar(page, jugador.correo, jugador.contrasena);
-  await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mi cuenta" })).toBeVisible();
 
   await page.context().clearCookies({ name: "sesion" });
   await page.clock.fastForward(15 * 60 * 1000 + 1000);

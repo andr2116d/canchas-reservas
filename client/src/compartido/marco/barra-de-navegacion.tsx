@@ -6,26 +6,8 @@ import { MonogramaLaPrevia } from "@/compartido/ui/monograma-la-previa";
 import type { Rol } from "../sesion/destino-de-sesion";
 import { useCerrarSesion } from "../sesion/use-cerrar-sesion";
 import { useVigenciaDeSesion } from "../sesion/use-vigencia-de-sesion";
-import {
-  esSeccionActual,
-  NOMBRE_DEL_PANEL,
-  RUTA_DE_LA_CUENTA,
-  SECCIONES_DEL_PANEL,
-} from "./secciones-del-panel";
-
-function EnlaceALaCuenta({ rol }: { rol: Rol }) {
-  const ruta = RUTA_DE_LA_CUENTA[rol];
-  const actual = usePathname().startsWith(ruta);
-  return (
-    <Link href={ruta} aria-current={actual ? "page" : undefined} className="barra-de-vidrio__cuenta">
-      <svg aria-hidden="true" viewBox="0 0 20 20" className="size-5" focusable="false">
-        <circle cx="10" cy="7" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M3.5 17c1.2-3.2 3.6-4.6 6.5-4.6s5.3 1.4 6.5 4.6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-      <span>Mi cuenta</span>
-    </Link>
-  );
-}
+import { MenuDeLaCuenta } from "./menu-de-la-cuenta";
+import { esSeccionActual, NOMBRE_DEL_PANEL, SECCIONES_DEL_PANEL } from "./secciones-del-panel";
 
 function SeccionesDelRol({ rol }: { rol: Rol }) {
   const rutaActual = usePathname();
@@ -59,7 +41,7 @@ interface BarraDeNavegacionProps {
 
 /**
  * Barra de vidrio de las pantallas internas: identifica el panel del rol, lleva
- * a sus secciones y a la cuenta, y cierra la sesión.
+ * a sus secciones y, desde el menú de la cuenta, a la cuenta y a cerrar la sesión.
  */
 export function BarraDeNavegacion({ rol, venceEn, conSecciones = true }: BarraDeNavegacionProps) {
   const { cerrar, cerrando, error } = useCerrarSesion();
@@ -75,10 +57,13 @@ export function BarraDeNavegacion({ rol, venceEn, conSecciones = true }: BarraDe
         </div>
         {rol && conSecciones && <SeccionesDelRol rol={rol} />}
         <div className="flex items-center gap-1">
-          {rol && conSecciones && <EnlaceALaCuenta rol={rol} />}
-          <button type="button" onClick={cerrar} disabled={cerrando} className="barra-de-vidrio__salir">
-            {cerrando ? "Cerrando sesión…" : "Cerrar sesión"}
-          </button>
+          {rol && conSecciones ? (
+            <MenuDeLaCuenta rol={rol} cerrar={cerrar} cerrando={cerrando} />
+          ) : (
+            <button type="button" onClick={cerrar} disabled={cerrando} className="barra-de-vidrio__salir">
+              {cerrando ? "Cerrando sesión…" : "Cerrar sesión"}
+            </button>
+          )}
         </div>
       </div>
       {error && <p role="alert" className="px-1 pt-2 text-sm font-semibold text-[#ffd2cf]">No pudimos cerrar tu sesión. Inténtalo de nuevo.</p>}

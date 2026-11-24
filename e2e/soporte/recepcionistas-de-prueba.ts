@@ -54,6 +54,7 @@ export async function crearPorApi(pagina: Page, recepcionista = unaRecepcionista
 }
 
 export async function cerrarSesion(pagina: Page) {
+  await pagina.getByRole("button", { name: "Mi cuenta" }).click();
   await pagina.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(pagina).toHaveURL("/iniciar-sesion");
 }

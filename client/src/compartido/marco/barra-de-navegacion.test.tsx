@@ -27,13 +27,40 @@ describe("BarraDeNavegacion", () => {
     expect(within(navegacion).getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
   });
 
-  it("lleva a la cuenta propia desde cualquier panel", () => {
+  it("el menú de la cuenta lleva a la cuenta propia desde cualquier panel", async () => {
     ruta.actual = "/recepcion/cuenta";
     render(<BarraDeNavegacion rol="RECEPCIONISTA" venceEn={VENCE} />);
+    const boton = screen.getByRole("button", { name: "Mi cuenta" });
 
-    expect(screen.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("href", "/recepcion/cuenta");
-    expect(screen.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
+    expect(boton).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(boton);
+
+    expect(boton).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: "Ver mi cuenta" })).toHaveAttribute("href", "/recepcion/cuenta");
+    expect(screen.getByRole("link", { name: "Ver mi cuenta" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "Historial de cambios" })).not.toBeInTheDocument();
     ruta.actual = "/administracion/recepcionistas";
+  });
+
+  it("el menú se cierra con Escape y devuelve el foco al botón", async () => {
+    render(<BarraDeNavegacion rol="ADMINISTRADOR" venceEn={VENCE} />);
+    const boton = screen.getByRole("button", { name: "Mi cuenta" });
+
+    await userEvent.click(boton);
+    await userEvent.keyboard("{Escape}");
+
+    expect(boton).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: "Ver mi cuenta" })).not.toBeInTheDocument();
+    expect(boton).toHaveFocus();
+  });
+
+  it("el menú se cierra al tocar fuera de él", async () => {
+    render(<BarraDeNavegacion rol="ADMINISTRADOR" venceEn={VENCE} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Mi cuenta" }));
+    await userEvent.click(screen.getByText("Administración"));
+
+    expect(screen.queryByRole("link", { name: "Ver mi cuenta" })).not.toBeInTheDocument();
   });
 
   it("identifica el panel del rol", () => {
@@ -47,7 +74,8 @@ describe("BarraDeNavegacion", () => {
 
     expect(screen.getByText("Recepción")).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Secciones" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Mi cuenta" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mi cuenta" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
   });
 
   it("sin rol solo ofrece cerrar la sesión", () => {
@@ -61,6 +89,7 @@ describe("BarraDeNavegacion", () => {
     vi.mocked(cerrarSesion).mockRejectedValue(new Error("sin conexión"));
     render(<BarraDeNavegacion rol="JUGADOR" venceEn={VENCE} />);
 
+    await userEvent.click(screen.getByRole("button", { name: "Mi cuenta" }));
     await userEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos cerrar tu sesión");
