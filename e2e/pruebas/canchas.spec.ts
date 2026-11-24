@@ -18,6 +18,8 @@ async function vaciarCanchas(pagina: Page) {
 
 const nombreUnico = (base: string) => `${base} ${randomInt(1000, 9999)}`;
 const ficha = (pagina: Page, nombre: string) => pagina.getByRole("article", { name: nombre });
+const pestana = (pagina: Page, nombre: "Canchas" | "Mantenimiento") =>
+  pagina.getByRole("navigation", { name: "Secciones de canchas" }).getByRole("link", { name: new RegExp(`^${nombre}`) });
 const aviso = (pagina: Page, texto: string) => pagina.getByRole("status").filter({ hasText: texto });
 
 async function agregarUna(pagina: Page, nombre: string) {
@@ -123,3 +125,82 @@ test.describe("en escritorio", () => {
     expect(primeraFicha!.y).toBeLessThan(alta!.y);
   });
 });
+
+test.describe("mantenimiento, en escritorio", () => {
+  test.skip(({ isMobile }) => isMobile, "Los bloqueos son del local: los crea un solo proyecto.");
+
+  async function abrirMantenimiento(pagina: Page, nombre: string) {
+    await abrirCanchas(pagina);
+    await agregarUna(pagina, nombre);
+    await expect(ficha(pagina, nombre)).toBeVisible();
+    await pestana(pagina, "Mantenimiento").click();
+    await expect(pagina).toHaveURL("/administracion/canchas/mantenimiento");
+  }
+
+  const bloqueos = (pagina: Page) => pagina.getByRole("complementary", { name: "Bloqueos" });
+
+  test("bloquea una cancha en un rango con motivo; se ve en la lista y en su ficha", async ({ page }) => {
+    const nombre = nombreUnico("Por bloquear");
+    await abrirMantenimiento(page, nombre);
+
+    await page.getByRole("button", { name: /^Bloquear/ }).click();
+    await expect(page.getByText("Elige al menos una cancha.")).toBeVisible();
+    await expect(page.getByText("Escribe el motivo del bloqueo.")).toBeVisible();
+    await page.getByRole("button", { name: nombre }).click();
+    await page.getByLabel(/^Motivo/).fill("Peinado del césped.");
+    await page.getByRole("button", { name: "Bloquear 1 cancha" }).click();
+
+    await expect(aviso(page, `${nombre} queda en mantenimiento en ese rango.`)).toBeVisible();
+    const proximo = bloqueos(page).getByRole("region", { name: "Próximos" }).getByRole("listitem").filter({ hasText: nombre });
+    await expect(proximo).toContainText("Peinado del césped.");
+    await expect(page.getByRole("button", { name: nombre })).toHaveAttribute("aria-pressed", "true");
+    await page.getByLabel(/^Motivo/).fill("Otra vez.");
+    await page.getByRole("button", { name: "Bloquear 1 cancha" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Ya hay un bloqueo en ese rango." })).toBeVisible();
+
+    await pestana(page, "Canchas").click();
+    await expect(ficha(page, nombre).getByText(/Próximo mantenimiento/)).toBeVisible();
+  });
+
+  test("una emergencia la pone en mantenimiento ya; al liberarla vuelve a estar operativa", async ({ page }) => {
+    const nombre = nombreUnico("Emergencia");
+    await abrirMantenimiento(page, nombre);
+
+    await page.getByRole("button", { name: nombre }).click();
+    await page.getByRole("button", { name: "Emergencia", exact: true }).click();
+    await page.getByRole("button", { name: "Hasta el fin de ese día" }).click();
+    await page.getByLabel(/^Motivo/).fill("Se rompió un reflector.");
+    await page.getByRole("button", { name: "Bloquear 1 cancha" }).click();
+
+    const enCurso = bloqueos(page).getByRole("region", { name: "En curso" }).getByRole("listitem").filter({ hasText: nombre });
+    await expect(enCurso).toBeVisible();
+    await pestana(page, "Canchas").click();
+    await expect(ficha(page, nombre).getByText("Mantenimiento")).toBeVisible();
+    await expect(ficha(page, nombre).getByText(/No se puede reservar hasta/)).toBeVisible();
+
+    await pestana(page, "Mantenimiento").click();
+    await enCurso.getByRole("button", { name: "Liberar desde ahora" }).click();
+    await enCurso.getByRole("button", { name: "Sí, liberar" }).click();
+    await expect(aviso(page, `${nombre} vuelve a estar disponible.`)).toBeVisible();
+    await pestana(page, "Canchas").click();
+    await expect(ficha(page, nombre).getByText("Operativa")).toBeVisible();
+    await page.getByText("Cambios recientes").click();
+    await expect(page.getByText(new RegExp(`liberó antes el mantenimiento de ${nombre}`))).toBeVisible();
+  });
+
+  test("quita un bloqueo que aún no empieza", async ({ page }) => {
+    const nombre = nombreUnico("Por quitar");
+    await abrirMantenimiento(page, nombre);
+    await page.getByRole("button", { name: nombre }).click();
+    await page.getByLabel(/^Motivo/).fill("Fumigación.");
+    await page.getByRole("button", { name: "Bloquear 1 cancha" }).click();
+    const proximo = bloqueos(page).getByRole("listitem").filter({ hasText: nombre });
+
+    await proximo.getByRole("button", { name: "Quitar bloqueo" }).click();
+    await proximo.getByRole("button", { name: "Sí, quitar" }).click();
+
+    await expect(aviso(page, `Se quitó el bloqueo de ${nombre}.`)).toBeVisible();
+    await expect(proximo).toHaveCount(0);
+  });
+});
+
