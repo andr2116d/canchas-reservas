@@ -2,6 +2,7 @@ import type { Cuenta } from "@/compartido/cuenta/cuenta.servidor";
 
 export function unaCuenta(cambios: Partial<Cuenta> = {}): Cuenta {
   return {
+    id: 7,
     rol: "JUGADOR",
     nombres: "Valeria",
     apellidos: "León Paredes",
@@ -12,6 +13,7 @@ export function unaCuenta(cambios: Partial<Cuenta> = {}): Cuenta {
     celular: "987654321",
     dorsal: 10,
     editables: ["correo", "celular", "dorsal"],
+    puedeCambiarTipoDeDocumento: false,
     ...cambios,
   };
 }

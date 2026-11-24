@@ -5,7 +5,6 @@ import {
   debePedirCambioDeContrasena,
   destinoDeSesion,
   RUTA_DE_ACCESO,
-  RUTA_DE_CAMBIO,
   type EstadoDeSesion,
   type Rol,
 } from "./destino-de-sesion";
@@ -28,7 +27,7 @@ export async function exigirPanel(rol: Rol) {
   const cookie = (await cookies()).toString();
   const sesion = await consultarSesionEnServidor(cookie);
   if (!sesion) redirect(RUTA_DE_ACCESO);
-  if (debePedirCambioDeContrasena(sesion)) redirect(RUTA_DE_CAMBIO);
+  if (sesion.requiereCompletarDatos || debePedirCambioDeContrasena(sesion)) redirect(destinoDeSesion(sesion));
   if (sesion.rol !== rol) redirect("/acceso-no-autorizado");
   return { cookie, sesion };
 }
@@ -36,6 +35,15 @@ export async function exigirPanel(rol: Rol) {
 export async function exigirCambioDeContrasena(): Promise<EstadoDeSesion> {
   const sesion = await consultarSesionEnServidor((await cookies()).toString());
   if (!sesion) redirect(RUTA_DE_ACCESO);
-  if (!sesion.requiereCambiarContrasena) redirect(destinoDeSesion(sesion));
+  if (sesion.requiereCompletarDatos || !sesion.requiereCambiarContrasena) redirect(destinoDeSesion(sesion));
   return sesion;
+}
+
+/** La sesión de quien debe completar sus datos; si no le toca, va a donde corresponde. */
+export async function exigirCompletarDatos(): Promise<EstadoDeSesion & { cookie: string }> {
+  const cookie = (await cookies()).toString();
+  const sesion = await consultarSesionEnServidor(cookie);
+  if (!sesion) redirect(RUTA_DE_ACCESO);
+  if (!sesion.requiereCompletarDatos) redirect(destinoDeSesion(sesion));
+  return { ...sesion, cookie };
 }

@@ -11,3 +11,20 @@ export async function actualizarMiCuenta(cambios: Partial<Record<DatoEditable, s
 export async function cambiarMiContrasena(actual: string, contrasena: string): Promise<ResultadoDeAccion> {
   return resultadoDeAccion(await enviarJson("/api/cuenta/contrasena", "PATCH", { actual, contrasena }));
 }
+
+/** Primer ingreso del personal: completa o confirma sus datos. */
+export async function completarMisDatos(datos: Record<string, string | undefined>): Promise<ResultadoDeAccion> {
+  return resultadoDeAccion(await enviarJson("/api/cuenta/datos", "POST", datos));
+}
+
+/** El cambio único de DNI a carné de extranjería, o al revés, tras leer el aviso. */
+export async function cambiarMiTipoDeDocumento(tipoDocumento: string, numeroDocumento: string): Promise<ResultadoDeAccion> {
+  return resultadoDeAccion(
+    await enviarJson("/api/cuenta/documento", "PATCH", { tipoDocumento, numeroDocumento, aceptaAviso: true }),
+  );
+}
+
+/** Cierra todas las sesiones de la cuenta menos esta. */
+export async function cerrarMisOtrasSesiones(): Promise<ResultadoDeAccion> {
+  return resultadoDeAccion(await enviarJson("/api/cuenta/sesiones/otras", "DELETE"));
+}

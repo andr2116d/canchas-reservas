@@ -12,6 +12,12 @@ describe("destinoDeSesion", () => {
     ).toBe("/recepcion");
   });
 
+  it("el personal con datos sin confirmar los completa antes que nada", () => {
+    expect(
+      destinoDeSesion({ rol: "ADMINISTRADOR", requiereCompletarDatos: true, requiereCambiarContrasena: true, cambioOmitido: true }),
+    ).toBe("/completar-datos");
+  });
+
   it("lleva al panel del rol si la contraseña no es temporal", () => {
     expect(destinoDeSesion({ rol: "ADMINISTRADOR", requiereCambiarContrasena: false })).toBe("/administracion");
   });

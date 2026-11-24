@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { Cuenta, DatoEditable } from "@/compartido/cuenta/cuenta.servidor";
 import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
+import { reglaDeUsuarioDeCorreo } from "@/compartido/formulario/regla-de-usuario-de-correo";
 import {
   campoCon,
   reglaDeCorreo,
@@ -16,41 +17,65 @@ import {
 } from "@/compartido/formulario/reglas-de-datos-personales";
 import { actualizarMiCuenta } from "../servicios/cuenta.api";
 
-const REGLAS: Record<DatoEditable, Regla> = {
+const PROPIAS = reglasDeDatosPersonales("propia");
+const REGLAS: Record<DatoEditable | "usuarioDeCorreo", Regla> = {
+  nombres: PROPIAS.nombres,
+  apellidos: PROPIAS.apellidos,
+  fechaNacimiento: PROPIAS.fechaNacimiento,
   correo: reglaDeCorreo,
-  celular: reglasDeDatosPersonales("propia").celular,
+  usuarioDeCorreo: reglaDeUsuarioDeCorreo("Escribe tu correo de La Previa."),
+  celular: PROPIAS.celular,
   dorsal: reglaDeDorsal,
 };
 
-type DatosDeContacto = Partial<Record<DatoEditable, string>>;
+type Campo = DatoEditable | "usuarioDeCorreo";
 
-function valoresActuales(cuenta: Cuenta): Record<DatoEditable, string> {
-  return { correo: cuenta.correo, celular: cuenta.celular ?? "", dorsal: cuenta.dorsal?.toString() ?? "" };
+function valoresActuales(cuenta: Cuenta): Record<Campo, string> {
+  return {
+    nombres: cuenta.nombres,
+    apellidos: cuenta.apellidos,
+    fechaNacimiento: cuenta.fechaNacimiento ?? "",
+    correo: cuenta.correo,
+    usuarioDeCorreo: cuenta.correo.split("@")[0],
+    celular: cuenta.celular ?? "",
+    dorsal: cuenta.dorsal?.toString() ?? "",
+  };
 }
 
-/** Edita los datos de contacto que el rol permite cambiar y refresca la cuenta al guardar. */
-export function useContacto(cuenta: Cuenta) {
+/**
+ * Edita lo que el rol permite cambiar de su propia cuenta. El administrador escribe solo lo
+ * que va antes de la @ de su correo institucional; se envía completo.
+ */
+export function useMisDatos(cuenta: Cuenta) {
   const router = useRouter();
   const [guardado, setGuardado] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState<string>();
+  const institucional = cuenta.rol !== "JUGADOR";
+  const dominio = cuenta.correo.split("@")[1];
+  const campos: Campo[] = cuenta.editables.map((dato) => (dato === "correo" && institucional ? "usuarioDeCorreo" : dato));
   const actuales = valoresActuales(cuenta);
-  const formulario = useForm<DatosDeContacto>({
-    resolver: zodResolver(z.object(Object.fromEntries(cuenta.editables.map((dato) => [dato, campoCon(REGLAS[dato])])))),
-    mode: "onChange",
-    defaultValues: Object.fromEntries(cuenta.editables.map((dato) => [dato, actuales[dato]])),
+  const formulario = useForm<Partial<Record<Campo, string>>>({
+    resolver: zodResolver(z.object(Object.fromEntries(campos.map((campo) => [campo, campoCon(REGLAS[campo])])))),
+    mode: "onTouched",
+    defaultValues: Object.fromEntries(campos.map((campo) => [campo, actuales[campo]])),
   });
 
-  const enviar = formulario.handleSubmit(async (cambios) => {
+  const enviar = formulario.handleSubmit(async ({ usuarioDeCorreo, ...cambios }) => {
     setGuardado(false);
     setErrorGeneral(undefined);
-    const resultado = await actualizarMiCuenta(cambios);
+    const resultado = await actualizarMiCuenta(
+      usuarioDeCorreo === undefined ? cambios : { ...cambios, correo: `${usuarioDeCorreo.trim()}@${dominio}` },
+    );
     if (resultado.tipo === "hecho") {
       setGuardado(true);
       router.refresh();
+    } else if (resultado.tipo === "datos-rechazados" && institucional && resultado.errores.correo) {
+      const { correo, ...otros } = resultado.errores;
+      setErrorGeneral(atenderRechazo(formulario, { tipo: "datos-rechazados", errores: { ...otros, usuarioDeCorreo: correo } }));
     } else {
       setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 
-  return { formulario, enviar, guardado, errorGeneral };
+  return { formulario, enviar, guardado, errorGeneral, dominio };
 }
