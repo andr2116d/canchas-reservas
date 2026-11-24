@@ -14,6 +14,10 @@ export class SinReservasAdapter implements ReservasDeCancha {
     return Promise.resolve([]);
   }
 
+  enRangos(): Promise<(ReservaAfectada & { canchaId: number })[]> {
+    return Promise.resolve([]);
+  }
+
   conReservas(): Promise<Set<number>> {
     return Promise.resolve(new Set());
   }

@@ -1,4 +1,5 @@
 import type {
+  ConsultaDeReservas,
   ReservaAfectada,
   ReservasDeCancha,
 } from '../../src/modulos/canchas/aplicacion/reservas-de-cancha.port';
@@ -21,6 +22,18 @@ export class ReservasDeCanchaDePrueba implements ReservasDeCancha {
   porJugar(canchaId: number, desde: Date): Promise<ReservaAfectada[]> {
     return Promise.resolve(
       (this.porCancha.get(canchaId) ?? []).filter((r) => r.fin > desde),
+    );
+  }
+
+  enRangos(
+    consultas: ConsultaDeReservas[],
+  ): Promise<(ReservaAfectada & { canchaId: number })[]> {
+    return Promise.resolve(
+      consultas.flatMap(({ canchaId, inicio, fin }) =>
+        (this.porCancha.get(canchaId) ?? [])
+          .filter((r) => r.inicio < fin && inicio < r.fin)
+          .map((r) => ({ ...r, canchaId })),
+      ),
     );
   }
 
