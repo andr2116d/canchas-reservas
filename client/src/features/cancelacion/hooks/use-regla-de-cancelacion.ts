@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import { useReglaEnEdicion } from "../componentes/proveedor-de-la-regla";
 import { type DatosDeLaRegla, esquemaDeLaRegla } from "../esquemas/regla.schema";
 import { guardarRegla } from "../servicios/cancelacion.api";
@@ -43,10 +43,8 @@ export function useReglaDeCancelacion(consultada: ReglaConsultada) {
     if (resultado.tipo === "guardada") {
       setAviso(resultado.cambio ? "guardada" : "sin-cambios");
       router.refresh();
-    } else if (resultado.tipo === "datos-rechazados") {
-      marcarErroresDelServer(formulario, resultado.errores);
     } else {
-      setErrorGeneral(resultado.mensaje);
+      setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 

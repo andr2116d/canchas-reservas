@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import { type DatosDeContrasenaTemporal, esquemaDeContrasenaTemporal } from "../esquemas/recepcionista.schema";
 import type { ResultadoDeAccion } from "../servicios/recepcionistas.api";
 
@@ -32,10 +32,8 @@ export function useContrasenaTemporalEntregada(
       setEntregable(contrasena);
       formulario.reset({ contrasena: "" });
       (alTerminar ?? router.refresh)();
-    } else if (resultado.tipo === "datos-rechazados") {
-      marcarErroresDelServer(formulario, resultado.errores);
     } else {
-      setErrorGeneral(resultado.mensaje);
+      setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 

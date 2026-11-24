@@ -4,6 +4,7 @@ import { useFormularioDeAcceso } from "../hooks/use-formulario-de-acceso";
 import { guardarCorreoRecordado } from "../servicios/correo-recordado";
 import { BotonDeAcceso } from "./boton-de-acceso";
 import { CampoDeAcceso } from "./campo-de-acceso";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 /** Permite iniciar sesión con correo y contraseña. */
 export function FormularioDeAcceso() {
@@ -22,7 +23,7 @@ export function FormularioDeAcceso() {
         </label>
         <p id="detalle-recordar" className="text-sm text-grava">Recuerda tu correo en este dispositivo.</p>
       </div>
-      {error && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{error}</p>}
+      <ErrorGeneral mensaje={error} />
       <BotonDeAcceso enviando={enviando} texto="Iniciar sesión" textoAlEnviar="Iniciando sesión…" />
     </form>
   );

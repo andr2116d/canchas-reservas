@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import { useAjustarDocumentoAlCambiarTipo } from "@/compartido/formulario/use-ajustar-documento";
 import { type DatosDeAlta, esquemaDeAlta } from "../esquemas/recepcionista.schema";
 import { crearRecepcionista } from "../servicios/recepcionistas.api";
@@ -50,10 +50,8 @@ export function useAltaDeRecepcionista() {
       setCreada({ id: resultado.id, usuarioDeCorreo, contrasena: datos.contrasena });
     } else if (resultado.tipo === "reactivable") {
       reactivacion.ofrecer({ id: resultado.id, nombres: resultado.nombres });
-    } else if (resultado.tipo === "datos-rechazados") {
-      marcarErroresDelServer(formulario, resultado.errores);
     } else {
-      setErrorGeneral(resultado.mensaje);
+      setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 

@@ -8,6 +8,7 @@ import { datosParaEntregar } from "../utilidades/datos-para-entregar";
 import { CampoDeContrasenaTemporal } from "./campo-de-contrasena-temporal";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 interface FormularioDeContrasenaTemporalProps {
   /** Correo de la recepcionista, para copiar sus datos de acceso. */
@@ -34,7 +35,7 @@ export function FormularioDeContrasenaTemporal({
     <FormProvider {...formulario}>
       <form noValidate onSubmit={enviar} className="flex flex-col gap-4">
         <CampoDeContrasenaTemporal />
-        {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
+        <ErrorGeneral mensaje={errorGeneral} />
         {entregable && (
           <div className="flex flex-col gap-3 rounded-lg bg-tiza px-4 py-3 text-sm text-tinta">
             <p>

@@ -10,6 +10,7 @@ import { CamposDeTarifa } from "./campos-de-tarifa";
 import { HistorialDeTarifa } from "./historial-de-tarifa";
 import { TurnosPorDia } from "./turnos-por-dia";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 const AVISOS: Record<AvisoDeGuardado, string> = {
   guardada: "Tarifa guardada. Rige para las reservas nuevas; las reservas ya hechas mantienen su precio.",
@@ -41,7 +42,7 @@ export function TarjetaDeTarifa({ tarifa }: { tarifa: TarifaDelTipo }) {
         <form noValidate onSubmit={enviar} className="flex flex-col gap-5">
           <CamposDeTarifa tipo={tarifa.tipo} />
           <TurnosPorDia tipo={tarifa.tipo} />
-          {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
+          <ErrorGeneral mensaje={errorGeneral} />
           <div className="flex flex-col items-start gap-2">
             <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} aria-label={`Guardar tarifa de ${nombre.toLowerCase()}`} className={BOTON_PRINCIPAL}>
               <TextoDeEnvio enviando={isSubmitting} texto="Guardar tarifa" textoAlEnviar="Guardando…" />

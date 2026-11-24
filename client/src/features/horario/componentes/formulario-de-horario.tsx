@@ -10,6 +10,7 @@ import { DiasDistintos } from "./dias-distintos";
 import { DiasQueAbre } from "./dias-que-abre";
 import { SemanaResumida } from "./semana-resumida";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 const AVISOS: Record<AvisoDeGuardado, string> = {
   guardado: "Horario guardado. Rige para las reservas nuevas; las reservas ya hechas no cambian.",
@@ -51,7 +52,7 @@ export function FormularioDeHorario({ consultado }: { consultado: HorarioConsult
           <div className="border-t border-linea pt-5">
             <SemanaResumida />
           </div>
-          {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
+          <ErrorGeneral mensaje={errorGeneral} />
           <div className="flex flex-wrap items-center gap-4">
             <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
               <TextoDeEnvio enviando={isSubmitting} texto="Guardar horario" textoAlEnviar="Guardando…" />

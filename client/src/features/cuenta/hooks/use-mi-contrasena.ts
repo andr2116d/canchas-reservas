@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import { campoCon, reglaDeContrasena } from "@/compartido/formulario/reglas-de-datos-personales";
 import { cambiarMiContrasena } from "../servicios/cuenta.api";
 
@@ -37,10 +37,8 @@ export function useMiContrasena() {
     if (resultado.tipo === "hecho") {
       setCambiada(true);
       formulario.reset();
-    } else if (resultado.tipo === "datos-rechazados") {
-      marcarErroresDelServer(formulario, resultado.errores);
     } else {
-      setErrorGeneral(resultado.mensaje);
+      setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 

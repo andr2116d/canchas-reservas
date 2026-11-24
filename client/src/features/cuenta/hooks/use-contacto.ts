@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { Cuenta, DatoEditable } from "@/compartido/cuenta/cuenta.servidor";
-import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import {
   campoCon,
   reglaDeCorreo,
@@ -47,10 +47,8 @@ export function useContacto(cuenta: Cuenta) {
     if (resultado.tipo === "hecho") {
       setGuardado(true);
       router.refresh();
-    } else if (resultado.tipo === "datos-rechazados") {
-      marcarErroresDelServer(formulario, resultado.errores);
     } else {
-      setErrorGeneral(resultado.mensaje);
+      setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 

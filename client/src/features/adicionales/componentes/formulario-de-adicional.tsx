@@ -10,6 +10,7 @@ import { LARGO_MAXIMO_DE_LA_DESCRIPCION, LARGO_MAXIMO_DEL_NOMBRE } from "../esqu
 import { useFormularioDeAdicional } from "../hooks/use-formulario-de-adicional";
 import type { ResultadoDelGuardado } from "../servicios/adicionales.api";
 import type { Adicional, DatosDeAdicional } from "../servicios/adicionales";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 interface FormularioDeAdicionalProps {
   /** Prefijo de los ids, para que el alta y la edición convivan en la pantalla. */
@@ -43,7 +44,7 @@ export function FormularioDeAdicional({ id, nombre, boton, ayudaDelPrecio, enfoc
         </div>
         <p className="-mt-2 text-xs text-grava">{ayudaDelPrecio}</p>
         <CampoDeTexto nombre="descripcion" id={`${id}-descripcion`} etiqueta="Descripción" opcional maxLength={LARGO_MAXIMO_DE_LA_DESCRIPCION} autoComplete="off" placeholder="Talla, color o marca, para reconocerlo" />
-        {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
+        <ErrorGeneral mensaje={errorGeneral} />
         <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={`${BOTON_PRINCIPAL} w-fit`}>
           <TextoDeEnvio enviando={isSubmitting} texto={boton.texto} textoAlEnviar={boton.enviando} />
         </button>

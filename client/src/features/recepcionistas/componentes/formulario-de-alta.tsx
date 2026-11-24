@@ -10,6 +10,7 @@ import { CamposDeRecepcionista } from "./campos-de-recepcionista";
 import { CredencialesEntregables } from "./credenciales-entregables";
 import { BOTON_PRINCIPAL, TARJETA } from "@/compartido/ui/estilos";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 /** Formulario del administrador para crear la cuenta de una recepcionista. */
 export function FormularioDeAlta({ dominio }: { dominio: string }) {
@@ -32,9 +33,7 @@ export function FormularioDeAlta({ dominio }: { dominio: string }) {
       <form noValidate onSubmit={alta.enviar} className={`${TARJETA} flex flex-col gap-6`}>
         <CamposDeRecepcionista dominio={dominio} />
         <CampoDeContrasenaTemporal />
-        {alta.errorGeneral && (
-          <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{alta.errorGeneral}</p>
-        )}
+        <ErrorGeneral mensaje={alta.errorGeneral} />
         {alta.reactivacion.reactivable && (
           <AvisoDeReactivacion
             nombres={alta.reactivacion.reactivable.nombres}

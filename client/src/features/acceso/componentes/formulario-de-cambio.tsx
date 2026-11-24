@@ -4,6 +4,7 @@ import { useCambioDeContrasena } from "../hooks/use-cambio-de-contrasena";
 import { useOmitirCambio } from "../hooks/use-omitir-cambio";
 import { BotonDeAcceso } from "./boton-de-acceso";
 import { CampoDeAcceso } from "./campo-de-acceso";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 /**
  * Pide una contraseña nueva y su confirmación. También deja el cambio para
@@ -19,7 +20,7 @@ export function FormularioDeCambio({ panel }: { panel: string }) {
       <p id="requisitos" className="text-sm text-grava">Usa al menos 8 caracteres y un número.</p>
       <CampoDeAcceso id="contrasena" name="contrasena" etiqueta="Nueva contraseña" type="password" autoComplete="new-password" minLength={8} maxLength={64} aria-describedby="requisitos" />
       <CampoDeAcceso id="confirmacion" name="confirmacion" etiqueta="Confirma la contraseña" type="password" autoComplete="new-password" maxLength={64} />
-      {mensajeDeError && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{mensajeDeError}</p>}
+      <ErrorGeneral mensaje={mensajeDeError} />
       <BotonDeAcceso enviando={enviando} texto="Cambiar contraseña" textoAlEnviar="Guardando contraseña…" />
       <div className="grid gap-1 text-center">
         <button

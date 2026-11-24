@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useBorrador } from "@/compartido/horario/borrador";
-import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import { type DatosDeTarifa, esquemaDeTarifa } from "../esquemas/tarifa.schema";
 import { guardarTarifa } from "../servicios/tarifas.api";
 import type { TarifaDelTipo } from "../servicios/tarifas";
@@ -50,10 +50,8 @@ export function useTarifa(tarifa: TarifaDelTipo) {
     if (resultado.tipo === "guardada") {
       setAviso(resultado.cambio ? "guardada" : "sin-cambios");
       router.refresh();
-    } else if (resultado.tipo === "datos-rechazados") {
-      marcarErroresDelServer(formulario, resultado.errores);
     } else {
-      setErrorGeneral(resultado.mensaje);
+      setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 

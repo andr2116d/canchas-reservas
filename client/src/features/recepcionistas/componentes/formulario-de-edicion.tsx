@@ -6,6 +6,7 @@ import { useEdicionDeRecepcionista } from "../hooks/use-edicion-de-recepcionista
 import { CamposDeRecepcionista } from "./campos-de-recepcionista";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 interface FormularioDeEdicionProps {
   id: number;
@@ -22,7 +23,7 @@ export function FormularioDeEdicion({ id, dominio, datos }: FormularioDeEdicionP
     <FormProvider {...formulario}>
       <form noValidate onSubmit={enviar} className="flex flex-col gap-6">
         <CamposDeRecepcionista dominio={dominio} />
-        {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
+        <ErrorGeneral mensaje={errorGeneral} />
         <div className="flex flex-wrap items-center gap-4">
           <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
             <TextoDeEnvio enviando={isSubmitting} texto="Guardar cambios" textoAlEnviar="Guardando…" />

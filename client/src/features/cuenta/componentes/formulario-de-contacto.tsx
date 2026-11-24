@@ -8,6 +8,7 @@ import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 import { useContacto } from "../hooks/use-contacto";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 /** Datos de contacto que la persona puede cambiar de su propia cuenta. */
 export function FormularioDeContacto({ cuenta }: { cuenta: Cuenta }) {
@@ -27,7 +28,7 @@ export function FormularioDeContacto({ cuenta }: { cuenta: Cuenta }) {
         {editable("dorsal") && (
           <CampoDeTexto nombre="dorsal" etiqueta="Dorsal" opcional inputMode="numeric" ayuda="Del 1 al 99." filtrarEntrada={filtrarDorsal} />
         )}
-        {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
+        <ErrorGeneral mensaje={errorGeneral} />
         <div className="flex flex-wrap items-center gap-4">
           <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
             <TextoDeEnvio enviando={isSubmitting} texto="Guardar cambios" textoAlEnviar="Guardando…" />

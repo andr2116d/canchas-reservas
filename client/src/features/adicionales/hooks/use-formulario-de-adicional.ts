@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
+import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import { esquemaDeAdicional } from "../esquemas/adicional.schema";
 import type { ResultadoDelGuardado } from "../servicios/adicionales.api";
 import type { Adicional, DatosDeAdicional } from "../servicios/adicionales";
@@ -33,10 +33,8 @@ export function useFormularioDeAdicional({ inicial, enviar, alGuardar, limpiarAl
     if (resultado.tipo === "guardado") {
       if (limpiarAlGuardar) formulario.reset(SIN_DATOS);
       alGuardar(resultado.adicional);
-    } else if (resultado.tipo === "datos-rechazados") {
-      marcarErroresDelServer(formulario, resultado.errores);
     } else {
-      setErrorGeneral(resultado.mensaje);
+      setErrorGeneral(atenderRechazo(formulario, resultado));
     }
   });
 

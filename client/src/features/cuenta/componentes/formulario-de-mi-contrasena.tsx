@@ -6,6 +6,7 @@ import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
 import { BOTON_PRINCIPAL } from "@/compartido/ui/estilos";
 import { useMiContrasena } from "../hooks/use-mi-contrasena";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
+import { ErrorGeneral } from "@/compartido/formulario/error-general";
 
 /** Cambio de contraseña desde la cuenta: pide la actual y la nueva dos veces. */
 export function FormularioDeMiContrasena() {
@@ -25,7 +26,7 @@ export function FormularioDeMiContrasena() {
           maxLength={LARGOS.contrasenaMaxima}
         />
         <CampoDeTexto nombre="confirmacion" etiqueta="Confirma la contraseña nueva" type="password" autoComplete="new-password" maxLength={LARGOS.contrasenaMaxima} />
-        {errorGeneral && <p role="alert" className="rounded-lg bg-error-fondo px-4 py-3 text-sm text-error">{errorGeneral}</p>}
+        <ErrorGeneral mensaje={errorGeneral} />
         {cambiada && (
           <p role="status" className="rounded-lg bg-tiza px-4 py-3 text-sm font-semibold text-botella">
             Contraseña cambiada. Cerramos tus otras sesiones abiertas.
