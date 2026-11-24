@@ -1,6 +1,6 @@
 "use client";
 
-import { escribirHora, leerHora } from "../utilidades/pasos-del-marcador";
+import { escribirHora, leerHora } from "./pasos-del-marcador";
 import { ColumnaDelMarcador } from "./columna-del-marcador";
 
 export interface MarcadorDeHoraProps {

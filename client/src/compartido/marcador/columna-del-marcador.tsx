@@ -1,6 +1,6 @@
 "use client";
 
-import { useColumnaDelMarcador } from "../hooks/use-columna-del-marcador";
+import { useColumnaDelMarcador } from "./use-columna-del-marcador";
 
 export interface ColumnaDelMarcadorProps {
   id: string;

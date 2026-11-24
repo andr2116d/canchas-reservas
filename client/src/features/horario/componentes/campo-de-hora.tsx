@@ -2,7 +2,7 @@
 
 import { Controller, useFormContext } from "react-hook-form";
 import type { DatosDelFormularioDeHorario } from "../esquemas/horario.schema";
-import { MarcadorDeHora } from "./marcador-de-hora";
+import { MarcadorDeHora } from "@/compartido/marcador/marcador-de-hora";
 
 type Hora = "abre" | "cierra" | "inicioDeLaNoche";
 type CampoDeHorario = Hora | `distintos.${number}.${Hora}`;

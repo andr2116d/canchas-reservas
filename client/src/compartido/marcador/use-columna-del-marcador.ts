@@ -1,7 +1,7 @@
 "use client";
 
 import { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
-import { bajar, dosCifras, subir } from "../utilidades/pasos-del-marcador";
+import { bajar, dosCifras, subir } from "./pasos-del-marcador";
 
 interface Opciones {
   valor: number;
