@@ -14,10 +14,16 @@
   color: var(--color-papel);
   font-size: 0.875rem;
   font-weight: 600;
-  translate: -50% 160%;
-  transition: translate 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  /* Escondido del todo, aunque esté vacío: baja más que su propia distancia al borde. */
+  translate: -50% calc(100% + 2rem + env(safe-area-inset-bottom, 0px));
+  visibility: hidden;
+  transition:
+    translate 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    visibility 0s linear 0.35s;
 }
 
 .aviso-flotante[data-visible="true"] {
   translate: -50% 0;
+  visibility: visible;
+  transition-delay: 0s;
 }
