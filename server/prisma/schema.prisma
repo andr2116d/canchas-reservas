@@ -63,6 +63,7 @@ model Usuario {
   reglasDeCancelacionGuardadas ReglaDeCancelacion[]
   cambiosDeCanchas             CambioDeCancha[]
   bloqueosCreados              BloqueoDeCancha[]
+  cambiosDeAdicionales         CambioDeAdicional[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -298,4 +299,54 @@ model BloqueoDeCancha {
   @@index([canchaId, inicio])
   @@index([fin])
   @@map("bloqueo_de_cancha")
+}
+
+enum EstadoDeAdicional {
+  ACTIVO      @map("activo")
+  DESACTIVADO @map("desactivado")
+
+  @@map("estado_de_adicional")
+}
+
+/// Material que el local presta en la cancha y su precio por unidad perdida o rota, con IGV.
+model Adicional {
+  id                Int                 @id @default(autoincrement())
+  nombre            String
+  nombreNormalizado String              @unique @map("nombre_normalizado")
+  descripcion       String?
+  precio            Decimal             @db.Decimal(10, 2)
+  estado            EstadoDeAdicional   @default(ACTIVO)
+  creadoEn          DateTime            @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn     DateTime            @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  cambios           CambioDeAdicional[]
+
+  @@map("adicional")
+}
+
+enum AccionSobreAdicional {
+  ALTA          @map("alta")
+  EDICION       @map("edicion")
+  DESACTIVACION @map("desactivacion")
+  REACTIVACION  @map("reactivacion")
+  ELIMINACION   @map("eliminacion")
+
+  @@map("accion_sobre_adicional")
+}
+
+/// Auditoría de los adicionales: quién hizo cada acción y cuándo. Conserva el nombre si el adicional se elimina.
+model CambioDeAdicional {
+  id                 Int                  @id @default(autoincrement())
+  adicionalId        Int?                 @map("adicional_id")
+  nombreDelAdicional String               @map("nombre_del_adicional")
+  accion             AccionSobreAdicional
+  /// En un alta, los valores con que se creó; en una edición, el valor anterior y el nuevo de lo que cambió.
+  detalle            Json?
+  ejecutadoPorId     Int                  @map("ejecutado_por_id")
+  ocurridoEn         DateTime             @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  adicional          Adicional?           @relation(fields: [adicionalId], references: [id], onDelete: SetNull)
+  ejecutadoPor       Usuario              @relation(fields: [ejecutadoPorId], references: [id])
+
+  @@index([ocurridoEn])
+  @@index([adicionalId])
+  @@map("cambio_de_adicional")
 }
