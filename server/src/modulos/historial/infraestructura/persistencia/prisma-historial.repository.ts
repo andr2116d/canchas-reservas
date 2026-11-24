@@ -3,6 +3,7 @@ import {
   CIFRADOR,
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
+import { nombreDelAutor } from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import { Prisma } from '../../../../generated/prisma/client';
 import type { Accion, Categoria } from '../../dominio/categorias-del-historial';
@@ -118,9 +119,7 @@ export class PrismaHistorialRepository implements HistorialRepository {
         {
           id: u.id,
           rol: u.rol,
-          nombre: [u.nombresCifrado, u.apellidosCifrado]
-            .map((valor) => this.cifrador.descifrar(valor))
-            .join(' '),
+          nombre: nombreDelAutor(this.cifrador, u),
         },
       ]),
     );

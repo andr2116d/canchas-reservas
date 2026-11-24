@@ -1,3 +1,7 @@
+import {
+  COLUMNAS_DEL_AUTOR,
+  nombreDelAutor,
+} from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   CIFRADOR,
@@ -15,7 +19,7 @@ import { HorarioSemanal } from '../../dominio/horario-semanal';
 
 const COMPLETO = {
   dias: true,
-  guardadoPor: { select: { nombresCifrado: true, apellidosCifrado: true } },
+  guardadoPor: { select: COLUMNAS_DEL_AUTOR },
 } as const satisfies Prisma.HorarioDeAtencionInclude;
 
 // El más reciente primero; el id desempata dos guardados en el mismo milisegundo.
@@ -109,13 +113,10 @@ export class PrismaHorarioRepository implements HorarioRepository {
         ),
       ]),
     );
-    const { nombresCifrado, apellidosCifrado } = fila.guardadoPor;
     return {
       horario: HorarioSemanal.restaurar(fila.minutoDeInicioDeLaNoche, dias),
       guardadoEn: fila.guardadoEn,
-      guardadoPor: [nombresCifrado, apellidosCifrado]
-        .map((valor) => this.cifrador.descifrar(valor))
-        .join(' '),
+      guardadoPor: nombreDelAutor(this.cifrador, fila.guardadoPor),
     };
   }
 }

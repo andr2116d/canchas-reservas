@@ -1,3 +1,7 @@
+import {
+  COLUMNAS_DEL_AUTOR,
+  nombreDelAutor,
+} from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   CIFRADOR,
@@ -84,9 +88,7 @@ export class PrismaRecepcionistaRepository implements RecepcionistaRepository {
         accionesRecibidas: {
           orderBy: { ocurridoEn: 'desc' },
           include: {
-            ejecutadoPor: {
-              select: { nombresCifrado: true, apellidosCifrado: true },
-            },
+            ejecutadoPor: { select: COLUMNAS_DEL_AUTOR },
           },
         },
       },
@@ -99,12 +101,7 @@ export class PrismaRecepcionistaRepository implements RecepcionistaRepository {
         ({ accion, ocurridoEn, ejecutadoPor }) => ({
           accion,
           ocurridoEn,
-          ejecutadoPor: [
-            ejecutadoPor.nombresCifrado,
-            ejecutadoPor.apellidosCifrado,
-          ]
-            .map((valor) => this.cifrador.descifrar(valor))
-            .join(' '),
+          ejecutadoPor: nombreDelAutor(this.cifrador, ejecutadoPor),
         }),
       ),
     };

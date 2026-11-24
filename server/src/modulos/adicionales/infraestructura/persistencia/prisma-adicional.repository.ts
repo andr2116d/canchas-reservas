@@ -1,3 +1,7 @@
+import {
+  COLUMNAS_DEL_AUTOR,
+  nombreDelAutor,
+} from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   CIFRADOR,
@@ -19,7 +23,7 @@ import { nombreRepetido } from '../../aplicacion/comprobaciones-de-adicional';
 type FilaDeAdicional = Prisma.AdicionalGetPayload<object>;
 
 const CON_AUTOR = {
-  ejecutadoPor: { select: { nombresCifrado: true, apellidosCifrado: true } },
+  ejecutadoPor: { select: COLUMNAS_DEL_AUTOR },
 } as const satisfies Prisma.CambioDeAdicionalInclude;
 
 function aAdicional(fila: FilaDeAdicional): Adicional {
@@ -133,12 +137,7 @@ export class PrismaAdicionalRepository implements AdicionalRepository {
     return filas.map((fila) => ({
       accion: fila.accion,
       nombreDelAdicional: fila.nombreDelAdicional,
-      ejecutadoPor: [
-        fila.ejecutadoPor.nombresCifrado,
-        fila.ejecutadoPor.apellidosCifrado,
-      ]
-        .map((valor) => this.cifrador.descifrar(valor))
-        .join(' '),
+      ejecutadoPor: nombreDelAutor(this.cifrador, fila.ejecutadoPor),
       ocurridoEn: fila.ocurridoEn,
       detalle: fila.detalle as CambioRegistrado['detalle'],
     }));

@@ -1,3 +1,7 @@
+import {
+  COLUMNAS_DEL_AUTOR,
+  nombreDelAutor,
+} from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   CIFRADOR,
@@ -13,7 +17,7 @@ import type {
 
 const COMPLETA = {
   rangos: true,
-  guardadaPor: { select: { nombresCifrado: true, apellidosCifrado: true } },
+  guardadaPor: { select: COLUMNAS_DEL_AUTOR },
 } as const satisfies Prisma.ReglaDeCancelacionInclude;
 
 // La más reciente primero; el id desempata dos guardados en el mismo milisegundo.
@@ -81,7 +85,6 @@ export class PrismaReglaDeCancelacionRepository implements ReglaDeCancelacionRep
   }
 
   private aVersion(fila: FilaDeLaRegla): VersionDeLaRegla {
-    const { nombresCifrado, apellidosCifrado } = fila.guardadaPor;
     return {
       regla: ReglaDeCancelacion.restaurar(
         fila.rangos.map(({ desdeHoras, porcentaje, ofreceCredito }) => ({
@@ -91,9 +94,7 @@ export class PrismaReglaDeCancelacionRepository implements ReglaDeCancelacionRep
         })),
       ),
       guardadaEn: fila.guardadaEn,
-      guardadaPor: [nombresCifrado, apellidosCifrado]
-        .map((valor) => this.cifrador.descifrar(valor))
-        .join(' '),
+      guardadaPor: nombreDelAutor(this.cifrador, fila.guardadaPor),
     };
   }
 }

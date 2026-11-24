@@ -1,3 +1,7 @@
+import {
+  COLUMNAS_DEL_AUTOR,
+  nombreDelAutor,
+} from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   CIFRADOR,
@@ -15,7 +19,7 @@ import type {
 import type { TipoDeCancha } from '../../../../compartido/dominio/tipo-de-cancha';
 
 const CON_QUIEN_LA_GUARDO = {
-  guardadaPor: { select: { nombresCifrado: true, apellidosCifrado: true } },
+  guardadaPor: { select: COLUMNAS_DEL_AUTOR },
 } as const satisfies Prisma.TarifaDeCanchaInclude;
 
 // La más reciente primero; el id desempata dos guardados en el mismo milisegundo.
@@ -90,7 +94,6 @@ export class PrismaTarifaRepository implements TarifaRepository {
   }
 
   private aVersion(fila: FilaDeTarifa): VersionDeTarifa {
-    const { nombresCifrado, apellidosCifrado } = fila.guardadaPor;
     return {
       tarifa: new Tarifa({
         tipo: fila.tipoDeCancha,
@@ -100,9 +103,7 @@ export class PrismaTarifaRepository implements TarifaRepository {
         ofreceTurnoCorto: fila.ofreceTurnoCorto,
       }),
       guardadaEn: fila.guardadaEn,
-      guardadaPor: [nombresCifrado, apellidosCifrado]
-        .map((valor) => this.cifrador.descifrar(valor))
-        .join(' '),
+      guardadaPor: nombreDelAutor(this.cifrador, fila.guardadaPor),
     };
   }
 }
