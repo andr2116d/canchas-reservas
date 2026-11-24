@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
-import { unJugadorNuevo } from "../soporte/jugador-de-prueba";
-import { CONTRASENA_TEMPORAL, crearAdministradorDePrueba, DOMINIO_DE_PRUEBA } from "../soporte/personal-de-prueba";
+import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { CONTRASENA_TEMPORAL, crearAdministradorDePrueba, DOMINIO_DE_PRUEBA } from "../../soporte/personal-de-prueba";
 
 const RUTA_DE_ACCESO = "/iniciar-sesion";
 const CONTRASENA_NUEVA = "definitiva2026";

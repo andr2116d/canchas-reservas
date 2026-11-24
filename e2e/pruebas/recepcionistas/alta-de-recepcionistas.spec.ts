@@ -1,13 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import {
-  cerrarSesion,
-  correoDe,
-  crearPorApi,
-  entrarComoAdministrador,
-  iniciarSesion,
-  unaRecepcionistaNueva,
-  type RecepcionistaDePrueba,
-} from "../soporte/recepcionistas-de-prueba";
+import { correoDe, crearPorApi, unaRecepcionistaNueva, type RecepcionistaDePrueba } from "../../soporte/recepcionistas-de-prueba";
+import { cerrarSesion, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
 
 async function llenarDatos(pagina: Page, recepcionista: RecepcionistaDePrueba) {
   await pagina.goto("/administracion/recepcionistas/nueva");

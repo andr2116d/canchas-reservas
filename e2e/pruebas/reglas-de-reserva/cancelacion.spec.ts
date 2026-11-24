@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
-import { unJugadorNuevo } from "../soporte/jugador-de-prueba";
-import { entrarComoAdministrador } from "../soporte/recepcionistas-de-prueba";
+import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // La regla de cancelación es una sola para el local: las pruebas que guardan van en orden y en un solo proyecto.
 test.describe.configure({ mode: "serial" });

@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
-import { entrarComoAdministrador } from "../soporte/recepcionistas-de-prueba";
+import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // Las canchas son del local: la primera vez necesita la lista vacía, así que el archivo va en orden.
 test.describe.configure({ mode: "serial" });

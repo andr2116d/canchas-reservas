@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
-import { entrarComoAdministrador } from "../soporte/recepcionistas-de-prueba";
+import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // El catálogo es del local: la lista vacía y los nombres únicos necesitan un orden.
 test.describe.configure({ mode: "serial" });
@@ -54,11 +54,12 @@ test.describe("en escritorio", () => {
     await precio.pressSequentially("-1a2");
     await expect(precio).toHaveValue("12");
     await precio.fill("0");
-    await alta(page).getByLabel(/^Nombre/).fill(nombreUnico("Conos"));
+    const conos = nombreUnico("Conos");
+    await alta(page).getByLabel(/^Nombre/).fill(conos);
     await alta(page).getByRole("button", { name: "Agregar al catálogo" }).click();
 
     await expect(alta(page).getByText("El monto debe ser mayor que cero.")).toBeVisible();
-    await expect(page.getByRole("list", { name: "Catálogo" }).getByRole("listitem")).toHaveCount(1);
+    await expect(fila(page, conos)).toHaveCount(0);
   });
 
   test("si el nombre ya existe, avisa y no guarda", async ({ page }) => {
@@ -67,7 +68,8 @@ test.describe("en escritorio", () => {
     await agregar(page, "BALON", "40");
 
     await expect(alta(page).getByText("Ya existe un adicional llamado «BALON».")).toBeVisible();
-    await expect(page.getByRole("list", { name: "Catálogo" }).getByRole("listitem")).toHaveCount(1);
+    await expect(fila(page, "BALON")).toHaveCount(0);
+    await expect(fila(page, "Balón")).toHaveCount(1);
   });
 
   test("edita el nombre y el precio; el cambio queda registrado con el antes y el después", async ({ page }) => {

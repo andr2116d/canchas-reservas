@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { type JugadorDePrueba, unJugadorNuevo } from "../soporte/jugador-de-prueba";
+import { type JugadorDePrueba, unJugadorNuevo } from "../../soporte/jugador-de-prueba";
 
 // La etiqueta visible termina en asterisco; se busca por su comienzo.
 const campo = (pagina: Page, nombre: string) => pagina.getByLabel(new RegExp(`^${nombre}`));

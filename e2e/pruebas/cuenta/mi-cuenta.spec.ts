@@ -1,12 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { unJugadorNuevo } from "../soporte/jugador-de-prueba";
-import {
-  cerrarSesion,
-  correoDe,
-  crearPorApi,
-  entrarComoAdministrador,
-  iniciarSesion,
-} from "../soporte/recepcionistas-de-prueba";
+import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { correoDe, crearPorApi } from "../../soporte/recepcionistas-de-prueba";
+import { cerrarSesion, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
 
 test("el jugador cambia su celular y su contraseña desde Mi cuenta", async ({ page }) => {
   const jugador = unJugadorNuevo();

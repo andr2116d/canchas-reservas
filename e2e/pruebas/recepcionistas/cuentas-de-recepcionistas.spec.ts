@@ -1,11 +1,6 @@
 import { expect, test } from "@playwright/test";
-import {
-  cerrarSesion,
-  correoDe,
-  crearPorApi,
-  entrarComoAdministrador,
-  iniciarSesion,
-} from "../soporte/recepcionistas-de-prueba";
+import { correoDe, crearPorApi } from "../../soporte/recepcionistas-de-prueba";
+import { cerrarSesion, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
 
 test("una cuenta desactivada no inicia sesión y pasa al listado de desactivadas", async ({ page }) => {
   await entrarComoAdministrador(page);

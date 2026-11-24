@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { unJugadorNuevo } from "../soporte/jugador-de-prueba";
-import { entrarComoAdministrador } from "../soporte/recepcionistas-de-prueba";
+import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // El horario y las tarifas son del local entero: las pruebas que guardan van en
 // orden y en un solo proyecto; en celular solo se comprueba que la pantalla se usa bien.

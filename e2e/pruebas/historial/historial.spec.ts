@@ -1,8 +1,8 @@
-import { randomInt } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
-import { unJugadorNuevo } from "../soporte/jugador-de-prueba";
-import { crearAdministradorDePrueba } from "../soporte/personal-de-prueba";
-import { entrarComoAdministrador } from "../soporte/recepcionistas-de-prueba";
+import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { crearAdministradorDePrueba } from "../../soporte/personal-de-prueba";
+import { crearPorApi } from "../../soporte/recepcionistas-de-prueba";
+import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 async function abrirHistorial(pagina: Page) {
   await entrarComoAdministrador(pagina);
@@ -17,24 +17,19 @@ const registros = (pagina: Page) => pagina.locator(".linea-de-tiempo").getByRole
 test.describe("en escritorio", () => {
   test.skip(({ isMobile }) => isMobile, "Los filtros se prueban una vez.");
 
-  test("administración ve quién cambió qué y cuándo, con el antes y el después", async ({ page }) => {
+  test("administración ve quién cambió qué, sobre quién y cuándo, y lo importante resaltado", async ({ page }) => {
     await entrarComoAdministrador(page);
-    const nombre = `Pelota ${randomInt(1000, 9999)}`;
-    const alta = await page.request.post("/api/adicionales", { data: { nombre, precio: "10" } });
-    const { id } = (await alta.json()) as { id: number };
-    await page.request.put(`/api/adicionales/${id}`, { data: { nombre, precio: "12" } });
+    const recepcionista = await crearPorApi(page);
+    await page.request.post(`/api/recepcionistas/${recepcionista.id}/desactivacion`);
     await page.getByRole("button", { name: "Mi cuenta" }).click();
     await page.getByRole("link", { name: "Historial de cambios" }).click();
 
-    await page.getByRole("group", { name: "Categoría" }).getByRole("button", { name: "Adicionales" }).click();
-    await page.getByLabel("Acción").selectOption("EDICION");
-    await expect(page).toHaveURL(/categoria=ADICIONALES&accion=EDICION/);
-    const edicion = registros(page).filter({ hasText: `editó el adicional ${nombre}` });
+    await page.getByRole("group", { name: "Categoría" }).getByRole("button", { name: "Cuentas" }).click();
+    await page.getByLabel("Acción").selectOption("DESACTIVACION");
+    await expect(page).toHaveURL(/categoria=CUENTAS&accion=DESACTIVACION/);
+    const nombre = `${recepcionista.nombres} ${recepcionista.apellidos}`;
 
-    await expect(edicion).toContainText("Importante");
-    await edicion.getByText("Ver qué cambió").click();
-    await expect(edicion.getByRole("row", { name: /Precio por unidad/ })).toContainText("S/ 10.00");
-    await expect(edicion.getByRole("row", { name: /Precio por unidad/ })).toContainText("S/ 12.00");
+    await expect(registros(page).filter({ hasText: `desactivó la cuenta de ${nombre}` })).toContainText("Importante");
   });
 
   test("los atajos de período filtran por días de Lima", async ({ page }) => {
