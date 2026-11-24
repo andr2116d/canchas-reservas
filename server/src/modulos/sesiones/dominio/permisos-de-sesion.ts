@@ -15,6 +15,7 @@ const PERMISOS_POR_ROL = {
     'tarifas:calcular',
     'horario:gestionar',
     'cancelacion:gestionar',
+    'canchas:gestionar',
   ],
   RECEPCIONISTA: ['panel:recepcion', 'cuenta:propia', 'tarifas:calcular'],
   JUGADOR: ['panel:jugador', 'cuenta:propia', 'tarifas:calcular'],
