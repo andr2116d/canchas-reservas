@@ -3,7 +3,7 @@
 import { type ReactNode, useState } from "react";
 import { TARJETA } from "@/compartido/ui/estilos";
 import { ACCIONES, ACCIONES_POR_CATEGORIA, type Autor, CATEGORIAS, type Categoria } from "../servicios/historial";
-import { FILTROS_INICIALES, type Filtros, hayFiltros } from "../utilidades/filtros";
+import { aDireccion, FILTROS_INICIALES, type Filtros, hayFiltros } from "../utilidades/filtros";
 import { useConsultarHistorial } from "./consulta-del-historial";
 
 interface FiltrosDelHistorialProps {
@@ -78,35 +78,52 @@ function Opciones({ filtros, aplicar, limpiar }: { filtros: Filtros; aplicar: Ap
   );
 }
 
+/**
+ * Lo que la barra muestra: se actualiza al instante con cada cambio, para que dos cambios
+ * seguidos se sumen aunque la página aún no llegue. Si la dirección cambia por otra vía
+ * (páginas, limpiar), se toma de nuevo.
+ */
+function useFiltrosEnPantalla(filtros: Filtros) {
+  const [enPantalla, setEnPantalla] = useState(filtros);
+  const [origen, setOrigen] = useState(aDireccion(filtros));
+  if (aDireccion(filtros) !== origen) {
+    setOrigen(aDireccion(filtros));
+    setEnPantalla(filtros);
+  }
+  return [enPantalla, setEnPantalla] as const;
+}
+
+const invertido = ({ desde, hasta }: Pick<Filtros, "desde" | "hasta">) => Boolean(desde && hasta && hasta < desde);
+
 /** Filtros combinables en una barra compacta; cada cambio consulta de nuevo desde la primera página. */
 export function FiltrosDelHistorial({ filtros, autores, aviso }: FiltrosDelHistorialProps) {
   const consultar = useConsultarHistorial();
-  const [fechas, setFechas] = useState({ desde: filtros.desde, hasta: filtros.hasta });
-  const rangoInvertido = Boolean(fechas.desde && fechas.hasta && fechas.hasta < fechas.desde);
-  const aplicar: Aplicar = (cambios) => consultar({ ...filtros, ...cambios, pagina: 1 });
-  const cambiarFecha = (cambio: Partial<typeof fechas>) => {
-    const nuevas = { ...fechas, ...cambio };
-    setFechas(nuevas);
-    if (!(nuevas.desde && nuevas.hasta && nuevas.hasta < nuevas.desde)) aplicar(nuevas);
+  const [enPantalla, setEnPantalla] = useFiltrosEnPantalla(filtros);
+  const aplicar: Aplicar = (cambios) => {
+    const nuevos = { ...enPantalla, ...cambios, pagina: 1 };
+    setEnPantalla(nuevos);
+    // Un rango invertido no se consulta: se avisa y se espera otra fecha.
+    if (!invertido(nuevos)) consultar(nuevos);
   };
   const limpiar = () => {
-    setFechas({ desde: "", hasta: "" });
+    setEnPantalla(FILTROS_INICIALES);
     consultar(FILTROS_INICIALES);
   };
+  const rangoInvertido = invertido(enPantalla);
   const mensaje = rangoInvertido ? "La fecha final es anterior a la inicial: elige otra para filtrar por fechas." : aviso;
 
   return (
     <section aria-label="Filtros" className={`${TARJETA} flex flex-col gap-3 !p-4 sm:!p-5`}>
       <div className="filtros-del-historial grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-[repeat(3,minmax(0,1fr))_9.5rem_9.5rem]">
-        <Selectores filtros={filtros} autores={autores} aplicar={aplicar} />
+        <Selectores filtros={enPantalla} autores={autores} aplicar={aplicar} />
         <Campo id="filtro-desde" etiqueta="Desde">
-          <input id="filtro-desde" type="date" value={fechas.desde} onChange={(e) => cambiarFecha({ desde: e.target.value })} className="campo-del-historial" />
+          <input id="filtro-desde" type="date" value={enPantalla.desde} onChange={(e) => aplicar({ desde: e.target.value })} className="campo-del-historial" />
         </Campo>
         <Campo id="filtro-hasta" etiqueta="Hasta">
-          <input id="filtro-hasta" type="date" value={fechas.hasta} aria-invalid={rangoInvertido || undefined} onChange={(e) => cambiarFecha({ hasta: e.target.value })} className="campo-del-historial" />
+          <input id="filtro-hasta" type="date" value={enPantalla.hasta} aria-invalid={rangoInvertido || undefined} onChange={(e) => aplicar({ hasta: e.target.value })} className="campo-del-historial" />
         </Campo>
       </div>
-      <Opciones filtros={filtros} aplicar={aplicar} limpiar={hayFiltros(filtros) || aviso ? limpiar : undefined} />
+      <Opciones filtros={enPantalla} aplicar={aplicar} limpiar={hayFiltros(enPantalla) || aviso ? limpiar : undefined} />
       {mensaje && <p role="alert" className="rounded-lg bg-[#fbf1d9] px-3 py-2 text-sm font-semibold text-tinta">{mensaje}</p>}
     </section>
   );

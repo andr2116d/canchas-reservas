@@ -61,6 +61,16 @@ describe("Historial de cambios", () => {
   afterEach(cleanup);
 
   describe("filtros", () => {
+    it("dos cambios seguidos se suman aunque la página aún no llegue", async () => {
+      const usuario = mostrarFiltros();
+
+      await usuario.selectOptions(screen.getByLabelText("Categoría"), "ADICIONALES");
+      await usuario.selectOptions(screen.getByLabelText("Acción"), "EDICION");
+
+      expect(navegar.push).toHaveBeenLastCalledWith("?categoria=ADICIONALES&accion=EDICION", { scroll: false });
+      expect(screen.getByLabelText("Categoría")).toHaveValue("ADICIONALES");
+    });
+
     it("combina filtros y vuelve a la primera página", async () => {
       const usuario = mostrarFiltros({ ...FILTROS_INICIALES, pagina: 3 });
 
@@ -82,9 +92,9 @@ describe("Historial de cambios", () => {
       await usuario.selectOptions(screen.getByLabelText("Persona"), "9");
       expect(navegar.push).toHaveBeenLastCalledWith("?autor=9", { scroll: false });
       await usuario.click(screen.getByRole("button", { name: "Solo importantes" }));
-      expect(navegar.push).toHaveBeenLastCalledWith("?importantes=1", { scroll: false });
+      expect(navegar.push).toHaveBeenLastCalledWith("?autor=9&importantes=1", { scroll: false });
       await usuario.click(screen.getByRole("button", { name: "Más antiguos" }));
-      expect(navegar.push).toHaveBeenLastCalledWith("?orden=antiguos", { scroll: false });
+      expect(navegar.push).toHaveBeenLastCalledWith("?autor=9&importantes=1&orden=antiguos", { scroll: false });
     });
 
     it("si la fecha final es anterior a la inicial no filtra y dice por qué", async () => {

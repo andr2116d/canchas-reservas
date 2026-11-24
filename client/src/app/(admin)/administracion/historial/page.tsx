@@ -22,7 +22,7 @@ async function HistorialCargado({ parametros }: { parametros: Parametros }) {
   const [pagina, autores, ahora] = await Promise.all([consultarHistorial(aConsulta(filtros)), consultarAutores(), ahoraDeLaPeticion()]);
   return (
     <ConsultaDelHistorial>
-      <FiltrosDelHistorial key={`${filtros.desde}-${filtros.hasta}`} filtros={filtros} autores={autores} aviso={aviso} />
+      <FiltrosDelHistorial filtros={filtros} autores={autores} aviso={aviso} />
       <LineaDeTiempo pagina={pagina} hoy={HOY_EN_LIMA.format(ahora)} />
       <PaginacionDelHistorial pagina={pagina} filtros={filtros} />
     </ConsultaDelHistorial>
