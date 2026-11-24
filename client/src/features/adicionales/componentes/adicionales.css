@@ -1,0 +1,48 @@
+/* Filas del catálogo de adicionales. */
+.fila-de-adicional {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1rem;
+  row-gap: 0.1rem;
+  border-top: 1px dashed color-mix(in oklab, var(--color-linea) 55%, var(--color-grava));
+  padding: 0.8rem 0 0.4rem;
+}
+
+.fila-de-adicional:first-child {
+  border-top: 0;
+}
+
+.fila-de-adicional[data-desactivado] .fila-de-adicional__dato {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fila-de-adicional--nueva {
+    animation: entrar-adicional 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+
+  .fila-de-adicional--nueva .font-titular {
+    animation: resaltar-precio 1.4s ease 0.3s both;
+  }
+
+  .confirmacion-de-adicional {
+    animation: entrar-adicional 0.25s ease both;
+  }
+}
+
+@keyframes entrar-adicional {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes resaltar-precio {
+  0%,
+  100% {
+    color: var(--color-tinta);
+  }
+  30% {
+    color: var(--color-botella);
+  }
+}

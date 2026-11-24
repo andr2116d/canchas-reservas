@@ -6,6 +6,7 @@
 @import "../compartido/ui/avisos-flotantes.css";
 @import "../compartido/marco/marco-interno.css";
 @import "../features/canchas/componentes/canchas.css";
+@import "../features/adicionales/componentes/adicionales.css";
 
 @theme {
   --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;
