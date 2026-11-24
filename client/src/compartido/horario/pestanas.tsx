@@ -1,16 +1,17 @@
 "use client";
 
 import { createContext, type ReactNode, useContext, useState } from "react";
+import { ListaDePestanas } from "@/compartido/ui/lista-de-pestanas";
 
 export type Pestana = "horario" | "tarifas" | "cancelacion" | "turnos";
 
 const ContextoDePestana = createContext<{ activa: Pestana; elegir: (pestana: Pestana) => void } | undefined>(undefined);
 
-const PESTANAS: { valor: Pestana; texto: string; soloAngosto?: boolean }[] = [
+const PESTANAS: { valor: Pestana; texto: string; className?: string }[] = [
   { valor: "horario", texto: "Horario" },
   { valor: "tarifas", texto: "Tarifas" },
   { valor: "cancelacion", texto: "Cancelación" },
-  { valor: "turnos", texto: "Turnos", soloAngosto: true },
+  { valor: "turnos", texto: "Turnos", className: "lg:hidden" },
 ];
 
 // Los turnos del día van fijos al costado en pantallas anchas; en las angostas son una pestaña más.
@@ -34,27 +35,10 @@ function usePestana() {
   return contexto;
 }
 
-/** Pestañas de vidrio sobre la cancha. */
+/** Pestañas de vidrio sobre la cancha; «Turnos» solo aparece en pantallas angostas. */
 export function PestanasDeHorarioYTarifas() {
   const { activa, elegir } = usePestana();
-  return (
-    <div role="tablist" aria-label="Secciones de las reglas de reserva" className="vidrio-verde flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-2xl p-1">
-      {PESTANAS.map(({ valor, texto, soloAngosto }) => (
-        <button
-          key={valor}
-          type="button"
-          role="tab"
-          id={`pestana-${valor}`}
-          aria-selected={activa === valor}
-          aria-controls={`panel-${valor}`}
-          onClick={() => elegir(valor)}
-          className={`relative rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap text-tiza/80 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-capitan aria-selected:bg-papel aria-selected:text-tinta aria-selected:shadow-[inset_0_1px_0_rgb(255_255_255/0.4),0_4px_14px_-6px_rgb(0_0_0/0.45)] ${soloAngosto ? "lg:hidden" : ""}`}
-        >
-          {texto}
-        </button>
-      ))}
-    </div>
-  );
+  return <ListaDePestanas etiqueta="Secciones de las reglas de reserva" pestanas={PESTANAS} activa={activa} alElegir={elegir} />;
 }
 
 /** Contenido de una pestaña. Queda montado aunque no se vea, para no perder lo que se está editando. */
