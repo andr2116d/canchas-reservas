@@ -1,5 +1,8 @@
 import type { TarifaRepository } from '../dominio/tarifa.repository';
-import { TIPOS_DE_CANCHA, type TipoDeCancha } from '../dominio/tipo-de-cancha';
+import {
+  TIPOS_DE_CANCHA,
+  type TipoDeCancha,
+} from '../../../compartido/dominio/tipo-de-cancha';
 import { aVista, type VistaDeTarifa } from './vista-de-tarifa';
 
 export interface TarifaDelTipo {

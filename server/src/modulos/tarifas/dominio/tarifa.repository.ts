@@ -1,5 +1,5 @@
 import type { Tarifa } from './tarifa';
-import type { TipoDeCancha } from './tipo-de-cancha';
+import type { TipoDeCancha } from '../../../compartido/dominio/tipo-de-cancha';
 
 export const TARIFA_REPOSITORY = Symbol('TARIFA_REPOSITORY');
 

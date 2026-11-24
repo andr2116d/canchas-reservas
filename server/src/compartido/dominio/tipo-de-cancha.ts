@@ -1,6 +1,6 @@
 export const TIPOS_DE_CANCHA = ['FUTBOL_5', 'FUTBOL_7'] as const;
 
-/** Formato de la cancha: las tarifas se definen por tipo, no por cancha. */
+/** Formato de la cancha. Las tarifas se definen por tipo y cada cancha tiene uno. */
 export type TipoDeCancha = (typeof TIPOS_DE_CANCHA)[number];
 
 export function esTipoDeCancha(valor: string): valor is TipoDeCancha {

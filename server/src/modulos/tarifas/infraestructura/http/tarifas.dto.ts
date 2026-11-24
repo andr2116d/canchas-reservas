@@ -10,7 +10,7 @@ import {
 import { DefinirHorarioDto } from '../../../horario/api-horario-http';
 import { DIAS_DE_LA_SEMANA } from '../../../horario/api-horario';
 import type { DatosDeTarifa } from '../../aplicacion/definir-tarifa.use-case';
-import { TIPOS_DE_CANCHA } from '../../dominio/tipo-de-cancha';
+import { TIPOS_DE_CANCHA } from '../../../../compartido/dominio/tipo-de-cancha';
 
 const COMO_TEXTO = { message: 'Ingresa este dato como texto.' };
 

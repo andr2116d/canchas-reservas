@@ -9,7 +9,7 @@ import {
   type DiaDeLaSemana,
 } from '../../horario/api-horario';
 import type { Tarifa } from '../dominio/tarifa';
-import type { TipoDeCancha } from '../dominio/tipo-de-cancha';
+import type { TipoDeCancha } from '../../../compartido/dominio/tipo-de-cancha';
 import { construirTarifa, type DatosDeTarifa } from './construir-tarifa';
 import { exigirTipoDeCancha } from './tipo-pedido';
 import { turnosConPrecio, type TurnosDeUnDia } from './turnos-con-precio';

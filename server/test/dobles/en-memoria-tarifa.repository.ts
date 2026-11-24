@@ -3,7 +3,7 @@ import type {
   TarifaRepository,
   VersionDeTarifa,
 } from '../../src/modulos/tarifas/dominio/tarifa.repository';
-import type { TipoDeCancha } from '../../src/modulos/tarifas/dominio/tipo-de-cancha';
+import type { TipoDeCancha } from '../../src/compartido/dominio/tipo-de-cancha';
 
 /** Versiones de tarifas en memoria para probar casos de uso sin base de datos. */
 export class EnMemoriaTarifaRepository implements TarifaRepository {

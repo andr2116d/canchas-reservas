@@ -12,7 +12,7 @@ import type {
   TarifaRepository,
   VersionDeTarifa,
 } from '../../dominio/tarifa.repository';
-import type { TipoDeCancha } from '../../dominio/tipo-de-cancha';
+import type { TipoDeCancha } from '../../../../compartido/dominio/tipo-de-cancha';
 
 const CON_QUIEN_LA_GUARDO = {
   guardadaPor: { select: { nombresCifrado: true, apellidosCifrado: true } },
