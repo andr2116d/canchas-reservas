@@ -55,9 +55,8 @@ export function FormularioDeMisDatos({ cuenta }: { cuenta: Cuenta }) {
             <CampoDeTexto nombre="apellidos" etiqueta="Apellidos" autoComplete="family-name" maxLength={LARGOS.nombre} />
           </div>
         )}
-        {editable("fechaNacimiento") && <CampoDeTexto nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" type="date" />}
-        <CampoDelCorreo cuenta={cuenta} dominio={dominio} />
         <div className="grid gap-5 sm:grid-cols-2">
+          {editable("fechaNacimiento") && <CampoDeTexto nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" type="date" />}
           {editable("celular") && (
             <CampoDeTexto nombre="celular" etiqueta="Celular" type="tel" inputMode="numeric" autoComplete="tel-national" filtrarEntrada={filtrarCelular} />
           )}
@@ -65,6 +64,7 @@ export function FormularioDeMisDatos({ cuenta }: { cuenta: Cuenta }) {
             <CampoDeTexto nombre="dorsal" etiqueta="Dorsal" opcional inputMode="numeric" ayuda="Del 1 al 99." filtrarEntrada={filtrarDorsal} />
           )}
         </div>
+        <CampoDelCorreo cuenta={cuenta} dominio={dominio} />
         <ErrorGeneral mensaje={errorGeneral} />
         <div className="flex flex-wrap items-center gap-4">
           <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
