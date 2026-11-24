@@ -62,6 +62,7 @@ model Usuario {
   horariosGuardados            HorarioDeAtencion[]
   reglasDeCancelacionGuardadas ReglaDeCancelacion[]
   cambiosDeCanchas             CambioDeCancha[]
+  bloqueosCreados              BloqueoDeCancha[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -236,16 +237,20 @@ model Cancha {
   creadoEn          DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn     DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(3)
   cambios           CambioDeCancha[]
+  bloqueos          BloqueoDeCancha[]
 
   @@map("cancha")
 }
 
 enum AccionSobreCancha {
-  ALTA          @map("alta")
-  EDICION       @map("edicion")
-  DESACTIVACION @map("desactivacion")
-  REACTIVACION  @map("reactivacion")
-  ELIMINACION   @map("eliminacion")
+  ALTA                  @map("alta")
+  EDICION               @map("edicion")
+  DESACTIVACION         @map("desactivacion")
+  REACTIVACION          @map("reactivacion")
+  ELIMINACION           @map("eliminacion")
+  BLOQUEO               @map("bloqueo")
+  LIBERACION_DE_BLOQUEO @map("liberacion_de_bloqueo")
+  RETIRO_DE_BLOQUEO     @map("retiro_de_bloqueo")
 
   @@map("accion_sobre_cancha")
 }
@@ -266,4 +271,31 @@ model CambioDeCancha {
   @@index([ocurridoEn])
   @@index([canchaId])
   @@map("cambio_de_cancha")
+}
+
+enum TipoDeBloqueo {
+  PROGRAMADO @map("programado")
+  EMERGENCIA @map("emergencia")
+
+  @@map("tipo_de_bloqueo")
+}
+
+/// Rango en que una cancha no se puede reservar por mantenimiento. Dos bloqueos de la misma cancha no se pisan.
+model BloqueoDeCancha {
+  id          Int           @id @default(autoincrement())
+  canchaId    Int           @map("cancha_id")
+  tipo        TipoDeBloqueo
+  motivo      String
+  inicio      DateTime      @db.Timestamptz(3)
+  fin         DateTime      @db.Timestamptz(3)
+  /// Si se liberó antes de terminar, desde cuándo la cancha volvió a estar disponible.
+  liberadoEn  DateTime?     @map("liberado_en") @db.Timestamptz(3)
+  creadoPorId Int           @map("creado_por_id")
+  creadoEn    DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
+  cancha      Cancha        @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  creadoPor   Usuario       @relation(fields: [creadoPorId], references: [id])
+
+  @@index([canchaId, inicio])
+  @@index([fin])
+  @@map("bloqueo_de_cancha")
 }

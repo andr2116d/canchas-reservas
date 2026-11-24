@@ -3,7 +3,14 @@ import type { CambiosDeCancha, Cancha } from './cancha.entity';
 export const CANCHA_REPOSITORY = Symbol('CANCHA_REPOSITORY');
 
 export type AccionSobreCancha =
-  'ALTA' | 'EDICION' | 'DESACTIVACION' | 'REACTIVACION' | 'ELIMINACION';
+  | 'ALTA'
+  | 'EDICION'
+  | 'DESACTIVACION'
+  | 'REACTIVACION'
+  | 'ELIMINACION'
+  | 'BLOQUEO'
+  | 'LIBERACION_DE_BLOQUEO'
+  | 'RETIRO_DE_BLOQUEO';
 
 /** Quién hace un cambio y cuándo; queda en la auditoría. */
 export interface Autoria {
