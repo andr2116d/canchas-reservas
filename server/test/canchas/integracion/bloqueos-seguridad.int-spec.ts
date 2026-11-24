@@ -54,6 +54,18 @@ describe('Bloqueos · seguridad', () => {
     });
   });
 
+  it('rechaza ids de cancha fuera de rango sin error interno', async () => {
+    const administrador = await sesionDeAdministrador(app);
+
+    const { body } = await api()
+      .post('/api/bloqueos')
+      .set('Cookie', administrador)
+      .send({ ...unBloqueoValido(), canchaIds: [99999999999, 0] })
+      .expect(400);
+
+    expect(body.errores).toEqual({ canchaIds: 'Elige canchas de la lista.' });
+  });
+
   it('un error interno responde 500 sin detalles', async () => {
     await app.close();
     ({ app, prisma } = await crearAppDePrueba((constructor) =>

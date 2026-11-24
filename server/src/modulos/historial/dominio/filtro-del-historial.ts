@@ -4,6 +4,7 @@ import {
   momentoEnLima,
   sumarAFecha,
 } from '../../../compartido/dominio/momento-en-lima';
+import { MAXIMO_ID } from '../../../compartido/dominio/id';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
 import {
@@ -52,8 +53,7 @@ function opcional<T>(
   return vacio(valor) ? undefined : leer(valor.trim());
 }
 
-// Un id es un `integer` de la base; una página más allá de este tope no tendría registros.
-const MAXIMO_ID = 2_147_483_647;
+// Una página más allá de este tope no tendría registros.
 const MAXIMA_PAGINA = 100_000;
 
 function entero(texto: string, mensaje: string, maximo: number): number {

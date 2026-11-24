@@ -1,7 +1,5 @@
 import type { PipeTransform } from '@nestjs/common';
-
-// Los ids son columnas `integer` de PostgreSQL: más allá de este valor la consulta falla.
-const MAXIMO_ID = 2_147_483_647;
+import { leerId } from '../../dominio/id';
 
 /**
  * Lee el id de la ruta. Uno que no es un entero positivo dentro del rango de la
@@ -12,8 +10,8 @@ export function idDeRuta(
 ): PipeTransform<string, number> {
   return {
     transform(valor: string): number {
-      const id = /^\d{1,10}$/.test(valor) ? Number(valor) : 0;
-      if (id < 1 || id > MAXIMO_ID) throw noEncontrado();
+      const id = leerId(valor);
+      if (id < 1) throw noEncontrado();
       return id;
     },
   };
