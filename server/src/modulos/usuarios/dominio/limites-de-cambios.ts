@@ -38,3 +38,19 @@ export const LIMITES_DE_CAMBIOS = {
 export function inicioDeLaVentana(limite: LimiteDeCambios, ahora: Date): Date {
   return new Date(ahora.getTime() - limite.ventanaEnMinutos * 60 * 1000);
 }
+
+/** Un límite con su ventana ya ubicada en el tiempo, para contarlo al escribir. */
+export interface LimiteVigente {
+  acciones: AccionAuditada[];
+  maximo: number;
+  desde: Date;
+  mensaje: string;
+}
+
+export function limiteVigente(
+  limite: LimiteDeCambios,
+  ahora: Date,
+): LimiteVigente {
+  const { acciones, maximo, mensaje } = limite;
+  return { acciones, maximo, mensaje, desde: inicioDeLaVentana(limite, ahora) };
+}

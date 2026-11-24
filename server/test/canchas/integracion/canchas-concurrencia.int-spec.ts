@@ -37,17 +37,25 @@ describe('Canchas abiertas en dos dispositivos a la vez', () => {
     const enOtro = await repositorio.buscar(canchaId);
     const autoria = { ejecutadoPorId: 1, ocurridoEn: new Date() };
     enUnDispositivo!.editar(unaCanchaValida({ nota: 'Césped nuevo' }));
-    await repositorio.guardar(enUnDispositivo!, { ...autoria, accion: 'EDICION' });
+    await repositorio.guardar(enUnDispositivo!, {
+      ...autoria,
+      accion: 'EDICION',
+    });
     enOtro!.desactivar();
 
     await expect(
       repositorio.guardar(enOtro!, { ...autoria, accion: 'DESACTIVACION' }),
     ).rejects.toMatchObject({
-      message: 'La cancha cambió mientras se guardaba. Recarga para ver lo último.',
+      message:
+        'La cancha cambió mientras se guardaba. Recarga para ver lo último.',
     });
-    const fila = await prisma.cancha.findUniqueOrThrow({ where: { id: canchaId } });
+    const fila = await prisma.cancha.findUniqueOrThrow({
+      where: { id: canchaId },
+    });
     expect(fila).toMatchObject({ nota: 'Césped nuevo', estado: 'OPERATIVA' });
-    expect(await prisma.cambioDeCancha.count({ where: { accion: 'DESACTIVACION' } })).toBe(0);
+    expect(
+      await prisma.cambioDeCancha.count({ where: { accion: 'DESACTIVACION' } }),
+    ).toBe(0);
   });
 
   it('editar y desactivar a la vez no pierde ninguno de los dos cambios guardados', async () => {
@@ -56,10 +64,14 @@ describe('Canchas abiertas en dos dispositivos a la vez', () => {
         .put(`/api/canchas/${canchaId}`)
         .set('Cookie', administrador)
         .send(unaCanchaValida({ nota: 'Arcos nuevos' })),
-      api().post(`/api/canchas/${canchaId}/desactivacion`).set('Cookie', administrador),
+      api()
+        .post(`/api/canchas/${canchaId}/desactivacion`)
+        .set('Cookie', administrador),
     ]);
 
-    const fila = await prisma.cancha.findUniqueOrThrow({ where: { id: canchaId } });
+    const fila = await prisma.cancha.findUniqueOrThrow({
+      where: { id: canchaId },
+    });
     expect([edicion.status, desactivacion.status]).not.toContain(500);
     if (edicion.status === 200) expect(fila.nota).toBe('Arcos nuevos');
     if (desactivacion.status === 204) expect(fila.estado).toBe('DESACTIVADA');
@@ -72,7 +84,11 @@ describe('Canchas abiertas en dos dispositivos a la vez', () => {
       ),
     );
 
-    expect(respuestas.map((r) => r.status).sort()).toEqual([204, 404, 404]);
-    expect(await prisma.cambioDeCancha.count({ where: { accion: 'ELIMINACION' } })).toBe(1);
+    expect(respuestas.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+      204, 404, 404,
+    ]);
+    expect(
+      await prisma.cambioDeCancha.count({ where: { accion: 'ELIMINACION' } }),
+    ).toBe(1);
   });
 });

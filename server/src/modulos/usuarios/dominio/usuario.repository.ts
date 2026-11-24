@@ -1,3 +1,4 @@
+import type { LimiteVigente } from './limites-de-cambios';
 import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
 import type { AccionAuditada } from './accion-auditada';
 import type { FechaNacimiento } from './fecha-nacimiento.value-object';
@@ -32,6 +33,8 @@ export interface CambioPropio {
   marca?: 'DATOS_CONFIRMADOS' | 'DOCUMENTO_CAMBIADO';
   /** Cierra las demás sesiones de la cuenta, menos la de este token. */
   conservarSesion?: string;
+  /** Se vuelven a contar en la misma escritura: dos pedidos a la vez no los superan. */
+  limites?: LimiteVigente[];
 }
 
 export interface DatosDelAlta {

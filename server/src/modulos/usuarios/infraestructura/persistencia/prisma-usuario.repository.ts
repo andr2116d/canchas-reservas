@@ -3,7 +3,10 @@ import {
   CIFRADOR,
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
+import { LimiteExcedidoError } from '../../../../compartido/dominio/dominio.error';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
+import type { Prisma } from '../../../../generated/prisma/client';
+import type { LimiteVigente } from '../../dominio/limites-de-cambios';
 import type { RolUsuario } from '../../../../compartido/dominio/rol-usuario';
 import type { Correo } from '../../dominio/correo.value-object';
 import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
@@ -80,6 +83,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     const { usuarioId, marca } = cambio;
     try {
       return await this.prisma.$transaction(async (base) => {
+        await exigirLimitesAlEscribir(base, usuarioId, cambio.limites);
         const { count } = await base.usuario.updateMany({
           where: {
             id: usuarioId,
@@ -124,12 +128,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     desde: Date,
   ): Promise<number> {
     return this.prisma.registroAuditoria.count({
-      where: {
-        usuarioAfectadoId: usuarioId,
-        ejecutadoPorId: usuarioId,
-        accion: { in: acciones },
-        ocurridoEn: { gte: desde },
-      },
+      where: accionesPropias(usuarioId, acciones, desde),
     });
   }
 
@@ -142,6 +141,39 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     } catch (error) {
       rechazarDuplicado(error);
     }
+  }
+}
+
+/** Lo que la persona hizo sobre su propia cuenta desde un momento. */
+function accionesPropias(
+  usuarioId: number,
+  acciones: AccionAuditada[],
+  desde: Date,
+): Prisma.RegistroAuditoriaWhereInput {
+  return {
+    usuarioAfectadoId: usuarioId,
+    ejecutadoPorId: usuarioId,
+    accion: { in: acciones },
+    ocurridoEn: { gte: desde },
+  };
+}
+
+/**
+ * Bloquea la fila de la cuenta hasta el final de la transacción y vuelve a contar:
+ * así dos cambios simultáneos no ven el mismo conteo y superan el límite.
+ */
+async function exigirLimitesAlEscribir(
+  base: Prisma.TransactionClient,
+  usuarioId: number,
+  limites: LimiteVigente[] = [],
+): Promise<void> {
+  if (limites.length === 0) return;
+  await base.$queryRaw`SELECT id FROM usuario WHERE id = ${usuarioId} FOR UPDATE`;
+  for (const { acciones, desde, maximo, mensaje } of limites) {
+    const hechos = await base.registroAuditoria.count({
+      where: accionesPropias(usuarioId, acciones, desde),
+    });
+    if (hechos >= maximo) throw new LimiteExcedidoError(mensaje);
   }
 }
 

@@ -9,7 +9,10 @@ import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
 import { type DatoEditable, DATOS_EDITABLES } from '../dominio/datos-editables';
 import { Dorsal } from '../dominio/dorsal.value-object';
 import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
-import { LIMITES_DE_CAMBIOS } from '../dominio/limites-de-cambios';
+import {
+  LIMITES_DE_CAMBIOS,
+  limiteVigente,
+} from '../dominio/limites-de-cambios';
 import { NombrePersona } from '../dominio/nombre-persona.value-object';
 import type { Usuario } from '../dominio/usuario.entity';
 import type {
@@ -83,6 +86,12 @@ export class ActualizarMiCuentaUseCase {
       accion: nuevos.correo ? 'CAMBIO_DE_CORREO' : 'EDICION_PROPIA',
       ocurridoEn: ahora,
       ...(nuevos.correo && { conservarSesion: tokenHash }),
+      limites: [
+        limiteVigente(LIMITES_DE_CAMBIOS.datos, ahora),
+        ...(nuevos.correo
+          ? [limiteVigente(LIMITES_DE_CAMBIOS.correo, ahora)]
+          : []),
+      ],
     });
   }
 

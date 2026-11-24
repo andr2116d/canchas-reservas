@@ -1,3 +1,4 @@
+import { LimiteExcedidoError } from '../../../src/compartido/dominio/dominio.error';
 import type { RolUsuario } from '../../../src/compartido/dominio/rol-usuario';
 import type { AccionAuditada } from '../../../src/modulos/usuarios/dominio/accion-auditada';
 import type { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
@@ -62,6 +63,16 @@ export class EnMemoriaUsuarioRepository implements UsuarioRepository {
   }
 
   aplicarCambioPropio(cambio: CambioPropio): Promise<boolean> {
+    for (const limite of cambio.limites ?? []) {
+      const hechos = this.auditoria.filter(
+        (a) =>
+          a.usuarioId === cambio.usuarioId &&
+          limite.acciones.includes(a.accion) &&
+          a.ocurridoEn >= limite.desde,
+      ).length;
+      if (hechos >= limite.maximo)
+        return Promise.reject(new LimiteExcedidoError(limite.mensaje));
+    }
     const indice = this.usuarios.findIndex((u) => u.id === cambio.usuarioId);
     const actual = this.usuarios[indice].estadoGuardado;
     if (cambio.marca === 'DATOS_CONFIRMADOS' && actual.datosConfirmadosEn)

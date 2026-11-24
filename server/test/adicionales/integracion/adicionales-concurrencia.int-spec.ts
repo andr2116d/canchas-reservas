@@ -37,15 +37,21 @@ describe('Adicionales abiertos en dos dispositivos a la vez', () => {
     const enOtro = await repositorio.buscar(adicionalId);
     const autoria = { ejecutadoPorId: 1, ocurridoEn: new Date() };
     enUnDispositivo!.editar(unAdicionalValido({ precio: '50.00' }));
-    await repositorio.guardar(enUnDispositivo!, { ...autoria, accion: 'EDICION' });
+    await repositorio.guardar(enUnDispositivo!, {
+      ...autoria,
+      accion: 'EDICION',
+    });
     enOtro!.desactivar();
 
     await expect(
       repositorio.guardar(enOtro!, { ...autoria, accion: 'DESACTIVACION' }),
     ).rejects.toMatchObject({
-      message: 'El adicional cambió mientras se guardaba. Recarga para ver lo último.',
+      message:
+        'El adicional cambió mientras se guardaba. Recarga para ver lo último.',
     });
-    const fila = await prisma.adicional.findUniqueOrThrow({ where: { id: adicionalId } });
+    const fila = await prisma.adicional.findUniqueOrThrow({
+      where: { id: adicionalId },
+    });
     expect(fila.precio.toFixed(2)).toBe('50.00');
     expect(fila.estado).toBe('ACTIVO');
   });
@@ -53,11 +59,19 @@ describe('Adicionales abiertos en dos dispositivos a la vez', () => {
   it('eliminar desde dos dispositivos a la vez lo borra una vez y al otro le dice que ya no existe', async () => {
     const respuestas = await Promise.all(
       [1, 2, 3].map(() =>
-        api().delete(`/api/adicionales/${adicionalId}`).set('Cookie', administrador),
+        api()
+          .delete(`/api/adicionales/${adicionalId}`)
+          .set('Cookie', administrador),
       ),
     );
 
-    expect(respuestas.map((r) => r.status).sort()).toEqual([204, 404, 404]);
-    expect(await prisma.cambioDeAdicional.count({ where: { accion: 'ELIMINACION' } })).toBe(1);
+    expect(respuestas.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+      204, 404, 404,
+    ]);
+    expect(
+      await prisma.cambioDeAdicional.count({
+        where: { accion: 'ELIMINACION' },
+      }),
+    ).toBe(1);
   });
 });
