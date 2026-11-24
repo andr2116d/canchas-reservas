@@ -15,6 +15,8 @@ import {
 } from './dominio/sesion.repository';
 import { SesionGuard } from './infraestructura/http/sesion.guard';
 import { SesionesController } from './infraestructura/http/sesiones.controller';
+import { MisSesionesController } from './infraestructura/http/mis-sesiones.controller';
+import { MisSesionesUseCase } from './aplicacion/mis-sesiones.use-case';
 import { PanelesController } from './infraestructura/http/paneles.controller';
 import { PrismaSesionRepository } from './infraestructura/persistencia/prisma-sesion.repository';
 import { CryptoGeneradorTokenSesionAdapter } from './infraestructura/seguridad/crypto-generador-token-sesion.adapter';
@@ -23,9 +25,15 @@ const DEPENDENCIAS = [SESION_REPOSITORY, GENERADOR_TOKEN_SESION, RELOJ];
 
 /** Sesiones de usuario y protección de todas las rutas privadas. */
 @Module({
-  controllers: [SesionesController, PanelesController],
+  controllers: [SesionesController, PanelesController, MisSesionesController],
   providers: [
     { provide: SESION_REPOSITORY, useClass: PrismaSesionRepository },
+    {
+      provide: MisSesionesUseCase,
+      useFactory: (sesiones: SesionRepository, reloj: Reloj) =>
+        new MisSesionesUseCase(sesiones, reloj),
+      inject: [SESION_REPOSITORY, RELOJ],
+    },
     {
       provide: GENERADOR_TOKEN_SESION,
       useClass: CryptoGeneradorTokenSesionAdapter,

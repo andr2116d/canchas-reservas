@@ -52,6 +52,16 @@ export class PrismaAccesoRepository implements AccesoRepository {
     return aCredenciales(usuario);
   }
 
+  async ultimosAccesos(usuarioId: number, limite: number): Promise<Date[]> {
+    const filas = await this.prisma.registroAcceso.findMany({
+      where: { usuarioId },
+      orderBy: { ocurridoEn: 'desc' },
+      take: limite,
+      select: { ocurridoEn: true },
+    });
+    return filas.map((fila) => fila.ocurridoEn);
+  }
+
   contarCambiosDeContrasena(usuarioId: number, desde: Date): Promise<number> {
     return this.prisma.registroAuditoria.count({
       where: {
@@ -87,6 +97,11 @@ export class PrismaAccesoRepository implements AccesoRepository {
     return this.prisma.$transaction(async (base) => {
       if (!(await bloquearCuentaVigente(base, usuario))) return false;
       const usuarioId = usuario.usuarioId;
+      // La sesión renovada sigue siendo del mismo navegador que la anterior.
+      const anterior = await base.sesion.findUnique({
+        where: { tokenHash },
+        select: { dispositivo: true },
+      });
       const { count } = await base.sesion.deleteMany({
         where: {
           usuarioId,
@@ -112,7 +127,9 @@ export class PrismaAccesoRepository implements AccesoRepository {
           ocurridoEn: sesion.ultimaActividadEn,
         },
       });
-      await base.sesion.create({ data: { ...sesion, usuarioId } });
+      await base.sesion.create({
+        data: { ...sesion, usuarioId, dispositivo: anterior?.dispositivo },
+      });
       return true;
     });
   }

@@ -2,6 +2,7 @@ import type { Sesion } from '../../../src/modulos/sesiones/dominio/sesion.entity
 import type { AccesoDeSesion } from '../../../src/modulos/sesiones/dominio/permisos-de-sesion';
 import type {
   SesionConAcceso,
+  SesionDeLaCuenta,
   SesionRepository,
 } from '../../../src/modulos/sesiones/dominio/sesion.repository';
 
@@ -48,6 +49,34 @@ export class EnMemoriaSesionRepository implements SesionRepository {
 
   eliminar(tokenHash: string): Promise<void> {
     this.sesiones.delete(tokenHash);
+    return Promise.resolve();
+  }
+
+  deUsuario(usuarioId: number): Promise<SesionDeLaCuenta[]> {
+    return Promise.resolve(
+      this.todas()
+        .filter((sesion) => sesion.usuarioId === usuarioId)
+        .sort(
+          (a, b) =>
+            b.ultimaActividadEn.getTime() - a.ultimaActividadEn.getTime(),
+        )
+        .map((sesion, indice) => ({
+          id: indice + 1,
+          tokenHash: sesion.tokenHash,
+          dispositivo: sesion.dispositivo,
+          abiertaEn: sesion.ultimaActividadEn,
+          sesion,
+        })),
+    );
+  }
+
+  cerrarOtras(usuarioId: number, tokenHashActual: string): Promise<void> {
+    for (const sesion of this.todas())
+      if (
+        sesion.usuarioId === usuarioId &&
+        sesion.tokenHash !== tokenHashActual
+      )
+        this.sesiones.delete(sesion.tokenHash);
     return Promise.resolve();
   }
 

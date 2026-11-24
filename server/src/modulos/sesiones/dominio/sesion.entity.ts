@@ -7,6 +7,8 @@ export interface SesionNueva {
   tokenHash: string;
   ultimaActividadEn: Date;
   expiraEn: Date;
+  /** Navegador y sistema, como «Chrome en Windows», para reconocer la sesión. */
+  dispositivo?: string;
 }
 
 interface DatosSesion extends SesionNueva {
@@ -21,9 +23,14 @@ export class Sesion {
   private constructor(private readonly datos: DatosSesion) {}
 
   /** Calcula la vigencia de la sesión que se va a guardar. */
-  static preparar(tokenHash: string, ahora: Date): SesionNueva {
+  static preparar(
+    tokenHash: string,
+    ahora: Date,
+    dispositivo?: string,
+  ): SesionNueva {
     return {
       tokenHash,
+      dispositivo,
       ultimaActividadEn: ahora,
       expiraEn: new Date(
         ahora.getTime() + HORAS_DE_DURACION_MAXIMA * 60 * MINUTO,
@@ -55,6 +62,10 @@ export class Sesion {
 
   get expiraEn(): Date {
     return this.datos.expiraEn;
+  }
+
+  get dispositivo(): string | undefined {
+    return this.datos.dispositivo;
   }
 
   estaVigente(ahora: Date): boolean {

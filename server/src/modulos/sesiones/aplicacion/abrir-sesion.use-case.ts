@@ -29,11 +29,12 @@ export class AbrirSesionUseCase {
   }
 
   /** Prepara una sesión para guardarla junto con una cuenta nueva. */
-  preparar(): SesionPreparada {
+  preparar(dispositivo?: string): SesionPreparada {
     const token = this.generador.generar();
     const datosDeSesion = Sesion.preparar(
       this.generador.hashear(token),
       this.reloj.ahora(),
+      dispositivo,
     );
     return {
       datosDeSesion,

@@ -32,6 +32,8 @@ import {
 import { PROVIDERS_DE_RECEPCIONISTAS } from './recepcionistas.providers';
 import { CuentaController } from './infraestructura/http/cuenta.controller';
 import { DatosPropiosController } from './infraestructura/http/datos-propios.controller';
+import { ActividadDeLaCuentaController } from './infraestructura/http/actividad-de-la-cuenta.controller';
+import { ConsultarMisAccesosUseCase } from './aplicacion/consultar-mis-accesos.use-case';
 import { CambiarMiTipoDeDocumentoUseCase } from './aplicacion/cambiar-mi-tipo-de-documento.use-case';
 import { CompletarMisDatosUseCase } from './aplicacion/completar-mis-datos.use-case';
 import { InicioDeSesionController } from './infraestructura/http/inicio-de-sesion.controller';
@@ -50,6 +52,7 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
     JugadoresController,
     CuentaController,
     DatosPropiosController,
+    ActividadDeLaCuentaController,
     InicioDeSesionController,
     RecepcionistasController,
     CuentaDeRecepcionistaController,
@@ -148,6 +151,12 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
       useFactory: (usuarios: UsuarioRepository, contexto: ContextoDeCuentas) =>
         new ActualizarMiCuentaUseCase(usuarios, contexto),
       inject: [USUARIO_REPOSITORY, CONTEXTO_DE_CUENTAS],
+    },
+    {
+      provide: ConsultarMisAccesosUseCase,
+      useFactory: (accesos: AccesoRepository) =>
+        new ConsultarMisAccesosUseCase(accesos),
+      inject: [ACCESO_REPOSITORY],
     },
     ...[CompletarMisDatosUseCase, CambiarMiTipoDeDocumentoUseCase].map(
       (CasoDeUso) => ({

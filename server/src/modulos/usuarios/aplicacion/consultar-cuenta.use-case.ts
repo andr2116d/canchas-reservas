@@ -4,6 +4,8 @@ import type { UsuarioRepository } from '../dominio/usuario.repository';
 
 /** Lo que la persona ve de su propia cuenta y lo que puede cambiar. */
 export interface Cuenta {
+  /** El id de la propia cuenta, por ejemplo para ver su historial. */
+  id: number;
   rol: RolUsuario;
   nombres: string;
   apellidos: string;
@@ -28,6 +30,7 @@ export class ConsultarCuentaUseCase {
     const usuario = await this.usuarios.buscarPorId(usuarioId);
     if (!usuario) return undefined;
     return {
+      id: usuarioId,
       rol: usuario.rol,
       nombres: usuario.nombres.texto,
       apellidos: usuario.apellidos.texto,

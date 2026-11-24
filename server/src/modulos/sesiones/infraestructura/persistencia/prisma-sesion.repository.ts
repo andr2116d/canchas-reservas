@@ -4,6 +4,7 @@ import { PrismaService } from '../../../../compartido/infraestructura/prisma/pri
 import { Sesion } from '../../dominio/sesion.entity';
 import type {
   SesionConAcceso,
+  SesionDeLaCuenta,
   SesionRepository,
 } from '../../dominio/sesion.repository';
 
@@ -12,6 +13,29 @@ import type {
 export class PrismaSesionRepository implements SesionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async deUsuario(usuarioId: number): Promise<SesionDeLaCuenta[]> {
+    const filas = await this.prisma.sesion.findMany({
+      where: { usuarioId },
+      orderBy: { ultimaActividadEn: 'desc' },
+    });
+    return filas.map((fila) => {
+      const dispositivo = fila.dispositivo ?? undefined;
+      return {
+        id: fila.id,
+        tokenHash: fila.tokenHash,
+        dispositivo,
+        abiertaEn: fila.creadaEn,
+        sesion: Sesion.restaurar({ ...fila, dispositivo }),
+      };
+    });
+  }
+
+  async cerrarOtras(usuarioId: number, tokenHashActual: string): Promise<void> {
+    await this.prisma.sesion.deleteMany({
+      where: { usuarioId, tokenHash: { not: tokenHashActual } },
+    });
+  }
+
   async guardar(sesion: Sesion): Promise<void> {
     await this.prisma.sesion.create({
       data: {
@@ -19,6 +43,7 @@ export class PrismaSesionRepository implements SesionRepository {
         tokenHash: sesion.tokenHash,
         ultimaActividadEn: sesion.ultimaActividadEn,
         expiraEn: sesion.expiraEn,
+        dispositivo: sesion.dispositivo,
       },
     });
   }
@@ -42,7 +67,10 @@ export class PrismaSesionRepository implements SesionRepository {
     });
     if (!fila) return undefined;
     return {
-      sesion: Sesion.restaurar(fila),
+      sesion: Sesion.restaurar({
+        ...fila,
+        dispositivo: fila.dispositivo ?? undefined,
+      }),
       rol: fila.usuario.rol,
       activa: fila.usuario.estado === 'ACTIVO',
       requiereCambiarContrasena: fila.usuario.requiereCambiarContrasena,

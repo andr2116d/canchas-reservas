@@ -12,6 +12,8 @@ import { Correo } from '../dominio/correo.value-object';
 export interface DatosInicioSesion {
   correo: string;
   contrasena: string;
+  /** Resumen del navegador desde el que se entra. */
+  dispositivo?: string;
 }
 
 export type VerificarContrasena = (
@@ -70,7 +72,9 @@ export class IniciarSesionUseCase {
       return { tipo: 'contrasena-temporal-vencida' };
     }
 
-    const { datosDeSesion, credencial } = this.abrirSesion.preparar();
+    const { datosDeSesion, credencial } = this.abrirSesion.preparar(
+      datos.dispositivo,
+    );
     if (
       !(await this.accesos.registrarInicio({ usuario, sesion: datosDeSesion }))
     ) {
