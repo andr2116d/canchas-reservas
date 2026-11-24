@@ -1,8 +1,4 @@
-import type {
-  CambiosDeCancha,
-  Cancha,
-  FichaDeCancha,
-} from '../dominio/cancha.entity';
+import type { Cancha, FichaDeCancha } from '../dominio/cancha.entity';
 import type {
   AccionSobreCancha,
   CambioRegistrado,
@@ -21,7 +17,7 @@ export interface VistaDeCambio {
   nombreDeLaCancha: string;
   ejecutadoPor: string;
   ocurridoEn: string;
-  detalle: CambiosDeCancha | null;
+  detalle: CambioRegistrado['detalle'];
 }
 
 export interface VistaDeReserva {

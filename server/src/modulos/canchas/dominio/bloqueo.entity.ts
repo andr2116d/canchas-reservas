@@ -29,6 +29,13 @@ export interface FichaDelBloqueo {
   liberadoEn: Date | null;
 }
 
+/** Lo que guarda la auditoría de un bloqueo: su tipo y el rango que quedó bloqueado. */
+export interface DetalleDeBloqueo {
+  tipo: TipoDeBloqueo;
+  inicio: string;
+  fin: string;
+}
+
 const esTipo = (valor: string): valor is TipoDeBloqueo =>
   (TIPOS_DE_BLOQUEO as readonly string[]).includes(valor);
 
@@ -83,6 +90,14 @@ export class Bloqueo {
   /** Hasta cuándo la cancha queda bloqueada: el fin, o el momento en que se liberó. */
   get finEfectivo(): Date {
     return this.datos.liberadoEn ?? this.datos.fin;
+  }
+
+  get detalle(): DetalleDeBloqueo {
+    return {
+      tipo: this.datos.tipo,
+      inicio: this.datos.inicio.toISOString(),
+      fin: this.finEfectivo.toISOString(),
+    };
   }
 
   etapa(ahora: Date): EtapaDelBloqueo {

@@ -1,3 +1,4 @@
+import type { DetalleDeBloqueo } from './bloqueo.entity';
 import type { CambiosDeCancha, Cancha } from './cancha.entity';
 
 export const CANCHA_REPOSITORY = Symbol('CANCHA_REPOSITORY');
@@ -31,7 +32,8 @@ export interface CambioRegistrado {
   nombreDeLaCancha: string;
   ejecutadoPor: string;
   ocurridoEn: Date;
-  detalle: CambiosDeCancha | null;
+  /** En una edición, lo que cambió; en un bloqueo, su tipo y su rango. */
+  detalle: CambiosDeCancha | DetalleDeBloqueo | null;
 }
 
 /** Puerto de las canchas. Cada escritura guarda su cambio en la auditoría en la misma transacción. */

@@ -7,7 +7,7 @@ import { ConflictoError } from '../../../../compartido/dominio/dominio.error';
 import { indiceUnicoViolado } from '../../../../compartido/infraestructura/prisma/indice-unico-violado';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { Prisma } from '../../../../generated/prisma/client';
-import { type CambiosDeCancha, Cancha } from '../../dominio/cancha.entity';
+import { Cancha } from '../../dominio/cancha.entity';
 import type {
   Autoria,
   CambioAuditado,
@@ -136,7 +136,7 @@ export class PrismaCanchaRepository implements CanchaRepository {
         .map((valor) => this.cifrador.descifrar(valor))
         .join(' '),
       ocurridoEn: fila.ocurridoEn,
-      detalle: fila.detalle as CambiosDeCancha | null,
+      detalle: fila.detalle as CambioRegistrado['detalle'],
     }));
   }
 
