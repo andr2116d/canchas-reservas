@@ -1,0 +1,283 @@
+/* Historial de cambios: filtros compactos y una línea de tiempo por día. */
+.campo-del-historial {
+  width: 100%;
+  min-height: 2.6rem;
+  border: 1px solid var(--color-linea);
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.7rem;
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.campo-del-historial:focus-visible {
+  border-color: var(--color-botella);
+  box-shadow: 0 0 0 3px rgb(31 92 66 / 0.2);
+}
+
+.campo-del-historial[aria-invalid="true"] {
+  border-color: var(--color-error);
+}
+
+.interruptor-del-historial {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-linea);
+  border-radius: 999px;
+  padding: 0 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-grava);
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.interruptor-del-historial[aria-pressed="true"] {
+  border-color: var(--color-error);
+  background: var(--color-error-fondo);
+  color: var(--color-error);
+}
+
+.punto-importante {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-error);
+}
+
+.segmento-del-historial {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.2rem;
+  background: var(--color-tiza);
+}
+
+.segmento-del-historial button {
+  min-height: 2rem;
+  border-radius: 999px;
+  padding: 0 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-grava);
+}
+
+.segmento-del-historial button[aria-pressed="true"] {
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+.interruptor-del-historial:focus-visible,
+.segmento-del-historial button:focus-visible,
+.paginacion-del-historial button:focus-visible,
+.detalle-del-registro summary:focus-visible {
+  outline: 2px solid var(--color-botella);
+  outline-offset: 2px;
+}
+
+.consulta-del-historial[data-pendiente] .linea-de-tiempo {
+  opacity: 0.55;
+  transition: opacity 200ms ease;
+}
+
+.dia-del-historial {
+  position: sticky;
+  top: 5.5rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+  padding: 0.25rem 0;
+  background: var(--color-papel);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-grava);
+}
+
+.dia-del-historial::after {
+  flex: 1;
+  height: 1px;
+  background: var(--color-linea);
+  content: "";
+}
+
+/* Cada registro cuelga de una línea vertical, como una planilla de partido. */
+.registro-del-historial {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.65rem 0 0.65rem 0;
+}
+
+.registro-del-historial + .registro-del-historial {
+  border-top: 1px dashed color-mix(in oklab, var(--color-linea) 60%, var(--color-grava));
+}
+
+.registro-del-historial__hora {
+  width: 2.75rem;
+  flex-shrink: 0;
+  padding-top: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-grava);
+  font-variant-numeric: tabular-nums;
+}
+
+.registro-del-historial__autor {
+  position: relative;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-botella) 14%, var(--color-papel));
+  color: var(--color-botella);
+}
+
+.registro-del-historial__autor::before {
+  content: attr(data-iniciales);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.registro-del-historial[data-importante] .registro-del-historial__autor::after {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 2px solid var(--color-papel);
+  border-radius: 999px;
+  background: var(--color-error);
+  content: "";
+}
+
+.chip-del-historial {
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  background: var(--color-tiza);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--color-grava);
+}
+
+.chip-del-historial--importante {
+  background: var(--color-error-fondo);
+  color: var(--color-error);
+}
+
+.detalle-del-registro summary {
+  width: fit-content;
+  margin-top: 0.35rem;
+  cursor: pointer;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-botella);
+}
+
+.detalle-del-registro table {
+  margin-top: 0.4rem;
+  width: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.detalle-del-registro th,
+.detalle-del-registro td {
+  padding: 0.3rem 0.5rem 0.3rem 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.detalle-del-registro tbody th {
+  width: 9rem;
+  font-weight: 700;
+  color: var(--color-grava);
+}
+
+.detalle-del-registro__antes {
+  color: var(--color-grava);
+  text-decoration: line-through;
+  text-decoration-color: rgb(0 0 0 / 0.25);
+}
+
+.detalle-del-registro__despues {
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+.detalle-del-registro__despues[data-con-antes]::before {
+  margin-right: 0.5rem;
+  content: "→";
+  font-weight: 400;
+  color: var(--color-grava);
+}
+
+/* En celular, la persona ocupa toda la fila y el resto va de a dos. */
+@media (max-width: 639px) {
+  .filtros-del-historial > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.paginacion-del-historial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.paginacion-del-historial__paso,
+.paginacion-del-historial__numero {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border-radius: 0.6rem;
+  padding: 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-botella);
+}
+
+.paginacion-del-historial__paso:disabled {
+  color: var(--color-grava);
+  opacity: 0.45;
+}
+
+.paginacion-del-historial__numero[aria-current="page"] {
+  background: var(--color-botella);
+  color: var(--color-papel);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .linea-de-tiempo .registro-del-historial {
+    animation: entrar-registro 0.35s ease both;
+  }
+
+  .linea-de-tiempo .registro-del-historial:nth-child(2) { animation-delay: 30ms; }
+  .linea-de-tiempo .registro-del-historial:nth-child(3) { animation-delay: 60ms; }
+  .linea-de-tiempo .registro-del-historial:nth-child(4) { animation-delay: 90ms; }
+  .linea-de-tiempo .registro-del-historial:nth-child(n + 5) { animation-delay: 120ms; }
+
+  .detalle-del-registro[open] table {
+    animation: entrar-registro 0.25s ease both;
+  }
+}
+
+@keyframes entrar-registro {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

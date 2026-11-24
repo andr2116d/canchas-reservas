@@ -42,6 +42,15 @@ describe("BarraDeNavegacion", () => {
     ruta.actual = "/administracion/recepcionistas";
   });
 
+  it("solo administración ve el historial de cambios en el menú", async () => {
+    render(<BarraDeNavegacion rol="ADMINISTRADOR" venceEn={VENCE} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Mi cuenta" }));
+
+    expect(screen.getByRole("link", { name: "Historial de cambios" })).toHaveAttribute("href", "/administracion/historial");
+    expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
+  });
+
   it("el menú se cierra con Escape y devuelve el foco al botón", async () => {
     render(<BarraDeNavegacion rol="ADMINISTRADOR" venceEn={VENCE} />);
     const boton = screen.getByRole("button", { name: "Mi cuenta" });
