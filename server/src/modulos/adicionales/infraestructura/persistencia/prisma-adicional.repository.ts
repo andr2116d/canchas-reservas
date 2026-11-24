@@ -7,11 +7,14 @@ import {
   CIFRADOR,
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
+import { ConflictoError } from '../../../../compartido/dominio/dominio.error';
 import { Monto } from '../../../../compartido/dominio/monto.value-object';
+import { VersionesLeidas } from '../../../../compartido/infraestructura/prisma/versiones-leidas';
 import { indiceUnicoViolado } from '../../../../compartido/infraestructura/prisma/indice-unico-violado';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { Prisma } from '../../../../generated/prisma/client';
 import { Adicional } from '../../dominio/adicional.entity';
+import { AdicionalNoEncontradoError } from '../../dominio/adicional-no-encontrado.error';
 import type {
   AdicionalRepository,
   Autoria,
@@ -63,16 +66,21 @@ export class PrismaAdicionalRepository implements AdicionalRepository {
     @Inject(CIFRADOR) private readonly cifrador: Cifrador,
   ) {}
 
+  private readonly versiones = new VersionesLeidas<Adicional>();
+
+  private leer = (fila: FilaDeAdicional): Adicional =>
+    this.versiones.recordar(aAdicional(fila), fila.version);
+
   async listar(): Promise<Adicional[]> {
     const filas = await this.prisma.adicional.findMany({
       orderBy: { id: 'asc' },
     });
-    return filas.map(aAdicional);
+    return filas.map(this.leer);
   }
 
   async buscar(id: number): Promise<Adicional | undefined> {
     const fila = await this.prisma.adicional.findUnique({ where: { id } });
-    return fila ? aAdicional(fila) : undefined;
+    return fila ? this.leer(fila) : undefined;
   }
 
   async nombreOcupado(
@@ -104,28 +112,51 @@ export class PrismaAdicionalRepository implements AdicionalRepository {
         },
       })
       .catch(rechazarNombreRepetido(adicional));
-    return aAdicional(fila);
+    return this.leer(fila);
   }
 
+  /** Guarda solo si nadie lo cambió desde que se leyó; si no, avisa en vez de pisar ese cambio. */
   async guardar(adicional: Adicional, cambio: CambioAuditado): Promise<void> {
-    await this.prisma.adicional
-      .update({
-        where: { id: adicional.id },
-        data: {
-          ...aFila(adicional),
-          cambios: { create: this.cambio(adicional, cambio) },
-        },
+    const version = this.versiones.de(adicional);
+    await this.prisma
+      .$transaction(async (tx) => {
+        const { count } = await tx.adicional.updateMany({
+          where: { id: adicional.id, version },
+          data: { ...aFila(adicional), version: { increment: 1 } },
+        });
+        if (count === 0) throw await this.porQueNoSeEscribio(tx, adicional);
+        await tx.cambioDeAdicional.create({
+          data: { ...this.cambio(adicional, cambio), adicionalId: adicional.id },
+        });
       })
       .catch(rechazarNombreRepetido(adicional));
+    this.versiones.recordar(adicional, version + 1);
   }
 
   async eliminar(adicional: Adicional, autoria: Autoria): Promise<void> {
-    await this.prisma.$transaction([
-      this.prisma.cambioDeAdicional.create({
+    const version = this.versiones.de(adicional);
+    await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.adicional.deleteMany({
+        where: { id: adicional.id, version },
+      });
+      if (count === 0) throw await this.porQueNoSeEscribio(tx, adicional);
+      await tx.cambioDeAdicional.create({
         data: this.cambio(adicional, { ...autoria, accion: 'ELIMINACION' }),
-      }),
-      this.prisma.adicional.delete({ where: { id: adicional.id } }),
-    ]);
+      });
+    });
+  }
+
+  /** Otro dispositivo lo eliminó o lo cambió entre la lectura y la escritura. */
+  private async porQueNoSeEscribio(
+    tx: Prisma.TransactionClient,
+    adicional: Adicional,
+  ) {
+    const sigue = await tx.adicional.count({ where: { id: adicional.id } });
+    if (!sigue) return new AdicionalNoEncontradoError();
+    return new ConflictoError(
+      'El adicional cambió mientras se guardaba. Recarga para ver lo último.',
+      {},
+    );
   }
 
   async cambios(limite: number): Promise<CambioRegistrado[]> {

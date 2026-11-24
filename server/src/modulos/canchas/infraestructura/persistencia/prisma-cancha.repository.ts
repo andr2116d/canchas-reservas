@@ -8,10 +8,12 @@ import {
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
 import { ConflictoError } from '../../../../compartido/dominio/dominio.error';
+import { VersionesLeidas } from '../../../../compartido/infraestructura/prisma/versiones-leidas';
 import { indiceUnicoViolado } from '../../../../compartido/infraestructura/prisma/indice-unico-violado';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { Prisma } from '../../../../generated/prisma/client';
 import { Cancha } from '../../dominio/cancha.entity';
+import { CanchaNoEncontradaError } from '../../dominio/cancha-no-encontrada.error';
 import type {
   Autoria,
   CambioAuditado,
@@ -51,6 +53,8 @@ function rechazarNombreRepetido(error: unknown): never {
   throw error;
 }
 
+type Transaccion = Prisma.TransactionClient;
+
 /** Canchas sobre PostgreSQL; cada escritura deja su cambio en la auditoría en la misma transacción. */
 @Injectable()
 export class PrismaCanchaRepository implements CanchaRepository {
@@ -59,14 +63,19 @@ export class PrismaCanchaRepository implements CanchaRepository {
     @Inject(CIFRADOR) private readonly cifrador: Cifrador,
   ) {}
 
+  private readonly versiones = new VersionesLeidas<Cancha>();
+
+  private leer = (fila: FilaDeCancha): Cancha =>
+    this.versiones.recordar(aCancha(fila), fila.version);
+
   async listar(): Promise<Cancha[]> {
     const filas = await this.prisma.cancha.findMany({ orderBy: { id: 'asc' } });
-    return filas.map(aCancha);
+    return filas.map(this.leer);
   }
 
   async buscar(id: number): Promise<Cancha | undefined> {
     const fila = await this.prisma.cancha.findUnique({ where: { id } });
-    return fila ? aCancha(fila) : undefined;
+    return fila ? this.leer(fila) : undefined;
   }
 
   async nombresOcupados(
@@ -99,29 +108,49 @@ export class PrismaCanchaRepository implements CanchaRepository {
           ),
         ),
       )
-      .then((filas) => filas.sort((a, b) => a.id - b.id).map(aCancha))
+      .then((filas) => filas.sort((a, b) => a.id - b.id).map(this.leer))
       .catch(rechazarNombreRepetido);
   }
 
+  /** Guarda solo si nadie la cambió desde que se leyó; si no, avisa en vez de pisar ese cambio. */
   async guardar(cancha: Cancha, cambio: CambioAuditado): Promise<void> {
-    await this.prisma.cancha
-      .update({
-        where: { id: cancha.id },
-        data: {
-          ...aFila(cancha),
-          cambios: { create: this.cambio(cancha, cambio) },
-        },
+    const version = this.versiones.de(cancha);
+    await this.prisma
+      .$transaction(async (tx) => {
+        const { count } = await tx.cancha.updateMany({
+          where: { id: cancha.id, version },
+          data: { ...aFila(cancha), version: { increment: 1 } },
+        });
+        if (count === 0) throw await this.porQueNoSeEscribio(tx, cancha);
+        await tx.cambioDeCancha.create({
+          data: { ...this.cambio(cancha, cambio), canchaId: cancha.id },
+        });
       })
       .catch(rechazarNombreRepetido);
+    this.versiones.recordar(cancha, version + 1);
   }
 
   async eliminar(cancha: Cancha, autoria: Autoria): Promise<void> {
-    await this.prisma.$transaction([
-      this.prisma.cambioDeCancha.create({
+    const version = this.versiones.de(cancha);
+    await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.cancha.deleteMany({
+        where: { id: cancha.id, version },
+      });
+      if (count === 0) throw await this.porQueNoSeEscribio(tx, cancha);
+      await tx.cambioDeCancha.create({
         data: this.cambio(cancha, { ...autoria, accion: 'ELIMINACION' }),
-      }),
-      this.prisma.cancha.delete({ where: { id: cancha.id } }),
-    ]);
+      });
+    });
+  }
+
+  /** Otro dispositivo la eliminó o la cambió entre la lectura y la escritura. */
+  private async porQueNoSeEscribio(tx: Transaccion, cancha: Cancha) {
+    const sigue = await tx.cancha.count({ where: { id: cancha.id } });
+    if (!sigue) return new CanchaNoEncontradaError();
+    return new ConflictoError(
+      'La cancha cambió mientras se guardaba. Recarga para ver lo último.',
+      {},
+    );
   }
 
   async cambios(limite: number): Promise<CambioRegistrado[]> {
