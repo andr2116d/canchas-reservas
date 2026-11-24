@@ -71,22 +71,30 @@ describe('EditarRecepcionistaUseCase', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('rechaza el documento o el correo de otra cuenta del personal', async () => {
+  it('rechaza el correo de otra cuenta del personal', async () => {
     const { editar, id } = await preparar();
 
     const error = await editar
-      .ejecutar(
-        id,
-        cambios({ numeroDocumento: '47654321', usuarioDeCorreo: 'mateo.paz' }),
-        ADMINISTRADOR,
-      )
+      .ejecutar(id, cambios({ usuarioDeCorreo: 'mateo.paz' }), ADMINISTRADOR)
       .catch((e: unknown) => e);
 
     expect((error as CuentaYaExisteError).errores).toEqual({
-      numeroDocumento:
-        'Este documento ya pertenece a otra cuenta de recepción.',
       correo: 'Este correo ya fue registrado para otra cuenta del personal.',
     });
+  });
+
+  it('no cambia el documento: identifica a la persona', async () => {
+    const { editar, id, recepcionistas } = await preparar();
+
+    const error = await editar
+      .ejecutar(id, cambios({ numeroDocumento: '49999999' }), ADMINISTRADOR)
+      .catch((e: unknown) => e);
+
+    expect((error as ReglaInvalidaError).errores).toEqual({
+      numeroDocumento:
+        'El documento identifica a la persona y no se puede cambiar.',
+    });
+    expect(recepcionistas.todas()[0].documento?.numero).toBe('41234567');
   });
 
   it('valida los datos igual que en el alta', async () => {

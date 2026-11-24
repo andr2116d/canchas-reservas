@@ -37,5 +37,8 @@ export interface AccesoRepository {
     usuarioId: number,
   ): Promise<CredencialesGuardadas | undefined>;
   registrarInicio(inicio: InicioAutenticado): Promise<boolean>;
+  /** Cambia la contraseña, cierra las demás sesiones y lo deja en la auditoría. */
   cambiarContrasena(cambio: CambioDeContrasena): Promise<boolean>;
+  /** Cuántas veces cambió su contraseña desde ese momento. */
+  contarCambiosDeContrasena(usuarioId: number, desde: Date): Promise<number>;
 }

@@ -88,6 +88,7 @@ describe('Historial de cambios', () => {
       ['CANCHAS', 'ALTA'],
       ['TARIFAS', 'EDICION'],
       ['TARIFAS', 'ALTA'],
+      ['CUENTAS', 'CAMBIO_DE_CONTRASENA'],
       ['ACCESOS', 'INICIO_DE_SESION'],
     ]);
     expect(registros[2]).toMatchObject({
@@ -119,6 +120,7 @@ describe('Historial de cambios', () => {
     expect(registros.map((r) => [r.accion, r.sujeto, r.importante])).toEqual([
       ['DESACTIVACION', 'Rosa Quispe Lozano', true],
       ['ALTA', 'Rosa Quispe Lozano', false],
+      ['CAMBIO_DE_CONTRASENA', 'Valeria León Paredes', true],
     ]);
     expect(accesos.total).toBe(1);
   });
@@ -139,14 +141,19 @@ describe('Historial de cambios', () => {
       accion: 'ALTA',
     });
 
-    expect(importantes.registros.map((r) => r.categoria)).toEqual(['TARIFAS']);
+    // Importantes: la tarifa y el cambio de la contraseña temporal del administrador.
+    expect(importantes.registros.map((r) => r.categoria)).toEqual([
+      'TARIFAS',
+      'CUENTAS',
+    ]);
     expect(altasDeCanchas.total).toBe(1);
   });
 
   it('filtra por días de Lima y dice cuando nada cumple', async () => {
     const hoy = fechaEnLima(new Date());
 
-    expect((await consultar({ desde: hoy, hasta: hoy })).total).toBe(1);
+    // El inicio de sesión del administrador y el cambio de su contraseña temporal.
+    expect((await consultar({ desde: hoy, hasta: hoy })).total).toBe(2);
     expect(await consultar({ desde: '2099-01-01' })).toMatchObject({
       registros: [],
       total: 0,
@@ -177,12 +184,12 @@ describe('Historial de cambios', () => {
     const antiguos = await consultar({ porPagina: '10', orden: 'ANTIGUOS' });
 
     expect(segunda).toMatchObject({
-      total: 13,
+      total: 14,
       pagina: 2,
       porPagina: 10,
       paginas: 2,
     });
-    expect(segunda.registros).toHaveLength(3);
+    expect(segunda.registros).toHaveLength(4);
     expect(antiguos.registros[0].categoria).toBe('ACCESOS');
   });
 

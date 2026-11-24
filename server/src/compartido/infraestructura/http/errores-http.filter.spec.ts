@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   ConflictoError,
+  LimiteExcedidoError,
   ReglaInvalidaError,
 } from '../../dominio/dominio.error';
 import { ErroresHttpFilter } from './errores-http.filter';
@@ -70,6 +71,15 @@ describe('ErroresHttpFilter', () => {
     expect(capturarRespuesta(new BadRequestException(cuerpo)).cuerpo).toEqual(
       cuerpo,
     );
+  });
+
+  it('responde 429 con su motivo cuando se supera un límite de cambios', () => {
+    expect(
+      capturarRespuesta(new LimiteExcedidoError('Espera una hora.')),
+    ).toEqual({
+      estado: 429,
+      cuerpo: { mensaje: 'Espera una hora.', errores: {} },
+    });
   });
 
   it.each([

@@ -61,7 +61,7 @@ describe('Mi cuenta', () => {
     expect(JSON.stringify(body)).not.toMatch(/Hash|Cifrad|argon2/);
   });
 
-  it('la recepcionista ve su cuenta y solo puede cambiar el celular', async () => {
+  it('la recepcionista corrige sus datos pero no cambia su correo', async () => {
     const recepcion = await sesionDeRecepcionista();
 
     const { body } = await api()
@@ -71,7 +71,8 @@ describe('Mi cuenta', () => {
 
     expect(body).toMatchObject({
       rol: 'RECEPCIONISTA',
-      editables: ['celular'],
+      editables: ['nombres', 'apellidos', 'fechaNacimiento', 'celular'],
+      puedeCambiarTipoDeDocumento: true,
     });
     const respuesta = await api()
       .patch('/api/cuenta')

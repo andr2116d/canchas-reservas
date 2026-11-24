@@ -26,12 +26,16 @@ type DatosDeJugador = 'fechaNacimiento' | 'documento' | 'celular';
 type DatosDeUsuario = Omit<DatosDeCuenta, DatosDeJugador> &
   Partial<Pick<DatosDeCuenta, DatosDeJugador>>;
 
-interface EstadoCompleto extends DatosDeUsuario {
+export interface EstadoCompleto extends DatosDeUsuario {
   id?: number;
   rol: RolUsuario;
   estado: EstadoUsuario;
   requiereCambiarContrasena?: boolean;
   contrasenaTemporalVenceEn?: Date;
+  /** Cuándo el personal completó o confirmó sus datos. */
+  datosConfirmadosEn?: Date;
+  /** Cuándo pasó de DNI a carné de extranjería o al revés; solo una vez. */
+  documentoCambiadoEn?: Date;
 }
 
 /** Persona con cuenta en La Previa. */
@@ -130,6 +134,19 @@ export class Usuario {
   /** Hasta cuándo sirve la contraseña temporal; nada si no es temporal. */
   get contrasenaTemporalVenceEn(): Date | undefined {
     return this.datos.contrasenaTemporalVenceEn;
+  }
+
+  get datosConfirmadosEn(): Date | undefined {
+    return this.datos.datosConfirmadosEn;
+  }
+
+  get documentoCambiadoEn(): Date | undefined {
+    return this.datos.documentoCambiadoEn;
+  }
+
+  /** Copia del estado guardado, para reconstruirlo con algunos datos cambiados. */
+  get estadoGuardado(): EstadoCompleto {
+    return { ...this.datos };
   }
 
   /** Solo los usuarios activos pueden iniciar sesión. */

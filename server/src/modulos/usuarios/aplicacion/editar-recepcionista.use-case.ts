@@ -5,7 +5,9 @@ import {
 } from '../dominio/cuenta-ya-existe.error';
 import { RecepcionistaNoEncontradaError } from '../dominio/recepcionista-no-encontrada.error';
 import type { RecepcionistaRepository } from '../dominio/recepcionista.repository';
+import { exigirMismoDocumento } from '../dominio/documento-fijo';
 import { construirDatosPersonales } from './datos-personales';
+import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
 import type { ContextoDeCuentas } from './contexto-de-cuentas';
 import type { DatosDeRecepcionista } from './registrar-recepcionista.use-case';
 
@@ -16,7 +18,7 @@ const MENSAJES_DE_OTRA_CUENTA = {
   numeroDocumento: 'Este documento ya pertenece a otra cuenta de recepción.',
 };
 
-/** Cambia los datos personales y el correo de una recepcionista. El rol no cambia. */
+/** Cambia los datos personales y el correo de una recepcionista. El rol y el documento no cambian. */
 export class EditarRecepcionistaUseCase {
   constructor(
     private readonly recepcionistas: Pick<
@@ -36,9 +38,18 @@ export class EditarRecepcionistaUseCase {
       ...construirDatosPersonales(datos, reloj.ahora()),
       correo: () => correos.institucional(datos.usuarioDeCorreo),
     });
-    if (!(await this.recepcionistas.buscar(id))) {
-      throw new RecepcionistaNoEncontradaError();
-    }
+    const actual = await this.recepcionistas.buscar(id);
+    if (!actual) throw new RecepcionistaNoEncontradaError();
+    exigirMismoDocumento(
+      DocumentoIdentidad.crear(
+        actual.ficha.tipoDocumento,
+        actual.ficha.numeroDocumento,
+      ),
+      {
+        tipoDocumento: numeroDocumento.tipo,
+        numeroDocumento: numeroDocumento.numero,
+      },
+    );
     const ajenas = (
       await this.recepcionistas.buscarCoincidencias(
         numeroDocumento,

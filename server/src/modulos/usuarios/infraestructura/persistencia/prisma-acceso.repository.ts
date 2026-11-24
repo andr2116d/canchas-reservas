@@ -52,6 +52,16 @@ export class PrismaAccesoRepository implements AccesoRepository {
     return aCredenciales(usuario);
   }
 
+  contarCambiosDeContrasena(usuarioId: number, desde: Date): Promise<number> {
+    return this.prisma.registroAuditoria.count({
+      where: {
+        usuarioAfectadoId: usuarioId,
+        accion: 'CAMBIO_DE_CONTRASENA',
+        ocurridoEn: { gte: desde },
+      },
+    });
+  }
+
   registrarInicio({ usuario, sesion }: InicioAutenticado): Promise<boolean> {
     return this.prisma.$transaction(async (base) => {
       if (!(await bloquearCuentaVigente(base, usuario))) return false;
@@ -94,6 +104,14 @@ export class PrismaAccesoRepository implements AccesoRepository {
         },
       });
       await base.sesion.deleteMany({ where: { usuarioId } });
+      await base.registroAuditoria.create({
+        data: {
+          accion: 'CAMBIO_DE_CONTRASENA',
+          usuarioAfectadoId: usuarioId,
+          ejecutadoPorId: usuarioId,
+          ocurridoEn: sesion.ultimaActividadEn,
+        },
+      });
       await base.sesion.create({ data: { ...sesion, usuarioId } });
       return true;
     });

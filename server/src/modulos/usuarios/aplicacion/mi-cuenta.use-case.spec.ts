@@ -1,6 +1,9 @@
 import { EnMemoriaUsuarioRepository } from '../../../../test/usuarios/dobles/en-memoria-usuario.repository';
 import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
-import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
+import {
+  LimiteExcedidoError,
+  ReglaInvalidaError,
+} from '../../../compartido/dominio/dominio.error';
 import { Celular } from '../dominio/celular.value-object';
 import { Correo } from '../dominio/correo.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
@@ -38,14 +41,25 @@ async function preparar() {
     ),
   );
   const recepcionista = usuarios.todos()[1].id ?? 0;
+  await usuarios.crearPersonal(
+    Usuario.registrarPersonal(
+      { ...datos('admin@laprevia.pe') },
+      'ADMINISTRADOR',
+      new Date('2026-11-29T00:00:00.000Z'),
+    ),
+  );
+  const admin = usuarios.todos()[2].id ?? 0;
   return {
     usuarios,
     jugador,
     recepcionista,
+    admin,
     consultar: new ConsultarCuentaUseCase(usuarios),
     actualizar: new ActualizarMiCuentaUseCase(usuarios, contexto),
   };
 }
+
+const sesionDe = (usuarioId: number) => ({ usuarioId, tokenHash: 'esta' });
 
 describe('Mi cuenta', () => {
   it('muestra los propios datos y cuáles puede cambiar el jugador', async () => {
@@ -60,20 +74,20 @@ describe('Mi cuenta', () => {
     });
   });
 
-  it('el personal solo puede cambiar su celular', async () => {
+  it('la recepcionista corrige sus nombres y su fecha, pero no su correo ni su documento', async () => {
     const { consultar, recepcionista } = await preparar();
 
     await expect(consultar.ejecutar(recepcionista)).resolves.toMatchObject({
       rol: 'RECEPCIONISTA',
       correo: 'valeria.leon@laprevia.pe',
-      editables: ['celular'],
+      editables: ['nombres', 'apellidos', 'fechaNacimiento', 'celular'],
     });
   });
 
   it('el jugador cambia su correo, su celular y su dorsal', async () => {
     const { actualizar, consultar, jugador } = await preparar();
 
-    await actualizar.ejecutar(jugador, {
+    await actualizar.ejecutar(sesionDe(jugador), {
       correo: 'nueva@gmail.com',
       celular: '912000111',
       dorsal: '10',
@@ -90,7 +104,7 @@ describe('Mi cuenta', () => {
     const { actualizar, recepcionista } = await preparar();
 
     const error = await actualizar
-      .ejecutar(recepcionista, { correo: 'otra@laprevia.pe' })
+      .ejecutar(sesionDe(recepcionista), { correo: 'otra@laprevia.pe' })
       .catch((e: unknown) => e);
 
     expect((error as ReglaInvalidaError).errores).toEqual({
@@ -102,7 +116,10 @@ describe('Mi cuenta', () => {
     const { actualizar, jugador } = await preparar();
 
     const error = await actualizar
-      .ejecutar(jugador, { correo: 'nueva@laprevia.pe', celular: '12' })
+      .ejecutar(sesionDe(jugador), {
+        correo: 'nueva@laprevia.pe',
+        celular: '12',
+      })
       .catch((e: unknown) => e);
 
     expect(Object.keys((error as ReglaInvalidaError).errores)).toEqual([
@@ -121,7 +138,7 @@ describe('Mi cuenta', () => {
     );
 
     await expect(
-      actualizar.ejecutar(jugador, { correo: 'ocupado@gmail.com' }),
+      actualizar.ejecutar(sesionDe(jugador), { correo: 'ocupado@gmail.com' }),
     ).rejects.toBeInstanceOf(CuentaYaExisteError);
   });
 
@@ -129,7 +146,7 @@ describe('Mi cuenta', () => {
     const { actualizar, recepcionista } = await preparar();
 
     await expect(
-      actualizar.ejecutar(recepcionista, {
+      actualizar.ejecutar(sesionDe(recepcionista), {
         celular: '912000111',
         correo: undefined,
       }),
@@ -140,7 +157,77 @@ describe('Mi cuenta', () => {
     const { actualizar, jugador } = await preparar();
 
     await expect(
-      actualizar.ejecutar(jugador, { correo: 'VALERIA@gmail.com' }),
+      actualizar.ejecutar(sesionDe(jugador), { correo: 'VALERIA@gmail.com' }),
     ).resolves.toBeUndefined();
+  });
+
+  describe('cambios propios', () => {
+    it('guardar los mismos datos no deja registro', async () => {
+      const { actualizar, usuarios, recepcionista } = await preparar();
+
+      await actualizar.ejecutar(sesionDe(recepcionista), {
+        nombres: 'Valeria',
+        celular: '987654321',
+      });
+
+      expect(usuarios.auditoria).toEqual([]);
+    });
+
+    it('corregir el nombre queda en la auditoría como edición propia', async () => {
+      const { actualizar, usuarios, recepcionista, consultar } =
+        await preparar();
+
+      await actualizar.ejecutar(sesionDe(recepcionista), { nombres: 'Valery' });
+
+      await expect(consultar.ejecutar(recepcionista)).resolves.toMatchObject({
+        nombres: 'Valery',
+      });
+      expect(usuarios.auditoria.map((a) => a.accion)).toEqual([
+        'EDICION_PROPIA',
+      ]);
+    });
+
+    it('no deja cambiar los datos más de 10 veces en una hora', async () => {
+      const { actualizar, recepcionista } = await preparar();
+      for (let vez = 0; vez < 10; vez++)
+        await actualizar.ejecutar(sesionDe(recepcionista), {
+          celular: `91200011${vez}`,
+        });
+
+      await expect(
+        actualizar.ejecutar(sesionDe(recepcionista), { celular: '913000000' }),
+      ).rejects.toThrow(LimiteExcedidoError);
+    });
+
+    it('el administrador cambia su correo solo dentro del dominio y cierra sus otras sesiones', async () => {
+      const { actualizar, usuarios, admin } = await preparar();
+
+      const error = await actualizar
+        .ejecutar(sesionDe(admin), { correo: 'admin@gmail.com' })
+        .catch((e: unknown) => e);
+      await actualizar.ejecutar(sesionDe(admin), {
+        correo: 'direccion@laprevia.pe',
+      });
+
+      expect(Object.keys((error as ReglaInvalidaError).errores)).toEqual([
+        'correo',
+      ]);
+      expect(usuarios.auditoria.map((a) => a.accion)).toEqual([
+        'CAMBIO_DE_CORREO',
+      ]);
+      expect(usuarios.sesionConservada).toBe('esta');
+    });
+
+    it('no deja cambiar el correo más de 3 veces en un día', async () => {
+      const { actualizar, admin } = await preparar();
+      for (const usuario of ['uno', 'dos', 'tres'])
+        await actualizar.ejecutar(sesionDe(admin), {
+          correo: `${usuario}@laprevia.pe`,
+        });
+
+      await expect(
+        actualizar.ejecutar(sesionDe(admin), { correo: 'cuatro@laprevia.pe' }),
+      ).rejects.toThrow(LimiteExcedidoError);
+    });
   });
 });

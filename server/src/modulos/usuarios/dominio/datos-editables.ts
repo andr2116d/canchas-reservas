@@ -1,14 +1,20 @@
 import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
 
-export type DatoEditable = 'correo' | 'celular' | 'dorsal';
+export type DatoEditable =
+  'nombres' | 'apellidos' | 'fechaNacimiento' | 'correo' | 'celular' | 'dorsal';
 
 /**
- * Lo que cada persona puede cambiar de su propia cuenta. Documento, nombres,
- * apellidos y fecha de nacimiento la identifican: no se cambian desde la cuenta.
- * El correo del personal es institucional y lo asigna el administrador.
+ * Lo que cada persona cambia de su propia cuenta. El documento la identifica: su
+ * número nunca se cambia. El correo de la recepcionista lo asigna administración.
  */
 export const DATOS_EDITABLES: Record<RolUsuario, DatoEditable[]> = {
   JUGADOR: ['correo', 'celular', 'dorsal'],
-  RECEPCIONISTA: ['celular'],
-  ADMINISTRADOR: ['celular'],
+  RECEPCIONISTA: ['nombres', 'apellidos', 'fechaNacimiento', 'celular'],
+  ADMINISTRADOR: [
+    'nombres',
+    'apellidos',
+    'fechaNacimiento',
+    'correo',
+    'celular',
+  ],
 };

@@ -40,3 +40,10 @@ export class ConflictoError extends DominioError {
     super(mensaje, errores);
   }
 }
+
+/** Se superó un límite de cambios en un tiempo, como cambiar la contraseña muchas veces en una hora. */
+export class LimiteExcedidoError extends DominioError {
+  constructor(mensaje: string) {
+    super(mensaje, {});
+  }
+}

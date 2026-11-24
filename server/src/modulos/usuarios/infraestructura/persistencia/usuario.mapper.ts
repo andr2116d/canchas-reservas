@@ -98,6 +98,8 @@ export function aEntidad(fila: FilaUsuario, cifrador: Cifrador): Usuario {
       : undefined,
     contrasenaHash: fila.contrasenaHash,
     dorsal: fila.dorsal === null ? undefined : Dorsal.restaurar(fila.dorsal),
+    datosConfirmadosEn: fila.datosConfirmadosEn ?? undefined,
+    documentoCambiadoEn: fila.documentoCambiadoEn ?? undefined,
     rol: fila.rol,
     estado: fila.estado,
     requiereCambiarContrasena: fila.requiereCambiarContrasena,

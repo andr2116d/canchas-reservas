@@ -11,6 +11,7 @@ import {
   ConflictoError,
   DominioError,
   type ErroresPorCampo,
+  LimiteExcedidoError,
   NoEncontradoError,
 } from '../../dominio/dominio.error';
 
@@ -43,6 +44,7 @@ function esCuerpoDeError(valor: unknown): valor is CuerpoDeError {
 function estadoDelError(error: DominioError): HttpStatus {
   if (error instanceof ConflictoError) return HttpStatus.CONFLICT;
   if (error instanceof NoEncontradoError) return HttpStatus.NOT_FOUND;
+  if (error instanceof LimiteExcedidoError) return HttpStatus.TOO_MANY_REQUESTS;
   return HttpStatus.BAD_REQUEST;
 }
 

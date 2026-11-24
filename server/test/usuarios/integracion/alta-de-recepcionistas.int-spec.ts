@@ -104,6 +104,7 @@ describe('POST /api/recepcionistas', () => {
       const { body } = await crear().set('Cookie', administrador).expect(201);
 
       const [registro] = await prisma.registroAuditoria.findMany({
+        where: { accion: 'ALTA' },
         include: { ejecutadoPor: true },
       });
       expect(registro.accion).toBe('ALTA');

@@ -51,12 +51,13 @@ export class CuentaController {
   }
 
   @Patch()
+  @Throttle(LIMITE_DE_INICIOS_POR_IP)
   @HttpCode(HttpStatus.NO_CONTENT)
   actualizar(
     @SesionDeLaSolicitud() sesion: SesionValida,
     @Body() cambios: ActualizarMiCuentaDto,
   ): Promise<void> {
-    return this.actualizarCuenta.ejecutar(sesion.usuarioId, cambios);
+    return this.actualizarCuenta.ejecutar(sesion, cambios);
   }
 
   @Patch('contrasena')

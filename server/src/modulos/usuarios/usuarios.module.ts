@@ -31,6 +31,9 @@ import {
 } from './aplicacion/contexto-de-cuentas';
 import { PROVIDERS_DE_RECEPCIONISTAS } from './recepcionistas.providers';
 import { CuentaController } from './infraestructura/http/cuenta.controller';
+import { DatosPropiosController } from './infraestructura/http/datos-propios.controller';
+import { CambiarMiTipoDeDocumentoUseCase } from './aplicacion/cambiar-mi-tipo-de-documento.use-case';
+import { CompletarMisDatosUseCase } from './aplicacion/completar-mis-datos.use-case';
 import { InicioDeSesionController } from './infraestructura/http/inicio-de-sesion.controller';
 import { RecepcionistasController } from './infraestructura/http/recepcionistas.controller';
 import { CuentaDeRecepcionistaController } from './infraestructura/http/cuenta-de-recepcionista.controller';
@@ -46,6 +49,7 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
   controllers: [
     JugadoresController,
     CuentaController,
+    DatosPropiosController,
     InicioDeSesionController,
     RecepcionistasController,
     CuentaDeRecepcionistaController,
@@ -145,6 +149,14 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
         new ActualizarMiCuentaUseCase(usuarios, contexto),
       inject: [USUARIO_REPOSITORY, CONTEXTO_DE_CUENTAS],
     },
+    ...[CompletarMisDatosUseCase, CambiarMiTipoDeDocumentoUseCase].map(
+      (CasoDeUso) => ({
+        provide: CasoDeUso,
+        useFactory: (usuarios: UsuarioRepository, reloj: Reloj) =>
+          new CasoDeUso(usuarios, reloj),
+        inject: [USUARIO_REPOSITORY, RELOJ],
+      }),
+    ),
     {
       provide: RegistrarPersonalUseCase,
       useFactory: (

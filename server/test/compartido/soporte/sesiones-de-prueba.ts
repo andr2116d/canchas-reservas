@@ -41,6 +41,23 @@ export async function sesionDeAdministrador(
   return cookieDe(cambio);
 }
 
+/** Un administrador recién creado, sin datos confirmados, con la cookie de su primera sesión. */
+export async function administradorSinDatos(
+  app: NestExpressApplication,
+  correo = 'jefa@laprevia.pe',
+): Promise<string> {
+  await app.get(RegistrarPersonalUseCase).ejecutar(
+    {
+      nombres: 'Vale',
+      apellidos: 'León',
+      correo,
+      contrasena: CONTRASENA_TEMPORAL,
+    },
+    'ADMINISTRADOR',
+  );
+  return cookieDe(await iniciar(app, correo, CONTRASENA_TEMPORAL));
+}
+
 /**
  * Marca como confirmados los datos del personal creado en la prueba, para que entre
  * directo a su panel. El primer ingreso con datos se prueba aparte.

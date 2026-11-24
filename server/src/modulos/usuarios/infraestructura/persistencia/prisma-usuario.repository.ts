@@ -8,9 +8,11 @@ import type { RolUsuario } from '../../../../compartido/dominio/rol-usuario';
 import type { Correo } from '../../dominio/correo.value-object';
 import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
 import type { Usuario } from '../../dominio/usuario.entity';
+import type { AccionAuditada } from '../../dominio/accion-auditada';
 import type {
-  ContactoNuevo,
+  CambioPropio,
   DatosDelAlta,
+  DatosPropios,
   UsuarioRepository,
 } from '../../dominio/usuario.repository';
 import {
@@ -74,27 +76,61 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     }
   }
 
-  async actualizarContacto(
-    id: number,
-    { correo, celular, dorsal }: ContactoNuevo,
-  ): Promise<void> {
+  async aplicarCambioPropio(cambio: CambioPropio): Promise<boolean> {
+    const { usuarioId, marca } = cambio;
     try {
-      await this.prisma.usuario.update({
-        where: { id },
-        data: {
-          ...(correo && {
-            correoCifrado: this.cifrador.cifrar(correo.direccion),
-            correoHash: hashDeCorreo(correo, this.cifrador),
-          }),
-          ...(celular && {
-            celularCifrado: this.cifrador.cifrar(celular.numero),
-          }),
-          ...(dorsal !== undefined && { dorsal: dorsal?.numero ?? null }),
-        },
+      return await this.prisma.$transaction(async (base) => {
+        const { count } = await base.usuario.updateMany({
+          where: {
+            id: usuarioId,
+            ...(marca === 'DATOS_CONFIRMADOS' && { datosConfirmadosEn: null }),
+            ...(marca === 'DOCUMENTO_CAMBIADO' && {
+              documentoCambiadoEn: null,
+            }),
+          },
+          data: {
+            ...columnasPropias(cambio.datos, this.cifrador),
+            ...(marca === 'DATOS_CONFIRMADOS' && {
+              datosConfirmadosEn: cambio.ocurridoEn,
+            }),
+            ...(marca === 'DOCUMENTO_CAMBIADO' && {
+              documentoCambiadoEn: cambio.ocurridoEn,
+            }),
+          },
+        });
+        if (count === 0) return false;
+        await base.registroAuditoria.create({
+          data: {
+            accion: cambio.accion,
+            usuarioAfectadoId: usuarioId,
+            ejecutadoPorId: usuarioId,
+            ocurridoEn: cambio.ocurridoEn,
+          },
+        });
+        if (cambio.conservarSesion)
+          await base.sesion.deleteMany({
+            where: { usuarioId, tokenHash: { not: cambio.conservarSesion } },
+          });
+        return true;
       });
     } catch (error) {
       rechazarDuplicado(error);
     }
+  }
+
+  contarAccionesPropias(
+    usuarioId: number,
+    acciones: AccionAuditada[],
+    desde: Date,
+  ): Promise<number> {
+    return this.prisma.registroAuditoria.count({
+      where: {
+        usuarioAfectadoId: usuarioId,
+        ejecutadoPorId: usuarioId,
+        accion: { in: acciones },
+        ocurridoEn: { gte: desde },
+      },
+    });
   }
 
   async crearPersonal(usuario: Usuario): Promise<void> {
@@ -107,4 +143,27 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
       rechazarDuplicado(error);
     }
   }
+}
+
+/** Solo las columnas de los datos que cambian, cada dato personal cifrado. */
+function columnasPropias(datos: DatosPropios, cifrador: Cifrador) {
+  const cifrar = (texto: string) => cifrador.cifrar(texto);
+  return {
+    ...(datos.nombres && { nombresCifrado: cifrar(datos.nombres.texto) }),
+    ...(datos.apellidos && { apellidosCifrado: cifrar(datos.apellidos.texto) }),
+    ...(datos.fechaNacimiento && {
+      fechaNacimientoCifrada: cifrar(datos.fechaNacimiento.fecha),
+    }),
+    ...(datos.documento && {
+      tipoDocumento: datos.documento.tipo,
+      numeroDocumentoCifrado: cifrar(datos.documento.numero),
+      documentoHash: hashDeDocumento(datos.documento, cifrador),
+    }),
+    ...(datos.correo && {
+      correoCifrado: cifrar(datos.correo.direccion),
+      correoHash: hashDeCorreo(datos.correo, cifrador),
+    }),
+    ...(datos.celular && { celularCifrado: cifrar(datos.celular.numero) }),
+    ...(datos.dorsal !== undefined && { dorsal: datos.dorsal?.numero ?? null }),
+  };
 }

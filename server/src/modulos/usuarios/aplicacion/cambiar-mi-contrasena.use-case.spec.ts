@@ -1,7 +1,10 @@
 import { EnMemoriaSesionRepository } from '../../../../test/sesiones/dobles/en-memoria-sesion.repository';
 import { GeneradorTokenDePrueba } from '../../../../test/compartido/dobles/generador-token-de-prueba';
 import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
-import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
+import {
+  LimiteExcedidoError,
+  ReglaInvalidaError,
+} from '../../../compartido/dominio/dominio.error';
 import {
   AbrirSesionUseCase,
   type SesionValida,
@@ -18,6 +21,7 @@ const SESION = {
 
 function preparar() {
   const guardarCambio = jest.fn().mockResolvedValue(true);
+  const contarCambios = jest.fn().mockResolvedValue(0);
   const accesos = {
     buscarPorUsuario: jest.fn().mockResolvedValue({
       usuarioId: 7,
@@ -27,6 +31,7 @@ function preparar() {
       requiereCambiarContrasena: false,
     }),
     cambiarContrasena: guardarCambio,
+    contarCambiosDeContrasena: contarCambios,
   } as unknown as AccesoRepository;
   const reloj = new RelojDePrueba();
   const cambiar = new CambiarMiContrasenaUseCase(
@@ -39,7 +44,7 @@ function preparar() {
       reloj,
     ),
   );
-  return { guardarCambio, cambiar };
+  return { guardarCambio, contarCambios, cambiar };
 }
 
 describe('CambiarMiContrasenaUseCase', () => {
@@ -59,6 +64,16 @@ describe('CambiarMiContrasenaUseCase', () => {
         tokenHash: 'token',
       }),
     );
+  });
+
+  it('no deja cambiarla más de 5 veces en una hora', async () => {
+    const { guardarCambio, contarCambios, cambiar } = preparar();
+    contarCambios.mockResolvedValue(5);
+
+    await expect(
+      cambiar.ejecutar(SESION, 'actual2026', 'nueva2026'),
+    ).rejects.toThrow(LimiteExcedidoError);
+    expect(guardarCambio).not.toHaveBeenCalled();
   });
 
   it('exige la contraseña actual correcta', async () => {

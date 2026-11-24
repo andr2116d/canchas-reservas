@@ -14,6 +14,8 @@ export interface Cuenta {
   celular?: string;
   dorsal?: number;
   editables: DatoEditable[];
+  /** El personal puede pasar una vez de DNI a carné de extranjería o al revés. */
+  puedeCambiarTipoDeDocumento: boolean;
 }
 
 /** Datos de la cuenta del usuario con sesión iniciada. */
@@ -36,6 +38,10 @@ export class ConsultarCuentaUseCase {
       celular: usuario.celular?.numero,
       dorsal: usuario.dorsal?.numero,
       editables: DATOS_EDITABLES[usuario.rol],
+      puedeCambiarTipoDeDocumento:
+        usuario.rol !== 'JUGADOR' &&
+        Boolean(usuario.documento) &&
+        !usuario.documentoCambiadoEn,
     };
   }
 }
