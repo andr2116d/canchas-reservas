@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aConsulta, FILTROS_INICIALES, hayFiltros, leerFiltros } from "./filtros";
+import { aConsulta, FILTROS_INICIALES, hayFiltros, leerFiltros, periodoDe, rangoDelPeriodo } from "./filtros";
 
 describe("leerFiltros", () => {
   it("sin parámetros: todo, lo más reciente primero, 25 por página", () => {
@@ -62,5 +62,22 @@ describe("hayFiltros", () => {
     expect(hayFiltros(FILTROS_INICIALES)).toBe(false);
     expect(hayFiltros({ ...FILTROS_INICIALES, orden: "ANTIGUOS", pagina: 4 })).toBe(false);
     expect(hayFiltros({ ...FILTROS_INICIALES, desde: "2026-11-01" })).toBe(true);
+  });
+});
+
+describe("atajos de período", () => {
+  it.each([
+    ["HOY", { desde: "2026-11-24", hasta: "2026-11-24" }],
+    ["AYER", { desde: "2026-11-23", hasta: "2026-11-23" }],
+    ["SIETE_DIAS", { desde: "2026-11-18", hasta: "2026-11-24" }],
+    ["TREINTA_DIAS", { desde: "2026-10-26", hasta: "2026-11-24" }],
+    ["TODO", { desde: "", hasta: "" }],
+  ] as const)("%s cuenta días de Lima incluyendo hoy", (periodo, rango) => {
+    expect(rangoDelPeriodo(periodo, "2026-11-24")).toEqual(rango);
+    expect(periodoDe(rango, "2026-11-24")).toBe(periodo);
+  });
+
+  it("unas fechas elegidas a mano no corresponden a ningún atajo", () => {
+    expect(periodoDe({ desde: "2026-11-02", hasta: "2026-11-10" }, "2026-11-24")).toBeUndefined();
   });
 });

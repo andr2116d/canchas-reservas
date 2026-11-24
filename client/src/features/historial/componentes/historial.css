@@ -1,4 +1,146 @@
 /* Historial de cambios: filtros compactos y una línea de tiempo por día. */
+.filtros-del-historial {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: 1.25rem;
+  padding: 0.75rem;
+  background: var(--color-papel);
+  box-shadow: 0 18px 40px -26px rgb(19 38 30 / 0.45);
+}
+
+/* Categorías de un toque: en el celular se deslizan de lado. */
+.categorias-del-historial {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 0.3rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 0.9rem;
+  padding: 0.25rem;
+  background: var(--color-tiza);
+}
+
+.categorias-del-historial button {
+  flex-shrink: 0;
+  min-height: 2.25rem;
+  border-radius: 0.7rem;
+  padding: 0 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-grava);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.categorias-del-historial button:hover {
+  color: var(--color-tinta);
+}
+
+.categorias-del-historial button[aria-pressed="true"] {
+  background: var(--color-botella);
+  color: var(--color-papel);
+  box-shadow: 0 4px 12px -6px rgb(19 38 30 / 0.6);
+}
+
+.filtros-del-historial__fila {
+  display: grid;
+  gap: 0.75rem;
+  align-items: end;
+  padding: 0 0.25rem 0.25rem;
+}
+
+@media (min-width: 1024px) {
+  .filtros-del-historial__fila {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.campos-del-historial {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+@media (min-width: 640px) {
+  .campos-del-historial {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 9.5rem 9.5rem;
+  }
+}
+
+.limpiar-del-historial {
+  flex-shrink: 0;
+  min-height: 2.25rem;
+  padding: 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-botella);
+  text-underline-offset: 4px;
+}
+
+.limpiar-del-historial:hover {
+  text-decoration: underline;
+}
+
+.aviso-del-historial {
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #fbf1d9;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.resumen-del-historial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.paginacion-del-historial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-top: 1px solid var(--color-linea);
+  padding-top: 0.75rem;
+}
+
+.paginacion-del-historial__paso,
+.paginacion-del-historial__numero {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border-radius: 0.65rem;
+  padding: 0 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-botella);
+  transition: background-color 160ms ease;
+}
+
+.paginacion-del-historial__paso:hover:not(:disabled),
+.paginacion-del-historial__numero:hover:not([aria-current]) {
+  background: var(--color-tiza);
+}
+
+.paginacion-del-historial__paso:disabled {
+  color: var(--color-grava);
+  opacity: 0.4;
+}
+
+.paginacion-del-historial__numero[aria-current="page"] {
+  background: var(--color-botella);
+  color: var(--color-papel);
+}
+
+.registros-del-historial {
+  scroll-margin-top: 6rem;
+}
+
 .campo-del-historial {
   width: 100%;
   min-height: 2.6rem;
@@ -64,6 +206,13 @@
   color: var(--color-grava);
 }
 
+.segmento-del-historial--chico button {
+  min-height: 1.75rem;
+  min-width: 2.5rem;
+  padding: 0 0.6rem;
+  font-size: 0.8rem;
+}
+
 .segmento-del-historial button[aria-pressed="true"] {
   background: var(--color-papel);
   color: var(--color-tinta);
@@ -72,13 +221,15 @@
 
 .interruptor-del-historial:focus-visible,
 .segmento-del-historial button:focus-visible,
+.categorias-del-historial button:focus-visible,
+.limpiar-del-historial:focus-visible,
 .paginacion-del-historial button:focus-visible,
 .detalle-del-registro summary:focus-visible {
   outline: 2px solid var(--color-botella);
   outline-offset: 2px;
 }
 
-.consulta-del-historial[data-pendiente] .linea-de-tiempo {
+.consulta-del-historial[data-pendiente] .registros-del-historial {
   opacity: 0.55;
   transition: opacity 200ms ease;
 }
@@ -223,42 +374,7 @@
   color: var(--color-grava);
 }
 
-/* En celular, la persona ocupa toda la fila y el resto va de a dos. */
-@media (max-width: 639px) {
-  .filtros-del-historial > :first-child {
-    grid-column: 1 / -1;
-  }
-}
 
-.paginacion-del-historial {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0 0.25rem;
-}
-
-.paginacion-del-historial__paso,
-.paginacion-del-historial__numero {
-  min-width: 2.25rem;
-  min-height: 2.25rem;
-  border-radius: 0.6rem;
-  padding: 0 0.6rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-botella);
-}
-
-.paginacion-del-historial__paso:disabled {
-  color: var(--color-grava);
-  opacity: 0.45;
-}
-
-.paginacion-del-historial__numero[aria-current="page"] {
-  background: var(--color-botella);
-  color: var(--color-papel);
-}
 
 @media (prefers-reduced-motion: no-preference) {
   .linea-de-tiempo .registro-del-historial {

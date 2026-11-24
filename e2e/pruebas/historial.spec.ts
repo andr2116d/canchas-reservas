@@ -26,7 +26,7 @@ test.describe("en escritorio", () => {
     await page.getByRole("button", { name: "Mi cuenta" }).click();
     await page.getByRole("link", { name: "Historial de cambios" }).click();
 
-    await page.getByLabel("Categoría").selectOption("ADICIONALES");
+    await page.getByRole("group", { name: "Categoría" }).getByRole("button", { name: "Adicionales" }).click();
     await page.getByLabel("Acción").selectOption("EDICION");
     await expect(page).toHaveURL(/categoria=ADICIONALES&accion=EDICION/);
     const edicion = registros(page).filter({ hasText: `editó el adicional ${nombre}` });
@@ -35,6 +35,17 @@ test.describe("en escritorio", () => {
     await edicion.getByText("Ver qué cambió").click();
     await expect(edicion.getByRole("row", { name: /Precio por unidad/ })).toContainText("S/ 10.00");
     await expect(edicion.getByRole("row", { name: /Precio por unidad/ })).toContainText("S/ 12.00");
+  });
+
+  test("los atajos de período filtran por días de Lima", async ({ page }) => {
+    await abrirHistorial(page);
+    const periodo = page.getByRole("group", { name: "Período" });
+
+    await periodo.getByRole("button", { name: "Hoy" }).click();
+
+    await expect(periodo.getByRole("button", { name: "Hoy" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page).toHaveURL(/desde=(\d{4}-\d{2}-\d{2})&hasta=\1/);
+    await expect(page.locator(".dia-del-historial")).toHaveText(["Hoy"]);
   });
 
   test("sin registros que cumplan lo dice, y con la fecha final antes de la inicial no filtra", async ({ page }) => {
@@ -60,11 +71,11 @@ test.describe("en escritorio", () => {
     await expect(page).toHaveURL("/administracion", { timeout: 20_000 });
     await page.goto("/administracion/historial");
 
-    await page.getByLabel("Por página").selectOption("10");
-    await expect(page.getByText(/^1–10 de \d+$/)).toBeVisible();
-    await page.getByRole("button", { name: "Siguiente" }).click();
+    await page.getByRole("group", { name: "Por página" }).getByRole("button", { name: "10" }).click();
+    await expect(page.getByText("1–10", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Página siguiente" }).click();
 
-    await expect(page.getByText(/^11–\d+ de \d+$/)).toBeVisible();
+    await expect(page.getByText(/^11–\d+$/)).toBeVisible();
     await expect(page).toHaveURL(/pagina=2/);
   });
 });

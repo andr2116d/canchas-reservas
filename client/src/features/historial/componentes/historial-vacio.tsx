@@ -1,11 +1,11 @@
 "use client";
 
 import { FILTROS_INICIALES } from "../utilidades/filtros";
-import { useConsultarHistorial } from "./consulta-del-historial";
+import { useConsultaDelHistorial } from "./consulta-del-historial";
 
 /** Sin registros: lo dice y ofrece volver a ver todo. Si la página quedó fuera de rango, vuelve a la primera. */
 export function HistorialVacio({ fueraDeRango }: { fueraDeRango: boolean }) {
-  const consultar = useConsultarHistorial();
+  const { consultar } = useConsultaDelHistorial();
   return (
     <div className="flex flex-col items-center gap-2 py-10 text-center">
       <h2 className="font-titular text-2xl font-black text-tinta">

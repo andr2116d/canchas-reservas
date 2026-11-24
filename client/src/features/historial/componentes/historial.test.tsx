@@ -6,7 +6,8 @@ import { FILTROS_INICIALES, type Filtros } from "../utilidades/filtros";
 import { ConsultaDelHistorial } from "./consulta-del-historial";
 import { FiltrosDelHistorial } from "./filtros-del-historial";
 import { LineaDeTiempo } from "./linea-de-tiempo";
-import { PaginacionDelHistorial } from "./paginacion-del-historial";
+import { PaginacionDelHistorial, ResumenDeResultados } from "./paginacion-del-historial";
+import { PeriodoDelHistorial } from "./periodo-del-historial";
 
 const navegar = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navegar }));
@@ -49,12 +50,15 @@ const pagina = (cambios: Partial<PaginaDelHistorial> = {}): PaginaDelHistorial =
 
 function mostrarFiltros(filtros: Filtros = FILTROS_INICIALES, aviso?: string) {
   render(
-    <ConsultaDelHistorial>
-      <FiltrosDelHistorial filtros={filtros} autores={AUTORES} aviso={aviso} />
+    <ConsultaDelHistorial filtros={filtros} hoy="2026-11-24">
+      <PeriodoDelHistorial />
+      <FiltrosDelHistorial autores={AUTORES} aviso={aviso} />
     </ConsultaDelHistorial>,
   );
   return userEvent.setup();
 }
+
+const categoria = (nombre: string) => within(screen.getByRole("group", { name: "Categoría" })).getByRole("button", { name: nombre });
 
 describe("Historial de cambios", () => {
   beforeEach(() => vi.resetAllMocks());
@@ -64,17 +68,17 @@ describe("Historial de cambios", () => {
     it("dos cambios seguidos se suman aunque la página aún no llegue", async () => {
       const usuario = mostrarFiltros();
 
-      await usuario.selectOptions(screen.getByLabelText("Categoría"), "ADICIONALES");
+      await usuario.click(categoria("Adicionales"));
       await usuario.selectOptions(screen.getByLabelText("Acción"), "EDICION");
 
       expect(navegar.push).toHaveBeenLastCalledWith("?categoria=ADICIONALES&accion=EDICION", { scroll: false });
-      expect(screen.getByLabelText("Categoría")).toHaveValue("ADICIONALES");
+      expect(categoria("Adicionales")).toHaveAttribute("aria-pressed", "true");
     });
 
     it("combina filtros y vuelve a la primera página", async () => {
       const usuario = mostrarFiltros({ ...FILTROS_INICIALES, pagina: 3 });
 
-      await usuario.selectOptions(screen.getByLabelText("Categoría"), "CANCHAS");
+      await usuario.click(categoria("Canchas"));
 
       expect(navegar.push).toHaveBeenLastCalledWith("?categoria=CANCHAS", { scroll: false });
     });
@@ -95,6 +99,18 @@ describe("Historial de cambios", () => {
       expect(navegar.push).toHaveBeenLastCalledWith("?autor=9&importantes=1", { scroll: false });
       await usuario.click(screen.getByRole("button", { name: "Más antiguos" }));
       expect(navegar.push).toHaveBeenLastCalledWith("?autor=9&importantes=1&orden=antiguos", { scroll: false });
+    });
+
+    it("los atajos de período eligen fechas de Lima y marcan el elegido", async () => {
+      const usuario = mostrarFiltros();
+      const periodo = screen.getByRole("group", { name: "Período" });
+
+      expect(within(periodo).getByRole("button", { name: "Todo" })).toHaveAttribute("aria-pressed", "true");
+      await usuario.click(within(periodo).getByRole("button", { name: "7 días" }));
+
+      expect(navegar.push).toHaveBeenLastCalledWith("?desde=2026-11-18&hasta=2026-11-24", { scroll: false });
+      expect(within(periodo).getByRole("button", { name: "7 días" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByLabelText("Desde")).toHaveValue("2026-11-18");
     });
 
     it("si la fecha final es anterior a la inicial no filtra y dice por qué", async () => {
@@ -137,7 +153,7 @@ describe("Historial de cambios", () => {
 
     it("sin registros que cumplan los filtros, lo dice", () => {
       render(
-        <ConsultaDelHistorial>
+        <ConsultaDelHistorial filtros={FILTROS_INICIALES} hoy="2026-11-24">
           <LineaDeTiempo pagina={pagina({ registros: [], total: 0, paginas: 0 })} hoy="2026-11-24" />
         </ConsultaDelHistorial>,
       );
@@ -147,17 +163,40 @@ describe("Historial de cambios", () => {
   });
 
   describe("paginación", () => {
-    it("dice qué registros se ven y avanza de página", async () => {
+    function mostrarPaginas(cambios: Partial<PaginaDelHistorial>) {
       render(
-        <ConsultaDelHistorial>
-          <PaginacionDelHistorial pagina={pagina({ total: 60, pagina: 2, paginas: 3 })} filtros={{ ...FILTROS_INICIALES, pagina: 2 }} />
+        <ConsultaDelHistorial filtros={{ ...FILTROS_INICIALES, pagina: cambios.pagina ?? 1 }} hoy="2026-11-24">
+          <ResumenDeResultados pagina={pagina(cambios)} />
+          <PaginacionDelHistorial pagina={pagina(cambios)} />
         </ConsultaDelHistorial>,
       );
+      return userEvent.setup();
+    }
 
-      expect(screen.getByText("26–50 de 60")).toBeInTheDocument();
-      await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    it("dice qué registros se ven y cuántos hay, y avanza de página", async () => {
+      const usuario = mostrarPaginas({ total: 60, pagina: 2, paginas: 3 });
+
+      expect(screen.getByText("26–50")).toBeInTheDocument();
+      expect(screen.getByText("de 60 registros")).toBeInTheDocument();
+      await usuario.click(screen.getByRole("button", { name: "Página siguiente" }));
       expect(navegar.push).toHaveBeenLastCalledWith("?pagina=3", { scroll: false });
-      await userEvent.selectOptions(screen.getByLabelText("Por página"), "50");
+    });
+
+    it("con muchas páginas muestra la primera, la última y las cercanas", () => {
+      mostrarPaginas({ total: 300, pagina: 6, paginas: 12 });
+
+      const numeros = within(screen.getByRole("navigation", { name: "Páginas del historial" }))
+        .getAllByRole("button", { name: /^Página \d+$/ })
+        .map((b) => b.textContent);
+      expect(numeros).toEqual(["1", "5", "6", "7", "12"]);
+      expect(screen.getByRole("button", { name: "Página 6" })).toHaveAttribute("aria-current", "page");
+    });
+
+    it("elige cuántos registros mostrar por página", async () => {
+      const usuario = mostrarPaginas({ total: 60, paginas: 3 });
+
+      await usuario.click(within(screen.getByRole("group", { name: "Por página" })).getByRole("button", { name: "50" }));
+
       expect(navegar.push).toHaveBeenLastCalledWith("?porPagina=50", { scroll: false });
     });
   });

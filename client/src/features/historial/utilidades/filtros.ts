@@ -101,3 +101,41 @@ export function aConsulta(filtros: Filtros): URLSearchParams {
 export function hayFiltros(filtros: Filtros): boolean {
   return Boolean(filtros.autor || filtros.categoria || filtros.accion || filtros.desde || filtros.hasta || filtros.soloImportantes);
 }
+
+export type Periodo = "TODO" | "HOY" | "AYER" | "SIETE_DIAS" | "TREINTA_DIAS";
+
+/** Atajos de fechas, contados en días de Lima e incluyendo hoy. */
+export const PERIODOS: { valor: Periodo; texto: string }[] = [
+  { valor: "TODO", texto: "Todo" },
+  { valor: "HOY", texto: "Hoy" },
+  { valor: "AYER", texto: "Ayer" },
+  { valor: "SIETE_DIAS", texto: "7 días" },
+  { valor: "TREINTA_DIAS", texto: "30 días" },
+];
+
+const restarDias = (fecha: string, dias: number) =>
+  new Date(Date.parse(`${fecha}T00:00:00Z`) - dias * 86_400_000).toISOString().slice(0, 10);
+
+/** Desde y hasta de un atajo; «Todo» no filtra por fechas. */
+export function rangoDelPeriodo(periodo: Periodo, hoy: string): Pick<Filtros, "desde" | "hasta"> {
+  switch (periodo) {
+    case "HOY":
+      return { desde: hoy, hasta: hoy };
+    case "AYER":
+      return { desde: restarDias(hoy, 1), hasta: restarDias(hoy, 1) };
+    case "SIETE_DIAS":
+      return { desde: restarDias(hoy, 6), hasta: hoy };
+    case "TREINTA_DIAS":
+      return { desde: restarDias(hoy, 29), hasta: hoy };
+    default:
+      return { desde: "", hasta: "" };
+  }
+}
+
+/** El atajo que corresponde a las fechas elegidas, o ninguno si son otras. */
+export function periodoDe(filtros: Pick<Filtros, "desde" | "hasta">, hoy: string): Periodo | undefined {
+  return PERIODOS.find(({ valor }) => {
+    const rango = rangoDelPeriodo(valor, hoy);
+    return rango.desde === filtros.desde && rango.hasta === filtros.hasta;
+  })?.valor;
+}
