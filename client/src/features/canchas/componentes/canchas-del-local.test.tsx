@@ -28,7 +28,7 @@ describe("CanchasDelLocal", () => {
   afterEach(cleanup);
 
   it("sin canchas, el alta ocupa toda la pantalla y no hay filtros", () => {
-    render(<CanchasDelLocal canchas={[]} cambios={[]} tiposSinTarifa={[]} />);
+    render(<CanchasDelLocal canchas={[]} cambios={[]} tiposSinTarifa={[]} hoy="2026-11-24" />);
 
     expect(screen.getByRole("heading", { name: "Agrega las canchas del local" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Mostrar" })).not.toBeInTheDocument();
@@ -37,7 +37,7 @@ describe("CanchasDelLocal", () => {
   it("filtra por tamaño y por las desactivadas", async () => {
     const usuario = userEvent.setup();
     const canchas = [unaCancha(1), unaCancha(2, { tipo: "FUTBOL_7" }), unaCancha(3, { estado: "DESACTIVADA" })];
-    render(<CanchasDelLocal canchas={canchas} cambios={[]} tiposSinTarifa={[]} />);
+    render(<CanchasDelLocal canchas={canchas} cambios={[]} tiposSinTarifa={[]} hoy="2026-11-24" />);
 
     await usuario.click(screen.getByRole("button", { name: "Fútbol 7 1" }));
     expect(screen.getAllByRole("article")).toHaveLength(1);
@@ -50,12 +50,12 @@ describe("CanchasDelLocal", () => {
   it("tras crear las primeras canchas señala dónde quedaron y dónde agregar más", async () => {
     vi.mocked(registrarCanchas).mockResolvedValue({ tipo: "creadas", canchas: [unaCancha(1), unaCancha(2)] });
     const usuario = userEvent.setup();
-    const { rerender } = render(<CanchasDelLocal canchas={[]} cambios={[]} tiposSinTarifa={[]} />);
+    const { rerender } = render(<CanchasDelLocal canchas={[]} cambios={[]} tiposSinTarifa={[]} hoy="2026-11-24" />);
 
     await usuario.click(screen.getByRole("button", { name: "Con luz" }));
     await usuario.click(screen.getByRole("button", { name: "Agregar 2 canchas" }));
     expect(navegar.refresh).toHaveBeenCalled();
-    rerender(<CanchasDelLocal canchas={[unaCancha(1), unaCancha(2)]} cambios={[]} tiposSinTarifa={[]} />);
+    rerender(<CanchasDelLocal canchas={[unaCancha(1), unaCancha(2)]} cambios={[]} tiposSinTarifa={[]} hoy="2026-11-24" />);
 
     expect(screen.getByText(/Estas son tus canchas/)).toBeInTheDocument();
     expect(screen.getByText("¿Faltan canchas? Agrégalas aquí cuando quieras.")).toBeInTheDocument();

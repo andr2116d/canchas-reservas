@@ -29,3 +29,12 @@ export function describirRango(inicio: string, fin: string): string {
   if (mismoDia) return `${dia(desde)}, ${HORA.format(desde)} – ${horaDeFin}`;
   return `${dia(desde)}, ${HORA.format(desde)} → ${dia(hasta)}, ${HORA.format(hasta)}`;
 }
+
+/** Hasta cuándo dura algo, visto desde hoy: «14:00» si termina hoy, o con el día si no. */
+export function describirHasta(fin: string, hoy: string): string {
+  const hasta = new Date(fin);
+  const terminaHoy = partesEnLima(new Date(hasta.getTime() - 1)).fecha === hoy;
+  const { hora } = partesEnLima(hasta);
+  if (terminaHoy) return hora === "00:00" ? "24:00" : hora;
+  return `${dia(hasta)}, ${HORA.format(hasta)}`;
+}

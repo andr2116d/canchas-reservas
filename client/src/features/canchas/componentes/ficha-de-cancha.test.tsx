@@ -32,7 +32,7 @@ function unaCancha(cambios: Partial<Cancha> = {}): Cancha {
 function mostrar(cancha = unaCancha()) {
   render(
     <ProveedorDeAvisos>
-      <FichaDeCancha cancha={cancha} />
+      <FichaDeCancha cancha={cancha} hoy="2026-11-24" />
     </ProveedorDeAvisos>,
   );
   return { usuario: userEvent.setup(), ficha: screen.getByRole("article", { name: cancha.nombre }) };
@@ -48,6 +48,20 @@ describe("FichaDeCancha", () => {
     for (const texto of ["Operativa", "Fútbol 5", "Solo con luz natural", "Techada", "Bancas", "La banda izquierda va pegada a la pared."]) {
       expect(within(ficha).getByText(texto)).toBeInTheDocument();
     }
+  });
+
+  it("en mantenimiento dice hasta cuándo y muestra el próximo bloqueo", () => {
+    const { ficha } = mostrar(
+      unaCancha({
+        mantenimiento: { hasta: "2026-11-24T19:00:00.000Z", tipo: "EMERGENCIA" },
+        proximoMantenimiento: { inicio: "2026-11-28T12:00:00.000Z", fin: "2026-11-28T15:00:00.000Z" },
+      }),
+    );
+
+    expect(within(ficha).getByText("Mantenimiento")).toBeInTheDocument();
+    expect(within(ficha).getByText("No se puede reservar hasta 14:00")).toBeInTheDocument();
+    expect(within(ficha).queryByText("Operativa")).not.toBeInTheDocument();
+    expect(within(ficha).getByText("sáb 28 nov, 07:00 – 10:00")).toBeInTheDocument();
   });
 
   it("pide confirmar antes de desactivar y refresca al terminar", async () => {
