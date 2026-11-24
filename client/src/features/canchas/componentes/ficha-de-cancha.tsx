@@ -19,7 +19,7 @@ interface FichaDeCanchaProps {
   hoy?: string;
 }
 
-function EstadoDeLaCancha({ cancha, hoy }: { cancha: Cancha; hoy: string }) {
+function EstadoDeLaCancha({ cancha }: { cancha: Cancha }) {
   if (cancha.estado === "DESACTIVADA") return <span className="estado-de-cancha estado-de-cancha--apagada">Desactivada</span>;
   if (cancha.mantenimiento) return <span className="estado-de-cancha estado-de-cancha--en-obra">Mantenimiento</span>;
   return <span className="estado-de-cancha">Operativa</span>;
@@ -73,7 +73,7 @@ export function FichaDeCancha({ cancha, nueva = false, orden = 0, hoy = "" }: Fi
       <div className="flex flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 id={idDelNombre} className="font-titular text-2xl leading-none font-black break-words text-tinta">{cancha.nombre}</h3>
-          <EstadoDeLaCancha cancha={cancha} hoy={hoy} />
+          <EstadoDeLaCancha cancha={cancha} />
         </div>
         <DatosDeLaCancha cancha={cancha} hoy={hoy} />
         <AccionesDeCancha cancha={cancha} alEditar={() => setEditando(true)} />
