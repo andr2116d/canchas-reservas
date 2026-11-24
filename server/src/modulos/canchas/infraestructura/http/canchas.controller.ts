@@ -4,7 +4,10 @@ import {
   SesionDeLaSolicitud,
   type SesionValida,
 } from '../../../sesiones/api-sesiones';
-import { ConsultarCanchasUseCase } from '../../aplicacion/consultar-canchas.use-case';
+import {
+  type CanchaEnLaLista,
+  ConsultarCanchasUseCase,
+} from '../../aplicacion/consultar-canchas.use-case';
 import { EditarCanchaUseCase } from '../../aplicacion/editar-cancha.use-case';
 import { RegistrarCanchasUseCase } from '../../aplicacion/registrar-canchas.use-case';
 import type {
@@ -25,7 +28,7 @@ export class CanchasController {
   ) {}
 
   @Get()
-  listar(): Promise<VistaDeCancha[]> {
+  listar(): Promise<CanchaEnLaLista[]> {
     return this.consultar.listar();
   }
 

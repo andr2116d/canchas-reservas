@@ -69,9 +69,18 @@ const CON_RESERVAS = [CANCHA_REPOSITORY, RESERVAS_DE_CANCHA, RELOJ];
     })),
     {
       provide: ConsultarCanchasUseCase,
-      useFactory: (canchas: CanchaRepository, reservas: ReservasDeCancha) =>
-        new ConsultarCanchasUseCase(canchas, reservas),
-      inject: [CANCHA_REPOSITORY, RESERVAS_DE_CANCHA],
+      useFactory: (
+        canchas: CanchaRepository,
+        reservas: ReservasDeCancha,
+        bloqueos: BloqueoRepository,
+        reloj: Reloj,
+      ) => new ConsultarCanchasUseCase({ canchas, reservas, bloqueos, reloj }),
+      inject: [
+        CANCHA_REPOSITORY,
+        RESERVAS_DE_CANCHA,
+        BLOQUEO_REPOSITORY,
+        RELOJ,
+      ],
     },
     {
       provide: RegistrarCanchasUseCase,
