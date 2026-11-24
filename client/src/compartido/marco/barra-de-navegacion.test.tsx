@@ -6,7 +6,7 @@ import { BarraDeNavegacion } from "./barra-de-navegacion";
 
 const ruta = vi.hoisted(() => ({ actual: "/administracion/recepcionistas" }));
 vi.mock("next/navigation", () => ({ usePathname: () => ruta.actual }));
-vi.mock("../sesion/sesion.api", () => ({ cerrarSesion: vi.fn(), consultarSesion: vi.fn() }));
+vi.mock("../sesion/sesion.api", () => ({ cerrarSesion: vi.fn(), consultarTiempoRestante: vi.fn() }));
 const VENCE = new Date(Date.now() + 15 * 60_000).toISOString();
 
 describe("BarraDeNavegacion", () => {

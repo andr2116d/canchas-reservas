@@ -2,10 +2,12 @@
 
 import { useEffect } from "react";
 import { RUTA_DE_ACCESO } from "./destino-de-sesion";
-import { consultarSesion } from "./sesion.api";
+import { consultarTiempoRestante } from "./sesion.api";
 
 const EVENTO_DE_SALIDA = "la-previa:salida";
 const REINTENTO_TRAS_FALLO = 10_000;
+// Aunque la cuenta dé cero, no se vuelve a preguntar antes: evita un bucle de consultas.
+const ESPERA_MINIMA = 5_000;
 
 export function salirDelPanel(): void {
   try {
@@ -16,6 +18,10 @@ export function salirDelPanel(): void {
   window.location.replace(RUTA_DE_ACCESO);
 }
 
+/**
+ * Lleva al acceso cuando la sesión vence por inactividad, o cuando se cierra en
+ * otra pestaña. Pregunta al server en el momento del vencimiento, medido con su reloj.
+ */
 export function useVigenciaDeSesion(venceEn: string): void {
   useEffect(() => {
     let temporizador: ReturnType<typeof setTimeout>;
@@ -30,9 +36,9 @@ export function useVigenciaDeSesion(venceEn: string): void {
       if (!vigente || consultando) return;
       consultando = true;
       try {
-        const sesion = await consultarSesion();
+        const restante = await consultarTiempoRestante();
         if (!vigente) return;
-        if (sesion) programar(Date.parse(sesion.venceEn) - Date.now());
+        if (restante !== undefined) programar(Math.max(ESPERA_MINIMA, restante));
         else window.location.replace(`${RUTA_DE_ACCESO}?motivo=inactividad`);
       } catch {
         if (vigente) programar(REINTENTO_TRAS_FALLO);
