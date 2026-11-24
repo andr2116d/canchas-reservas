@@ -69,6 +69,16 @@ describe('Historial de cambios · seguridad', () => {
       });
     });
 
+    it('una persona o una página fuera de rango se rechaza con su motivo, sin error interno', async () => {
+      const { body } = await api()
+        .get('/api/historial')
+        .query({ autor: '99999999999', pagina: '99999999999' })
+        .set('Cookie', administrador)
+        .expect(400);
+
+      expect(Object.keys(body.errores)).toEqual(['autor', 'pagina']);
+    });
+
     it('no expone ids internos, datos cifrados ni datos personales de las cuentas', async () => {
       const { body } = await api()
         .get('/api/historial')

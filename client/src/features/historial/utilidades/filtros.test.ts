@@ -44,6 +44,10 @@ describe("leerFiltros", () => {
     expect(leerFiltros({ categoria: "PAGOS", accion: "BORRAR", porPagina: "999", pagina: "-3", autor: "x" })).toEqual({ filtros: FILTROS_INICIALES });
   });
 
+  it("ignora una persona o una página fuera de rango", () => {
+    expect(leerFiltros({ autor: "99999999999", pagina: "100001" })).toEqual({ filtros: FILTROS_INICIALES });
+  });
+
   it("descarta una acción que no corresponde a la categoría", () => {
     expect(leerFiltros({ categoria: "ACCESOS", accion: "ELIMINACION" }).filtros.accion).toBe("");
   });

@@ -52,10 +52,14 @@ function opcional<T>(
   return vacio(valor) ? undefined : leer(valor.trim());
 }
 
-function entero(texto: string, mensaje: string, minimo = 1): number {
-  if (!/^\d+$/.test(texto) || Number(texto) < minimo)
-    throw new ValorInvalidoError(mensaje);
-  return Number(texto);
+// Un id es un `integer` de la base; una página más allá de este tope no tendría registros.
+const MAXIMO_ID = 2_147_483_647;
+const MAXIMA_PAGINA = 100_000;
+
+function entero(texto: string, mensaje: string, maximo: number): number {
+  const numero = /^\d{1,10}$/.test(texto) ? Number(texto) : 0;
+  if (numero < 1 || numero > maximo) throw new ValorInvalidoError(mensaje);
+  return numero;
 }
 
 function elegir<T>(
@@ -85,7 +89,9 @@ export function leerFiltroDelHistorial(
 ): FiltroDelHistorial {
   const leidos = validarCampos({
     autor: () =>
-      opcional(datos.autor, (t) => entero(t, 'Elige una persona de la lista.')),
+      opcional(datos.autor, (t) =>
+        entero(t, 'Elige una persona de la lista.', MAXIMO_ID),
+      ),
     categoria: () =>
       opcional(datos.categoria, (t) =>
         elegir(t, esCategoria, 'Elige una categoría de la lista.'),
@@ -101,7 +107,9 @@ export function leerFiltroDelHistorial(
         elegir(t, esOrden, 'Elige más recientes o más antiguos.'),
       ) ?? 'RECIENTES',
     pagina: () =>
-      opcional(datos.pagina, (t) => entero(t, 'La página empieza en 1.')) ?? 1,
+      opcional(datos.pagina, (t) =>
+        entero(t, `Elige una página del 1 al ${MAXIMA_PAGINA}.`, MAXIMA_PAGINA),
+      ) ?? 1,
     porPagina: () => opcional(datos.porPagina, leerTamano) ?? 25,
   });
   const { autor, categoria, accion, desde, hasta, ...pagina } = leidos;

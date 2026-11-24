@@ -84,8 +84,15 @@ describe('leerFiltroDelHistorial', () => {
       accion: 'Elige una acción de la lista.',
       desde: 'Ingresa una fecha válida.',
       orden: 'Elige más recientes o más antiguos.',
-      pagina: 'La página empieza en 1.',
+      pagina: 'Elige una página del 1 al 100000.',
       porPagina: 'Muestra 10, 25 o 50 registros por página.',
+    });
+  });
+
+  it('rechaza una persona o una página fuera de rango', () => {
+    expect(errores({ autor: '99999999999', pagina: '100001' })).toEqual({
+      autor: 'Elige una persona de la lista.',
+      pagina: 'Elige una página del 1 al 100000.',
     });
   });
 

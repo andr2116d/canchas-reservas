@@ -33,7 +33,15 @@ export const RANGO_INVERTIDO = "La fecha final es anterior a la inicial, así qu
 type Parametros = Record<string, string | string[] | undefined>;
 
 const uno = (valor: string | string[] | undefined) => (Array.isArray(valor) ? valor[0] : valor) ?? "";
-const entero = (texto: string) => (/^\d+$/.test(texto) && Number(texto) > 0 ? Number(texto) : undefined);
+// Los mismos topes que valida la API: un id es un `integer` de la base y las páginas tienen un máximo.
+const MAXIMO_ID = 2_147_483_647;
+const MAXIMA_PAGINA = 100_000;
+
+/** Un entero de 1 al máximo dado, o nada si el texto no lo es. */
+function entero(texto: string, maximo: number): number | undefined {
+  const numero = /^\d{1,10}$/.test(texto) ? Number(texto) : 0;
+  return numero >= 1 && numero <= maximo ? numero : undefined;
+}
 
 function leerCategoria(texto: string): Categoria | "" {
   return CATEGORIAS.some((c) => c.valor === texto) ? (texto as Categoria) : "";
@@ -48,19 +56,19 @@ function leerAccion(texto: string, categoria: Categoria | ""): Accion | "" {
 /** Lee los filtros de la dirección; lo que no es válido se ignora y un rango invertido se avisa. */
 export function leerFiltros(parametros: Parametros): { filtros: Filtros; aviso?: string } {
   const categoria = leerCategoria(uno(parametros.categoria));
-  const porPagina = entero(uno(parametros.porPagina));
+  const porPagina = entero(uno(parametros.porPagina), 50);
   const desde = FECHA.test(uno(parametros.desde)) ? uno(parametros.desde) : "";
   const hasta = FECHA.test(uno(parametros.hasta)) ? uno(parametros.hasta) : "";
   const invertido = Boolean(desde && hasta && hasta < desde);
   const filtros: Filtros = {
-    autor: entero(uno(parametros.autor)) ? uno(parametros.autor) : "",
+    autor: entero(uno(parametros.autor), MAXIMO_ID) ? uno(parametros.autor) : "",
     categoria,
     accion: leerAccion(uno(parametros.accion), categoria),
     desde: invertido ? "" : desde,
     hasta: invertido ? "" : hasta,
     soloImportantes: uno(parametros.importantes) === "1",
     orden: uno(parametros.orden) === "antiguos" ? "ANTIGUOS" : "RECIENTES",
-    pagina: entero(uno(parametros.pagina)) ?? 1,
+    pagina: entero(uno(parametros.pagina), MAXIMA_PAGINA) ?? 1,
     porPagina: (TAMANOS_DE_PAGINA as readonly number[]).includes(porPagina ?? 0) ? porPagina! : 25,
   };
   return invertido ? { filtros, aviso: RANGO_INVERTIDO } : { filtros };
