@@ -77,7 +77,7 @@ export class InicioDeSesionController {
     }
     if (resultado.tipo === 'cuenta-inactiva') {
       throw new ForbiddenException({
-        mensaje: 'Tu cuenta está inactiva. Contacta a La Previa.',
+        mensaje: 'La cuenta está inactiva. Contacta a La Previa.',
         errores: {},
       });
     }

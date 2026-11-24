@@ -26,7 +26,7 @@ describe("recepcionistas.api", () => {
   });
 
   it("ofrece reactivar si el server encuentra una cuenta desactivada", async () => {
-    responder(409, { mensaje: "Puedes reactivarla.", errores: {}, datos: { reactivable: { id: 3, nombres: "Rosa" } } });
+    responder(409, { mensaje: "Reactívala para recuperar sus datos.", errores: {}, datos: { reactivable: { id: 3, nombres: "Rosa" } } });
 
     await expect(crearRecepcionista(DATOS)).resolves.toEqual({ tipo: "reactivable", id: 3, nombres: "Rosa" });
   });

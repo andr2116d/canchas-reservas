@@ -161,7 +161,7 @@ describe('POST /api/recepcionistas', () => {
 
       expect(respuesta.body).toEqual({
         mensaje:
-          'Esta persona ya tuvo una cuenta de recepción. Puedes reactivarla.',
+          'Esta persona ya tuvo una cuenta de recepción. Reactívala para recuperar sus datos.',
         errores: {},
         datos: { reactivable: { id: body.id, nombres: 'Rosa' } },
       });

@@ -75,7 +75,11 @@ describe('ErroresHttpFilter', () => {
   it.each([
     [new BadRequestException(), 400, 'La solicitud no es válida.'],
     [new UnauthorizedException(), 401, 'Inicia sesión para continuar.'],
-    [new ForbiddenException(), 403, 'No tienes permiso para hacer esto.'],
+    [
+      new ForbiddenException(),
+      403,
+      'Esta cuenta no tiene permiso para hacer esto.',
+    ],
     [new NotFoundException(), 404, 'No encontramos lo que buscas.'],
     [
       new HttpException('Too Many Requests', HttpStatus.TOO_MANY_REQUESTS),

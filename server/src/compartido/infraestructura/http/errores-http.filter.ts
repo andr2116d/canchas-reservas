@@ -25,7 +25,7 @@ export interface CuerpoDeError {
 const MENSAJES_POR_ESTADO: Record<number, string> = {
   400: 'La solicitud no es válida.',
   401: 'Inicia sesión para continuar.',
-  403: 'No tienes permiso para hacer esto.',
+  403: 'Esta cuenta no tiene permiso para hacer esto.',
   404: 'No encontramos lo que buscas.',
   413: 'Los datos enviados son demasiado grandes.',
   429: 'Hubo demasiados intentos. Espera un momento y vuelve a intentarlo.',

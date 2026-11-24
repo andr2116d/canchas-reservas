@@ -167,7 +167,7 @@ describe('Inicio de sesión y autorización por rol', () => {
         .set('Cookie', renovada)
         .expect(403);
       expect(rechazo.body).toEqual({
-        mensaje: 'No tienes permiso para hacer esto.',
+        mensaje: 'Esta cuenta no tiene permiso para hacer esto.',
         errores: {},
       });
       await api().get(panel).set('Cookie', temporal).expect(401);

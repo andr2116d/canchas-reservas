@@ -7,7 +7,7 @@ import { ConflictoError } from '../../../compartido/dominio/dominio.error';
 export class ReactivacionDisponibleError extends ConflictoError {
   constructor(cuenta: { id: number; nombres: string }) {
     super(
-      'Esta persona ya tuvo una cuenta de recepción. Puedes reactivarla.',
+      'Esta persona ya tuvo una cuenta de recepción. Reactívala para recuperar sus datos.',
       {},
       { reactivable: cuenta },
     );
