@@ -1,7 +1,7 @@
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugador';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
+import { unJugadorValido } from '../../../../test/usuarios/fabricas/datos-registro-jugador';
 import type { Contrasena } from '../dominio/contrasena.value-object';
-import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
+import { EnMemoriaUsuarioRepository } from '../../../../test/usuarios/dobles/en-memoria-usuario.repository';
 import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
 import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { ConsultarCuentaUseCase } from './consultar-cuenta.use-case';
@@ -40,5 +40,5 @@ describe('ConsultarCuentaUseCase', () => {
     expect(cuenta).toBeUndefined();
   });
 });
-import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
-import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';
+import { EnMemoriaSesionRepository } from '../../../../test/sesiones/dobles/en-memoria-sesion.repository';
+import { GeneradorTokenDePrueba } from '../../../../test/compartido/dobles/generador-token-de-prueba';

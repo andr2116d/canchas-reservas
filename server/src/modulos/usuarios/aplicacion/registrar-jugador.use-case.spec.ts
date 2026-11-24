@@ -1,5 +1,5 @@
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { unJugadorValido } from '../../../../test/fabricas/datos-registro-jugador';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
+import { unJugadorValido } from '../../../../test/usuarios/fabricas/datos-registro-jugador';
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { AbrirSesionUseCase } from '../../sesiones/api-sesiones';
 import type { Contrasena } from '../dominio/contrasena.value-object';
@@ -11,9 +11,9 @@ import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
 import { NombrePersona } from '../dominio/nombre-persona.value-object';
 import { Usuario } from '../dominio/usuario.entity';
 import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
-import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
-import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
-import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';
+import { EnMemoriaUsuarioRepository } from '../../../../test/usuarios/dobles/en-memoria-usuario.repository';
+import { EnMemoriaSesionRepository } from '../../../../test/sesiones/dobles/en-memoria-sesion.repository';
+import { GeneradorTokenDePrueba } from '../../../../test/compartido/dobles/generador-token-de-prueba';
 import type { HasheadorContrasena } from './hasheador-contrasena.port';
 import { RegistrarJugadorUseCase } from './registrar-jugador.use-case';
 

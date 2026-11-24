@@ -1,6 +1,6 @@
-import { EnMemoriaHorarioRepository } from '../../../../test/dobles/en-memoria-horario.repository';
-import { EnMemoriaTarifaRepository } from '../../../../test/dobles/en-memoria-tarifa.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
+import { EnMemoriaHorarioRepository } from '../../../../test/horario/dobles/en-memoria-horario.repository';
+import { EnMemoriaTarifaRepository } from '../../../../test/tarifas/dobles/en-memoria-tarifa.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import {
   NoEncontradoError,
   type ReglaInvalidaError,

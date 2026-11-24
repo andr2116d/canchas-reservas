@@ -2,7 +2,7 @@ import {
   ConflictoError,
   ReglaInvalidaError,
 } from '../../../compartido/dominio/dominio.error';
-import { unaCanchaValida } from '../../../../test/fabricas/datos-cancha';
+import { unaCanchaValida } from '../../../../test/canchas/fabricas/datos-cancha';
 import { Cancha, type DatosDeCancha } from './cancha.entity';
 
 function erroresAlCrear(datos: DatosDeCancha): Record<string, string> {

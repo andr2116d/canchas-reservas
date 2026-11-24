@@ -1,5 +1,5 @@
-import { EnMemoriaHorarioRepository } from '../../../../test/dobles/en-memoria-horario.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
+import { EnMemoriaHorarioRepository } from '../../../../test/horario/dobles/en-memoria-horario.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import type { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { DIAS_DE_LA_SEMANA } from '../dominio/dia-de-la-semana';
 import { ConsultarHorarioUseCase } from './consultar-horario.use-case';

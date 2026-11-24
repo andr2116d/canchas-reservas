@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { RelojDePrueba } from '../../../../../test/dobles/reloj-de-prueba';
+import { RelojDePrueba } from '../../../../../test/compartido/dobles/reloj-de-prueba';
 import { AesGcmCifradorAdapter } from '../../../../compartido/infraestructura/cifrado/aes-gcm-cifrador.adapter';
 import { LimiteDeInicios } from './limite-de-inicios';
 

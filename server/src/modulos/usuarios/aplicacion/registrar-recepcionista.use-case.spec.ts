@@ -1,6 +1,6 @@
-import { EnMemoriaRecepcionistaRepository } from '../../../../test/dobles/en-memoria-recepcionista.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { unaRecepcionistaValida } from '../../../../test/fabricas/datos-recepcionista';
+import { EnMemoriaRecepcionistaRepository } from '../../../../test/usuarios/dobles/en-memoria-recepcionista.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
+import { unaRecepcionistaValida } from '../../../../test/usuarios/fabricas/datos-recepcionista';
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { Celular } from '../dominio/celular.value-object';
 import type { Contrasena } from '../dominio/contrasena.value-object';

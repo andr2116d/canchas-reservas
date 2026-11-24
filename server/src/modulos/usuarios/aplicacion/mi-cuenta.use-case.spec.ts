@@ -1,5 +1,5 @@
-import { EnMemoriaUsuarioRepository } from '../../../../test/dobles/en-memoria-usuario.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
+import { EnMemoriaUsuarioRepository } from '../../../../test/usuarios/dobles/en-memoria-usuario.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { Celular } from '../dominio/celular.value-object';
 import { Correo } from '../dominio/correo.value-object';

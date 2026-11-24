@@ -1,5 +1,5 @@
-import { EnMemoriaReglaDeCancelacionRepository } from '../../../../test/dobles/en-memoria-regla-de-cancelacion.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
+import { EnMemoriaReglaDeCancelacionRepository } from '../../../../test/cancelacion/dobles/en-memoria-regla-de-cancelacion.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import type { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { ConsultarReglaDeCancelacionUseCase } from './consultar-regla-de-cancelacion.use-case';
 import { DefinirReglaDeCancelacionUseCase } from './definir-regla-de-cancelacion.use-case';

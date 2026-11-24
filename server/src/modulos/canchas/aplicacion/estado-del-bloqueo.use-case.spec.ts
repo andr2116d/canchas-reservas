@@ -1,5 +1,5 @@
-import { EnMemoriaBloqueoRepository } from '../../../../test/dobles/en-memoria-bloqueo.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
+import { EnMemoriaBloqueoRepository } from '../../../../test/canchas/dobles/en-memoria-bloqueo.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import { Bloqueo } from '../dominio/bloqueo.entity';
 import { ConsultarBloqueosUseCase } from './consultar-bloqueos.use-case';
 import { LiberarBloqueoUseCase } from './liberar-bloqueo.use-case';

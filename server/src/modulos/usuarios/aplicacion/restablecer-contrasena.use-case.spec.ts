@@ -1,5 +1,5 @@
-import { conUnaRecepcionista } from '../../../../test/dobles/recepcionista-guardada';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
+import { conUnaRecepcionista } from '../../../../test/usuarios/dobles/recepcionista-guardada';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import { ConflictoError } from '../../../compartido/dominio/dominio.error';
 import type { Contrasena } from '../dominio/contrasena.value-object';
 import { RestablecerContrasenaUseCase } from './restablecer-contrasena.use-case';

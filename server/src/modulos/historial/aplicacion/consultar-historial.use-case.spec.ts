@@ -1,5 +1,5 @@
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
-import { EnMemoriaHistorialRepository } from '../../../../test/dobles/en-memoria-historial.repository';
+import { EnMemoriaHistorialRepository } from '../../../../test/historial/dobles/en-memoria-historial.repository';
 import type { RegistroGuardado } from '../dominio/historial.repository';
 import { ConsultarHistorialUseCase } from './consultar-historial.use-case';
 

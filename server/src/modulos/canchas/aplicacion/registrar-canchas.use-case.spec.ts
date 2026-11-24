@@ -2,9 +2,9 @@ import {
   ConflictoError,
   ReglaInvalidaError,
 } from '../../../compartido/dominio/dominio.error';
-import { EnMemoriaCanchaRepository } from '../../../../test/dobles/en-memoria-cancha.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { unaCanchaValida } from '../../../../test/fabricas/datos-cancha';
+import { EnMemoriaCanchaRepository } from '../../../../test/canchas/dobles/en-memoria-cancha.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
+import { unaCanchaValida } from '../../../../test/canchas/fabricas/datos-cancha';
 import { RegistrarCanchasUseCase } from './registrar-canchas.use-case';
 
 const ADMINISTRADOR = 7;

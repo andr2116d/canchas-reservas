@@ -1,6 +1,6 @@
-import { EnMemoriaAdicionalRepository } from '../../../../test/dobles/en-memoria-adicional.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { unAdicionalValido } from '../../../../test/fabricas/datos-adicional';
+import { EnMemoriaAdicionalRepository } from '../../../../test/adicionales/dobles/en-memoria-adicional.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
+import { unAdicionalValido } from '../../../../test/adicionales/fabricas/datos-adicional';
 import { Adicional } from '../dominio/adicional.entity';
 import { AdicionalNoEncontradoError } from '../dominio/adicional-no-encontrado.error';
 import {

@@ -1,5 +1,5 @@
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
-import { unAdicionalValido } from '../../../../test/fabricas/datos-adicional';
+import { unAdicionalValido } from '../../../../test/adicionales/fabricas/datos-adicional';
 import { Adicional, type DatosDeAdicional } from './adicional.entity';
 
 function erroresAlCrear(datos: DatosDeAdicional): Record<string, string> {

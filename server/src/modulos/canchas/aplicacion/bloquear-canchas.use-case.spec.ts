@@ -2,12 +2,12 @@ import {
   ConflictoError,
   ReglaInvalidaError,
 } from '../../../compartido/dominio/dominio.error';
-import { EnMemoriaBloqueoRepository } from '../../../../test/dobles/en-memoria-bloqueo.repository';
-import { EnMemoriaCanchaRepository } from '../../../../test/dobles/en-memoria-cancha.repository';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { ReservasDeCanchaDePrueba } from '../../../../test/dobles/reservas-de-cancha-de-prueba';
-import { unBloqueoValido } from '../../../../test/fabricas/datos-bloqueo';
-import { unaCanchaValida } from '../../../../test/fabricas/datos-cancha';
+import { EnMemoriaBloqueoRepository } from '../../../../test/canchas/dobles/en-memoria-bloqueo.repository';
+import { EnMemoriaCanchaRepository } from '../../../../test/canchas/dobles/en-memoria-cancha.repository';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
+import { ReservasDeCanchaDePrueba } from '../../../../test/canchas/dobles/reservas-de-cancha-de-prueba';
+import { unBloqueoValido } from '../../../../test/canchas/fabricas/datos-bloqueo';
+import { unaCanchaValida } from '../../../../test/canchas/fabricas/datos-cancha';
 import { Cancha } from '../dominio/cancha.entity';
 import { BloquearCanchasUseCase } from './bloquear-canchas.use-case';
 

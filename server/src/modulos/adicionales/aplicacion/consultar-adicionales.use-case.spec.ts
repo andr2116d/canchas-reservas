@@ -1,6 +1,6 @@
-import { EnMemoriaAdicionalRepository } from '../../../../test/dobles/en-memoria-adicional.repository';
-import { UsosDeAdicionalDePrueba } from '../../../../test/dobles/usos-de-adicional-de-prueba';
-import { unAdicionalValido } from '../../../../test/fabricas/datos-adicional';
+import { EnMemoriaAdicionalRepository } from '../../../../test/adicionales/dobles/en-memoria-adicional.repository';
+import { UsosDeAdicionalDePrueba } from '../../../../test/adicionales/dobles/usos-de-adicional-de-prueba';
+import { unAdicionalValido } from '../../../../test/adicionales/fabricas/datos-adicional';
 import { Adicional } from '../dominio/adicional.entity';
 import { ConsultarAdicionalesUseCase } from './consultar-adicionales.use-case';
 

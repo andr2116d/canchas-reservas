@@ -1,6 +1,6 @@
-import { GeneradorTokenDePrueba } from '../../../../test/dobles/generador-token-de-prueba';
-import { RelojDePrueba } from '../../../../test/dobles/reloj-de-prueba';
-import { EnMemoriaSesionRepository } from '../../../../test/dobles/en-memoria-sesion.repository';
+import { GeneradorTokenDePrueba } from '../../../../test/compartido/dobles/generador-token-de-prueba';
+import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
+import { EnMemoriaSesionRepository } from '../../../../test/sesiones/dobles/en-memoria-sesion.repository';
 import { AbrirSesionUseCase } from './abrir-sesion.use-case';
 import { CerrarSesionUseCase } from './cerrar-sesion.use-case';
 import { ValidarSesionUseCase } from './validar-sesion.use-case';
