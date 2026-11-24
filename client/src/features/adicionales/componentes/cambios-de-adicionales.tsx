@@ -1,4 +1,4 @@
-import { fechaEnLima } from "@/compartido/ui/fecha-en-lima";
+import { ListaDeCambiosRecientes } from "@/compartido/ui/lista-de-cambios-recientes";
 import { type AccionSobreAdicional, type CambioDeAdicional, type CambiosDeAdicional, enSoles, type ResumenDeAdicional } from "../servicios/adicionales";
 
 const VERBO: Record<AccionSobreAdicional, string> = {
@@ -27,23 +27,19 @@ function detalleDelCambio({ accion, detalle }: CambioDeAdicional): string {
   return "";
 }
 
-/** Historial plegado: quién hizo cada cambio en el catálogo, cuándo y qué cambió. */
+/** Quién hizo cada cambio en el catálogo, cuándo y qué cambió. */
 export function CambiosDeAdicionales({ cambios }: { cambios: CambioDeAdicional[] }) {
-  if (cambios.length === 0) return null;
   return (
-    <details className="rounded-2xl border border-white/80 bg-papel px-5 py-1 text-sm shadow-sm">
-      <summary className="cursor-pointer py-3 font-bold text-tinta">Cambios recientes</summary>
-      <ol className="mb-4 flex flex-col gap-2">
-        {cambios.map((cambio, indice) => (
-          <li key={`${cambio.ocurridoEn}-${indice}`} className="flex flex-wrap gap-x-3">
-            <time dateTime={cambio.ocurridoEn} className="min-w-40 text-grava tabular-nums">{fechaEnLima(cambio.ocurridoEn)}</time>
-            <span className="min-w-0 flex-1">
-              {cambio.ejecutadoPor} {VERBO[cambio.accion]} <b>{cambio.nombreDelAdicional}</b>
-              {detalleDelCambio(cambio)}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </details>
+    <ListaDeCambiosRecientes
+      cambios={cambios.map((cambio) => ({
+        ocurridoEn: cambio.ocurridoEn,
+        frase: (
+          <>
+            {cambio.ejecutadoPor} {VERBO[cambio.accion]} <b>{cambio.nombreDelAdicional}</b>
+            {detalleDelCambio(cambio)}
+          </>
+        ),
+      }))}
+    />
   );
 }
