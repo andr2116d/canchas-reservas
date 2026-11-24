@@ -6,11 +6,12 @@ import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 import { useEdicionDeCancha } from "../hooks/use-edicion-de-cancha";
 import type { Cancha } from "../servicios/canchas";
 import { CampoDelNombre, SelectorDeDetalles, SelectorDeLuz, SelectorDeTamano } from "./controles-de-cancha";
+import { PlantaDeCancha } from "./planta-de-cancha";
 import { ReservasAfectadas } from "./reservas-afectadas";
 
 const LARGO_DE_LA_NOTA = 200;
 
-/** Edición de los datos de una cancha dentro de su ficha. */
+/** Edición de los datos de una cancha; el dibujo de arriba cambia con el tamaño, la luz y la pared elegidos. */
 export function FormularioDeCancha({ cancha, alTerminar }: { cancha: Cancha; alTerminar: () => void }) {
   const { borrador, cambiar, errores, problema, enviando, guardar } = useEdicionDeCancha(cancha, alTerminar);
   const enviar = (evento: FormEvent) => {
@@ -18,7 +19,13 @@ export function FormularioDeCancha({ cancha, alTerminar }: { cancha: Cancha; alT
     void guardar();
   };
   return (
-    <form noValidate onSubmit={enviar} className="flex flex-col gap-4 p-4 sm:p-5">
+    <form noValidate onSubmit={enviar} className="flex flex-col gap-4">
+      <PlantaDeCancha
+        tipo={borrador.tipo ?? cancha.tipo}
+        tieneIluminacion={borrador.tieneIluminacion !== false}
+        juntoALaPared={borrador.caracteristicas.includes("JUNTO_A_LA_PARED")}
+        className="h-24 overflow-hidden rounded-xl"
+      />
       <CampoDelNombre id={`nombre-${cancha.id}`} valor={borrador.nombre} alEscribir={(nombre) => cambiar({ nombre })} error={errores.nombre} />
       <SelectorDeTamano
         valor={borrador.tipo}

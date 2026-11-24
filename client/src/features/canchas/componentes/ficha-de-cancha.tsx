@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { NOMBRE_DEL_TIPO } from "@/compartido/canchas/tipo-de-cancha";
+import { TarjetaFlotante } from "@/compartido/ui/tarjeta-flotante";
 import { TEXTO_DE_CARACTERISTICA, type Cancha } from "../servicios/canchas";
 import { AccionesDeCancha } from "./acciones-de-cancha";
 import { FormularioDeCancha } from "./formulario-de-cancha";
@@ -36,7 +37,7 @@ function DatosDeLaCancha({ cancha }: { cancha: Cancha }) {
   );
 }
 
-/** Una cancha dibujada desde arriba con sus datos, sus acciones y su edición en el mismo lugar. */
+/** Una cancha dibujada desde arriba con sus datos y sus acciones; se edita en una tarjeta flotante para no mover la cuadrícula. */
 export function FichaDeCancha({ cancha, nueva = false, orden = 0 }: FichaDeCanchaProps) {
   const [editando, setEditando] = useState(false);
   const idDelNombre = useId();
@@ -53,10 +54,12 @@ export function FichaDeCancha({ cancha, nueva = false, orden = 0 }: FichaDeCanch
           <h3 id={idDelNombre} className="font-titular text-2xl leading-none font-black break-words text-tinta">{cancha.nombre}</h3>
           <span className={`estado-de-cancha ${operativa ? "" : "estado-de-cancha--apagada"}`}>{operativa ? "Operativa" : "Desactivada"}</span>
         </div>
-        {!editando && <DatosDeLaCancha cancha={cancha} />}
-        {!editando && <AccionesDeCancha cancha={cancha} alEditar={() => setEditando(true)} />}
+        <DatosDeLaCancha cancha={cancha} />
+        <AccionesDeCancha cancha={cancha} alEditar={() => setEditando(true)} />
       </div>
-      {editando && <FormularioDeCancha cancha={cancha} alTerminar={() => setEditando(false)} />}
+      <TarjetaFlotante titulo={`Editar ${cancha.nombre}`} abierta={editando} alCerrar={() => setEditando(false)}>
+        <FormularioDeCancha cancha={cancha} alTerminar={() => setEditando(false)} />
+      </TarjetaFlotante>
     </article>
   );
 }

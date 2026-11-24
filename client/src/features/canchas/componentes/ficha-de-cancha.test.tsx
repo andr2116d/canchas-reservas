@@ -111,7 +111,8 @@ describe("FichaDeCancha", () => {
     const { usuario } = mostrar();
 
     await usuario.click(screen.getByRole("button", { name: "Editar" }));
-    const nombre = screen.getByLabelText(/^Nombre/);
+    const edicion = screen.getByRole("dialog", { name: "Editar Cancha 3" });
+    const nombre = within(edicion).getByLabelText(/^Nombre/);
     await usuario.clear(nombre);
     await usuario.type(nombre, "Cancha 1");
     await usuario.click(screen.getByRole("button", { name: "Con luz" }));
@@ -126,6 +127,20 @@ describe("FichaDeCancha", () => {
     });
     expect(await screen.findByText("Ya existe una cancha llamada «Cancha 1».")).toBeInTheDocument();
     expect(nombre).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("edita en una tarjeta flotante que se cierra al guardar, sin mover la ficha", async () => {
+    vi.mocked(editarCancha).mockResolvedValue({ tipo: "guardada", cancha: unaCancha({ tipo: "FUTBOL_7" }) });
+    const { usuario, ficha } = mostrar();
+
+    await usuario.click(screen.getByRole("button", { name: "Editar" }));
+    expect(within(ficha).getByText("Solo con luz natural")).toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: "Fútbol 7" }));
+    await usuario.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(navegar.refresh).toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent("Se guardaron los cambios de Cancha 3.");
   });
 
   it("no envía la edición si falta el nombre", async () => {
