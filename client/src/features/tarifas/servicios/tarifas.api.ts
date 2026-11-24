@@ -1,7 +1,7 @@
 import { enviarJson } from "@/compartido/api/enviar-json";
 import { type ResultadoDeAccion, resultadoDeAccion } from "@/compartido/api/resultado-de-accion";
 import type { DatosDeTarifa } from "../esquemas/tarifa.schema";
-import type { TipoDeCancha } from "./tarifas";
+import type { TipoDeCancha } from "@/compartido/canchas/tipo-de-cancha";
 
 const RUTA = "/api/tarifas";
 

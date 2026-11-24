@@ -1,11 +1,4 @@
-export type TipoDeCancha = "FUTBOL_5" | "FUTBOL_7";
-
-export const TIPOS_DE_CANCHA: TipoDeCancha[] = ["FUTBOL_5", "FUTBOL_7"];
-
-export const NOMBRE_DEL_TIPO: Record<TipoDeCancha, string> = {
-  FUTBOL_5: "Fútbol 5",
-  FUTBOL_7: "Fútbol 7",
-};
+import type { TipoDeCancha } from "@/compartido/canchas/tipo-de-cancha";
 
 /** Una versión guardada de la tarifa, con montos en soles y dos decimales. */
 export interface VistaDeTarifa {

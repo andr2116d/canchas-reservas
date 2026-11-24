@@ -3,7 +3,7 @@
 import { Controller, useFormContext } from "react-hook-form";
 import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
 import type { DatosDeTarifa } from "../esquemas/tarifa.schema";
-import type { TipoDeCancha } from "../servicios/tarifas";
+import type { TipoDeCancha } from "@/compartido/canchas/tipo-de-cancha";
 import { filtrarMonto } from "@/compartido/formulario/filtrar-monto";
 import { SelectorDeDuracion } from "./selector-de-duracion";
 

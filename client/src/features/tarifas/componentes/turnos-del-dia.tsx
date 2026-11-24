@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useBorrador } from "@/compartido/horario/borrador";
 import { DIAS_DE_LA_SEMANA, type DiaDeLaSemana, NOMBRE_DEL_DIA } from "@/compartido/horario/horario";
 import type { TurnoConPrecio } from "@/compartido/horario/simulacion";
-import { NOMBRE_DEL_TIPO, TIPOS_DE_CANCHA, type TipoDeCancha } from "../servicios/tarifas";
+import { NOMBRE_DEL_TIPO, TIPOS_DE_CANCHA, type TipoDeCancha } from "@/compartido/canchas/tipo-de-cancha";
 import { SelectorSegmentado } from "./selector-segmentado";
 
 const TIPOS = TIPOS_DE_CANCHA.map((valor) => ({ valor, texto: NOMBRE_DEL_TIPO[valor] }));
