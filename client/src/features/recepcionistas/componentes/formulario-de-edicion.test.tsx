@@ -37,16 +37,23 @@ describe("FormularioDeEdicion", () => {
     await waitFor(() => expect(navegar.refresh).toHaveBeenCalled());
   });
 
+  it("muestra el documento con candado: identifica a la persona y no se edita", () => {
+    render(<FormularioDeEdicion id={7} dominio="laprevia.pe" datos={DATOS} />);
+
+    expect(screen.getByText("DNI 41234567")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Número de documento/)).not.toBeInTheDocument();
+  });
+
   it("marca el dato que ya pertenece a otra cuenta", async () => {
     vi.mocked(editarRecepcionista).mockResolvedValue({
       tipo: "datos-rechazados",
-      errores: { numeroDocumento: "Este documento ya pertenece a otra cuenta de recepción." },
+      errores: { usuarioDeCorreo: "Este correo ya fue registrado para otra cuenta del personal." },
     });
     const usuario = userEvent.setup();
     render(<FormularioDeEdicion id={7} dominio="laprevia.pe" datos={DATOS} />);
 
     await usuario.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
-    expect(await screen.findByText("Este documento ya pertenece a otra cuenta de recepción.")).toBeInTheDocument();
+    expect(await screen.findByText("Este correo ya fue registrado para otra cuenta del personal.")).toBeInTheDocument();
   });
 });

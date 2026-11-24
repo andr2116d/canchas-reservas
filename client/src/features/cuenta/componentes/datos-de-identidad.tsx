@@ -1,6 +1,6 @@
 import type { Cuenta } from "@/compartido/cuenta/cuenta.servidor";
 
-const NOMBRE_DEL_DOCUMENTO = { DNI: "DNI", CARNE_EXTRANJERIA: "Carné de extranjería" } as const;
+import { NOMBRE_DEL_DOCUMENTO } from "@/compartido/formulario/documento-fijo";
 
 function fechaLegible(fecha: string): string {
   const [anio, mes, dia] = fecha.split("-");

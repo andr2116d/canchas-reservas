@@ -2,12 +2,19 @@
 
 import { CampoDeTexto } from "@/compartido/formulario/campo-de-texto";
 import { CamposDelDocumento } from "@/compartido/formulario/campos-del-documento";
+import { DocumentoFijo } from "@/compartido/formulario/documento-fijo";
 import { filtrarCelular } from "@/compartido/formulario/filtros-de-entrada";
 import { LARGOS } from "@/compartido/formulario/reglas-de-datos-personales";
 import { CampoDeCorreoInstitucional } from "./campo-de-correo-institucional";
 
+interface CamposDeRecepcionistaProps {
+  dominio: string;
+  /** Al editar, el documento ya no se cambia: se muestra con candado. */
+  documentoFijo?: { tipoDocumento: "DNI" | "CARNE_EXTRANJERIA"; numeroDocumento: string };
+}
+
 /** Datos personales y correo institucional de una recepcionista, para el alta y la edición. */
-export function CamposDeRecepcionista({ dominio }: { dominio: string }) {
+export function CamposDeRecepcionista({ dominio, documentoFijo }: CamposDeRecepcionistaProps) {
   return (
     <>
       <div className="grid gap-5 sm:grid-cols-2">
@@ -25,7 +32,7 @@ export function CamposDeRecepcionista({ dominio }: { dominio: string }) {
           filtrarEntrada={filtrarCelular}
         />
       </div>
-      <CamposDelDocumento />
+      {documentoFijo ? <DocumentoFijo cuenta={documentoFijo} /> : <CamposDelDocumento />}
       <CampoDeCorreoInstitucional dominio={dominio} />
     </>
   );

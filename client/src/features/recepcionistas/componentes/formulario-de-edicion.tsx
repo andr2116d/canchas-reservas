@@ -22,7 +22,7 @@ export function FormularioDeEdicion({ id, dominio, datos }: FormularioDeEdicionP
   return (
     <FormProvider {...formulario}>
       <form noValidate onSubmit={enviar} className="flex flex-col gap-6">
-        <CamposDeRecepcionista dominio={dominio} />
+        <CamposDeRecepcionista dominio={dominio} documentoFijo={datos} />
         <ErrorGeneral mensaje={errorGeneral} />
         <div className="flex flex-wrap items-center gap-4">
           <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
