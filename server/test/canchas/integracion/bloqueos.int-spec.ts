@@ -120,7 +120,7 @@ describe('Bloqueos por mantenimiento', () => {
       Array.from({ length: 4 }, () => bloquear(enTresDias())),
     );
 
-    expect(respuestas.map((r) => r.status).sort()).toEqual([
+    expect(respuestas.map((r) => r.status).sort((a, b) => a - b)).toEqual([
       201, 409, 409, 409,
     ]);
     const { body } = await bloquear(
