@@ -246,6 +246,8 @@ model Cancha {
   caracteristicas   CaracteristicaDeCancha[]
   nota              String?
   estado            EstadoDeCancha           @default(OPERATIVA)
+  /// Sube en cada escritura: un guardado hecho sobre una versión vieja se rechaza.
+  version           Int                      @default(0)
   creadoEn          DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn     DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(3)
   cambios           CambioDeCancha[]
@@ -327,6 +329,8 @@ model Adicional {
   descripcion       String?
   precio            Decimal             @db.Decimal(10, 2)
   estado            EstadoDeAdicional   @default(ACTIVO)
+  /// Sube en cada escritura: un guardado hecho sobre una versión vieja se rechaza.
+  version           Int                 @default(0)
   creadoEn          DateTime            @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn     DateTime            @updatedAt @map("actualizado_en") @db.Timestamptz(3)
   cambios           CambioDeAdicional[]
