@@ -19,7 +19,7 @@ export const ERROR_INESPERADO = "Ocurrió un error inesperado. Inténtalo de nue
 /** Envía JSON a la API del mismo sitio y traduce la respuesta, con o sin cuerpo. Se puede cancelar con `senal`. */
 export async function enviarJson<T = undefined>(
   ruta: string,
-  metodo: "GET" | "POST" | "PUT" | "PATCH",
+  metodo: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   cuerpo?: unknown,
   senal?: AbortSignal,
 ): Promise<RespuestaDeLaApi<T>> {
