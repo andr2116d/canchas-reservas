@@ -18,6 +18,8 @@ export interface MarcadorDeHoraProps {
   ayuda?: string;
   /** Cifras más chicas, para los días con horario propio. */
   chico?: boolean;
+  /** La etiqueta solo para lectores de pantalla, cuando otra ya se ve al lado. */
+  etiquetaOculta?: boolean;
 }
 
 const PASO_DE_MINUTOS = 5;
@@ -40,7 +42,7 @@ function AtajosDeHora({ atajos, valor, alCambiar }: { atajos: string[]; valor: s
  * Selector de hora con aspecto de marcador de estadio: horas y minutos en
  * cifras grandes que se cambian con flechas, teclado, rueda o escribiendo.
  */
-export function MarcadorDeHora({ id, etiqueta, valor, alCambiar, hastaMedianoche = false, atajos = [], error, ayuda, chico = false }: MarcadorDeHoraProps) {
+export function MarcadorDeHora({ id, etiqueta, valor, alCambiar, hastaMedianoche = false, atajos = [], error, ayuda, chico = false, etiquetaOculta = false }: MarcadorDeHoraProps) {
   const { horas, minutos } = leerHora(valor);
   const idError = `${id}-error`;
   const idAyuda = `${id}-ayuda`;
@@ -49,7 +51,7 @@ export function MarcadorDeHora({ id, etiqueta, valor, alCambiar, hastaMedianoche
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span id={`${id}-etiqueta`} className={chico ? "text-xs font-bold text-grava" : "text-sm font-bold text-tinta"}>{etiqueta}</span>
+      <span id={`${id}-etiqueta`} className={etiquetaOculta ? "sr-only" : chico ? "text-xs font-bold text-grava" : "text-sm font-bold text-tinta"}>{etiqueta}</span>
       <div role="group" aria-labelledby={`${id}-etiqueta`} className={`inline-flex w-fit items-center gap-0.5 rounded-xl bg-cancha px-1.5 py-1 shadow-[inset_0_2px_6px_rgb(0_0_0/0.45)] ring-2 ${error ? "ring-error" : "ring-cancha-clara"}`}>
         <ColumnaDelMarcador
           id={`${id}-horas`}

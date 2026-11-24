@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { MarcadorDeHora } from "@/compartido/marcador/marcador-de-hora";
 import type { BorradorDeBloqueo, Momento } from "../esquemas/bloqueo.schema";
 import type { Frecuencia } from "../servicios/bloqueos";
@@ -40,17 +41,24 @@ interface MomentoDelRangoProps {
   alCambiar: (valor: Momento) => void;
   error?: string;
   hastaMedianoche?: boolean;
+  /** Un atajo junto al título, como «Hasta el fin de ese día». */
+  atajo?: ReactNode;
 }
 
-function MomentoDelRango({ id, etiqueta, valor, alCambiar, error, hastaMedianoche }: MomentoDelRangoProps) {
+function MomentoDelRango({ id, etiqueta, valor, alCambiar, error, hastaMedianoche, atajo }: MomentoDelRangoProps) {
   return (
-    <div className="flex items-end gap-2">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${id}-fecha`} className="text-xs font-bold text-grava">{`Fecha de ${etiqueta.toLowerCase()}`}</label>
-        <input id={`${id}-fecha`} type="date" value={valor.fecha} aria-invalid={Boolean(error)} onChange={(e) => alCambiar({ ...valor, fecha: e.target.value })} className={FECHA} />
+    <fieldset className="flex flex-col gap-1.5">
+      <legend className="sr-only">{etiqueta}</legend>
+      <div className="flex min-h-6 items-center justify-between gap-3">
+        <span aria-hidden="true" className="text-xs font-bold tracking-wide text-grava uppercase">{etiqueta}</span>
+        {atajo}
       </div>
-      <MarcadorDeHora id={`${id}-hora`} etiqueta={etiqueta} valor={valor.hora} alCambiar={(hora) => alCambiar({ ...valor, hora })} hastaMedianoche={hastaMedianoche} chico error={error} />
-    </div>
+      <div className="flex items-center gap-2">
+        <label htmlFor={`${id}-fecha`} className="sr-only">{`Fecha de ${etiqueta.toLowerCase()}`}</label>
+        <input id={`${id}-fecha`} type="date" value={valor.fecha} aria-invalid={Boolean(error)} onChange={(e) => alCambiar({ ...valor, fecha: e.target.value })} className={FECHA} />
+        <MarcadorDeHora id={`${id}-hora`} etiqueta={etiqueta} valor={valor.hora} alCambiar={(hora) => alCambiar({ ...valor, hora })} hastaMedianoche={hastaMedianoche} chico etiquetaOculta error={error} />
+      </div>
+    </fieldset>
   );
 }
 
@@ -65,19 +73,29 @@ interface CamposDelRangoProps {
 export function CamposDelRango({ borrador, cambiar, errores, horaActual }: CamposDelRangoProps) {
   const emergencia = borrador.tipo === "EMERGENCIA";
   return (
-    <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 justify-center rounded-2xl border border-linea bg-tiza px-4 py-3">
       {emergencia ? (
-        <p className="flex h-10 items-center gap-2 self-center rounded-full bg-error/10 px-3 text-sm font-bold text-error">
+        <p className="flex h-10 items-center gap-2 rounded-full sm:mt-7.5 bg-error/10 px-3 text-sm font-bold text-error">
           <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-error" />
           Inicio: ahora, {horaActual}
         </p>
       ) : (
         <MomentoDelRango id="inicio-del-bloqueo" etiqueta="Inicio" valor={borrador.desde} alCambiar={(desde) => cambiar({ desde })} error={errores.desde} />
       )}
-      <MomentoDelRango id="fin-del-bloqueo" etiqueta="Fin" valor={borrador.hasta} alCambiar={(hasta) => cambiar({ hasta })} error={errores.hasta} hastaMedianoche />
-      <button type="button" onClick={() => cambiar({ hasta: { fecha: borrador.hasta.fecha, hora: "24:00" } })} className="mb-1 w-fit rounded-full border border-dashed border-botella px-3 py-1 text-xs font-bold text-botella">
-        Hasta el fin de ese día
-      </button>
+      <span aria-hidden="true" className="mt-7.5 hidden text-xl font-black text-grava/60 sm:block">→</span>
+      <MomentoDelRango
+        id="fin-del-bloqueo"
+        etiqueta="Fin"
+        valor={borrador.hasta}
+        alCambiar={(hasta) => cambiar({ hasta })}
+        error={errores.hasta}
+        hastaMedianoche
+        atajo={
+          <button type="button" onClick={() => cambiar({ hasta: { fecha: borrador.hasta.fecha, hora: "24:00" } })} className="rounded-full border border-dashed border-botella px-2.5 py-0.5 text-xs font-bold text-botella hover:bg-botella/10">
+            Hasta el fin de ese día
+          </button>
+        }
+      />
     </div>
   );
 }
