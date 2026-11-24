@@ -108,4 +108,25 @@ describe("FormularioDeHorario", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("las reservas ya hechas no cambian");
     expect(navegar.refresh).toHaveBeenCalled();
   });
+
+  it("guardar lo mismo avisa que no hubo cambios", async () => {
+    vi.mocked(guardarHorario).mockResolvedValue({ tipo: "guardado", cambio: false });
+    mostrar();
+
+    await userEvent.click(screen.getByRole("button", { name: "Guardar horario" }));
+
+    expect(await screen.findByRole("status")).toBeInTheDocument();
+    expect(navegar.refresh).toHaveBeenCalled();
+  });
+
+  it("si no hay conexión muestra el motivo y no pierde lo escrito", async () => {
+    vi.mocked(guardarHorario).mockResolvedValue({ tipo: "error", mensaje: "No pudimos conectar con La Previa. Inténtalo de nuevo." });
+    mostrar();
+
+    await userEvent.click(chip("lunes"));
+    await userEvent.click(screen.getByRole("button", { name: "Guardar horario" }));
+
+    expect(await screen.findByText("No pudimos conectar con La Previa. Inténtalo de nuevo.")).toBeInTheDocument();
+    expect(chip("lunes")).toHaveAttribute("aria-pressed", "false");
+  });
 });

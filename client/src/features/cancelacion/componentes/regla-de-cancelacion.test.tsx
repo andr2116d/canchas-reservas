@@ -128,4 +128,18 @@ describe("Regla de cancelación", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Debe devolver algo: no se permite negar la devolución en todos los casos.");
   });
+
+  it("el simulador no deja escribir letras en los montos y muestra junto al campo lo que rechaza el server", async () => {
+    vi.mocked(simularCancelacion).mockResolvedValue({ tipo: "rechazada", errores: { pagado: "Lo pagado no puede ser menor que el anticipo." } });
+    const usuario = userEvent.setup();
+    mostrar();
+    const anticipo = screen.getByRole("textbox", { name: /^Anticipo/ });
+
+    await usuario.clear(anticipo);
+    await usuario.type(anticipo, "6a0.505");
+
+    expect(anticipo).toHaveValue("60.50");
+    expect(await screen.findByText("Lo pagado no puede ser menor que el anticipo.")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /^Pagó/ })).toHaveAttribute("aria-invalid", "true");
+  });
 });
