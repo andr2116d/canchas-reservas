@@ -55,6 +55,10 @@ model Usuario {
   requiereCambiarContrasena    Boolean              @default(false) @map("requiere_cambiar_contrasena")
   /// Hasta cuándo sirve la contraseña temporal; vacío si la contraseña ya no es temporal.
   contrasenaTemporalVenceEn    DateTime?            @map("contrasena_temporal_vence_en") @db.Timestamptz(3)
+  /// Cuándo la persona del personal completó o confirmó sus datos; vacío hasta su primer ingreso.
+  datosConfirmadosEn           DateTime?            @map("datos_confirmados_en") @db.Timestamptz(3)
+  /// Cuándo pasó de DNI a carné de extranjería o al revés: solo se permite una vez.
+  documentoCambiadoEn          DateTime?            @map("documento_cambiado_en") @db.Timestamptz(3)
   accesos                      RegistroAcceso[]
   accionesRecibidas            RegistroAuditoria[]  @relation("AccionesRecibidas")
   accionesEjecutadas           RegistroAuditoria[]  @relation("AccionesEjecutadas")
@@ -78,6 +82,8 @@ model Sesion {
   creadaEn          DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
   /// En esta sesión la persona eligió cambiar su contraseña temporal más tarde.
   cambioOmitido     Boolean  @default(false) @map("cambio_omitido")
+  /// Navegador y sistema desde los que se abrió, como «Chrome en Windows».
+  dispositivo       String?
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
 
@@ -101,6 +107,11 @@ enum AccionAuditada {
   DESACTIVACION                  @map("desactivacion")
   REACTIVACION                   @map("reactivacion")
   RESTABLECIMIENTO_DE_CONTRASENA @map("restablecimiento_de_contrasena")
+  CONFIRMACION_DE_DATOS          @map("confirmacion_de_datos")
+  EDICION_PROPIA                 @map("edicion_propia")
+  CAMBIO_DE_CONTRASENA           @map("cambio_de_contrasena")
+  CAMBIO_DE_CORREO               @map("cambio_de_correo")
+  CAMBIO_DE_DOCUMENTO            @map("cambio_de_documento")
 
   @@map("accion_auditada")
 }
