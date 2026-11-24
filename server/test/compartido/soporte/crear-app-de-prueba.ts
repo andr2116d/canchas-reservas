@@ -17,6 +17,7 @@ export async function crearAppDePrueba(
   ).compile();
   const app = modulo.createNestApplication<NestExpressApplication>({
     logger: false,
+    bodyParser: false,
   });
   configurarApp(app);
   await app.init();

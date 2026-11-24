@@ -15,7 +15,7 @@ export class NombrePersona {
     if (limpio === '') throw new ValorInvalidoError(`Ingresa los ${etiqueta}.`);
     if (limpio.length > LARGO_MAXIMO) {
       throw new ValorInvalidoError(
-        `Tus ${etiqueta} no pueden tener más de ${LARGO_MAXIMO} caracteres.`,
+        `Los ${etiqueta} no pueden tener más de ${LARGO_MAXIMO} caracteres.`,
       );
     }
     return new NombrePersona(limpio);
