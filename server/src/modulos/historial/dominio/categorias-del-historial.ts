@@ -1,0 +1,34 @@
+/** De dónde viene cada registro del historial. */
+export const CATEGORIAS = [
+  'CUENTAS',
+  'TARIFAS',
+  'HORARIO',
+  'CANCELACION',
+  'CANCHAS',
+  'MANTENIMIENTO',
+  'ADICIONALES',
+  'ACCESOS',
+] as const;
+
+export type Categoria = (typeof CATEGORIAS)[number];
+
+export const ACCIONES = [
+  'ALTA',
+  'EDICION',
+  'DESACTIVACION',
+  'REACTIVACION',
+  'ELIMINACION',
+  'RESTABLECIMIENTO_DE_CONTRASENA',
+  'BLOQUEO',
+  'LIBERACION_DE_BLOQUEO',
+  'RETIRO_DE_BLOQUEO',
+  'INICIO_DE_SESION',
+] as const;
+
+export type Accion = (typeof ACCIONES)[number];
+
+export const esCategoria = (valor: string): valor is Categoria =>
+  (CATEGORIAS as readonly string[]).includes(valor);
+
+export const esAccion = (valor: string): valor is Accion =>
+  (ACCIONES as readonly string[]).includes(valor);
