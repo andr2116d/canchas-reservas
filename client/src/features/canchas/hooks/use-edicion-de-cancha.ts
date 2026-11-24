@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAvisar } from "../componentes/avisos-de-canchas";
+import { useAvisar } from "@/compartido/ui/avisos-flotantes";
 import { type CanchaEnEdicion, erroresDeCancha } from "../esquemas/cancha.schema";
 import { editarCancha } from "../servicios/canchas.api";
 import type { Cancha, Caracteristica, ReservaAfectada } from "../servicios/canchas";

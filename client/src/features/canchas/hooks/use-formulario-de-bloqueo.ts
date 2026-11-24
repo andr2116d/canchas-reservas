@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAvisar } from "../componentes/avisos-de-canchas";
+import { useAvisar } from "@/compartido/ui/avisos-flotantes";
 import { aPedido, type BorradorDeBloqueo, erroresDelBloqueo } from "../esquemas/bloqueo.schema";
 import { bloquearCanchas, type ResultadoDelBloqueo } from "../servicios/bloqueos.api";
 import type { ReservaCruzada } from "../servicios/bloqueos";

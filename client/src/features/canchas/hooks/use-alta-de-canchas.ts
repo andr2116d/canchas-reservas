@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAvisar } from "../componentes/avisos-de-canchas";
+import { useAvisar } from "@/compartido/ui/avisos-flotantes";
 import { registrarCanchas } from "../servicios/canchas.api";
 import type { DatosDeCancha } from "../servicios/canchas";
 import { nombresSugeridos } from "../utilidades/nombres-sugeridos";

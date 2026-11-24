@@ -3,6 +3,7 @@
 @import "../compartido/ui/cancha-completa.css";
 @import "../compartido/ui/espera-de-cancha.css";
 @import "../compartido/ui/pantalla-de-aviso.css";
+@import "../compartido/ui/avisos-flotantes.css";
 @import "../compartido/marco/marco-interno.css";
 @import "../features/canchas/componentes/canchas.css";
 

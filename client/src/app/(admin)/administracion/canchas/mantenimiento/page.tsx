@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { ahoraDeLaPeticion } from "@/compartido/sesion/ahora-de-la-peticion";
 import { CargaDeContenido } from "@/compartido/ui/carga-de-contenido";
 import { TARJETA } from "@/compartido/ui/estilos";
-import { ProveedorDeAvisos } from "@/features/canchas/componentes/avisos-de-canchas";
+import { ProveedorDeAvisos } from "@/compartido/ui/avisos-flotantes";
 import { FormularioDeBloqueo } from "@/features/canchas/componentes/formulario-de-bloqueo";
 import { ListaDeBloqueos } from "@/features/canchas/componentes/lista-de-bloqueos";
 import { consultarBloqueos } from "@/features/canchas/servicios/bloqueos.servidor";

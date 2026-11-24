@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ResultadoDelEstado } from "../servicios/canchas.api";
 import type { ReservaAfectada } from "../servicios/canchas";
-import { useAvisar } from "../componentes/avisos-de-canchas";
+import { useAvisar } from "@/compartido/ui/avisos-flotantes";
 
 export type EstadoDeLaAccion =
   | { tipo: "inactiva" }

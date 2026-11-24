@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { desactivarCancha, editarCancha, eliminarCancha, reactivarCancha } from "../servicios/canchas.api";
 import type { Cancha } from "../servicios/canchas";
-import { ProveedorDeAvisos } from "./avisos-de-canchas";
+import { ProveedorDeAvisos } from "@/compartido/ui/avisos-flotantes";
 import { FichaDeCancha } from "./ficha-de-cancha";
 
 const navegar = vi.hoisted(() => ({ refresh: vi.fn() }));

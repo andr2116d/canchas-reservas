@@ -7,7 +7,7 @@ const DURACION_DEL_AVISO = 3500;
 
 const ContextoDeAvisos = createContext<((texto: string) => void) | undefined>(undefined);
 
-/** Da a la pantalla de canchas un aviso flotante que confirma cada acción y se anuncia al lector de pantalla. */
+/** Da a la pantalla un aviso flotante que confirma cada acción y se anuncia al lector de pantalla. */
 export function ProveedorDeAvisos({ children }: { children: ReactNode }) {
   const [aviso, setAviso] = useState<{ texto: string; vez: number }>();
   const avisar = useCallback((texto: string) => setAviso({ texto, vez: Date.now() }), []);
@@ -21,7 +21,7 @@ export function ProveedorDeAvisos({ children }: { children: ReactNode }) {
   return (
     <ContextoDeAvisos.Provider value={avisar}>
       {children}
-      <div role="status" className="aviso-de-canchas" data-visible={Boolean(aviso)}>
+      <div role="status" className="aviso-flotante" data-visible={Boolean(aviso)}>
         {aviso && (
           <>
             <PelotaQueRebota tamano="boton" />

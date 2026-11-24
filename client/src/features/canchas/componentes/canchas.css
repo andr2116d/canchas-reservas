@@ -342,29 +342,6 @@
   font-weight: 700;
 }
 
-.aviso-de-canchas {
-  position: fixed;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
-  left: 50%;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  max-width: calc(100% - 2rem);
-  border-radius: 0.875rem;
-  padding: 0.65rem 1rem;
-  background: var(--color-tinta);
-  color: var(--color-papel);
-  font-size: 0.875rem;
-  font-weight: 600;
-  translate: -50% 160%;
-  transition: translate 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-}
-
-.aviso-de-canchas[data-visible="true"] {
-  translate: -50% 0;
-}
-
 @media (max-width: 47.99rem) {
   .alta-de-canchas--completa {
     grid-template-columns: minmax(0, 1fr);

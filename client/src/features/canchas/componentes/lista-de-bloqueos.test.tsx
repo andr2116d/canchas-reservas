@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { liberarBloqueo, quitarBloqueo } from "../servicios/bloqueos.api";
 import type { Bloqueo } from "../servicios/bloqueos";
-import { ProveedorDeAvisos } from "./avisos-de-canchas";
+import { ProveedorDeAvisos } from "@/compartido/ui/avisos-flotantes";
 import { ListaDeBloqueos } from "./lista-de-bloqueos";
 
 const navegar = vi.hoisted(() => ({ refresh: vi.fn() }));

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { registrarCanchas } from "../servicios/canchas.api";
 import { AltaDeCanchas, type AltaDeCanchasProps } from "./alta-de-canchas";
-import { ProveedorDeAvisos } from "./avisos-de-canchas";
+import { ProveedorDeAvisos } from "@/compartido/ui/avisos-flotantes";
 
 vi.mock("../servicios/canchas.api", () => ({ registrarCanchas: vi.fn() }));
 

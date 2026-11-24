@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { TipoDeCancha } from "@/compartido/canchas/tipo-de-cancha";
 import type { CambioDeCancha, Cancha } from "../servicios/canchas";
 import { AltaDeCanchas } from "./alta-de-canchas";
-import { ProveedorDeAvisos } from "./avisos-de-canchas";
+import { ProveedorDeAvisos } from "@/compartido/ui/avisos-flotantes";
 import { CambiosRecientes } from "./cambios-recientes";
 import { FichaDeCancha } from "./ficha-de-cancha";
 import { cumpleElFiltro, type Filtro, FiltroDeCanchas } from "./filtro-de-canchas";
