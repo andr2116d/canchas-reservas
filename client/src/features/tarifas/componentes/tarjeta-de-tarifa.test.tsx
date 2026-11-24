@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProveedorDelBorrador, useBorrador } from "@/compartido/horario/borrador";
 import { simularTurnos } from "@/compartido/horario/simulacion.api";
-import { LUNES_DE_PRUEBA, simulacionDePrueba } from "@/compartido/horario/simulacion-de-prueba";
+import { LUNES_DE_PRUEBA, simulacionDePrueba } from "../../../../test/compartido/horario/simulacion-de-prueba";
 import { guardarTarifa } from "../servicios/tarifas.api";
 import type { TarifaDelTipo } from "../servicios/tarifas";
 import { TarjetaDeTarifa } from "./tarjeta-de-tarifa";

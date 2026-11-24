@@ -1,5 +1,5 @@
-import { DIAS_DE_LA_SEMANA, type DiaDeLaSemana } from "./horario";
-import type { Simulacion, TurnoConPrecio, TurnosDeUnDia } from "./simulacion";
+import { DIAS_DE_LA_SEMANA, type DiaDeLaSemana } from "@/compartido/horario/horario";
+import type { Simulacion, TurnoConPrecio, TurnosDeUnDia } from "@/compartido/horario/simulacion";
 
 const turno = (desde: string, hasta: string, total: string, extra: Partial<TurnoConPrecio> = {}): TurnoConPrecio => ({
   desde,

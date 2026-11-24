@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProveedorDelBorrador, useBorrador } from "@/compartido/horario/borrador";
 import type { HorarioParaSimular, TarifaParaSimular } from "@/compartido/horario/simulacion";
 import { simularTurnos } from "@/compartido/horario/simulacion.api";
-import { LUNES_DE_PRUEBA, simulacionDePrueba } from "@/compartido/horario/simulacion-de-prueba";
+import { LUNES_DE_PRUEBA, simulacionDePrueba } from "../../../../test/compartido/horario/simulacion-de-prueba";
 import { TurnosDelDia } from "./turnos-del-dia";
 
 vi.mock("@/compartido/horario/simulacion.api", () => ({ simularTurnos: vi.fn() }));
