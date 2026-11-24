@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
 import { crearAdministradorDePrueba } from "../../soporte/personal-de-prueba";
 import { crearPorApi } from "../../soporte/recepcionistas-de-prueba";
-import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
+import { completarDatosDelAdministrador, entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 async function abrirHistorial(pagina: Page) {
   await entrarComoAdministrador(pagina);
@@ -60,7 +60,8 @@ test.describe("en escritorio", () => {
     // Once inicios de sesión de un administrador propio: más de una página sin depender de otras pruebas.
     const admin = crearAdministradorDePrueba();
     for (let vez = 0; vez < 11; vez++) await page.request.post("/api/sesiones", { data: admin });
-    // La última sesión queda en el navegador: solo falta dejar el cambio de contraseña para después.
+    // La última sesión queda en el navegador: faltan sus datos y dejar la contraseña para después.
+    await completarDatosDelAdministrador(page);
     await page.goto("/cambiar-contrasena");
     await page.getByRole("button", { name: "Ahora no" }).click();
     await expect(page).toHaveURL("/administracion", { timeout: 20_000 });

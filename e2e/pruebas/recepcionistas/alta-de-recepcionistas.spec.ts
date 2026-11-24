@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { correoDe, crearPorApi, unaRecepcionistaNueva, type RecepcionistaDePrueba } from "../../soporte/recepcionistas-de-prueba";
-import { cerrarSesion, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
+import { cerrarSesion, confirmarMisDatos, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
 
 async function llenarDatos(pagina: Page, recepcionista: RecepcionistaDePrueba) {
   await pagina.goto("/administracion/recepcionistas/nueva");
@@ -64,7 +64,7 @@ test("con los datos de una cuenta desactivada ofrece reactivarla y conserva su h
   await expect(historial).toHaveText([/Reactivación/, /Desactivación/, /Alta de la cuenta/]);
   await cerrarSesion(page);
   await iniciarSesion(page, correoDe(anterior), "regreso2026");
-  await expect(page).toHaveURL("/cambiar-contrasena");
+  await confirmarMisDatos(page);
 });
 
 test("la recepcionista puede dejar el cambio de su contraseña temporal, pero se le pide en cada ingreso", async ({ page }) => {
@@ -73,7 +73,7 @@ test("la recepcionista puede dejar el cambio de su contraseña temporal, pero se
   await cerrarSesion(page);
 
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
-  await expect(page).toHaveURL("/cambiar-contrasena");
+  await confirmarMisDatos(page);
   await expect(page.getByText(/Tu contraseña temporal vence en 7 días\./)).toBeVisible();
   await page.getByRole("button", { name: "Ahora no" }).click();
   await expect(page).toHaveURL("/recepcion");

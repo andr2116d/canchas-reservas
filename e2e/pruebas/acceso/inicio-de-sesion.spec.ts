@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
 import { CONTRASENA_TEMPORAL, crearAdministradorDePrueba, DOMINIO_DE_PRUEBA } from "../../soporte/personal-de-prueba";
+import { completarDatosDelAdministrador, confirmarMisDatos } from "../../soporte/sesiones-de-prueba";
 
 const RUTA_DE_ACCESO = "/iniciar-sesion";
 const CONTRASENA_NUEVA = "definitiva2026";
@@ -152,7 +153,8 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
   const admin = crearAdministradorDePrueba();
   await page.goto(RUTA_DE_ACCESO);
   await iniciar(page, admin.correo, admin.contrasena);
-  await expect(page).toHaveURL("/cambiar-contrasena");
+  await expect(page).toHaveURL("/completar-datos");
+  await completarDatosDelAdministrador(page);
   await page.goto("/administracion");
   await expect(page).toHaveURL("/cambiar-contrasena");
 
@@ -181,7 +183,7 @@ test("obliga al administrador y al recepcionista a cambiar su contraseña tempor
 
   await expect(page).toHaveURL(RUTA_DE_ACCESO);
   await iniciar(page, recepcion.correo, recepcion.contrasena);
-  await expect(page).toHaveURL("/cambiar-contrasena");
+  await confirmarMisDatos(page);
   await cambiarContrasena(page);
   await expect(page).toHaveURL("/recepcion");
   await expect(page.getByRole("heading", { name: "Recepción" })).toBeVisible();

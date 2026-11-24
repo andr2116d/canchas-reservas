@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { correoDe, crearPorApi } from "../../soporte/recepcionistas-de-prueba";
-import { cerrarSesion, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
+import { cerrarSesion, confirmarMisDatos, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
 
 test("una cuenta desactivada no inicia sesión y pasa al listado de desactivadas", async ({ page }) => {
   await entrarComoAdministrador(page);
@@ -43,7 +43,7 @@ test("el administrador edita sus datos y restablece su contraseña", async ({ pa
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
   await expect(page.getByRole("main").getByRole("alert")).toContainText("incorrectos");
   await iniciarSesion(page, correoDe(recepcionista), nueva);
-  await expect(page).toHaveURL("/cambiar-contrasena");
+  await confirmarMisDatos(page);
 });
 
 test("desde el listado se restablece la contraseña y se desactiva sin entrar a la ficha", async ({ page }) => {
@@ -83,6 +83,7 @@ test("la recepcionista lee el aviso de privacidad del personal desde su panel", 
   const recepcionista = await crearPorApi(page);
   await cerrarSesion(page);
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
+  await confirmarMisDatos(page);
   await page.getByRole("button", { name: "Ahora no" }).click();
   await expect(page).toHaveURL("/recepcion");
 
@@ -98,6 +99,7 @@ test("solo el administrador entra a la gestión de recepcionistas", async ({ pag
   const recepcionista = await crearPorApi(page);
   await cerrarSesion(page);
   await iniciarSesion(page, correoDe(recepcionista), "temporal2026");
+  await confirmarMisDatos(page);
   await page.getByRole("button", { name: "Ahora no" }).click();
   await expect(page).toHaveURL("/recepcion");
 
