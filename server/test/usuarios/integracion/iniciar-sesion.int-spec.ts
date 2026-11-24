@@ -1,3 +1,4 @@
+import { confirmarDatosDelPersonal } from '../../compartido/soporte/sesiones-de-prueba';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
@@ -20,6 +21,8 @@ const PERSONAL = {
   apellidos: 'León Paredes',
   contrasena: CONTACTO.contrasena,
 };
+
+const rolSinConfirmar = 'ADMINISTRADOR' as const;
 
 describe('Inicio de sesión y autorización por rol', () => {
   let app: NestExpressApplication;
@@ -57,6 +60,7 @@ describe('Inicio de sesión y autorización por rol', () => {
     await app
       .get(RegistrarPersonalUseCase)
       .ejecutar({ ...PERSONAL, correo }, rol);
+    await confirmarDatosDelPersonal(app);
     return correo;
   }
 
@@ -77,6 +81,7 @@ describe('Inicio de sesión y autorización por rol', () => {
     expect(respuesta.status).toBe(200);
     expect(respuesta.body).toEqual({
       rol: 'JUGADOR',
+      requiereCompletarDatos: false,
       requiereCambiarContrasena: false,
     });
     expect(respuesta.headers['set-cookie'][0]).toMatch(
@@ -122,6 +127,31 @@ describe('Inicio de sesión y autorización por rol', () => {
     await api().get('/api/cuenta').set('Cookie', cookie).expect(401);
   });
 
+  it('el personal sin datos confirmados solo puede completarlos antes de todo lo demás', async () => {
+    const correo = rolSinConfirmar.toLowerCase() + '@' + DOMINIO;
+    await app
+      .get(RegistrarPersonalUseCase)
+      .ejecutar({ ...PERSONAL, correo }, rolSinConfirmar);
+
+    const inicio = await iniciar(correo).expect(200);
+    const sesion = cookieDe(inicio);
+
+    expect(inicio.body).toMatchObject({
+      requiereCompletarDatos: true,
+      requiereCambiarContrasena: true,
+    });
+    await api()
+      .get('/api/paneles/administracion')
+      .set('Cookie', sesion)
+      .expect(403);
+    await cambiarContrasena(sesion).expect(403);
+    const { body } = await api()
+      .get('/api/sesiones/actual')
+      .set('Cookie', sesion)
+      .expect(200);
+    expect(body.requiereCompletarDatos).toBe(true);
+  });
+
   it('exige el dominio exacto del administrador tanto en el alta como en el acceso', async () => {
     await expect(
       app
@@ -148,6 +178,7 @@ describe('Inicio de sesión y autorización por rol', () => {
       const inicio = await iniciar(correo).expect(200);
       expect(inicio.body).toEqual({
         rol,
+        requiereCompletarDatos: false,
         requiereCambiarContrasena: true,
         contrasenaTemporalVenceEn: expect.any(String),
       });
@@ -160,7 +191,11 @@ describe('Inicio de sesión y autorización por rol', () => {
       const renovada = cookieDe(cambio);
 
       expect(renovada).not.toBe(temporal);
-      expect(cambio.body).toEqual({ rol, requiereCambiarContrasena: false });
+      expect(cambio.body).toEqual({
+        rol,
+        requiereCompletarDatos: false,
+        requiereCambiarContrasena: false,
+      });
       await api().get(panel).set('Cookie', renovada).expect(200);
       const rechazo = await api()
         .get(panelAjeno)

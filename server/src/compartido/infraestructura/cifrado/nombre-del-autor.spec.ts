@@ -1,8 +1,7 @@
 import type { Cifrador } from '../../aplicacion/cifrador.port';
 import { nombreDelAutor } from './nombre-del-autor';
 
-const conPrefijo: Cifrador = {
-  cifrar: (texto) => `cifrado:${texto}`,
+const conPrefijo: Pick<Cifrador, 'descifrar'> = {
   descifrar: (cifrado) => cifrado.replace(/^cifrado:/, ''),
 };
 

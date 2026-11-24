@@ -35,6 +35,7 @@ import { LIMITE_DE_INICIOS_POR_IP, LimiteDeInicios } from './limite-de-inicios';
 
 interface DestinoDeSesion {
   rol: RolUsuario;
+  requiereCompletarDatos: boolean;
   requiereCambiarContrasena: boolean;
   contrasenaTemporalVenceEn?: Date;
 }
@@ -95,6 +96,7 @@ export class InicioDeSesionController {
     );
     return {
       rol: resultado.rol,
+      requiereCompletarDatos: resultado.requiereCompletarDatos,
       requiereCambiarContrasena: resultado.requiereCambiarContrasena,
       contrasenaTemporalVenceEn: resultado.contrasenaTemporalVenceEn,
     };
@@ -119,6 +121,10 @@ export class InicioDeSesionController {
       renovada,
       this.configuracion.cookieSegura,
     );
-    return { rol: sesion.rol, requiereCambiarContrasena: false };
+    return {
+      rol: sesion.rol,
+      requiereCompletarDatos: false,
+      requiereCambiarContrasena: false,
+    };
   }
 }

@@ -1,5 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
+import { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
 import { RegistrarPersonalUseCase } from '../../../src/modulos/usuarios/aplicacion/registrar-personal.use-case';
 import { unJugadorValido } from '../../usuarios/fabricas/datos-registro-jugador';
 import { cookieDe } from './cookie-de-sesion';
@@ -31,12 +32,26 @@ export async function sesionDeAdministrador(
     },
     'ADMINISTRADOR',
   );
+  await confirmarDatosDelPersonal(app);
   const temporal = cookieDe(await iniciar(app, correo, CONTRASENA_TEMPORAL));
   const cambio = await request(app.getHttpServer())
     .patch('/api/sesiones/contrasena-temporal')
     .set('Cookie', temporal)
     .send({ contrasena: CONTRASENA_DEFINITIVA });
   return cookieDe(cambio);
+}
+
+/**
+ * Marca como confirmados los datos del personal creado en la prueba, para que entre
+ * directo a su panel. El primer ingreso con datos se prueba aparte.
+ */
+export async function confirmarDatosDelPersonal(
+  app: NestExpressApplication,
+): Promise<void> {
+  await app.get(PrismaService).usuario.updateMany({
+    where: { rol: { not: 'JUGADOR' }, datosConfirmadosEn: null },
+    data: { datosConfirmadosEn: new Date() },
+  });
 }
 
 /** Registra un jugador y devuelve la cookie de la sesión que abre el registro. */

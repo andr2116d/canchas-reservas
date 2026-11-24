@@ -10,6 +10,7 @@ import {
   iniciarSesion,
   sesionDeAdministrador,
   sesionDeJugador,
+  confirmarDatosDelPersonal,
 } from '../../compartido/soporte/sesiones-de-prueba';
 
 describe('Mi cuenta', () => {
@@ -33,6 +34,7 @@ describe('Mi cuenta', () => {
       .set('Cookie', administrador)
       .send(unaRecepcionistaValida())
       .expect(201);
+    await confirmarDatosDelPersonal(app);
     const sesion = cookieDe(
       await iniciarSesion(app, 'rosa.quispe@laprevia.pe', 'temporal2026'),
     );

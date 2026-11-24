@@ -1,3 +1,4 @@
+import { debeCompletarDatos } from '../../../../compartido/dominio/datos-del-personal';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import { Sesion } from '../../dominio/sesion.entity';
@@ -34,6 +35,7 @@ export class PrismaSesionRepository implements SesionRepository {
             estado: true,
             requiereCambiarContrasena: true,
             contrasenaTemporalVenceEn: true,
+            datosConfirmadosEn: true,
           },
         },
       },
@@ -45,6 +47,10 @@ export class PrismaSesionRepository implements SesionRepository {
       activa: fila.usuario.estado === 'ACTIVO',
       requiereCambiarContrasena: fila.usuario.requiereCambiarContrasena,
       cambioOmitido: fila.cambioOmitido,
+      requiereCompletarDatos: debeCompletarDatos(
+        fila.usuario.rol,
+        fila.usuario.datosConfirmadosEn,
+      ),
       contrasenaTemporalVenceEn:
         fila.usuario.contrasenaTemporalVenceEn ?? undefined,
     };

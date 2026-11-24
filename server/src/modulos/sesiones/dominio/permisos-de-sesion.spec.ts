@@ -102,4 +102,35 @@ describe('Permisos de sesión', () => {
       ),
     ).toBe(false);
   });
+
+  describe('con los datos sin confirmar', () => {
+    const sinDatos = {
+      rol: 'ADMINISTRADOR' as const,
+      requiereCambiarContrasena: true,
+      cambioOmitido: true,
+      requiereCompletarDatos: true,
+    };
+
+    it('solo puede consultar su sesión y completar sus datos', () => {
+      expect(puedeAcceder(sinDatos, 'sesion:consultar')).toBe(true);
+      expect(puedeAcceder(sinDatos, 'cuenta:completar-datos')).toBe(true);
+    });
+
+    it('no abre su panel ni cambia la contraseña hasta completarlos', () => {
+      expect(puedeAcceder(sinDatos, 'panel:administracion')).toBe(false);
+      expect(puedeAcceder(sinDatos, 'cuenta:propia')).toBe(false);
+      expect(puedeAcceder(sinDatos, 'sesion:cambiar-contrasena-temporal')).toBe(
+        false,
+      );
+    });
+
+    it('con los datos confirmados ya no puede volver a completarlos', () => {
+      expect(
+        puedeAcceder(
+          { rol: 'RECEPCIONISTA', requiereCambiarContrasena: false },
+          'cuenta:completar-datos',
+        ),
+      ).toBe(false);
+    });
+  });
 });

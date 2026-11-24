@@ -9,6 +9,7 @@ import {
   iniciarSesion,
   sesionDeAdministrador,
   sesionDeJugador,
+  confirmarDatosDelPersonal,
 } from '../../compartido/soporte/sesiones-de-prueba';
 
 const RUTA = '/api/recepcionistas';
@@ -55,6 +56,7 @@ describe('POST /api/recepcionistas', () => {
 
     it('responde 403 a una recepcionista', async () => {
       await crear().set('Cookie', administrador).expect(201);
+      await confirmarDatosDelPersonal(app);
       const recepcion = cookieDe(
         await iniciarSesion(app, CORREO, 'temporal2026'),
       );
@@ -114,12 +116,14 @@ describe('POST /api/recepcionistas', () => {
 
     it('la recepcionista entra con su correo institucional y debe cambiar la contraseña', async () => {
       await crear().set('Cookie', administrador).expect(201);
+      await confirmarDatosDelPersonal(app);
 
       const inicio = await iniciarSesion(app, CORREO, 'temporal2026');
 
       expect(inicio.status).toBe(200);
       expect(inicio.body).toEqual({
         rol: 'RECEPCIONISTA',
+        requiereCompletarDatos: false,
         requiereCambiarContrasena: true,
         contrasenaTemporalVenceEn: expect.any(String),
       });

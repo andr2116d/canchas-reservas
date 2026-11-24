@@ -15,6 +15,8 @@ export interface CredencialesGuardadas {
   requiereCambiarContrasena: boolean;
   /** Hasta cuándo sirve la contraseña temporal; nada si no es temporal. */
   contrasenaTemporalVenceEn?: Date;
+  /** Personal que aún no completó o confirmó sus datos. */
+  requiereCompletarDatos: boolean;
 }
 
 export interface InicioAutenticado {

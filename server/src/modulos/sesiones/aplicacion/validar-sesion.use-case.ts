@@ -5,6 +5,7 @@ import type { GeneradorTokenSesion } from './generador-token-sesion.port';
 
 export interface SesionValida extends AccesoDeSesion {
   cambioOmitido: boolean;
+  requiereCompletarDatos: boolean;
   contrasenaTemporalVenceEn?: Date;
   usuarioId: number;
   tokenHash: string;
@@ -33,7 +34,12 @@ export class ValidarSesionUseCase {
     const ahora = this.reloj.ahora();
     if (!acceso?.activa || !acceso.sesion.estaVigente(ahora)) return undefined;
 
-    const { rol, requiereCambiarContrasena, cambioOmitido = false } = acceso;
+    const {
+      rol,
+      requiereCambiarContrasena,
+      cambioOmitido = false,
+      requiereCompletarDatos = false,
+    } = acceso;
     let sesion = acceso.sesion;
     if (renovar(acceso)) {
       sesion = sesion.registrarActividad(ahora);
@@ -46,6 +52,7 @@ export class ValidarSesionUseCase {
       rol,
       requiereCambiarContrasena,
       cambioOmitido,
+      requiereCompletarDatos,
       contrasenaTemporalVenceEn: acceso.contrasenaTemporalVenceEn,
       venceEn: sesion.venceEn(),
     };

@@ -23,6 +23,7 @@ export type ResultadoInicioSesion =
   | {
       tipo: 'sesion-abierta';
       rol: RolUsuario;
+      requiereCompletarDatos: boolean;
       requiereCambiarContrasena: boolean;
       contrasenaTemporalVenceEn?: Date;
       sesion: SesionAbierta;
@@ -78,6 +79,7 @@ export class IniciarSesionUseCase {
     return {
       tipo: 'sesion-abierta',
       rol: usuario.rol,
+      requiereCompletarDatos: usuario.requiereCompletarDatos,
       requiereCambiarContrasena: usuario.requiereCambiarContrasena,
       contrasenaTemporalVenceEn: usuario.contrasenaTemporalVenceEn,
       sesion: credencial,

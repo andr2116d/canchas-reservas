@@ -8,7 +8,7 @@ export const COLUMNAS_DEL_AUTOR = {
 
 /** Nombres y apellidos descifrados, como «Valeria León Paredes». */
 export function nombreDelAutor(
-  cifrador: Cifrador,
+  cifrador: Pick<Cifrador, 'descifrar'>,
   autor: { nombresCifrado: string; apellidosCifrado: string },
 ): string {
   return [autor.nombresCifrado, autor.apellidosCifrado]

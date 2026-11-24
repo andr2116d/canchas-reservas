@@ -5,6 +5,10 @@ const PERMISOS_TEMPORALES = [
   ...PERMISOS_COMUNES,
   'sesion:cambiar-contrasena-temporal',
 ] as const;
+const PERMISOS_SIN_DATOS = [
+  ...PERMISOS_COMUNES,
+  'cuenta:completar-datos',
+] as const;
 
 const PERMISOS_POR_ROL = {
   ADMINISTRADOR: [
@@ -25,6 +29,7 @@ const PERMISOS_POR_ROL = {
 
 export type Permiso =
   | (typeof PERMISOS_TEMPORALES)[number]
+  | (typeof PERMISOS_SIN_DATOS)[number]
   | (typeof PERMISOS_POR_ROL)[RolUsuario][number];
 
 export interface AccesoDeSesion {
@@ -32,13 +37,16 @@ export interface AccesoDeSesion {
   requiereCambiarContrasena: boolean;
   /** En esta sesión se eligió cambiar la contraseña temporal más tarde. */
   cambioOmitido?: boolean;
+  /** Personal que aún no completó o confirmó sus datos. */
+  requiereCompletarDatos?: boolean;
 }
 
 /**
- * Con contraseña temporal solo se puede cambiarla, salvo que en esa sesión se
- * haya omitido el cambio: entonces abre su panel y aún puede cambiarla.
+ * Primero se completan los datos; luego, con contraseña temporal, solo se puede
+ * cambiarla, salvo que en esa sesión se haya omitido: entonces abre su panel.
  */
 function permisosDe(acceso: AccesoDeSesion): readonly Permiso[] {
+  if (acceso.requiereCompletarDatos) return PERMISOS_SIN_DATOS;
   const delRol = PERMISOS_POR_ROL[acceso.rol];
   if (!acceso.requiereCambiarContrasena)
     return [...PERMISOS_COMUNES, ...delRol];

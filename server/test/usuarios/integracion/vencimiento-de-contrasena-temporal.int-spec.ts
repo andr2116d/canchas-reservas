@@ -8,6 +8,7 @@ import { limpiarTablas } from '../../compartido/soporte/limpiar-tablas';
 import {
   iniciarSesion,
   sesionDeAdministrador,
+  confirmarDatosDelPersonal,
 } from '../../compartido/soporte/sesiones-de-prueba';
 
 const CORREO = 'rosa.quispe@laprevia.pe';
@@ -28,6 +29,7 @@ describe('Vencimiento de la contraseña temporal', () => {
       .send(unaRecepcionistaValida())
       .expect(201);
     id = body.id as number;
+    await confirmarDatosDelPersonal(app);
   });
   afterEach(() => app.close());
 

@@ -1,3 +1,4 @@
+import { debeCompletarDatos } from '../../../../compartido/dominio/datos-del-personal';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   CIFRADOR,
@@ -21,6 +22,7 @@ const CAMPOS_DE_ACCESO = {
   estado: true,
   requiereCambiarContrasena: true,
   contrasenaTemporalVenceEn: true,
+  datosConfirmadosEn: true,
 } as const satisfies Prisma.UsuarioSelect;
 
 @Injectable()
@@ -106,11 +108,13 @@ function aCredenciales(
   fila: FilaDeAcceso | null,
 ): CredencialesGuardadas | undefined {
   if (!fila) return undefined;
-  const { id, contrasenaTemporalVenceEn, ...credenciales } = fila;
+  const { id, contrasenaTemporalVenceEn, datosConfirmadosEn, ...credenciales } =
+    fila;
   return {
     usuarioId: id,
     ...credenciales,
     contrasenaTemporalVenceEn: contrasenaTemporalVenceEn ?? undefined,
+    requiereCompletarDatos: debeCompletarDatos(fila.rol, datosConfirmadosEn),
   };
 }
 

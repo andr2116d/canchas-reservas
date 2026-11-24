@@ -35,9 +35,10 @@ export class SesionesController {
   @RequerirPermiso('sesion:consultar')
   consultar(@SesionDeLaSolicitud() sesion: SesionValida) {
     const { rol, requiereCambiarContrasena, cambioOmitido, venceEn } = sesion;
-    const { contrasenaTemporalVenceEn } = sesion;
+    const { contrasenaTemporalVenceEn, requiereCompletarDatos } = sesion;
     return {
       rol,
+      requiereCompletarDatos,
       requiereCambiarContrasena,
       cambioOmitido,
       contrasenaTemporalVenceEn,

@@ -10,6 +10,7 @@ import {
   iniciarSesion,
   sesionDeAdministrador,
   sesionDeJugador,
+  confirmarDatosDelPersonal,
 } from '../../compartido/soporte/sesiones-de-prueba';
 
 const CORREO = 'rosa.quispe@laprevia.pe';
@@ -28,6 +29,7 @@ describe('Omitir el cambio de la contraseña temporal', () => {
       .set('Cookie', administrador)
       .send(unaRecepcionistaValida())
       .expect(201);
+    await confirmarDatosDelPersonal(app);
   });
   afterEach(() => app.close());
 
@@ -50,6 +52,7 @@ describe('Omitir el cambio de la contraseña temporal', () => {
       .expect(200);
     expect(body).toMatchObject({
       rol: 'RECEPCIONISTA',
+      requiereCompletarDatos: false,
       requiereCambiarContrasena: true,
       cambioOmitido: true,
     });
@@ -91,6 +94,7 @@ describe('Omitir el cambio de la contraseña temporal', () => {
       },
       'ADMINISTRADOR',
     );
+    await confirmarDatosDelPersonal(app);
     const sesion = cookieDe(
       await iniciarSesion(app, 'lucia@laprevia.pe', TEMPORAL),
     );
