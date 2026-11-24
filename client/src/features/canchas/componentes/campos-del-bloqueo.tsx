@@ -44,9 +44,9 @@ interface MomentoDelRangoProps {
 
 function MomentoDelRango({ id, etiqueta, valor, alCambiar, error, hastaMedianoche }: MomentoDelRangoProps) {
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className="flex items-end gap-2">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${id}-fecha`} className="text-sm font-bold text-tinta">{`Fecha de ${etiqueta.toLowerCase()}`}</label>
+        <label htmlFor={`${id}-fecha`} className="text-xs font-bold text-grava">{`Fecha de ${etiqueta.toLowerCase()}`}</label>
         <input id={`${id}-fecha`} type="date" value={valor.fecha} aria-invalid={Boolean(error)} onChange={(e) => alCambiar({ ...valor, fecha: e.target.value })} className={FECHA} />
       </div>
       <MarcadorDeHora id={`${id}-hora`} etiqueta={etiqueta} valor={valor.hora} alCambiar={(hora) => alCambiar({ ...valor, hora })} hastaMedianoche={hastaMedianoche} chico error={error} />
@@ -65,14 +65,17 @@ interface CamposDelRangoProps {
 export function CamposDelRango({ borrador, cambiar, errores, horaActual }: CamposDelRangoProps) {
   const emergencia = borrador.tipo === "EMERGENCIA";
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
       {emergencia ? (
-        <p className="text-sm"><b>Inicio:</b> ahora, {horaActual}</p>
+        <p className="flex h-10 items-center gap-2 self-center rounded-full bg-error/10 px-3 text-sm font-bold text-error">
+          <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-error" />
+          Inicio: ahora, {horaActual}
+        </p>
       ) : (
         <MomentoDelRango id="inicio-del-bloqueo" etiqueta="Inicio" valor={borrador.desde} alCambiar={(desde) => cambiar({ desde })} error={errores.desde} />
       )}
       <MomentoDelRango id="fin-del-bloqueo" etiqueta="Fin" valor={borrador.hasta} alCambiar={(hasta) => cambiar({ hasta })} error={errores.hasta} hastaMedianoche />
-      <button type="button" onClick={() => cambiar({ hasta: { fecha: borrador.hasta.fecha, hora: "24:00" } })} className="w-fit rounded-full border border-dashed border-botella px-3 py-1 text-xs font-bold text-botella">
+      <button type="button" onClick={() => cambiar({ hasta: { fecha: borrador.hasta.fecha, hora: "24:00" } })} className="mb-1 w-fit rounded-full border border-dashed border-botella px-3 py-1 text-xs font-bold text-botella">
         Hasta el fin de ese día
       </button>
     </div>
@@ -89,14 +92,18 @@ const FRECUENCIAS: { valor: Frecuencia; texto: string }[] = [
 export function RepeticionDelBloqueo({ borrador, cambiar, error }: { borrador: BorradorDeBloqueo; cambiar: (cambios: Partial<BorradorDeBloqueo>) => void; error?: string }) {
   return (
     <details open={borrador.repite} onToggle={(e) => cambiar({ repite: e.currentTarget.open })} className="rounded-2xl border border-linea bg-tiza px-4 py-1">
-      <summary className="cursor-pointer py-2 text-sm font-bold text-tinta">¿Se repite?</summary>
-      <div className="flex flex-col gap-3 pb-3">
-        <Segmento etiqueta="Cada cuánto" opciones={FRECUENCIAS} valor={borrador.frecuencia} alElegir={(frecuencia) => cambiar({ frecuencia })} />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="repetir-hasta" className="text-sm font-bold text-tinta">Hasta el</label>
-          <input id="repetir-hasta" type="date" value={borrador.repiteHasta} aria-invalid={Boolean(error)} onChange={(e) => cambiar({ repiteHasta: e.target.value })} className={FECHA} />
+      <summary className="cursor-pointer py-2 text-sm font-bold text-tinta">
+        ¿Se repite? <span className="font-normal text-grava">opcional</span>
+      </summary>
+      <div className="flex flex-col gap-2 pb-3">
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+          <Segmento etiqueta="Cada cuánto" opciones={FRECUENCIAS} valor={borrador.frecuencia} alElegir={(frecuencia) => cambiar({ frecuencia })} />
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="repetir-hasta" className="text-sm font-semibold text-tinta">Hasta el</label>
+            <input id="repetir-hasta" type="date" value={borrador.repiteHasta} aria-invalid={Boolean(error)} onChange={(e) => cambiar({ repiteHasta: e.target.value })} className={FECHA} />
+          </div>
         </div>
-        <p className="text-xs text-grava">Cada repetición queda como un bloqueo propio que se puede quitar por separado.</p>
+        <p className="text-xs text-grava">Cada repetición es un bloqueo propio que se quita por separado.</p>
         <p aria-live="polite" className={ERROR}>{error}</p>
       </div>
     </details>

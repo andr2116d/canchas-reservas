@@ -16,8 +16,8 @@ const TIPOS: { valor: TipoDeBloqueo; texto: string }[] = [
 ];
 
 const AYUDA_DEL_TIPO: Record<TipoDeBloqueo, string> = {
-  PROGRAMADO: "Se planifica con tiempo: si choca con reservas, no se guarda hasta reubicarlas o cancelarlas.",
-  EMERGENCIA: "Empieza ahora y se guarda aunque haya reservas: cada jugador afectado elige devolución, reprogramación o crédito.",
+  PROGRAMADO: "Si choca con reservas, no se guarda hasta reubicarlas.",
+  EMERGENCIA: "Empieza ahora y se guarda aunque haya reservas.",
 };
 
 const textoDelBoton = (cuantas: number) => (cuantas === 0 ? "Bloquear" : `Bloquear ${cuantas} cancha${cuantas > 1 ? "s" : ""}`);
@@ -37,21 +37,25 @@ export function FormularioDeBloqueo({ canchas, ahora }: FormularioDeBloqueoProps
   };
   const emergencia = borrador.tipo === "EMERGENCIA";
   return (
-    <form noValidate onSubmit={alEnviar} aria-labelledby="titulo-del-bloqueo" className={`${TARJETA} flex flex-col gap-5`}>
+    <form noValidate onSubmit={alEnviar} aria-labelledby="titulo-del-bloqueo" className={`${TARJETA} flex flex-col gap-4`}>
       <div>
-        <h2 id="titulo-del-bloqueo" className="font-titular text-3xl leading-none font-black text-tinta">Bloquear canchas</h2>
-        <p className="mt-1.5 text-sm text-grava">En ese rango aparecen como «Mantenimiento» y no se reservan. Al terminar vuelven a estar disponibles solas.</p>
+        <h2 id="titulo-del-bloqueo" className="font-titular text-2xl leading-none font-black text-tinta">Bloquear canchas</h2>
+        <p className="mt-1 text-sm text-grava">No se reservan en ese rango y vuelven solas al terminar.</p>
       </div>
-      <SelectorDeCanchas canchas={canchas} elegidas={borrador.canchaIds} alCambiar={(canchaIds) => cambiar({ canchaIds })} error={errores.canchaIds} />
-      <Segmento etiqueta="Tipo" opciones={TIPOS} valor={borrador.tipo} alElegir={(tipo) => cambiar({ tipo })} ayuda={AYUDA_DEL_TIPO[borrador.tipo]} error={errores.tipo} />
+      <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+        <SelectorDeCanchas canchas={canchas} elegidas={borrador.canchaIds} alCambiar={(canchaIds) => cambiar({ canchaIds })} error={errores.canchaIds} />
+        <Segmento etiqueta="Tipo" opciones={TIPOS} valor={borrador.tipo} alElegir={(tipo) => cambiar({ tipo })} ayuda={AYUDA_DEL_TIPO[borrador.tipo]} error={errores.tipo} />
+      </div>
       <CamposDelRango borrador={borrador} cambiar={cambiar} errores={errores} horaActual={partesEnLima(new Date(ahora)).hora} />
-      <RepeticionDelBloqueo borrador={borrador} cambiar={cambiar} error={errores.repeticion} />
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="motivo-del-bloqueo" className="text-sm font-semibold text-tinta">Motivo<span aria-hidden="true" className="ml-0.5 text-error">*</span></label>
-        <p className="text-xs text-grava">Solo lo ve el personal. El jugador ve «Mantenimiento».</p>
-        <textarea id="motivo-del-bloqueo" value={borrador.motivo} maxLength={200} rows={2} aria-invalid={Boolean(errores.motivo)} onChange={(e) => cambiar({ motivo: e.target.value })} className="campo-de-cancha w-full resize-y" />
+        <label htmlFor="motivo-del-bloqueo" className="text-sm font-semibold text-tinta">
+          Motivo<span aria-hidden="true" className="ml-0.5 text-error">*</span>
+          <span className="ml-2 text-xs font-normal text-grava">solo lo ve el personal</span>
+        </label>
+        <input id="motivo-del-bloqueo" value={borrador.motivo} maxLength={200} autoComplete="off" aria-invalid={Boolean(errores.motivo)} onChange={(e) => cambiar({ motivo: e.target.value })} className="campo-de-cancha w-full" />
         <p aria-live="polite" className="text-sm font-medium text-error empty:hidden">{errores.motivo}</p>
       </div>
+      <RepeticionDelBloqueo borrador={borrador} cambiar={cambiar} error={errores.repeticion} />
       {choque && <ChoqueDelBloqueo choque={choque} />}
       <ReservasAfectadasPorBloqueo reservas={afectadas} />
       {errores.general && <p role="alert" className="text-sm font-medium text-error">{errores.general}</p>}

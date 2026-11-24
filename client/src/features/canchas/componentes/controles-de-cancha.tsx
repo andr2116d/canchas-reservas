@@ -27,7 +27,7 @@ export function Segmento<T extends string | boolean>({ etiqueta, opciones, valor
           </button>
         ))}
       </div>
-      {ayuda && <p className="text-sm text-grava">{ayuda}</p>}
+      {ayuda && <p className="max-w-80 text-sm text-grava">{ayuda}</p>}
       <p aria-live="polite" className="text-sm font-medium text-error empty:hidden">{error}</p>
     </fieldset>
   );

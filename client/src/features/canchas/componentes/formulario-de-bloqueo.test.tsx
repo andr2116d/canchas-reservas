@@ -117,7 +117,7 @@ describe("FormularioDeBloqueo", () => {
 
     await usuario.click(screen.getByRole("button", { name: "Cancha 1" }));
     await llenarMotivo(usuario);
-    await usuario.click(screen.getByText("¿Se repite?"));
+    await usuario.click(screen.getByText(/^¿Se repite\?/));
     await usuario.click(screen.getByRole("button", { name: "Cada semana" }));
     await usuario.clear(screen.getByLabelText("Hasta el"));
     await usuario.type(screen.getByLabelText("Hasta el"), "2026-12-15");
