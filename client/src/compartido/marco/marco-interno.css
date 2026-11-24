@@ -70,6 +70,29 @@
   gap: 2rem;
 }
 
+/*
+ * Pantallas de una sola tarea (primer ingreso, contraseña temporal): la cancha llena
+ * la pantalla hasta abajo, sin franja clara al pie, y el relleno inferior es menor.
+ */
+.marco-interno:has(.encabezado-de-seccion--con-tarjeta) {
+  display: flex;
+  flex-direction: column;
+}
+
+.marco-interno:has(.encabezado-de-seccion--con-tarjeta) > .contenido-interno {
+  flex: 1;
+  padding-bottom: 1.5rem;
+}
+
+.encabezado-de-seccion--con-tarjeta {
+  flex: 1;
+}
+
+.encabezado-de-seccion.encabezado-de-seccion--con-tarjeta::before {
+  bottom: -1.5rem;
+  border-bottom: 0;
+}
+
 .encabezado-de-seccion--con-tarjeta > :last-child {
   flex: 1 1 24rem;
   max-width: 30rem;
