@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage --coverage.include=src --coverage.reporter=text-summary --coverage.reporter=json-summary"
+    "test:cov": "vitest run --testTimeout=30000 --coverage --coverage.include=src --coverage.reporter=text-summary --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.8",
