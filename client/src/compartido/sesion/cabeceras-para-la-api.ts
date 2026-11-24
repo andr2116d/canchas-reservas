@@ -1,8 +1,9 @@
 /**
- * Cabeceras de una consulta del server de Next a la API: la cookie de la
- * sesión y, si llegó, la IP de quien visita la página. Sin ella, la API vería
- * siempre la IP de Next y todos compartirían el mismo límite de peticiones.
+ * Cabeceras de una consulta del server de Next a la API: la cookie y la IP de quien visita la
+ * página, para que la API cuente sus límites por persona. De la cadena de proxies se toma solo la
+ * última IP: las anteriores las puede escribir cualquiera.
  */
 export function cabecerasParaLaApi(cookie: string, ipReenviada?: string): Record<string, string> {
-  return ipReenviada ? { cookie, "x-forwarded-for": ipReenviada } : { cookie };
+  const ip = ipReenviada?.split(",").at(-1)?.trim();
+  return ip ? { cookie, "x-forwarded-for": ip } : { cookie };
 }
