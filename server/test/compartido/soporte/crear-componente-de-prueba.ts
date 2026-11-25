@@ -13,6 +13,7 @@ import { PrismaService } from '../../../src/compartido/infraestructura/prisma/pr
 import { USOS_DE_ADICIONAL } from '../../../src/modulos/adicionales/aplicacion/usos-de-adicional.port';
 import { ADICIONAL_REPOSITORY } from '../../../src/modulos/adicionales/dominio/adicional.repository';
 import { REGLA_DE_CANCELACION_REPOSITORY } from '../../../src/modulos/cancelacion/dominio/regla-de-cancelacion.repository';
+import { ADELANTO_REPOSITORY } from '../../../src/modulos/adelanto/dominio/adelanto.repository';
 import { RESERVAS_DE_CANCHA } from '../../../src/modulos/canchas/aplicacion/reservas-de-cancha.port';
 import { BLOQUEO_REPOSITORY } from '../../../src/modulos/canchas/dominio/bloqueo.repository';
 import { CANCHA_REPOSITORY } from '../../../src/modulos/canchas/dominio/cancha.repository';
@@ -25,6 +26,7 @@ import {
 import { TARIFA_REPOSITORY } from '../../../src/modulos/tarifas/dominio/tarifa.repository';
 import { RECEPCIONISTA_REPOSITORY } from '../../../src/modulos/usuarios/dominio/recepcionista.repository';
 import { USUARIO_REPOSITORY } from '../../../src/modulos/usuarios/dominio/usuario.repository';
+import { EnMemoriaAdelantoRepository } from '../../adelanto/dobles/en-memoria-adelanto.repository';
 import { EnMemoriaAdicionalRepository } from '../../adicionales/dobles/en-memoria-adicional.repository';
 import { UsosDeAdicionalDePrueba } from '../../adicionales/dobles/usos-de-adicional-de-prueba';
 import { EnMemoriaReglaDeCancelacionRepository } from '../../cancelacion/dobles/en-memoria-regla-de-cancelacion.repository';
@@ -61,6 +63,7 @@ function crearDobles() {
     tarifas: new EnMemoriaTarifaRepository(),
     horario: new EnMemoriaHorarioRepository(),
     cancelacion: new EnMemoriaReglaDeCancelacionRepository(),
+    adelanto: new EnMemoriaAdelantoRepository(),
     historial: new EnMemoriaHistorialRepository(),
     usuarios: new EnMemoriaUsuarioRepository(),
     recepcionistas: new EnMemoriaRecepcionistaRepository(),
@@ -82,6 +85,7 @@ function dobleDeCadaPuerto(dobles: Dobles): [symbol, unknown][] {
     [TARIFA_REPOSITORY, dobles.tarifas],
     [HORARIO_REPOSITORY, dobles.horario],
     [REGLA_DE_CANCELACION_REPOSITORY, dobles.cancelacion],
+    [ADELANTO_REPOSITORY, dobles.adelanto],
     [HISTORIAL_REPOSITORY, dobles.historial],
     [USUARIO_REPOSITORY, dobles.usuarios],
     [RECEPCIONISTA_REPOSITORY, dobles.recepcionistas],

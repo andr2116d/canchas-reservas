@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { leerLimiteGeneral } from './compartido/infraestructura/configuracion/configuracion';
 import { CompartidoModule } from './compartido/compartido.module';
+import { AdelantoModule } from './modulos/adelanto/adelanto.module';
 import { CancelacionModule } from './modulos/cancelacion/cancelacion.module';
 import { AdicionalesModule } from './modulos/adicionales/adicionales.module';
 import { CanchasModule } from './modulos/canchas/canchas.module';
@@ -27,6 +28,7 @@ const LIMITE_GENERAL = {
     HorarioModule,
     TarifasModule,
     CancelacionModule,
+    AdelantoModule,
     CanchasModule,
     AdicionalesModule,
     HistorialModule,
