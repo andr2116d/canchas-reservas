@@ -163,3 +163,42 @@
   border-radius: 0.35rem;
   padding: 0;
 }
+
+/* Próximos turnos libres de hoy, sobre la foto de la portada. */
+.proximos-turnos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 1.4rem;
+  padding: 0.7rem;
+  background: rgb(14 59 46 / 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.proximos-turnos__titulo {
+  max-width: 7.5rem;
+  padding-inline: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgb(244 246 239 / 0.85);
+}
+
+.proximos-turnos__turno {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border-radius: 1rem;
+  padding: 0.55rem 0.9rem 0.55rem 0.7rem;
+  background: rgb(251 252 248 / 0.1);
+  transition: background-color 150ms ease;
+}
+
+.proximos-turnos__turno:hover {
+  background: rgb(251 252 248 / 0.18);
+}

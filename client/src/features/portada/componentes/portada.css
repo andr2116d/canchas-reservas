@@ -1,101 +1,297 @@
-/* Portada pública: la barra de vidrio flota sobre la foto y el mapa va sobre las franjas de césped. */
-.portada {
-  --acento: var(--color-capitan);
-  --sobre-acento: var(--color-tinta);
-  background-color: #eef3eb;
-  background-image: repeating-linear-gradient(90deg, #eef3eb 0 7rem, #e8efe5 7rem 14rem);
-}
-
-.portada__barra {
-  position: fixed;
-  top: 0.75rem;
-  right: 0;
-  left: 0;
-}
-
-.portada__secciones {
-  display: flex;
-  gap: 0.25rem;
-}
-
-@media (max-width: 767px) {
-  .portada__secciones {
-    display: none;
-  }
-}
-
-.portada__boton {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  border: 1px solid rgb(255 255 255 / 0.3);
-  border-radius: 999px;
-  padding: 0 1rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-papel);
-  transition: background-color 160ms ease;
-}
-
-.portada__boton:hover {
-  background: rgb(255 255 255 / 0.12);
-}
-
-.portada__boton--capitan {
-  border-color: transparent;
-  background: var(--color-capitan);
-  color: var(--color-tinta);
-}
-
-.portada__boton--capitan:hover {
-  background: var(--color-papel);
-}
-
-.portada__boton:focus-visible {
-  outline: 2px solid var(--color-capitan);
-  outline-offset: 2px;
-}
-
-.portada__presentacion {
+/* Portada: foto a sangre, bandas que alternan tiza y franjas de césped, y fichas con su dibujo. */
+.presentacion-del-club {
   position: relative;
   isolation: isolate;
   display: flex;
   align-items: flex-end;
-  min-height: min(38rem, 88svh);
+  min-height: min(46rem, 100svh);
   background: var(--color-cancha);
 }
 
-.portada__foto {
+.presentacion-del-club__foto {
   z-index: -2;
   object-fit: cover;
   object-position: 68% 40%;
 }
 
-/* El texto va a la izquierda, donde la foto deja la cancha oscura. */
-.portada__presentacion::before {
+.presentacion-del-club::before {
   position: absolute;
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, rgb(9 33 26 / 0.92) 0%, rgb(9 33 26 / 0.65) 40%, rgb(9 33 26 / 0.05) 75%),
-    linear-gradient(0deg, rgb(9 33 26 / 0.75), transparent 45%);
+    linear-gradient(90deg, rgb(9 33 26 / 0.94) 0%, rgb(9 33 26 / 0.66) 42%, rgb(9 33 26 / 0.05) 78%),
+    linear-gradient(0deg, rgb(9 33 26 / 0.9), transparent 50%);
   content: "";
 }
 
-.portada__mensaje,
-.portada__seccion {
+.antetitulo-de-la-portada {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-botella);
+}
+
+.titulo-de-la-portada {
+  font-family: var(--font-titular);
+  font-size: clamp(2.8rem, 6vw, 4.4rem);
+  font-weight: 900;
+  line-height: 0.92;
+  color: var(--color-cancha);
+  text-wrap: balance;
+}
+
+.seccion-de-la-portada {
+  padding-block: 5.5rem;
+  scroll-margin-top: 4.5rem;
+}
+
+.seccion-de-la-portada--franjas {
+  background-color: #eef3eb;
+  background-image: repeating-linear-gradient(90deg, #eef3eb 0 7rem, #e8efe5 7rem 14rem);
+}
+
+.promesas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-block: 2.2rem;
+}
+
+.promesas li {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  width: min(72rem, calc(100% - 2rem));
-  margin-inline: auto;
+  gap: 0.35rem;
+  border-left: 1px solid rgb(244 246 239 / 0.15);
+  padding-inline: 1.5rem;
 }
 
-.portada__mensaje {
-  padding: 7rem 0 3rem;
+.promesas li:first-child {
+  border-left: 0;
+  padding-left: 0;
 }
 
-.portada__seccion {
-  padding: 3rem 0;
-  scroll-margin-top: 5.5rem;
+@media (max-width: 860px) {
+  .promesas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 1.6rem;
+  }
+
+  .promesas li:nth-child(odd) {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .promesas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .promesas li {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+.filtro-del-club {
+  display: inline-flex;
+  width: fit-content;
+  gap: 0.2rem;
+  border-radius: 999px;
+  padding: 0.25rem;
+  background: var(--color-cancha);
+}
+
+.filtro-del-club button {
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: rgb(244 246 239 / 0.8);
+}
+
+.filtro-del-club button[aria-pressed="true"] {
+  background: var(--color-capitan);
+  color: var(--color-tinta);
+}
+
+.filtro-del-club button:focus-visible {
+  outline: 2px solid var(--color-capitan);
+  outline-offset: 2px;
+}
+
+.ficha-del-club {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-linea);
+  border-radius: 1.4rem;
+  background: var(--color-papel);
+}
+
+.ficha-del-club__planta {
+  position: relative;
+  background: #2a6f4a;
+}
+
+.ficha-del-club__dibujo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ficha-del-club__tipo {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  background: var(--color-capitan);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-tinta);
+}
+
+.franja-de-precio {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-end;
+  min-height: 24rem;
+  overflow: hidden;
+  border-radius: 1.6rem;
+}
+
+.franja-de-precio__foto {
+  z-index: -2;
+  object-fit: cover;
+}
+
+.franja-de-precio::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(0deg, rgb(9 33 26 / 0.95) 15%, rgb(9 33 26 / 0.2) 70%);
+  content: "";
+}
+
+.franja-de-precio__tarifa {
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 1rem;
+  padding: 0.8rem 1rem;
+  background: rgb(251 252 248 / 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.pasos-para-reservar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.pasos-para-reservar li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 3px solid var(--color-cancha);
+  padding-top: 1.3rem;
+}
+
+@media (max-width: 860px) {
+  .pasos-para-reservar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .pasos-para-reservar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pregunta-frecuente {
+  border: 1px solid var(--color-linea);
+  border-radius: 1.1rem;
+  background: var(--color-papel);
+}
+
+.pregunta-frecuente summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.pregunta-frecuente summary::-webkit-details-marker {
+  display: none;
+}
+
+.pregunta-frecuente summary::after {
+  font-family: var(--font-titular);
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--color-botella);
+  content: "+";
+}
+
+.pregunta-frecuente[open] summary::after {
+  content: "−";
+}
+
+.pregunta-frecuente summary:focus-visible {
+  outline: 3px solid var(--color-botella);
+  outline-offset: -3px;
+  border-radius: 1.1rem;
+}
+
+.tabla-de-la-regla {
+  width: 100%;
+  max-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.tabla-de-la-regla th,
+.tabla-de-la-regla td {
+  border-bottom: 1px solid var(--color-linea);
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+}
+
+.tabla-de-la-regla th {
+  color: var(--color-tinta);
+}
+
+.invitacion-del-club {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1rem;
+  min-height: 22rem;
+  overflow: hidden;
+  border-radius: 1.6rem;
+  padding: 2rem;
+  background: var(--color-cancha);
+}
+
+.invitacion-del-club__foto {
+  z-index: -2;
+  object-fit: cover;
+  opacity: 0.55;
+}
+
+.invitacion-del-club::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(0deg, rgb(9 33 26 / 0.95) 20%, rgb(9 33 26 / 0.2));
+  content: "";
 }

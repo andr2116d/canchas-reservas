@@ -1,17 +1,24 @@
 import Image from "next/image";
-import { BOTON_SOBRE_CANCHA } from "@/compartido/ui/estilos";
+import Link from "next/link";
 import foto from "../../../../public/imagenes/futbol-de-barrio.webp";
+import type { ReactNode } from "react";
 
-/** Foto del partido con el mensaje y el acceso directo a los turnos libres. */
-export function Presentacion() {
+/** Foto del partido, el mensaje del club, los accesos a reservar y, debajo, los próximos turnos. */
+export function Presentacion({ proximos }: { proximos: ReactNode }) {
   return (
-    <section aria-labelledby="portada-titulo" className="portada__presentacion">
-      <Image src={foto} alt="" fill priority sizes="100vw" placeholder="blur" className="portada__foto" />
-      <div className="portada__mensaje">
-        <p className="text-sm font-bold text-capitan">Fútbol 5 y 7 · Trujillo, La Libertad</p>
-        <h1 id="portada-titulo" className="font-titular text-6xl leading-[0.9] font-black text-balance text-papel sm:text-8xl">Nos vemos en la cancha.</h1>
-        <p className="max-w-[34ch] text-lg text-pretty text-tiza/90">Mira qué turnos quedan libres hoy y en los próximos 30 días, con su precio final.</p>
-        <a href="#turnos" className={`${BOTON_SOBRE_CANCHA} w-fit`}>Ver turnos libres</a>
+    <section aria-labelledby="presentacion-titulo" className="presentacion-del-club">
+      <Image src={foto} alt="Un partido de fútbol 5 de noche, bajo los reflectores de una cancha de barrio." fill priority sizes="100vw" placeholder="blur" className="presentacion-del-club__foto" />
+      <div className="envoltura-del-sitio flex flex-col gap-10 pt-36 pb-10">
+        <div className="flex max-w-2xl flex-col gap-5">
+          <p className="antetitulo-de-la-portada text-capitan">Fútbol 5 y 7 · Trujillo</p>
+          <h1 id="presentacion-titulo" className="font-titular text-[clamp(3.6rem,10vw,7.5rem)] leading-[0.9] font-black text-balance text-papel">Nos vemos en la cancha.</h1>
+          <p className="max-w-[34rem] text-lg text-pretty text-tiza/90">Mira en vivo qué turnos quedan, elige tu cancha y sepárala con un adelanto. El precio que ves es el que pagas.</p>
+          <div className="flex flex-wrap gap-3">
+            <a href="#turnos" className="boton-del-sitio boton-del-sitio--capitan boton-del-sitio--grande">Ver turnos libres</a>
+            <Link href="/registro" className="boton-del-sitio boton-del-sitio--vidrio boton-del-sitio--grande">Crear mi cuenta</Link>
+          </div>
+        </div>
+        {proximos}
       </div>
     </section>
   );
