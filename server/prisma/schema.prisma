@@ -68,6 +68,7 @@ model Usuario {
   cambiosDeCanchas             CambioDeCancha[]
   bloqueosCreados              BloqueoDeCancha[]
   cambiosDeAdicionales         CambioDeAdicional[]
+  adelantosGuardados           AdelantoMinimo[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -364,4 +365,17 @@ model CambioDeAdicional {
   @@index([ocurridoEn])
   @@index([adicionalId])
   @@map("cambio_de_adicional")
+}
+
+/// Cada versión guardada del adelanto mínimo del local; la vigente es la más reciente.
+model AdelantoMinimo {
+  id            Int      @id @default(autoincrement())
+  /// Porcentaje entero del precio del turno, de 1 a 100.
+  porcentaje    Int      @db.SmallInt
+  guardadoPorId Int      @map("guardado_por_id")
+  guardadoEn    DateTime @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  guardadoPor   Usuario  @relation(fields: [guardadoPorId], references: [id])
+
+  @@index([guardadoEn])
+  @@map("adelanto_minimo")
 }
