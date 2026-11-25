@@ -13,6 +13,8 @@ import { PrismaService } from '../../../src/compartido/infraestructura/prisma/pr
 import { USOS_DE_ADICIONAL } from '../../../src/modulos/adicionales/aplicacion/usos-de-adicional.port';
 import { ADICIONAL_REPOSITORY } from '../../../src/modulos/adicionales/dominio/adicional.repository';
 import { REGLA_DE_CANCELACION_REPOSITORY } from '../../../src/modulos/cancelacion/dominio/regla-de-cancelacion.repository';
+import { OCUPACION_DEL_DIA } from '../../../src/modulos/disponibilidad/aplicacion/ocupacion-del-dia.port';
+import { OcupacionDePrueba } from '../../disponibilidad/dobles/ocupacion-de-prueba';
 import { ADELANTO_REPOSITORY } from '../../../src/modulos/adelanto/dominio/adelanto.repository';
 import { RESERVAS_DE_CANCHA } from '../../../src/modulos/canchas/aplicacion/reservas-de-cancha.port';
 import { BLOQUEO_REPOSITORY } from '../../../src/modulos/canchas/dominio/bloqueo.repository';
@@ -64,6 +66,7 @@ function crearDobles() {
     horario: new EnMemoriaHorarioRepository(),
     cancelacion: new EnMemoriaReglaDeCancelacionRepository(),
     adelanto: new EnMemoriaAdelantoRepository(),
+    ocupacion: new OcupacionDePrueba(),
     historial: new EnMemoriaHistorialRepository(),
     usuarios: new EnMemoriaUsuarioRepository(),
     recepcionistas: new EnMemoriaRecepcionistaRepository(),
@@ -86,6 +89,7 @@ function dobleDeCadaPuerto(dobles: Dobles): [symbol, unknown][] {
     [HORARIO_REPOSITORY, dobles.horario],
     [REGLA_DE_CANCELACION_REPOSITORY, dobles.cancelacion],
     [ADELANTO_REPOSITORY, dobles.adelanto],
+    [OCUPACION_DEL_DIA, dobles.ocupacion],
     [HISTORIAL_REPOSITORY, dobles.historial],
     [USUARIO_REPOSITORY, dobles.usuarios],
     [RECEPCIONISTA_REPOSITORY, dobles.recepcionistas],
