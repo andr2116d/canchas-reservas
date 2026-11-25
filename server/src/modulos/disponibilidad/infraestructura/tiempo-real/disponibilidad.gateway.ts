@@ -1,8 +1,6 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import type { Namespace } from 'socket.io';
-
-/** Ruta de socket.io: bajo /api, para que pase por el mismo origen que la API. */
-export const RUTA_DEL_TIEMPO_REAL = '/api/tiempo-real';
+import { RUTA_DEL_TIEMPO_REAL } from '../../../../compartido/infraestructura/tiempo-real/ruta-del-tiempo-real';
 
 /**
  * Canal público de solo lectura: avisa a los navegadores que el mapa de turnos

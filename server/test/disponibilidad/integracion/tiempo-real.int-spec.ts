@@ -2,7 +2,7 @@ import type { AddressInfo } from 'node:net';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { io, type Socket } from 'socket.io-client';
 import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
-import { RUTA_DEL_TIEMPO_REAL } from '../../../src/modulos/disponibilidad/infraestructura/tiempo-real/disponibilidad.gateway';
+import { RUTA_DEL_TIEMPO_REAL } from '../../../src/compartido/infraestructura/tiempo-real/ruta-del-tiempo-real';
 import { crearAppDePrueba } from '../../compartido/soporte/crear-app-de-prueba';
 import { limpiarTablas } from '../../compartido/soporte/limpiar-tablas';
 
