@@ -1,4 +1,4 @@
-export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS";
+export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS";
 
 export type Accion =
   | "ALTA"
@@ -54,6 +54,7 @@ export const CATEGORIAS: { valor: Categoria; texto: string }[] = [
   { valor: "TARIFAS", texto: "Tarifas" },
   { valor: "HORARIO", texto: "Horario" },
   { valor: "CANCELACION", texto: "Cancelación" },
+  { valor: "ADELANTO", texto: "Adelanto" },
   { valor: "CANCHAS", texto: "Canchas" },
   { valor: "MANTENIMIENTO", texto: "Mantenimiento" },
   { valor: "ADICIONALES", texto: "Adicionales" },
@@ -95,6 +96,7 @@ export const ACCIONES_POR_CATEGORIA: Record<Categoria, Accion[]> = {
   TARIFAS: ["ALTA", "EDICION"],
   HORARIO: ["ALTA", "EDICION"],
   CANCELACION: ["ALTA", "EDICION"],
+  ADELANTO: ["ALTA", "EDICION"],
   CANCHAS: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],
   MANTENIMIENTO: ["BLOQUEO", "LIBERACION_DE_BLOQUEO", "RETIRO_DE_BLOQUEO"],
   ADICIONALES: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],

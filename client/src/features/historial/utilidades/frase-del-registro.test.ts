@@ -7,6 +7,7 @@ describe("fraseDelRegistro", () => {
     { categoria: "TARIFAS", accion: "ALTA", sujeto: "Fútbol 5", verbo: "definió la tarifa de", destacado: "Fútbol 5" },
     { categoria: "HORARIO", accion: "EDICION", sujeto: "Horario de atención", verbo: "cambió el horario de atención", destacado: null },
     { categoria: "CANCELACION", accion: "ALTA", sujeto: "Regla de cancelación", verbo: "definió la regla de cancelación", destacado: null },
+    { categoria: "ADELANTO", accion: "EDICION", sujeto: "Adelanto mínimo", verbo: "cambió el adelanto mínimo", destacado: null },
     { categoria: "CUENTAS", accion: "RESTABLECIMIENTO_DE_CONTRASENA", sujeto: "Rosa Díaz", verbo: "restableció la contraseña de", destacado: "Rosa Díaz" },
     { categoria: "CANCHAS", accion: "ELIMINACION", sujeto: "Cancha 3", verbo: "eliminó la cancha", destacado: "Cancha 3" },
     { categoria: "MANTENIMIENTO", accion: "BLOQUEO", sujeto: "Cancha 2", verbo: "bloqueó por mantenimiento", destacado: "Cancha 2" },

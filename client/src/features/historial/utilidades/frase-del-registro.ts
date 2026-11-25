@@ -36,6 +36,7 @@ const CON_SUJETO: Partial<Record<Categoria, Verbos>> = {
 const SIN_SUJETO: Partial<Record<Categoria, Verbos>> = {
   HORARIO: { ALTA: "definió el horario de atención", EDICION: "cambió el horario de atención" },
   CANCELACION: { ALTA: "definió la regla de cancelación", EDICION: "cambió la regla de cancelación" },
+  ADELANTO: { ALTA: "definió el adelanto mínimo", EDICION: "cambió el adelanto mínimo" },
   ACCESOS: { INICIO_DE_SESION: "inició sesión" },
   CUENTAS: {
     CONFIRMACION_DE_DATOS: "confirmó sus datos",
