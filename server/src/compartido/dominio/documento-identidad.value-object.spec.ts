@@ -1,4 +1,4 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import { ValorInvalidoError } from './valor-invalido.error';
 import { DocumentoIdentidad } from './documento-identidad.value-object';
 
 describe('DocumentoIdentidad', () => {

@@ -6,7 +6,7 @@ import {
 } from '../../../compartido/dominio/dominio.error';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
-import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import type { UsuarioRepository } from '../dominio/usuario.repository';
 
 export interface CambioDeTipoDeDocumento {

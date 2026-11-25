@@ -4,11 +4,11 @@ import type {
   Prisma,
 } from '../../../../generated/prisma/client';
 import { Celular } from '../../dominio/celular.value-object';
-import { Correo } from '../../dominio/correo.value-object';
-import { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
+import { Correo } from '../../../../compartido/dominio/correo.value-object';
+import { DocumentoIdentidad } from '../../../../compartido/dominio/documento-identidad.value-object';
 import { Dorsal } from '../../dominio/dorsal.value-object';
 import { FechaNacimiento } from '../../dominio/fecha-nacimiento.value-object';
-import { NombrePersona } from '../../dominio/nombre-persona.value-object';
+import { NombrePersona } from '../../../../compartido/dominio/nombre-persona.value-object';
 import { Usuario } from '../../dominio/usuario.entity';
 
 /** Hash con el que se busca y se exige unicidad del documento sin descifrarlo. */

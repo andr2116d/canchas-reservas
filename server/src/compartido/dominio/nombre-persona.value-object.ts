@@ -1,4 +1,4 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import { ValorInvalidoError } from './valor-invalido.error';
 
 const LARGO_MAXIMO = 80;
 

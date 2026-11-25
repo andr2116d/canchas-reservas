@@ -7,7 +7,7 @@ import { RecepcionistaNoEncontradaError } from '../dominio/recepcionista-no-enco
 import type { RecepcionistaRepository } from '../dominio/recepcionista.repository';
 import { exigirMismoDocumento } from '../dominio/documento-fijo';
 import { construirDatosPersonales } from './datos-personales';
-import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import type { ContextoDeCuentas } from './contexto-de-cuentas';
 import type { DatosDeRecepcionista } from './registrar-recepcionista.use-case';
 

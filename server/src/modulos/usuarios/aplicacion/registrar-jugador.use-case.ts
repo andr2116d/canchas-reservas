@@ -6,12 +6,12 @@ import type {
 } from '../../sesiones/api-sesiones';
 import { validarVersionLegal } from '../dominio/aceptacion-legal-registro';
 import { Contrasena } from '../dominio/contrasena.value-object';
-import { Correo } from '../dominio/correo.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
 import {
   CuentaYaExisteError,
   type DatoUnico,
 } from '../dominio/cuenta-ya-existe.error';
-import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import { Dorsal } from '../dominio/dorsal.value-object';
 import { Usuario } from '../dominio/usuario.entity';
 import type { UsuarioRepository } from '../dominio/usuario.repository';

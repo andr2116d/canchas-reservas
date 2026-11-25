@@ -1,6 +1,6 @@
 import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
-import { Correo } from './correo.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
 
 // Parte de un correo antes de la @ (estándar HTML de WHATWG).
 const USUARIO_DE_CORREO = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;

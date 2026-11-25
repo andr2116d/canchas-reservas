@@ -1,4 +1,4 @@
-import { Correo } from '../dominio/correo.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
 import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { SugerirCorreoInstitucionalUseCase } from './sugerir-correo-institucional.use-case';
 

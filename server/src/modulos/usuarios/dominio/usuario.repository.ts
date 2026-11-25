@@ -2,12 +2,12 @@ import type { LimiteVigente } from './limites-de-cambios';
 import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
 import type { AccionAuditada } from './accion-auditada';
 import type { FechaNacimiento } from './fecha-nacimiento.value-object';
-import type { NombrePersona } from './nombre-persona.value-object';
+import type { NombrePersona } from '../../../compartido/dominio/nombre-persona.value-object';
 import type { SesionNueva } from '../../sesiones/api-sesiones';
 import type { Celular } from './celular.value-object';
-import type { Correo } from './correo.value-object';
+import type { Correo } from '../../../compartido/dominio/correo.value-object';
 import type { Dorsal } from './dorsal.value-object';
-import type { DocumentoIdentidad } from './documento-identidad.value-object';
+import type { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import type { Usuario } from './usuario.entity';
 
 export const USUARIO_REPOSITORY = Symbol('USUARIO_REPOSITORY');

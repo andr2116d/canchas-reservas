@@ -12,7 +12,7 @@ import type {
   CredencialesGuardadas,
   InicioAutenticado,
 } from '../../dominio/acceso.repository';
-import type { Correo } from '../../dominio/correo.value-object';
+import type { Correo } from '../../../../compartido/dominio/correo.value-object';
 import { hashDeCorreo } from './usuario.mapper';
 
 const CAMPOS_DE_ACCESO = {

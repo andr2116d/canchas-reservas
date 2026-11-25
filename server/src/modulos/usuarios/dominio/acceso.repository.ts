@@ -3,7 +3,7 @@ import type {
   RolUsuario,
 } from '../../../compartido/dominio/rol-usuario';
 import type { SesionNueva } from '../../sesiones/api-sesiones';
-import type { Correo } from './correo.value-object';
+import type { Correo } from '../../../compartido/dominio/correo.value-object';
 
 export const ACCESO_REPOSITORY = Symbol('ACCESO_REPOSITORY');
 

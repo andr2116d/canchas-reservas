@@ -4,9 +4,9 @@ import type {
 } from '../../../compartido/dominio/rol-usuario';
 import type { AccionAuditada } from './accion-auditada';
 import type { ContrasenaTemporal } from './contrasena-temporal';
-import type { Correo } from './correo.value-object';
+import type { Correo } from '../../../compartido/dominio/correo.value-object';
 import type { DatoUnico } from './cuenta-ya-existe.error';
-import type { DocumentoIdentidad } from './documento-identidad.value-object';
+import type { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import type { DatosDeCuenta, Usuario } from './usuario.entity';
 
 export const RECEPCIONISTA_REPOSITORY = Symbol('RECEPCIONISTA_REPOSITORY');

@@ -4,11 +4,11 @@ import { leerConfiguracion } from '../../../src/compartido/infraestructura/confi
 import { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
 import { Sesion } from '../../../src/modulos/sesiones/dominio/sesion.entity';
 import { Celular } from '../../../src/modulos/usuarios/dominio/celular.value-object';
-import { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
+import { Correo } from '../../../src/compartido/dominio/correo.value-object';
 import { CuentaYaExisteError } from '../../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
-import { DocumentoIdentidad } from '../../../src/modulos/usuarios/dominio/documento-identidad.value-object';
+import { DocumentoIdentidad } from '../../../src/compartido/dominio/documento-identidad.value-object';
 import { FechaNacimiento } from '../../../src/modulos/usuarios/dominio/fecha-nacimiento.value-object';
-import { NombrePersona } from '../../../src/modulos/usuarios/dominio/nombre-persona.value-object';
+import { NombrePersona } from '../../../src/compartido/dominio/nombre-persona.value-object';
 import { Usuario } from '../../../src/modulos/usuarios/dominio/usuario.entity';
 import { PrismaUsuarioRepository } from '../../../src/modulos/usuarios/infraestructura/persistencia/prisma-usuario.repository';
 import { limpiarTablas } from '../../compartido/soporte/limpiar-tablas';

@@ -6,10 +6,10 @@ import {
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { Celular } from '../dominio/celular.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
-import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import { exigirMismoDocumento } from '../dominio/documento-fijo';
 import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
-import { NombrePersona } from '../dominio/nombre-persona.value-object';
+import { NombrePersona } from '../../../compartido/dominio/nombre-persona.value-object';
 import type { UsuarioRepository } from '../dominio/usuario.repository';
 
 /** Datos del primer ingreso; el documento solo lo escribe quien aún no lo tiene. */

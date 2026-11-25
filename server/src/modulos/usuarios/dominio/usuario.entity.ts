@@ -3,11 +3,11 @@ import type {
   RolUsuario,
 } from '../../../compartido/dominio/rol-usuario';
 import type { Celular } from './celular.value-object';
-import type { Correo } from './correo.value-object';
-import type { DocumentoIdentidad } from './documento-identidad.value-object';
+import type { Correo } from '../../../compartido/dominio/correo.value-object';
+import type { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import type { Dorsal } from './dorsal.value-object';
 import type { FechaNacimiento } from './fecha-nacimiento.value-object';
-import type { NombrePersona } from './nombre-persona.value-object';
+import type { NombrePersona } from '../../../compartido/dominio/nombre-persona.value-object';
 
 /** Datos personales y de acceso que se piden al crear una cuenta. */
 export interface DatosDeCuenta {

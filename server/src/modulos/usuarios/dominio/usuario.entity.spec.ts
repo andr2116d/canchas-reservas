@@ -1,8 +1,8 @@
 import { Celular } from './celular.value-object';
-import { Correo } from './correo.value-object';
-import { DocumentoIdentidad } from './documento-identidad.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import { FechaNacimiento } from './fecha-nacimiento.value-object';
-import { NombrePersona } from './nombre-persona.value-object';
+import { NombrePersona } from '../../../compartido/dominio/nombre-persona.value-object';
 import { Usuario } from './usuario.entity';
 
 function datosDeUnJugador() {

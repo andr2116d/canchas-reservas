@@ -1,5 +1,5 @@
 import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
-import type { DocumentoIdentidad } from './documento-identidad.value-object';
+import type { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 
 export const DOCUMENTO_FIJO =
   'El documento identifica a la persona y no se puede cambiar.';

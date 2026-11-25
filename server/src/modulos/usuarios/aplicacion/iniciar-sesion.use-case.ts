@@ -7,7 +7,7 @@ import type {
   SesionAbierta,
 } from '../../sesiones/api-sesiones';
 import type { AccesoRepository } from '../dominio/acceso.repository';
-import { Correo } from '../dominio/correo.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
 
 export interface DatosInicioSesion {
   correo: string;

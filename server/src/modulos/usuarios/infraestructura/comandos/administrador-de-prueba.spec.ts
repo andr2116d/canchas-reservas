@@ -1,5 +1,5 @@
 import { Contrasena } from '../../dominio/contrasena.value-object';
-import { Correo } from '../../dominio/correo.value-object';
+import { Correo } from '../../../../compartido/dominio/correo.value-object';
 import {
   credencialesDePrueba,
   exigirEntornoDePrueba,

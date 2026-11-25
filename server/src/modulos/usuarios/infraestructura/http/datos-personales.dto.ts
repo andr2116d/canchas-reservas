@@ -3,7 +3,7 @@ import type { DatosPersonalesEscritos } from '../../aplicacion/datos-personales'
 import {
   MENSAJE_ELEGIR_TIPO_DOCUMENTO,
   TIPOS_DOCUMENTO,
-} from '../../dominio/documento-identidad.value-object';
+} from '../../../../compartido/dominio/documento-identidad.value-object';
 
 export const COMO_TEXTO = { message: 'Ingresa este dato como texto.' };
 

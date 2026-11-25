@@ -8,12 +8,12 @@ import {
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
-import type { Correo } from '../../dominio/correo.value-object';
+import type { Correo } from '../../../../compartido/dominio/correo.value-object';
 import {
   MENSAJES_DEL_PERSONAL,
   type DatoUnico,
 } from '../../dominio/cuenta-ya-existe.error';
-import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
+import type { DocumentoIdentidad } from '../../../../compartido/dominio/documento-identidad.value-object';
 import type {
   AccionRegistrada,
   CambiosDeRecepcionista,

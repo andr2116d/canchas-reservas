@@ -8,8 +8,8 @@ import { PrismaService } from '../../../../compartido/infraestructura/prisma/pri
 import type { Prisma } from '../../../../generated/prisma/client';
 import type { LimiteVigente } from '../../dominio/limites-de-cambios';
 import type { RolUsuario } from '../../../../compartido/dominio/rol-usuario';
-import type { Correo } from '../../dominio/correo.value-object';
-import type { DocumentoIdentidad } from '../../dominio/documento-identidad.value-object';
+import type { Correo } from '../../../../compartido/dominio/correo.value-object';
+import type { DocumentoIdentidad } from '../../../../compartido/dominio/documento-identidad.value-object';
 import type { Usuario } from '../../dominio/usuario.entity';
 import type { AccionAuditada } from '../../dominio/accion-auditada';
 import type {

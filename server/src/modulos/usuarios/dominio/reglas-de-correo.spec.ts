@@ -1,5 +1,5 @@
 import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
-import { Correo } from './correo.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
 import { ReglasDeCorreo } from './reglas-de-correo';
 
 const reglas = new ReglasDeCorreo('laprevia.pe');

@@ -1,4 +1,4 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import { ValorInvalidoError } from './valor-invalido.error';
 
 // Largo máximo de una dirección según RFC 5321.
 const LARGO_MAXIMO = 254;

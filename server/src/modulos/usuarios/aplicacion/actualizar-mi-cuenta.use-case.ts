@@ -4,7 +4,7 @@ import {
 } from '../../../compartido/dominio/dominio.error';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { Celular } from '../dominio/celular.value-object';
-import { Correo } from '../dominio/correo.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
 import { type DatoEditable, DATOS_EDITABLES } from '../dominio/datos-editables';
 import { Dorsal } from '../dominio/dorsal.value-object';
@@ -13,7 +13,7 @@ import {
   LIMITES_DE_CAMBIOS,
   limiteVigente,
 } from '../dominio/limites-de-cambios';
-import { NombrePersona } from '../dominio/nombre-persona.value-object';
+import { NombrePersona } from '../../../compartido/dominio/nombre-persona.value-object';
 import type { Usuario } from '../dominio/usuario.entity';
 import type {
   DatosPropios,

@@ -1,4 +1,4 @@
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import { ValorInvalidoError } from './valor-invalido.error';
 
 export const TIPOS_DOCUMENTO = ['DNI', 'CARNE_EXTRANJERIA'] as const;
 export const MENSAJE_ELEGIR_TIPO_DOCUMENTO = 'Elige el tipo de documento.';

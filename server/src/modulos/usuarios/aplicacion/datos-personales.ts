@@ -1,7 +1,7 @@
 import { Celular } from '../dominio/celular.value-object';
-import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
-import { NombrePersona } from '../dominio/nombre-persona.value-object';
+import { NombrePersona } from '../../../compartido/dominio/nombre-persona.value-object';
 
 /** Datos personales tal como se escriben en un formulario. */
 export interface DatosPersonalesEscritos {

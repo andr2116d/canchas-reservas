@@ -1,10 +1,10 @@
 import { EnMemoriaRecepcionistaRepository } from './en-memoria-recepcionista.repository';
 import type { EstadoUsuario } from '../../../src/compartido/dominio/rol-usuario';
 import { Celular } from '../../../src/modulos/usuarios/dominio/celular.value-object';
-import { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
-import { DocumentoIdentidad } from '../../../src/modulos/usuarios/dominio/documento-identidad.value-object';
+import { Correo } from '../../../src/compartido/dominio/correo.value-object';
+import { DocumentoIdentidad } from '../../../src/compartido/dominio/documento-identidad.value-object';
 import { FechaNacimiento } from '../../../src/modulos/usuarios/dominio/fecha-nacimiento.value-object';
-import { NombrePersona } from '../../../src/modulos/usuarios/dominio/nombre-persona.value-object';
+import { NombrePersona } from '../../../src/compartido/dominio/nombre-persona.value-object';
 import { Usuario } from '../../../src/modulos/usuarios/dominio/usuario.entity';
 
 /** Repositorio en memoria con una recepcionista ya guardada en el estado indicado. */

@@ -1,9 +1,9 @@
 import { LimiteExcedidoError } from '../../../src/compartido/dominio/dominio.error';
 import type { RolUsuario } from '../../../src/compartido/dominio/rol-usuario';
 import type { AccionAuditada } from '../../../src/modulos/usuarios/dominio/accion-auditada';
-import type { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
+import type { Correo } from '../../../src/compartido/dominio/correo.value-object';
 import { CuentaYaExisteError } from '../../../src/modulos/usuarios/dominio/cuenta-ya-existe.error';
-import type { DocumentoIdentidad } from '../../../src/modulos/usuarios/dominio/documento-identidad.value-object';
+import type { DocumentoIdentidad } from '../../../src/compartido/dominio/documento-identidad.value-object';
 import { Usuario } from '../../../src/modulos/usuarios/dominio/usuario.entity';
 import type {
   CambioPropio,

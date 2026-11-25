@@ -5,11 +5,11 @@ import {
   ReglaInvalidaError,
 } from '../../../compartido/dominio/dominio.error';
 import { Celular } from '../dominio/celular.value-object';
-import { Correo } from '../dominio/correo.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
 import { CuentaYaExisteError } from '../dominio/cuenta-ya-existe.error';
-import { DocumentoIdentidad } from '../dominio/documento-identidad.value-object';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
 import { FechaNacimiento } from '../dominio/fecha-nacimiento.value-object';
-import { NombrePersona } from '../dominio/nombre-persona.value-object';
+import { NombrePersona } from '../../../compartido/dominio/nombre-persona.value-object';
 import { ReglasDeCorreo } from '../dominio/reglas-de-correo';
 import { Usuario } from '../dominio/usuario.entity';
 import { ConsultarCuentaUseCase } from './consultar-cuenta.use-case';

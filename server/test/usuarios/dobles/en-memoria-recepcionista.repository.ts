@@ -1,6 +1,6 @@
 import type { EstadoUsuario } from '../../../src/compartido/dominio/rol-usuario';
-import type { Correo } from '../../../src/modulos/usuarios/dominio/correo.value-object';
-import type { DocumentoIdentidad } from '../../../src/modulos/usuarios/dominio/documento-identidad.value-object';
+import type { Correo } from '../../../src/compartido/dominio/correo.value-object';
+import type { DocumentoIdentidad } from '../../../src/compartido/dominio/documento-identidad.value-object';
 import type {
   AccionRegistrada,
   CambiosDeRecepcionista,
