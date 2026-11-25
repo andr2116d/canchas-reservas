@@ -1,10 +1,12 @@
 import type { Accion, Categoria } from './categorias-del-historial';
 import {
   detalleDeLaRegla,
+  detalleDelAdelanto,
   detalleDelHorario,
   detalleDeTarifa,
   type RangoDeLaRegla,
   type VersionDeTarifa,
+  type VersionDelAdelanto,
   type VersionDelHorario,
   type Versiones,
 } from './detalle-de-configuracion';
@@ -27,6 +29,7 @@ export interface RegistroSinDescribir {
 const SUJETO_FIJO: Partial<Record<Categoria, string>> = {
   HORARIO: 'Horario de atención',
   CANCELACION: 'Regla de cancelación',
+  ADELANTO: 'Adelanto mínimo',
 };
 
 function sujetoLegible({
@@ -50,6 +53,8 @@ function lineas({
       return detalleDelHorario(detalle as Versiones<VersionDelHorario>);
     case 'CANCELACION':
       return detalleDeLaRegla(detalle as Versiones<RangoDeLaRegla[]>);
+    case 'ADELANTO':
+      return detalleDelAdelanto(detalle as Versiones<VersionDelAdelanto>);
     case 'CANCHAS':
       return accion === 'EDICION'
         ? detalleDeCancha(detalle as Parameters<typeof detalleDeCancha>[0])

@@ -31,6 +31,10 @@ export interface RangoDeLaRegla {
   ofreceCredito: boolean;
 }
 
+export interface VersionDelAdelanto {
+  porcentaje: number;
+}
+
 /** El detalle de una versión: la anterior (nula en la primera) y la guardada. */
 export interface Versiones<T> {
   antes: T | null;
@@ -105,4 +109,15 @@ export function detalleDeLaRegla({
   despues,
 }: Versiones<RangoDeLaRegla[]>): LineaDeDetalle[] {
   return lineasQueCambian([['Rangos', textoDeLaRegla]], antes, despues);
+}
+
+export function detalleDelAdelanto({
+  antes,
+  despues,
+}: Versiones<VersionDelAdelanto>): LineaDeDetalle[] {
+  return lineasQueCambian(
+    [['Porcentaje del turno', (a) => `${a.porcentaje} %`]],
+    antes,
+    despues,
+  );
 }

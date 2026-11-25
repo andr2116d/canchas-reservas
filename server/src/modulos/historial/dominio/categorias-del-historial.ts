@@ -4,6 +4,7 @@ export const CATEGORIAS = [
   'TARIFAS',
   'HORARIO',
   'CANCELACION',
+  'ADELANTO',
   'CANCHAS',
   'MANTENIMIENTO',
   'ADICIONALES',

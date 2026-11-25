@@ -101,6 +101,22 @@ describe('Historial de cambios', () => {
     });
   });
 
+  it('cada versión del adelanto mínimo entra como importante, con el valor anterior y el nuevo', async () => {
+    await comoAdministrador('put', '/api/adelanto', { porcentaje: '40' });
+    await comoAdministrador('put', '/api/adelanto', { porcentaje: '50' });
+
+    const { registros } = await consultar({ categoria: 'ADELANTO' });
+
+    expect(registros.map((r) => [r.accion, r.importante])).toEqual([
+      ['EDICION', true],
+      ['ALTA', true],
+    ]);
+    expect(registros[0].sujeto).toBe('Adelanto mínimo');
+    expect(registros[0].detalle).toEqual([
+      { campo: 'Porcentaje del turno', antes: '40 %', despues: '50 %' },
+    ]);
+  });
+
   it('las cuentas del personal muestran a quién se cambió; los accesos de jugadores no aparecen', async () => {
     const { body } = await comoAdministrador(
       'post',

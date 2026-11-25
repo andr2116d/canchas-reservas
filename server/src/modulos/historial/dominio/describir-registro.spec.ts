@@ -122,6 +122,22 @@ describe('describirRegistro', () => {
     });
   });
 
+  it('el adelanto mínimo muestra el porcentaje antes y después', () => {
+    const descrito = describirRegistro({
+      categoria: 'ADELANTO',
+      accion: 'EDICION',
+      sujeto: null,
+      detalle: { antes: { porcentaje: 40 }, despues: { porcentaje: 50 } },
+    });
+
+    expect(descrito).toEqual({
+      sujeto: 'Adelanto mínimo',
+      detalle: [
+        { campo: 'Porcentaje del turno', antes: '40 %', despues: '50 %' },
+      ],
+    });
+  });
+
   it('una cancha editada traduce el tamaño, la luz y los detalles', () => {
     const { detalle } = describirRegistro({
       categoria: 'CANCHAS',
