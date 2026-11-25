@@ -16,11 +16,16 @@ export interface Configuracion {
   dominioCorporativo: string;
 }
 
-type Entorno = Record<string, string | undefined>;
+export type Entorno = Record<string, string | undefined>;
 
 const ENTORNOS_SIN_HTTPS = ['development', 'test'];
 
-function exigir(entorno: Entorno, variable: string): string {
+/** Desarrollo y pruebas: sin HTTPS ni servicios externos reales. */
+export function esEntornoLocal(entorno: Entorno): boolean {
+  return ENTORNOS_SIN_HTTPS.includes(entorno.NODE_ENV ?? '');
+}
+
+export function exigir(entorno: Entorno, variable: string): string {
   const valor = entorno[variable];
   if (!valor) throw new Error(`Falta la variable de entorno ${variable}.`);
   return valor;
@@ -34,7 +39,7 @@ function leerClave(entorno: Entorno, variable: string): Buffer {
   return clave;
 }
 
-function leerEntero(entorno: Entorno, variable: string, porDefecto: number) {
+export function leerEntero(entorno: Entorno, variable: string, porDefecto: number) {
   const valor = entorno[variable];
   if (valor === undefined || valor === '') return porDefecto;
   if (!/^\d+$/.test(valor)) {
@@ -82,7 +87,7 @@ export function leerConfiguracion(entorno: Entorno): Configuracion {
     urlBaseDeDatos: exigir(entorno, 'DATABASE_URL'),
     claveCifrado: leerClave(entorno, 'CLAVE_CIFRADO'),
     claveHash: leerClave(entorno, 'CLAVE_HASH'),
-    cookieSegura: !ENTORNOS_SIN_HTTPS.includes(entorno.NODE_ENV ?? ''),
+    cookieSegura: !esEntornoLocal(entorno),
     saltosDeProxy: leerEntero(entorno, 'SALTOS_PROXY', 1),
     limiteDeRegistrosPorHora: leerLimiteDeRegistros(entorno),
     dominioCorporativo: leerDominioCorporativo(entorno),
