@@ -10,15 +10,15 @@ describe("reglaEnPalabras", () => {
         { desdeHoras: 2, porcentaje: 50, ofreceCredito: false },
       ]),
     ).toEqual([
-      { cuando: "24 horas antes o más", devolucion: "100 % del adelanto, en dinero o como crédito" },
-      { cuando: "Entre 2 horas y 24 horas antes", devolucion: "50 % del adelanto, en dinero" },
-      { cuando: "Menos de 2 horas antes", devolucion: "No se devuelve el adelanto" },
+      { cuando: "24 horas antes o más", devolucion: "100 % del adelanto, en dinero o como crédito", porcentaje: 100 },
+      { cuando: "Entre 2 horas y 24 horas antes", devolucion: "50 % del adelanto, en dinero", porcentaje: 50 },
+      { cuando: "Menos de 2 horas antes", devolucion: "No se devuelve el adelanto", porcentaje: 0 },
     ]);
   });
 
   it("con un solo rango desde 0 horas rige siempre", () => {
     expect(reglaEnPalabras([{ desdeHoras: 0, porcentaje: 100, ofreceCredito: false }])).toEqual([
-      { cuando: "En cualquier momento antes de empezar", devolucion: "100 % del adelanto, en dinero" },
+      { cuando: "En cualquier momento antes de empezar", devolucion: "100 % del adelanto, en dinero", porcentaje: 100 },
     ]);
   });
 

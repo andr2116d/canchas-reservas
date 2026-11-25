@@ -11,6 +11,7 @@
 @import "../features/disponibilidad/componentes/disponibilidad.css";
 @import "../compartido/sitio/sitio.css";
 @import "../features/portada/componentes/portada.css";
+@import "../features/legal/componentes/legal.css";
 
 @theme {
   --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;

@@ -3,6 +3,7 @@ import type { RangoDeCancelacion } from "../servicios/club";
 export interface FilaDeLaRegla {
   cuando: string;
   devolucion: string;
+  porcentaje: number;
 }
 
 const horas = (n: number) => (n === 1 ? "1 hora" : `${n} horas`);
@@ -22,5 +23,5 @@ function devolucion({ porcentaje, ofreceCredito }: RangoDeCancelacion): string {
 /** La regla de cancelación como tabla de leer: de más a menos anticipación. */
 export function reglaEnPalabras(rangos: RangoDeCancelacion[]): FilaDeLaRegla[] {
   const ordenados = [...rangos].sort((a, b) => b.desdeHoras - a.desdeHoras);
-  return ordenados.map((rango, i) => ({ cuando: cuando(rango, ordenados[i - 1]), devolucion: devolucion(rango) }));
+  return ordenados.map((rango, i) => ({ cuando: cuando(rango, ordenados[i - 1]), devolucion: devolucion(rango), porcentaje: rango.porcentaje }));
 }
