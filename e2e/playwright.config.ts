@@ -10,6 +10,8 @@ const PUERTO_WEB = 3100;
 const baseDePruebas = new URL(process.env.DATABASE_URL ?? "");
 baseDePruebas.pathname = `${baseDePruebas.pathname.replace(/_pruebas$/, "")}_pruebas`;
 
+const DISPONIBILIDAD = /disponibilidad\/.*\.spec\.ts/;
+
 export default defineConfig({
   testDir: "./pruebas",
   fullyParallel: true,
@@ -20,9 +22,23 @@ export default defineConfig({
     locale: "es-PE",
     trace: "retain-on-failure",
   },
+  // La disponibilidad pinta el horario, las tarifas y las canchas, que son del local entero y
+  // otras pruebas cambian: corre al final, primero en escritorio y después en celular.
   projects: [
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] } },
-    { name: "celular", use: { ...devices["Pixel 7"] } },
+    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: DISPONIBILIDAD },
+    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: DISPONIBILIDAD },
+    {
+      name: "disponibilidad-escritorio",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: DISPONIBILIDAD,
+      dependencies: ["escritorio", "celular"],
+    },
+    {
+      name: "disponibilidad-celular",
+      use: { ...devices["Pixel 7"] },
+      testMatch: DISPONIBILIDAD,
+      dependencies: ["disponibilidad-escritorio"],
+    },
   ],
   webServer: [
     {
