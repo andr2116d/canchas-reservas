@@ -151,6 +151,12 @@ export class EnMemoriaHojaRepository implements HojaRepository {
     return Promise.resolve();
   }
 
+  titularDe(hoja: HojaDeReclamacion): Promise<number | null> {
+    return Promise.resolve(
+      this.guardadas.find((g) => g.hoja.id === hoja.id)?.titularId ?? null,
+    );
+  }
+
   cambiosDe(hoja: HojaDeReclamacion): Promise<CambioRegistrado[]> {
     return Promise.resolve(
       this.auditoria

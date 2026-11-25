@@ -1,4 +1,5 @@
 import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
+import type { AvisarUseCase } from '../../avisos/aplicacion/avisar.use-case';
 import type { Correo } from '../../correo/dominio/correo';
 import type { HojaDeReclamacion } from '../dominio/hoja-de-reclamacion.entity';
 import type { HojaRepository } from '../dominio/hoja.repository';
@@ -10,6 +11,7 @@ import { fechaYHoraDeLima } from './textos-de-la-hoja-para-mostrar';
 export interface DependenciasDeLaRespuesta {
   hojas: HojaRepository;
   correos: { ejecutar(correo: Correo): Promise<void> };
+  avisos: Pick<AvisarUseCase, 'a'>;
   reloj: Reloj;
 }
 
@@ -53,6 +55,9 @@ export class ResponderHojaUseCase {
       ocurridoEn: this.d.reloj.ahora(),
     });
     if (hoja.medioDeRespuesta === 'CORREO') await this.enviar(hoja);
+    const titularId = await this.d.hojas.titularDe(hoja);
+    if (titularId)
+      await this.d.avisos.a(titularId, 'RECLAMO_RESPONDIDO', numero);
   }
 
   private async enviar(hoja: HojaDeReclamacion): Promise<void> {

@@ -7,6 +7,7 @@ import { CompartidoModule } from './compartido/compartido.module';
 import { AdelantoModule } from './modulos/adelanto/adelanto.module';
 import { CancelacionModule } from './modulos/cancelacion/cancelacion.module';
 import { AdicionalesModule } from './modulos/adicionales/adicionales.module';
+import { AvisosModule } from './modulos/avisos/avisos.module';
 import { CanchasModule } from './modulos/canchas/canchas.module';
 import { ClubModule } from './modulos/club/club.module';
 import { CorreoModule } from './modulos/correo/correo.module';
@@ -40,6 +41,7 @@ const LIMITE_GENERAL = {
     DisponibilidadModule,
     ClubModule,
     ReclamosModule,
+    AvisosModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

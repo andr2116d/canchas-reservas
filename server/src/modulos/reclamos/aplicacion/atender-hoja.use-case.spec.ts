@@ -1,3 +1,4 @@
+import { AvisosDePrueba } from '../../../../test/avisos/dobles/avisos-de-prueba';
 import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import { CorreosDePrueba } from '../../../../test/correo/dobles/correos-de-prueba';
 import { EnMemoriaHojaRepository } from '../../../../test/reclamos/dobles/en-memoria-hoja.repository';
@@ -29,23 +30,28 @@ describe('atención de las hojas por administración', () => {
   let correos: CorreosDePrueba;
   let reloj: RelojDePrueba;
   let registrar: RegistrarHojaUseCase;
+  let avisos: AvisosDePrueba;
 
   beforeEach(() => {
     hojas = new EnMemoriaHojaRepository();
     correos = new CorreosDePrueba();
     reloj = new RelojDePrueba(new Date('2026-11-25T15:00:00.000Z'));
     const proveedor = new SinDatosDelProveedorAdapter();
+    avisos = new AvisosDePrueba();
     registrar = new RegistrarHojaUseCase({
       hojas,
       generador: new GeneradorDeCodigoDePrueba(),
       proveedor,
       correos,
+      avisos,
       reloj,
     });
   });
 
-  const nuevas = (cambios: Parameters<typeof unaHojaValida>[0] = {}) =>
-    registrar.ejecutar(unaHojaValida(cambios), null);
+  const nuevas = (
+    cambios: Parameters<typeof unaHojaValida>[0] = {},
+    titularId: number | null = null,
+  ) => registrar.ejecutar(unaHojaValida(cambios), titularId);
   const dias = (n: number) => reloj.avanzarMinutos(n * 24 * 60);
 
   describe('ConsultarHojasUseCase', () => {
@@ -53,11 +59,12 @@ describe('atención de las hojas por administración', () => {
       await nuevas();
       dias(1);
       await nuevas({ tipo: 'QUEJA' });
-      await new ResponderHojaUseCase({ hojas, correos, reloj }).ejecutar(
-        NUMERO,
-        { texto: 'Listo.' },
-        ADMINISTRACION,
-      );
+      await new ResponderHojaUseCase({
+        hojas,
+        correos,
+        avisos,
+        reloj,
+      }).ejecutar(NUMERO, { texto: 'Listo.' }, ADMINISTRACION);
 
       const pagina = await new ConsultarHojasUseCase(hojas, reloj).ejecutar({});
 
@@ -174,11 +181,12 @@ describe('atención de las hojas por administración', () => {
       await nuevas({ esMenorDeEdad: true, ...unRepresentante() });
       correos.enviados.length = 0;
 
-      await new ResponderHojaUseCase({ hojas, correos, reloj }).ejecutar(
-        NUMERO,
-        { texto: 'Devolvimos el adelanto.' },
-        ADMINISTRACION,
-      );
+      await new ResponderHojaUseCase({
+        hojas,
+        correos,
+        avisos,
+        reloj,
+      }).ejecutar(NUMERO, { texto: 'Devolvimos el adelanto.' }, ADMINISTRACION);
 
       expect(hojas.auditoria[0]).toMatchObject({
         accion: 'RESPUESTA',
@@ -202,7 +210,12 @@ describe('atención de las hojas por administración', () => {
       await nuevas({ medioDeRespuesta: 'CARTA' });
       correos.enviados.length = 0;
 
-      await new ResponderHojaUseCase({ hojas, correos, reloj }).ejecutar(
+      await new ResponderHojaUseCase({
+        hojas,
+        correos,
+        avisos,
+        reloj,
+      }).ejecutar(
         NUMERO,
         { texto: 'Respuesta.', cartaEnviadaEl: '2026-11-25' },
         ADMINISTRACION,
@@ -217,12 +230,49 @@ describe('atención de las hojas por administración', () => {
 
     it('una hoja respondida no se vuelve a responder', async () => {
       await nuevas();
-      const responder = new ResponderHojaUseCase({ hojas, correos, reloj });
+      const responder = new ResponderHojaUseCase({
+        hojas,
+        correos,
+        avisos,
+        reloj,
+      });
       await responder.ejecutar(NUMERO, { texto: 'Una.' }, ADMINISTRACION);
 
       await expect(
         responder.ejecutar(NUMERO, { texto: 'Otra.' }, ADMINISTRACION),
       ).rejects.toThrow(ConflictoError);
+    });
+  });
+
+  describe('avisos al responder', () => {
+    it('avisa al jugador que registró la hoja con su cuenta', async () => {
+      await nuevas({}, 12);
+      avisos.enviados.length = 0;
+
+      await new ResponderHojaUseCase({
+        hojas,
+        correos,
+        avisos,
+        reloj,
+      }).ejecutar(NUMERO, { texto: 'Listo.' }, ADMINISTRACION);
+
+      expect(avisos.enviados).toEqual([
+        { para: 12, tipo: 'RECLAMO_RESPONDIDO', referencia: NUMERO },
+      ]);
+    });
+
+    it('si la hoja se registró sin cuenta no hay a quién avisar en la web', async () => {
+      await nuevas();
+      avisos.enviados.length = 0;
+
+      await new ResponderHojaUseCase({
+        hojas,
+        correos,
+        avisos,
+        reloj,
+      }).ejecutar(NUMERO, { texto: 'Listo.' }, ADMINISTRACION);
+
+      expect(avisos.enviados).toEqual([]);
     });
   });
 });

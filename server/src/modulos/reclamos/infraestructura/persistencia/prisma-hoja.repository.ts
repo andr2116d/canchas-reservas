@@ -179,6 +179,14 @@ export class PrismaHojaRepository implements HojaRepository {
     this.versiones.recordar(hoja, version + 1);
   }
 
+  async titularDe(hoja: HojaDeReclamacion): Promise<number | null> {
+    const fila = await this.prisma.hojaDeReclamacion.findUniqueOrThrow({
+      where: { id: hoja.id! },
+      select: { titularId: true },
+    });
+    return fila.titularId;
+  }
+
   async cambiosDe(hoja: HojaDeReclamacion): Promise<CambioRegistrado[]> {
     const filas = await this.prisma.cambioDeHoja.findMany({
       where: { hojaId: hoja.id! },

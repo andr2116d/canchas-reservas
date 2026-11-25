@@ -1,4 +1,5 @@
 import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
+import type { AvisarUseCase } from '../../avisos/aplicacion/avisar.use-case';
 import type { Correo } from '../../correo/dominio/correo';
 import {
   type DatosDeLaHoja,
@@ -17,6 +18,7 @@ export interface DependenciasDelRegistro {
   generador: GeneradorDeCodigo;
   proveedor: DatosDelProveedor;
   correos: { ejecutar(correo: Correo): Promise<void> };
+  avisos: Pick<AvisarUseCase, 'alRol'>;
   reloj: Reloj;
 }
 
@@ -53,6 +55,11 @@ export class RegistrarHojaUseCase {
       hoja: verHoja(hoja),
     };
     await this.enviarCopias(constancia);
+    await this.d.avisos.alRol(
+      'ADMINISTRADOR',
+      'NUEVO_RECLAMO',
+      constancia.numero,
+    );
     return constancia;
   }
 

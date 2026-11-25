@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RELOJ, type Reloj } from '../../compartido/aplicacion/reloj.port';
+import { AvisarUseCase } from '../avisos/aplicacion/avisar.use-case';
+import { AvisosModule } from '../avisos/avisos.module';
 import { CorreoModule } from '../correo/correo.module';
 import { EnviarCorreoUseCase } from '../correo/aplicacion/enviar-correo.use-case';
 import {
@@ -37,7 +39,7 @@ import { SinDatosDelProveedorAdapter } from './infraestructura/proveedor/sin-dat
 
 /** Libro de Reclamaciones virtual: registro público de hojas y su atención por administración. */
 @Module({
-  imports: [CorreoModule],
+  imports: [CorreoModule, AvisosModule],
   controllers: [
     LibroDeReclamacionesController,
     MisHojasController,
@@ -65,20 +67,24 @@ import { SinDatosDelProveedorAdapter } from './infraestructura/proveedor/sin-dat
     {
       provide: ResponderHojaUseCase,
       useFactory: (
-        hojas: HojaRepository,
-        correos: EnviarCorreoUseCase,
-        reloj: Reloj,
-      ) => new ResponderHojaUseCase({ hojas, correos, reloj }),
-      inject: [HOJA_REPOSITORY, EnviarCorreoUseCase, RELOJ],
+        ...[hojas, correos, avisos, reloj]: [
+          HojaRepository,
+          EnviarCorreoUseCase,
+          AvisarUseCase,
+          Reloj,
+        ]
+      ) => new ResponderHojaUseCase({ hojas, correos, avisos, reloj }),
+      inject: [HOJA_REPOSITORY, EnviarCorreoUseCase, AvisarUseCase, RELOJ],
     },
     {
       provide: RegistrarHojaUseCase,
       useFactory: (
-        ...[hojas, generador, proveedor, correos, reloj]: [
+        ...[hojas, generador, proveedor, correos, avisos, reloj]: [
           HojaRepository,
           GeneradorDeCodigo,
           DatosDelProveedor,
           EnviarCorreoUseCase,
+          AvisarUseCase,
           Reloj,
         ]
       ) =>
@@ -87,6 +93,7 @@ import { SinDatosDelProveedorAdapter } from './infraestructura/proveedor/sin-dat
           generador,
           proveedor,
           correos,
+          avisos,
           reloj,
         }),
       inject: [
@@ -94,6 +101,7 @@ import { SinDatosDelProveedorAdapter } from './infraestructura/proveedor/sin-dat
         GENERADOR_DE_CODIGO,
         DATOS_DEL_PROVEEDOR,
         EnviarCorreoUseCase,
+        AvisarUseCase,
         RELOJ,
       ],
     },

@@ -36,7 +36,13 @@ export class EnMemoriaAvisoRepository implements AvisoRepository {
           (a, b) => b.creadoEn.getTime() - a.creadoEn.getTime() || b.id - a.id,
         )
         .slice(0, limite)
-        .map(({ usuarioId: _, ...aviso }) => aviso),
+        .map(({ id, tipo, referencia, creadoEn, leidoEn }) => ({
+          id,
+          tipo,
+          referencia,
+          creadoEn,
+          leidoEn,
+        })),
     );
   }
 

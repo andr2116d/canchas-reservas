@@ -48,6 +48,9 @@ import { RelojDePrueba } from '../dobles/reloj-de-prueba';
 import { BANDEJA_DE_SALIDA } from '../../../src/modulos/correo/aplicacion/bandeja-de-salida.port';
 import { ENVIADOR_DE_CORREO } from '../../../src/modulos/correo/aplicacion/enviador-de-correo.port';
 import { HOJA_REPOSITORY } from '../../../src/modulos/reclamos/dominio/hoja.repository';
+import { AVISO_REPOSITORY } from '../../../src/modulos/avisos/dominio/aviso';
+import { ESCUCHA_DE_AVISOS } from '../../../src/modulos/avisos/infraestructura/tiempo-real/retransmision-de-avisos';
+import { EnMemoriaAvisoRepository } from '../../avisos/dobles/en-memoria-aviso.repository';
 import { EnMemoriaBandejaDeSalida } from '../../correo/dobles/en-memoria-bandeja-de-salida';
 import { EnviadorDeCorreoDePrueba } from '../../correo/dobles/enviador-de-correo-de-prueba';
 import { EnMemoriaHojaRepository } from '../../reclamos/dobles/en-memoria-hoja.repository';
@@ -71,6 +74,8 @@ function crearDobles() {
     bandeja: new EnMemoriaBandejaDeSalida(reloj),
     enviador: new EnviadorDeCorreoDePrueba(),
     hojas: new EnMemoriaHojaRepository(),
+    avisos: new EnMemoriaAvisoRepository(),
+    escuchaDeAvisos: new EscuchaDeCambiosDePrueba(),
     canchas: new EnMemoriaCanchaRepository(),
     bloqueos: new EnMemoriaBloqueoRepository(),
     reservas: new ReservasDeCanchaDePrueba(),
@@ -99,6 +104,8 @@ function dobleDeCadaPuerto(dobles: Dobles): [symbol, unknown][] {
     [BANDEJA_DE_SALIDA, dobles.bandeja],
     [ENVIADOR_DE_CORREO, dobles.enviador],
     [HOJA_REPOSITORY, dobles.hojas],
+    [AVISO_REPOSITORY, dobles.avisos],
+    [ESCUCHA_DE_AVISOS, dobles.escuchaDeAvisos],
     [CANCHA_REPOSITORY, dobles.canchas],
     [BLOQUEO_REPOSITORY, dobles.bloqueos],
     [RESERVAS_DE_CANCHA, dobles.reservas],

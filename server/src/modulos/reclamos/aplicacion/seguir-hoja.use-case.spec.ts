@@ -1,3 +1,4 @@
+import { AvisosDePrueba } from '../../../../test/avisos/dobles/avisos-de-prueba';
 import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import { CorreosDePrueba } from '../../../../test/correo/dobles/correos-de-prueba';
 import { EnMemoriaHojaRepository } from '../../../../test/reclamos/dobles/en-memoria-hoja.repository';
@@ -33,6 +34,7 @@ describe('seguimiento de las hojas', () => {
       generador: new GeneradorDeCodigoDePrueba(),
       proveedor: new SinDatosDelProveedorAdapter(),
       correos: new CorreosDePrueba(),
+      avisos: new AvisosDePrueba(),
       reloj,
     });
     seguir = new SeguirHojaUseCase(hojas, reloj);
@@ -71,6 +73,7 @@ describe('seguimiento de las hojas', () => {
       await new ResponderHojaUseCase({
         hojas,
         correos: new CorreosDePrueba(),
+        avisos: new AvisosDePrueba(),
         reloj,
       }).ejecutar('000001-2026', { texto: 'Devolvimos el adelanto.' }, 3);
 

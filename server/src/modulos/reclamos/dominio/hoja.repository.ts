@@ -79,6 +79,9 @@ export interface HojaRepository {
   /** Guarda la hoja leída y su cambio en la auditoría; falla si cambió mientras tanto. */
   guardar(hoja: HojaDeReclamacion, cambio: CambioDeLaHoja): Promise<void>;
 
+  /** La cuenta de jugador con que se registró, si la hubo. */
+  titularDe(hoja: HojaDeReclamacion): Promise<number | null>;
+
   /** La auditoría de la hoja, del más antiguo al más reciente. */
   cambiosDe(hoja: HojaDeReclamacion): Promise<CambioRegistrado[]>;
 }

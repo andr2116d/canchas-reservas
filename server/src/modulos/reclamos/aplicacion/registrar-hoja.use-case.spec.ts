@@ -1,3 +1,4 @@
+import { AvisosDePrueba } from '../../../../test/avisos/dobles/avisos-de-prueba';
 import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import { CorreosDePrueba } from '../../../../test/correo/dobles/correos-de-prueba';
 import { EnMemoriaHojaRepository } from '../../../../test/reclamos/dobles/en-memoria-hoja.repository';
@@ -16,17 +17,20 @@ describe('RegistrarHojaUseCase', () => {
   let hojas: EnMemoriaHojaRepository;
   let correos: CorreosDePrueba;
   let reloj: RelojDePrueba;
+  let avisos: AvisosDePrueba;
   let registrar: RegistrarHojaUseCase;
 
   beforeEach(() => {
     hojas = new EnMemoriaHojaRepository();
     correos = new CorreosDePrueba();
     reloj = new RelojDePrueba(new Date('2026-11-25T15:00:00.000Z'));
+    avisos = new AvisosDePrueba();
     registrar = new RegistrarHojaUseCase({
       hojas,
       generador: new GeneradorDeCodigoDePrueba(),
       proveedor: new SinDatosDelProveedorAdapter(),
       correos,
+      avisos,
       reloj,
     });
   });
@@ -96,5 +100,17 @@ describe('RegistrarHojaUseCase', () => {
 
     expect(hojas.guardadas).toHaveLength(0);
     expect(correos.enviados).toHaveLength(0);
+  });
+
+  it('avisa a administración que llegó una hoja nueva', async () => {
+    await registrar.ejecutar(unaHojaValida(), null);
+
+    expect(avisos.enviados).toEqual([
+      {
+        para: 'ADMINISTRADOR',
+        tipo: 'NUEVO_RECLAMO',
+        referencia: '000001-2026',
+      },
+    ]);
   });
 });
