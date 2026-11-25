@@ -8,6 +8,7 @@
 @import "../features/canchas/componentes/canchas.css";
 @import "../features/adicionales/componentes/adicionales.css";
 @import "../features/historial/componentes/historial.css";
+@import "../features/disponibilidad/componentes/disponibilidad.css";
 
 @theme {
   --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;

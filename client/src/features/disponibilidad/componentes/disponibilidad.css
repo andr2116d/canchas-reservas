@@ -1,0 +1,155 @@
+/* Mapa de turnos: horas en filas, canchas en columnas; el color y el texto dicen el estado. */
+.mapa-de-turnos {
+  overflow-x: auto;
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: 1.25rem;
+  background: rgb(251 252 248 / 0.92);
+  box-shadow: 0 18px 40px -26px rgb(19 38 30 / 0.45);
+}
+
+.mapa-de-turnos table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.mapa-de-turnos th,
+.mapa-de-turnos td {
+  border-bottom: 1px solid color-mix(in oklab, var(--color-linea) 60%, white);
+}
+
+.mapa-de-turnos tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.celda-del-turno {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 4.75rem;
+  min-height: 3.1rem;
+  border: 1.5px solid transparent;
+  border-radius: 0.8rem;
+  padding: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.celda-del-turno[data-estado="DISPONIBLE"] {
+  border-color: #9cc9ae;
+  background: white;
+  color: var(--color-botella);
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.celda-del-turno[data-estado="DISPONIBLE"]:hover {
+  border-color: var(--color-botella);
+  background: #f1f8f3;
+}
+
+.celda-del-turno[data-estado="DISPONIBLE"]:focus-visible {
+  outline: 3px solid var(--color-botella);
+  outline-offset: 2px;
+}
+
+.celda-del-turno[aria-pressed="true"] {
+  border-color: var(--color-cancha);
+  background: var(--color-capitan);
+  color: var(--color-tinta);
+  box-shadow: 0 0 0 3px rgb(23 87 63 / 0.18);
+}
+
+.celda-del-turno[data-estado="PENDIENTE"] {
+  border-color: #ecd6a6;
+  background: repeating-linear-gradient(135deg, #fbf1dc 0 7px, #f6e6c4 7px 14px);
+  color: #7a4e00;
+}
+
+.celda-del-turno[data-estado="OCUPADO"] {
+  background: var(--color-cancha);
+  color: rgb(244 246 239 / 0.85);
+}
+
+/* Las mismas franjas de obra que la ficha de una cancha en mantenimiento. */
+.celda-del-turno[data-estado="MANTENIMIENTO"] {
+  background: repeating-linear-gradient(135deg, #2a2f2c 0 8px, #e5b93c 8px 16px);
+  color: white;
+  text-shadow: 0 1px 2px black;
+}
+
+.celda-del-turno[data-estado="SIN_LUZ"],
+.celda-del-turno[data-estado="YA_EMPEZO"] {
+  border: 1.5px dashed var(--color-linea);
+  background: #eef1ec;
+  color: #6f7a73;
+  font-weight: 600;
+}
+
+/* «Tu turno»: al costado en pantallas anchas; en el celular sube desde abajo al elegir. */
+@media (max-width: 1023px) {
+  .tu-turno[data-elegido] {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 50;
+    max-height: 85dvh;
+    overflow-y: auto;
+    border-radius: 1.25rem 1.25rem 0 0;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -20px 40px -20px rgb(8 31 25 / 0.5);
+  }
+
+  .tu-turno:not([data-elegido]) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (max-width: 1023px) {
+  .tu-turno[data-elegido] {
+    animation: tu-turno-sube 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@keyframes tu-turno-sube {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.en-vivo__punto {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #2fa36b;
+}
+
+.en-vivo[data-conexion="reconectando"] .en-vivo__punto {
+  background: var(--color-alerta);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .en-vivo[data-conexion="conectado"] .en-vivo__punto {
+    animation: latido-en-vivo 2s infinite;
+  }
+}
+
+@keyframes latido-en-vivo {
+  0% {
+    box-shadow: 0 0 0 0 rgb(47 163 107 / 0.6);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px rgb(47 163 107 / 0);
+  }
+}
+
+/* La misma celda, en chico, para la leyenda. */
+.celda-del-turno.muestra-del-estado {
+  width: 1.5rem;
+  min-width: 0;
+  min-height: 0.9rem;
+  border-radius: 0.35rem;
+  padding: 0;
+}
