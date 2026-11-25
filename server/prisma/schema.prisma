@@ -70,6 +70,7 @@ model Usuario {
   cambiosDeAdicionales         CambioDeAdicional[]
   adelantosGuardados           AdelantoMinimo[]
   reservasComoTitular          Reserva[]
+  hojasDeReclamacion           HojaDeReclamacion[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -438,4 +439,90 @@ model CorreoSaliente {
 
   @@index([estado, proximoIntentoEn])
   @@map("correo_saliente")
+}
+
+/// Reclamo: disconformidad con el servicio. Queja: malestar con la atención.
+enum TipoDeHoja {
+  RECLAMO @map("reclamo")
+  QUEJA   @map("queja")
+
+  @@map("tipo_de_hoja")
+}
+
+enum ServicioReclamado {
+  RESERVA_DE_CANCHA  @map("reserva_de_cancha")
+  MATERIAL_ADICIONAL @map("material_adicional")
+  OTRO               @map("otro")
+
+  @@map("servicio_reclamado")
+}
+
+/// Por dónde quiere recibir la respuesta quien reclama.
+enum MedioDeRespuesta {
+  CORREO @map("correo")
+  CARTA  @map("carta")
+
+  @@map("medio_de_respuesta")
+}
+
+enum EstadoDeHoja {
+  NUEVA       @map("nueva")
+  EN_ATENCION @map("en_atencion")
+  RESPONDIDA  @map("respondida")
+
+  @@map("estado_de_hoja")
+}
+
+/// Hoja del Libro de Reclamaciones. Los datos personales y los textos libres van cifrados. No se borra.
+model HojaDeReclamacion {
+  id                            Int               @id @default(autoincrement())
+  /// Año y correlativo forman el número de la hoja: 000014-2026.
+  anio                          Int               @db.SmallInt
+  correlativo                   Int
+  codigoSeguimientoHash         String            @map("codigo_seguimiento_hash")
+  /// La cuenta de jugador si reclamó con sesión iniciada; así la ve en «Mis reclamos».
+  titularId                     Int?              @map("titular_id")
+  tipoDocumento                 TipoDocumento     @map("tipo_documento")
+  numeroDocumentoCifrado        String            @map("numero_documento_cifrado")
+  nombresCifrado                String            @map("nombres_cifrado")
+  apellidosCifrado              String            @map("apellidos_cifrado")
+  domicilioCifrado              String            @map("domicilio_cifrado")
+  telefonoCifrado               String            @map("telefono_cifrado")
+  correoCifrado                 String            @map("correo_cifrado")
+  esMenorDeEdad                 Boolean           @map("es_menor_de_edad")
+  representanteNombreCifrado    String?           @map("representante_nombre_cifrado")
+  representanteDomicilioCifrado String?           @map("representante_domicilio_cifrado")
+  representanteTelefonoCifrado  String?           @map("representante_telefono_cifrado")
+  representanteCorreoCifrado    String?           @map("representante_correo_cifrado")
+  servicio                      ServicioReclamado
+  montoReclamado                Decimal?          @map("monto_reclamado") @db.Decimal(10, 2)
+  descripcionDelServicioCifrada String?           @map("descripcion_del_servicio_cifrada")
+  /// Lo que marcó la persona; `tipo` cambia si administración la tramita como reclamo.
+  tipoMarcado                   TipoDeHoja        @map("tipo_marcado")
+  tipo                          TipoDeHoja
+  detalleCifrado                String            @map("detalle_cifrado")
+  pedidoCifrado                 String            @map("pedido_cifrado")
+  medioDeRespuesta              MedioDeRespuesta  @map("medio_de_respuesta")
+  estado                        EstadoDeHoja      @default(NUEVA)
+  registradaEn                  DateTime          @map("registrada_en") @db.Timestamptz(3)
+  /// Último día del plazo legal, en fecha de Lima.
+  fechaLimite                   DateTime          @map("fecha_limite") @db.Date
+  /// Sube en cada escritura: un guardado hecho sobre una versión vieja se rechaza.
+  version                       Int               @default(0)
+  creadoEn                      DateTime          @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn                 DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  titular                       Usuario?          @relation(fields: [titularId], references: [id])
+
+  @@unique([anio, correlativo])
+  @@index([estado, fechaLimite])
+  @@index([titularId])
+  @@map("hoja_de_reclamacion")
+}
+
+/// Último correlativo usado en cada año; se sube con un solo UPDATE para que dos hojas no tomen el mismo.
+model CorrelativoDeHoja {
+  anio   Int @id @db.SmallInt
+  ultimo Int
+
+  @@map("correlativo_de_hoja")
 }
