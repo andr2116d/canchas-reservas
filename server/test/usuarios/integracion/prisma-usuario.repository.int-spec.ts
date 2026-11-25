@@ -66,7 +66,7 @@ describe('PrismaUsuarioRepository', () => {
     const fecha = new Date();
     return repositorio.crear(jugador, {
       sesion: Sesion.preparar(randomBytes(32).toString('hex'), fecha),
-      aceptacion: { version: 'registro-1', fecha, canal: 'web' },
+      aceptacion: { version: '2026-11-24', fecha, canal: 'web' },
     });
   }
 

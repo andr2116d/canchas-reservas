@@ -13,7 +13,7 @@ export function unJugadorValido(
     correo: 'valeria.leon@gmail.com',
     celular: '987654321',
     contrasena: 'pichanga10',
-    versionLegalAceptada: 'registro-1',
+    versionLegalAceptada: '2026-11-24',
     ...cambios,
   };
 }

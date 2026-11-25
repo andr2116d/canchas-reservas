@@ -25,16 +25,28 @@ describe('POST /api/jugadores', () => {
     it('guarda la versión aceptada, el momento y el canal del registro', async () => {
       const respuesta = await registrar({
         ...unJugadorValido(),
-        versionLegalAceptada: 'registro-1',
+        versionLegalAceptada: '2026-11-24',
       });
 
       expect(respuesta.status).toBe(201);
       const usuario = await prisma.usuario.findFirstOrThrow();
       expect(usuario).toMatchObject({
-        versionLegalAceptada: 'registro-1',
+        versionLegalAceptada: '2026-11-24',
         canalAceptacionLegal: 'web',
         aceptacionLegalEn: expect.any(Date),
       });
+    });
+
+    it('rechaza la versión anterior de los documentos y pide revisarlos de nuevo', async () => {
+      const respuesta = await registrar({
+        ...unJugadorValido(),
+        versionLegalAceptada: 'registro-1',
+      });
+
+      expect(respuesta.status).toBe(400);
+      expect(respuesta.body.errores.versionLegalAceptada).toBe(
+        'Los documentos han cambiado. Recarga la página y revísalos.',
+      );
     });
 
     it('responde 201 con los nombres del jugador', async () => {
