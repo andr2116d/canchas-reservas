@@ -13,6 +13,7 @@ import { CorreoModule } from './modulos/correo/correo.module';
 import { DisponibilidadModule } from './modulos/disponibilidad/disponibilidad.module';
 import { HistorialModule } from './modulos/historial/historial.module';
 import { HorarioModule } from './modulos/horario/horario.module';
+import { ReclamosModule } from './modulos/reclamos/reclamos.module';
 import { TarifasModule } from './modulos/tarifas/tarifas.module';
 import { UsuariosModule } from './modulos/usuarios/usuarios.module';
 
@@ -38,6 +39,7 @@ const LIMITE_GENERAL = {
     HistorialModule,
     DisponibilidadModule,
     ClubModule,
+    ReclamosModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

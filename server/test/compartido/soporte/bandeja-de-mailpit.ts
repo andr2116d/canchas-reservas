@@ -48,3 +48,16 @@ export async function correosRecibidosPor(
     }),
   );
 }
+
+/** Espera a que lleguen `cantidad` correos a la dirección: el envío corre aparte de la respuesta. */
+export async function esperarCorreos(
+  direccion: string,
+  cantidad = 1,
+): Promise<CorreoRecibido[]> {
+  for (let intento = 0; intento < 50; intento++) {
+    const recibidos = await correosRecibidosPor(direccion);
+    if (recibidos.length >= cantidad) return recibidos;
+    await new Promise((listo) => setTimeout(listo, 100));
+  }
+  throw new Error(`No llegaron ${cantidad} correos a ${direccion}.`);
+}
