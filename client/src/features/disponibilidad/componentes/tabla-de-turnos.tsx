@@ -17,12 +17,13 @@ interface TablaDeTurnosProps {
 
 function CabeceraDelTurno({ turno }: { turno: TurnoDelMapa }) {
   return (
-    <th scope="row" className="py-2 pr-2 pl-4 text-left align-middle font-normal whitespace-nowrap">
+    <th scope="row" className="py-1.5 pr-3 pl-4 text-left align-middle font-normal whitespace-nowrap">
       <span className="font-titular text-2xl leading-none font-extrabold tabular-nums">{turno.desde}</span>
       <span className="ml-1 text-xs text-grava tabular-nums">a {turno.hasta}</span>
       {turno.corto && <span className="ml-1.5 rounded-full bg-tiza px-1.5 py-0.5 text-[0.65rem] font-bold text-grava">Turno corto</span>}
-      <span className="mt-0.5 block text-sm font-bold tabular-nums">{enSoles(turno.precio)}</span>
-      <span className="block text-xs text-grava tabular-nums">{turno.adelanto ? `Adelanto ${enSoles(turno.adelanto)}` : "Adelanto por definir"}</span>
+      <span className="mt-0.5 block text-xs text-grava tabular-nums">
+        <strong className="text-sm text-tinta">{enSoles(turno.precio)}</strong> · {turno.adelanto ? `Adelanto ${enSoles(turno.adelanto)}` : "Adelanto por definir"}
+      </span>
     </th>
   );
 }

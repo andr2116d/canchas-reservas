@@ -1,5 +1,7 @@
 /* Mapa de turnos: horas en filas, canchas en columnas; el color y el texto dicen el estado. */
 .mapa-de-turnos {
+  width: fit-content;
+  max-width: 100%;
   overflow-x: auto;
   border: 1px solid rgb(255 255 255 / 0.9);
   border-radius: 1.25rem;
@@ -8,7 +10,7 @@
 }
 
 .mapa-de-turnos table {
-  width: 100%;
+  width: auto;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -26,8 +28,9 @@
   display: grid;
   place-items: center;
   width: 100%;
-  min-width: 4.75rem;
-  min-height: 3.1rem;
+  min-width: 5.25rem;
+  max-width: 8rem;
+  min-height: 2.5rem;
   border: 1.5px solid transparent;
   border-radius: 0.8rem;
   padding: 0.25rem;
@@ -88,7 +91,14 @@
   font-weight: 600;
 }
 
-/* «Tu turno»: al costado en pantallas anchas; en el celular sube desde abajo al elegir. */
+/* «Tu turno»: al costado y fijo en pantallas anchas; en el celular sube desde abajo al elegir. */
+@media (min-width: 1024px) {
+  .tu-turno {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
 @media (max-width: 1023px) {
   .tu-turno[data-elegido] {
     position: fixed;

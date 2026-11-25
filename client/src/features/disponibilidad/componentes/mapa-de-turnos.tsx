@@ -56,7 +56,7 @@ export function MapaDeTurnos({ contexto }: { contexto: ContextoDelMapa }) {
       {error && <p role="alert" className="font-semibold text-error">{error}</p>}
       {tipo && <PestanasDeTipos mapa={mapa} activa={tipo.tipo} alElegir={setTipoElegido} />}
       <LeyendaDeEstados />
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_19rem]">
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,max-content)_19rem]">
         <div id={tipo ? `panel-${tipo.tipo}` : undefined} role={mapa.tipos.length > 1 ? "tabpanel" : undefined} aria-labelledby={tipo && mapa.tipos.length > 1 ? `pestana-${tipo.tipo}` : undefined} className="min-w-0">
           {mapa.local !== "ABIERTO" && <Aviso texto={SIN_TURNOS[mapa.local]} />}
           {mapa.local === "ABIERTO" && !tipo && <Aviso texto="Todavía no hay canchas para reservar." />}
