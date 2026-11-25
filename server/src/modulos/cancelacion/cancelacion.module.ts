@@ -35,5 +35,6 @@ import { PrismaReglaDeCancelacionRepository } from './infraestructura/persistenc
       useFactory: () => new SimularCancelacionUseCase(),
     },
   ],
+  exports: [REGLA_DE_CANCELACION_REPOSITORY],
 })
 export class CancelacionModule {}
