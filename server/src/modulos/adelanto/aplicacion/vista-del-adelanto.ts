@@ -1,10 +1,10 @@
 import type { VersionDelAdelanto } from '../dominio/adelanto.repository';
 
-/** Una versión del adelanto lista para mostrar. */
+/** Una versión del adelanto lista para mostrar, con los mismos campos que las demás versiones. */
 export interface VistaDelAdelanto {
   porcentaje: number;
-  guardadoEn: Date;
-  guardadoPor: string;
+  guardadaEn: Date;
+  guardadaPor: string;
 }
 
 export function aVista({
@@ -12,5 +12,9 @@ export function aVista({
   guardadoEn,
   guardadoPor,
 }: VersionDelAdelanto): VistaDelAdelanto {
-  return { porcentaje: porcentaje.valor, guardadoEn, guardadoPor };
+  return {
+    porcentaje: porcentaje.valor,
+    guardadaEn: guardadoEn,
+    guardadaPor: guardadoPor,
+  };
 }

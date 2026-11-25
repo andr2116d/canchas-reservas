@@ -39,7 +39,7 @@ describe('Adelanto mínimo', () => {
     expect(body.cambio).toBe(true);
     expect(body.vigente).toMatchObject({
       porcentaje: 50,
-      guardadoPor: 'Valeria León Paredes',
+      guardadaPor: 'Valeria León Paredes',
     });
     expect(await prisma.adelantoMinimo.count()).toBe(1);
   });

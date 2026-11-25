@@ -29,8 +29,8 @@ describe('Definir el adelanto mínimo', () => {
     expect(cambio).toBe(true);
     expect(vigente).toEqual({
       porcentaje: 50,
-      guardadoEn: reloj.ahora(),
-      guardadoPor: `Administración ${ADMINISTRADOR}`,
+      guardadaEn: reloj.ahora(),
+      guardadaPor: `Administración ${ADMINISTRADOR}`,
     });
   });
 
