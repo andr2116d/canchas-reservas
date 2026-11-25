@@ -17,6 +17,8 @@ import { ESCUCHA_DE_CAMBIOS } from '../../../src/modulos/disponibilidad/aplicaci
 import { EscuchaDeCambiosDePrueba } from '../../disponibilidad/dobles/escucha-de-cambios-de-prueba';
 import { OCUPACION_DEL_DIA } from '../../../src/modulos/disponibilidad/aplicacion/ocupacion-del-dia.port';
 import { OcupacionDePrueba } from '../../disponibilidad/dobles/ocupacion-de-prueba';
+import { CATALOGO_DEL_CLUB } from '../../../src/modulos/club/aplicacion/catalogo-del-club.port';
+import { CatalogoDePrueba } from '../../club/dobles/catalogo-de-prueba';
 import { ADELANTO_REPOSITORY } from '../../../src/modulos/adelanto/dominio/adelanto.repository';
 import { RESERVAS_DE_CANCHA } from '../../../src/modulos/canchas/aplicacion/reservas-de-cancha.port';
 import { BLOQUEO_REPOSITORY } from '../../../src/modulos/canchas/dominio/bloqueo.repository';
@@ -70,6 +72,7 @@ function crearDobles() {
     adelanto: new EnMemoriaAdelantoRepository(),
     ocupacion: new OcupacionDePrueba(),
     escucha: new EscuchaDeCambiosDePrueba(),
+    catalogo: new CatalogoDePrueba(),
     historial: new EnMemoriaHistorialRepository(),
     usuarios: new EnMemoriaUsuarioRepository(),
     recepcionistas: new EnMemoriaRecepcionistaRepository(),
@@ -94,6 +97,7 @@ function dobleDeCadaPuerto(dobles: Dobles): [symbol, unknown][] {
     [ADELANTO_REPOSITORY, dobles.adelanto],
     [OCUPACION_DEL_DIA, dobles.ocupacion],
     [ESCUCHA_DE_CAMBIOS, dobles.escucha],
+    [CATALOGO_DEL_CLUB, dobles.catalogo],
     [HISTORIAL_REPOSITORY, dobles.historial],
     [USUARIO_REPOSITORY, dobles.usuarios],
     [RECEPCIONISTA_REPOSITORY, dobles.recepcionistas],

@@ -8,6 +8,7 @@ import { AdelantoModule } from './modulos/adelanto/adelanto.module';
 import { CancelacionModule } from './modulos/cancelacion/cancelacion.module';
 import { AdicionalesModule } from './modulos/adicionales/adicionales.module';
 import { CanchasModule } from './modulos/canchas/canchas.module';
+import { ClubModule } from './modulos/club/club.module';
 import { DisponibilidadModule } from './modulos/disponibilidad/disponibilidad.module';
 import { HistorialModule } from './modulos/historial/historial.module';
 import { HorarioModule } from './modulos/horario/horario.module';
@@ -34,6 +35,7 @@ const LIMITE_GENERAL = {
     AdicionalesModule,
     HistorialModule,
     DisponibilidadModule,
+    ClubModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
