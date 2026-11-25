@@ -5,6 +5,8 @@
     "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.1"
+    "@playwright/test": "^1.65.1",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.1"
   }
 }
