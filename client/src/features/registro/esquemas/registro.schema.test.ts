@@ -12,7 +12,7 @@ function unRegistroValido(cambios: Partial<DatosRegistro> = {}): DatosRegistro {
     correo: "valeria.leon@gmail.com",
     contrasena: "pichanga10",
     dorsal: "",
-    versionLegalAceptada: "registro-1",
+    versionLegalAceptada: "2026-11-24",
     ...cambios,
   };
 }

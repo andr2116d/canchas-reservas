@@ -1,3 +1,16 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+
+/** Abre el documento completo en otra pestaña para no perder lo escrito en el formulario. */
+function EnlaceAlDocumento({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} target="_blank" rel="noopener noreferrer" className="font-semibold text-botella underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-botella">
+      {children}
+      <span className="sr-only"> (se abre en otra pestaña)</span>
+    </Link>
+  );
+}
+
 /** Tarjeta de términos y privacidad que se abre junto a la casilla de aceptación. */
 export function DocumentosDelRegistro() {
   return (
@@ -17,8 +30,12 @@ export function DocumentosDelRegistro() {
           <p>Usamos tus nombres, apellidos y documento para identificar al titular y tu fecha de nacimiento para comprobar que eres mayor de edad.</p>
           <p>Tu correo y contraseña te permiten acceder a la cuenta. Pedimos tu celular para contactarte sobre tus reservas. Puedes elegir un dorsal para tu ficha.</p>
           <p>Protegemos tus datos de identificación y contacto con cifrado y guardamos una huella protegida de tu contraseña.</p>
-          <p>Puedes ejercer tus derechos de acceso, rectificación, cancelación y oposición. Los datos del responsable, el canal de atención, los destinatarios y los plazos de conservación se precisarán en la versión para publicación.</p>
+          <p>Puedes ejercer tus derechos de acceso, rectificación, cancelación y oposición.</p>
         </section>
+        <p className="flex flex-wrap gap-x-4 gap-y-1 pt-4">
+          <EnlaceAlDocumento href="/legal/terminos">Leer los términos completos</EnlaceAlDocumento>
+          <EnlaceAlDocumento href="/legal/privacidad">Leer la política de privacidad completa</EnlaceAlDocumento>
+        </p>
       </div>
     </details>
   );

@@ -80,7 +80,14 @@ describe("RegistroDeJugador", () => {
       expect(terminos).toBeVisible();
       expect(screen.getByText(/usamos tus nombres, apellidos y documento/i)).toBeVisible();
       expect(screen.queryByText(/borrador para pruebas/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/versión registro-1/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/versión 2026-11-24/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/versión para publicación/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /términos completos/i })).toHaveAttribute("href", "/legal/terminos");
+      expect(screen.getByRole("link", { name: /política de privacidad completa/i })).toHaveAttribute("href", "/legal/privacidad");
+      for (const enlace of screen.getAllByRole("link", { name: /completos?|completa/i })) {
+        expect(enlace).toHaveAttribute("target", "_blank");
+        expect(enlace).toHaveAttribute("rel", "noopener noreferrer");
+      }
       await persona.click(leerDocumentos);
       expect(terminos).not.toBeVisible();
       expect(casillaLegal()).not.toBeChecked();
@@ -109,7 +116,7 @@ describe("RegistroDeJugador", () => {
         correo: "valeria@gmail.com",
         contrasena: "pichanga10",
         dorsal: "",
-        versionLegalAceptada: "registro-1",
+        versionLegalAceptada: "2026-11-24",
       });
       expect(reemplazarRuta).toHaveBeenCalledWith("/inicio");
     });

@@ -12,7 +12,7 @@ const DATOS: DatosRegistro = {
   correo: "valeria@gmail.com",
   contrasena: "pichanga10",
   dorsal: "10",
-  versionLegalAceptada: "registro-1",
+  versionLegalAceptada: "2026-11-24",
 };
 
 function responderCon(estado: number, cuerpo: object) {
