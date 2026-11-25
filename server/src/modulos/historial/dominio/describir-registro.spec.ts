@@ -227,4 +227,45 @@ describe('describirRegistro', () => {
       }),
     ).toEqual({ sujeto: null, detalle: [] });
   });
+
+  describe('reclamos', () => {
+    const hoja = (accion: string, detalle: unknown) =>
+      describirRegistro({
+        categoria: 'RECLAMOS',
+        accion: accion as never,
+        sujeto: 'Hoja 000014-2026',
+        detalle,
+      });
+
+    it('la hoja es el sujeto y abrirla no tiene detalle', () => {
+      expect(hoja('APERTURA', null)).toEqual({
+        sujeto: 'Hoja 000014-2026',
+        detalle: [],
+      });
+    });
+
+    it('la clasificación muestra el motivo anterior y el nuevo', () => {
+      expect(
+        hoja('CLASIFICACION', { antes: null, despues: 'ESTADO_DE_LA_CANCHA' })
+          .detalle,
+      ).toEqual([
+        { campo: 'Motivo', antes: null, despues: 'Estado de la cancha' },
+      ]);
+    });
+
+    it('el cambio de tipo muestra de queja a reclamo', () => {
+      expect(
+        hoja('CAMBIO_DE_TIPO', { antes: 'QUEJA', despues: 'RECLAMO' }).detalle,
+      ).toEqual([{ campo: 'Tipo', antes: 'Queja', despues: 'Reclamo' }]);
+    });
+
+    it('la respuesta muestra el medio y si fue dentro del plazo', () => {
+      expect(
+        hoja('RESPUESTA', { medio: 'CARTA', fueraDePlazo: true }).detalle,
+      ).toEqual([
+        { campo: 'Medio', antes: null, despues: 'Carta' },
+        { campo: 'Plazo', antes: null, despues: 'Fuera de plazo' },
+      ]);
+    });
+  });
 });

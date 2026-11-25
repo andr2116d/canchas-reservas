@@ -9,6 +9,7 @@ export const CATEGORIAS = [
   'MANTENIMIENTO',
   'ADICIONALES',
   'ACCESOS',
+  'RECLAMOS',
 ] as const;
 
 export type Categoria = (typeof CATEGORIAS)[number];
@@ -29,6 +30,10 @@ export const ACCIONES = [
   'LIBERACION_DE_BLOQUEO',
   'RETIRO_DE_BLOQUEO',
   'INICIO_DE_SESION',
+  'APERTURA',
+  'CLASIFICACION',
+  'CAMBIO_DE_TIPO',
+  'RESPUESTA',
 ] as const;
 
 export type Accion = (typeof ACCIONES)[number];

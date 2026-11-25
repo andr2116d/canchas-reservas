@@ -15,6 +15,7 @@ import {
   detalleDeBloqueo,
   detalleDeCancha,
 } from './detalle-del-catalogo';
+import { detalleDeReclamo } from './detalle-de-reclamos';
 import { type LineaDeDetalle, tamanoLegible } from './linea-de-detalle';
 
 /** Lo que trae cada registro antes de escribirlo para leerse. */
@@ -65,6 +66,8 @@ function lineas({
       );
     case 'ADICIONALES':
       return detalleDeAdicional(accion, detalle as Record<string, unknown>);
+    case 'RECLAMOS':
+      return detalleDeReclamo(accion, detalle as Record<string, unknown>);
     default:
       return [];
   }
