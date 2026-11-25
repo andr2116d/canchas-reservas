@@ -1,3 +1,4 @@
+import { ConflictoError } from '../../../compartido/dominio/dominio.error';
 import type { Monto } from '../../../compartido/dominio/monto.value-object';
 import {
   type Consumidor,
@@ -5,15 +6,24 @@ import {
   leerDatosDeLaHoja,
   type Representante,
 } from './lectura-de-la-hoja';
-import type {
-  EstadoDeHoja,
-  MedioDeRespuesta,
-  Motivo,
-  Servicio,
-  TipoDeHoja,
+import {
+  elegir,
+  type EstadoDeHoja,
+  type MedioDeRespuesta,
+  type Motivo,
+  MOTIVOS,
+  type Servicio,
+  type TipoDeHoja,
 } from './opciones-de-la-hoja';
 import type { NumeroDeHoja } from './numero-de-hoja.value-object';
 import { fechaLimiteDeRespuesta } from './plazo-de-respuesta';
+import {
+  type DatosDeLaRespuesta,
+  fechaDeComunicacion,
+  leerRespuesta,
+  type RespuestaDeLaHoja,
+} from './respuesta-de-la-hoja';
+import { validarCampos } from '../../../compartido/dominio/validar-campos';
 
 export type { DatosDeLaHoja } from './lectura-de-la-hoja';
 
@@ -38,6 +48,15 @@ export interface PropiedadesDeLaHoja {
   motivo: Motivo | null;
   registradaEn: Date;
   fechaLimite: string;
+  /** Cuándo administración la abrió por primera vez. */
+  abiertaEn: Date | null;
+  respuesta: RespuestaDeLaHoja | null;
+}
+
+/** Un cambio con su valor anterior y el nuevo, para la auditoría. */
+export interface Cambio<T> {
+  antes: T;
+  despues: T;
 }
 
 /** Hoja del Libro de Reclamaciones (DS 011-2011-PCM, art. 5): lo que pide y cómo se atiende. */
@@ -86,6 +105,8 @@ export class HojaDeReclamacion {
       motivo: null,
       registradaEn,
       fechaLimite: fechaLimiteDeRespuesta(registradaEn),
+      abiertaEn: null,
+      respuesta: null,
     });
   }
 
@@ -95,6 +116,70 @@ export class HojaDeReclamacion {
     propiedades: PropiedadesDeLaHoja,
   ): HojaDeReclamacion {
     return new HojaDeReclamacion(id, numero, { ...propiedades });
+  }
+
+  /** La primera vez que administración la abre pasa a «en atención». Devuelve si cambió. */
+  abrir(momento: Date): boolean {
+    if (this.propiedades.estado !== 'NUEVA') return false;
+    this.propiedades.estado = 'EN_ATENCION';
+    this.propiedades.abiertaEn = momento;
+    return true;
+  }
+
+  /** Clasificación interna; devuelve el cambio o `null` si el motivo ya era ese. */
+  clasificar(texto: string): Cambio<Motivo | null> | null {
+    const { motivo } = validarCampos({
+      motivo: () => elegir(texto, MOTIVOS, 'Elige un motivo de la lista.'),
+    });
+    const antes = this.propiedades.motivo;
+    if (antes === motivo) return null;
+    this.propiedades.motivo = motivo;
+    return { antes, despues: motivo };
+  }
+
+  /** Si una queja describe un problema con el servicio, se tramita como reclamo (DS 101-2022-PCM). */
+  tramitarComoReclamo(): void {
+    if (this.propiedades.respuesta) {
+      throw new ConflictoError(
+        'La hoja ya fue respondida: su tipo ya no cambia.',
+        {},
+      );
+    }
+    if (this.propiedades.tipo === 'RECLAMO') {
+      throw new ConflictoError('Esta hoja ya se tramita como reclamo.', {});
+    }
+    this.propiedades.tipo = 'RECLAMO';
+  }
+
+  /** Registra las acciones adoptadas. Una vez respondida, la respuesta no se cambia. */
+  responder(datos: DatosDeLaRespuesta, momento: Date): void {
+    if (this.propiedades.respuesta) {
+      throw new ConflictoError(
+        'La hoja ya fue respondida. La respuesta no se cambia.',
+        {},
+      );
+    }
+    this.propiedades.respuesta = leerRespuesta(datos, {
+      medio: this.propiedades.medioDeRespuesta,
+      registradaEn: this.propiedades.registradaEn,
+      ahora: momento,
+    });
+    this.propiedades.abiertaEn ??= momento;
+    this.propiedades.estado = 'RESPONDIDA';
+  }
+
+  /** Respondida después de la fecha límite, contando el día en que la respuesta se comunicó. */
+  get fueraDePlazo(): boolean {
+    const { respuesta, fechaLimite } = this.propiedades;
+    return respuesta !== null && fechaDeComunicacion(respuesta) > fechaLimite;
+  }
+
+  get abiertaEn() {
+    return this.propiedades.abiertaEn;
+  }
+
+  get respuesta() {
+    return this.propiedades.respuesta;
   }
 
   /** Todo lo que guarda la hoja, para la persistencia y las vistas. */

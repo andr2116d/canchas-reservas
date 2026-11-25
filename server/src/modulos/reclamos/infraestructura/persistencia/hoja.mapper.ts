@@ -84,6 +84,8 @@ export class HojaMapper {
         motivo: null,
         registradaEn: fila.registradaEn,
         fechaLimite: fila.fechaLimite.toISOString().slice(0, 10),
+        abiertaEn: null,
+        respuesta: null,
       },
     );
   }
