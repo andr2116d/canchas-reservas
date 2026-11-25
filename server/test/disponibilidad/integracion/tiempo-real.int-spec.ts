@@ -18,6 +18,7 @@ describe('Avisos del mapa de turnos en tiempo real', () => {
     const { port } = app.getHttpServer().address() as AddressInfo;
     navegador = io(`http://localhost:${port}/disponibilidad`, {
       path: RUTA_DEL_TIEMPO_REAL,
+      addTrailingSlash: false,
       transports: ['websocket'],
     });
     await new Promise<void>((listo) =>

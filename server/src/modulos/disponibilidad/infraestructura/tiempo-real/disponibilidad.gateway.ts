@@ -12,6 +12,7 @@ export const RUTA_DEL_TIEMPO_REAL = '/api/tiempo-real';
   namespace: 'disponibilidad',
   path: RUTA_DEL_TIEMPO_REAL,
   serveClient: false,
+  addTrailingSlash: false,
   maxHttpBufferSize: 1024,
   cors: { origin: false },
 })
