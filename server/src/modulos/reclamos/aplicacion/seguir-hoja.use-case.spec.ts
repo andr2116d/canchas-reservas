@@ -10,6 +10,7 @@ import {
 import { SinDatosDelProveedorAdapter } from '../infraestructura/proveedor/sin-datos-del-proveedor.adapter';
 import { MisHojasUseCase } from './mis-hojas.use-case';
 import { RegistrarHojaUseCase } from './registrar-hoja.use-case';
+import { ResponderHojaUseCase } from './responder-hoja.use-case';
 import { SeguirHojaUseCase } from './seguir-hoja.use-case';
 
 const JUGADOR = 12;
@@ -60,6 +61,28 @@ describe('seguimiento de las hojas', () => {
         },
         detalle: 'La cancha estaba ocupada al llegar y no pudimos jugar.',
         pedido: 'Que devuelvan el adelanto completo.',
+        abiertaEn: null,
+        respuesta: null,
+      });
+    });
+
+    it('una hoja respondida muestra la respuesta y ya no cuenta días', async () => {
+      await registrar.ejecutar(unaHojaValida(), null);
+      await new ResponderHojaUseCase({
+        hojas,
+        correos: new CorreosDePrueba(),
+        reloj,
+      }).ejecutar('000001-2026', { texto: 'Devolvimos el adelanto.' }, 3);
+
+      const seguimiento = await seguir.ejecutar('000001-2026', 'K7QP4ZMD');
+
+      expect(seguimiento).toMatchObject({
+        estado: 'RESPONDIDA',
+        diasHabilesRestantes: null,
+        respuesta: {
+          texto: 'Devolvimos el adelanto.',
+          respondidaEn: reloj.ahora(),
+        },
       });
     });
 

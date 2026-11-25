@@ -81,12 +81,39 @@ export class HojaMapper {
         pedido: leer(fila.pedidoCifrado),
         medioDeRespuesta: fila.medioDeRespuesta,
         estado: fila.estado,
-        motivo: null,
+        motivo: fila.motivo,
         registradaEn: fila.registradaEn,
         fechaLimite: fila.fechaLimite.toISOString().slice(0, 10),
-        abiertaEn: null,
-        respuesta: null,
+        abiertaEn: fila.abiertaEn,
+        respuesta: this.respuestaDe(fila),
       },
     );
+  }
+
+  /** Lo que cambia al atender la hoja: estado, tipo, motivo y respuesta. */
+  aColumnasDeAtencion(hoja: HojaDeReclamacion) {
+    const respuesta = hoja.respuesta;
+    return {
+      tipo: hoja.tipo,
+      motivo: hoja.motivo,
+      estado: hoja.estado,
+      abiertaEn: hoja.abiertaEn,
+      respuestaCifrada: respuesta
+        ? this.cifrador.cifrar(respuesta.texto)
+        : null,
+      respondidaEn: respuesta?.respondidaEn ?? null,
+      cartaEnviadaEl: respuesta?.cartaEnviadaEl
+        ? new Date(`${respuesta.cartaEnviadaEl}T00:00:00.000Z`)
+        : null,
+    };
+  }
+
+  private respuestaDe(fila: FilaDeHoja) {
+    if (!fila.respuestaCifrada || !fila.respondidaEn) return null;
+    return {
+      texto: this.cifrador.descifrar(fila.respuestaCifrada),
+      respondidaEn: fila.respondidaEn,
+      cartaEnviadaEl: fila.cartaEnviadaEl?.toISOString().slice(0, 10) ?? null,
+    };
   }
 }

@@ -39,6 +39,8 @@ export function verSeguimiento(hoja: HojaDeReclamacion, hoy: string) {
     },
     detalle: hoja.detalle,
     pedido: hoja.pedido,
+    abiertaEn: hoja.abiertaEn,
+    respuesta: hoja.respuesta,
   };
 }
 
