@@ -23,6 +23,10 @@ import {
   OCUPACION_DEL_DIA,
   type OcupacionDelDia,
 } from './aplicacion/ocupacion-del-dia.port';
+import { ESCUCHA_DE_CAMBIOS } from './aplicacion/escucha-de-cambios.port';
+import { DisponibilidadGateway } from './infraestructura/tiempo-real/disponibilidad.gateway';
+import { PostgresEscuchaDeCambiosAdapter } from './infraestructura/tiempo-real/postgres-escucha-de-cambios.adapter';
+import { RetransmisionDeCambios } from './infraestructura/tiempo-real/retransmision-de-cambios';
 import { DisponibilidadController } from './infraestructura/http/disponibilidad.controller';
 import { PrismaOcupacionDelDiaAdapter } from './infraestructura/persistencia/prisma-ocupacion-del-dia.adapter';
 
@@ -33,12 +37,15 @@ type ReglasDelTurno = Pick<
 >;
 const REGLAS_DEL_TURNO = Symbol('REGLAS_DEL_TURNO');
 
-/** Mapa público de turnos de cada día, con su precio, adelanto y estado. */
+/** Mapa público de turnos de cada día, con su precio, adelanto y estado, y el aviso de sus cambios. */
 @Module({
   imports: [TarifasModule, HorarioModule, AdelantoModule],
   controllers: [DisponibilidadController],
   providers: [
     { provide: OCUPACION_DEL_DIA, useClass: PrismaOcupacionDelDiaAdapter },
+    { provide: ESCUCHA_DE_CAMBIOS, useClass: PostgresEscuchaDeCambiosAdapter },
+    DisponibilidadGateway,
+    RetransmisionDeCambios,
     {
       provide: REGLAS_DEL_TURNO,
       useFactory: (
