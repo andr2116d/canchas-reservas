@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
-import { SeccionEnPreparacion } from "@/compartido/marco/seccion-en-preparacion";
+import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
+import { MapaDeTurnos } from "@/features/disponibilidad/componentes/mapa-de-turnos";
 
 export const metadata: Metadata = { title: "Reservar · La Previa" };
 
 export default function PaginaDeReserva() {
-  return <SeccionEnPreparacion titulo="Reservar" descripcion="Elige cancha, día y hora para tu próximo partido." />;
+  return (
+    <>
+      <EncabezadoDeSeccion titulo="Reservar" descripcion="Elige el día y toca un turno libre para ver su precio y su adelanto." />
+      <MapaDeTurnos contexto="jugador" />
+    </>
+  );
 }
