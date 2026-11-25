@@ -25,7 +25,11 @@ import {
 } from './aplicacion/ocupacion-del-dia.port';
 import { ESCUCHA_DE_CAMBIOS } from './aplicacion/escucha-de-cambios.port';
 import { DisponibilidadGateway } from './infraestructura/tiempo-real/disponibilidad.gateway';
-import { PostgresEscuchaDeCambiosAdapter } from './infraestructura/tiempo-real/postgres-escucha-de-cambios.adapter';
+import {
+  CONFIGURACION,
+  type Configuracion,
+} from '../../compartido/infraestructura/configuracion/configuracion';
+import { PostgresEscucha } from '../../compartido/infraestructura/tiempo-real/postgres-escucha';
 import { RetransmisionDeCambios } from './infraestructura/tiempo-real/retransmision-de-cambios';
 import { DisponibilidadController } from './infraestructura/http/disponibilidad.controller';
 import { PrismaOcupacionDelDiaAdapter } from './infraestructura/persistencia/prisma-ocupacion-del-dia.adapter';
@@ -43,7 +47,12 @@ const REGLAS_DEL_TURNO = Symbol('REGLAS_DEL_TURNO');
   controllers: [DisponibilidadController],
   providers: [
     { provide: OCUPACION_DEL_DIA, useClass: PrismaOcupacionDelDiaAdapter },
-    { provide: ESCUCHA_DE_CAMBIOS, useClass: PostgresEscuchaDeCambiosAdapter },
+    {
+      provide: ESCUCHA_DE_CAMBIOS,
+      useFactory: (c: Configuracion) =>
+        new PostgresEscucha(c.urlBaseDeDatos, 'disponibilidad'),
+      inject: [CONFIGURACION],
+    },
     DisponibilidadGateway,
     RetransmisionDeCambios,
     {
