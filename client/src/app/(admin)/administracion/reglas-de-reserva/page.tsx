@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { ProveedorDelBorrador } from "@/compartido/horario/borrador";
 import { consultarHorario } from "@/compartido/horario/horario.servidor";
 import { PanelDePestana, PestanasDeHorarioYTarifas, ProveedorDePestanas } from "@/compartido/horario/pestanas";
+import { TarjetaDelAdelanto } from "@/features/adelanto/componentes/tarjeta-del-adelanto";
+import { consultarAdelanto } from "@/features/adelanto/servicios/adelanto.servidor";
 import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
 import { CargaDeContenido } from "@/compartido/ui/carga-de-contenido";
 import { FormularioDeRegla } from "@/features/cancelacion/componentes/formulario-de-regla";
@@ -18,14 +20,19 @@ export const metadata: Metadata = { title: "Reglas de reserva · La Previa" };
 
 /** Horario, tarifas y cancelación en pestañas; al costado, la vista previa de la pestaña elegida. */
 async function ReglasDeReserva() {
-  const [horario, { tarifas }, regla] = await Promise.all([consultarHorario(), consultarTarifas(), consultarRegla()]);
+  const [horario, { tarifas }, regla, adelanto] = await Promise.all([consultarHorario(), consultarTarifas(), consultarRegla(), consultarAdelanto()]);
   return (
     <ProveedorDelBorrador>
       <ProveedorDeLaRegla>
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="min-w-0">
             <PanelDePestana pestana="horario"><FormularioDeHorario consultado={horario} /></PanelDePestana>
-            <PanelDePestana pestana="tarifas"><TarifasDelLocal tarifas={tarifas} /></PanelDePestana>
+            <PanelDePestana pestana="tarifas">
+              <div className="flex flex-col gap-6">
+                <TarifasDelLocal tarifas={tarifas} />
+                <TarjetaDelAdelanto consultado={adelanto} />
+              </div>
+            </PanelDePestana>
             <PanelDePestana pestana="cancelacion"><FormularioDeRegla consultada={regla} /></PanelDePestana>
           </div>
           <div className="lg:sticky lg:top-24">
