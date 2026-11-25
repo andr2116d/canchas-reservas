@@ -73,6 +73,7 @@ model Usuario {
   hojasDeReclamacion           HojaDeReclamacion[]
   hojasRespondidas             HojaDeReclamacion[]  @relation("HojasRespondidas")
   cambiosDeHojas               CambioDeHoja[]
+  avisos                       Aviso[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -577,4 +578,26 @@ model CorrelativoDeHoja {
   ultimo Int
 
   @@map("correlativo_de_hoja")
+}
+
+enum TipoDeAviso {
+  NUEVO_RECLAMO      @map("nuevo_reclamo")
+  RECLAMO_RESPONDIDO @map("reclamo_respondido")
+
+  @@map("tipo_de_aviso")
+}
+
+/// Aviso para una persona en su campana. Sin datos personales: el tipo y a qué se refiere.
+model Aviso {
+  id             Int         @id @default(autoincrement())
+  destinatarioId Int         @map("destinatario_id")
+  tipo           TipoDeAviso
+  /// A qué se refiere, por ejemplo el número de una hoja: 000014-2026.
+  referencia     String
+  creadoEn       DateTime    @default(now()) @map("creado_en") @db.Timestamptz(3)
+  leidoEn        DateTime?   @map("leido_en") @db.Timestamptz(3)
+  destinatario   Usuario     @relation(fields: [destinatarioId], references: [id])
+
+  @@index([destinatarioId, creadoEn])
+  @@map("aviso")
 }
