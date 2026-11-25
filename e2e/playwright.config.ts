@@ -19,6 +19,11 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: `http://localhost:${PUERTO_WEB}`,
+    // Con la preferencia de cookies ya elegida el aviso no tapa la pantalla; la prueba del aviso la quita.
+    storageState: {
+      cookies: [{ name: "preferencia_de_cookies", value: "necesarias", domain: "localhost", path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" }],
+      origins: [],
+    },
     locale: "es-PE",
     trace: "retain-on-failure",
   },
