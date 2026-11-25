@@ -27,7 +27,7 @@ import { CanchasController } from './infraestructura/http/canchas.controller';
 import { EstadoDeCanchaController } from './infraestructura/http/estado-de-cancha.controller';
 import { PrismaBloqueoRepository } from './infraestructura/persistencia/prisma-bloqueo.repository';
 import { PrismaCanchaRepository } from './infraestructura/persistencia/prisma-cancha.repository';
-import { SinReservasAdapter } from './infraestructura/reservas/sin-reservas.adapter';
+import { PrismaReservasDeCanchaAdapter } from './infraestructura/reservas/prisma-reservas-de-cancha.adapter';
 
 const CON_RESERVAS = [CANCHA_REPOSITORY, RESERVAS_DE_CANCHA, RELOJ];
 
@@ -40,7 +40,7 @@ const CON_RESERVAS = [CANCHA_REPOSITORY, RESERVAS_DE_CANCHA, RELOJ];
   ],
   providers: [
     { provide: CANCHA_REPOSITORY, useClass: PrismaCanchaRepository },
-    { provide: RESERVAS_DE_CANCHA, useClass: SinReservasAdapter },
+    { provide: RESERVAS_DE_CANCHA, useClass: PrismaReservasDeCanchaAdapter },
     { provide: BLOQUEO_REPOSITORY, useClass: PrismaBloqueoRepository },
     {
       provide: BloquearCanchasUseCase,
