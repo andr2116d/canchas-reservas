@@ -10,6 +10,7 @@ export interface VueltaDeReparto {
 export class RepartoDeCorreos {
   private enCurso: Promise<void> | null = null;
   private otraVuelta = false;
+  private detenido = false;
 
   constructor(
     private readonly vuelta: VueltaDeReparto,
@@ -18,6 +19,7 @@ export class RepartoDeCorreos {
 
   /** Empieza un reparto o anota una vuelta más; la promesa termina cuando no queda nada pendiente. */
   disparar(): Promise<void> {
+    if (this.detenido) return this.enCurso ?? Promise.resolve();
     if (this.enCurso) {
       this.otraVuelta = true;
       return this.enCurso;
@@ -28,6 +30,13 @@ export class RepartoDeCorreos {
     return this.enCurso;
   }
 
+  /** Al apagar el server: no empieza vueltas nuevas y espera la que está en curso. */
+  detener(): Promise<void> {
+    this.detenido = true;
+    this.otraVuelta = false;
+    return this.enCurso ?? Promise.resolve();
+  }
+
   private async repartirMientrasHagaFalta(): Promise<void> {
     do {
       this.otraVuelta = false;
@@ -36,6 +45,6 @@ export class RepartoDeCorreos {
       } catch (error) {
         this.alFallar(error);
       }
-    } while (this.otraVuelta);
+    } while (this.otraVuelta && !this.detenido);
   }
 }

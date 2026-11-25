@@ -90,4 +90,25 @@ describe('RepartoDeCorreos', () => {
 
     expect(errores).toEqual([new Error('Base caída.')]);
   });
+
+  it('al detenerse espera la vuelta en curso y ya no empieza otras', async () => {
+    let vueltas = 0;
+    let soltar: () => void = () => undefined;
+    const repartir = {
+      ejecutar: () => {
+        vueltas++;
+        return new Promise<void>((listo) => (soltar = listo));
+      },
+    };
+    const reparto = new RepartoDeCorreos(repartir, () => undefined);
+    void reparto.disparar();
+
+    const detenido = reparto.detener();
+    void reparto.disparar();
+    soltar();
+    await detenido;
+    await reparto.disparar();
+
+    expect(vueltas).toBe(1);
+  });
 });

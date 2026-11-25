@@ -1,7 +1,7 @@
 import {
   Injectable,
   type OnApplicationBootstrap,
-  type OnApplicationShutdown,
+  type OnModuleDestroy,
 } from '@nestjs/common';
 import { RepartoDeCorreos } from '../aplicacion/reparto-de-correos';
 
@@ -10,7 +10,7 @@ const SEGUNDOS_ENTRE_VUELTAS = 60;
 /** Pasa por la bandeja al arrancar y cada minuto, para enviar los reintentos que ya tocan. */
 @Injectable()
 export class RepartoPeriodicoDeCorreos
-  implements OnApplicationBootstrap, OnApplicationShutdown
+  implements OnApplicationBootstrap, OnModuleDestroy
 {
   private temporizador?: NodeJS.Timeout;
 
@@ -25,7 +25,9 @@ export class RepartoPeriodicoDeCorreos
     this.temporizador.unref();
   }
 
-  onApplicationShutdown(): void {
+  /** Antes de cerrar la base, espera el envío en curso para no cortarlo a la mitad. */
+  async onModuleDestroy(): Promise<void> {
     clearInterval(this.temporizador);
+    await this.reparto.detener();
   }
 }
