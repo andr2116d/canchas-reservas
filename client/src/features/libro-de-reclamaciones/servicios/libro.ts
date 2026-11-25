@@ -87,6 +87,17 @@ export interface Seguimiento {
   respuesta: Respuesta | null;
 }
 
+/** Una fila de «Mis reclamos». */
+export interface ResumenDeHoja {
+  numero: string;
+  tipo: TipoDeHoja;
+  estado: EstadoDeHoja;
+  registradaEn: string;
+  fechaLimite: string;
+  diasHabilesRestantes: number | null;
+  resumen: string;
+}
+
 export const NOMBRE_DEL_TIPO: Record<TipoDeHoja, string> = { RECLAMO: "Reclamo", QUEJA: "Queja" };
 
 export const NOMBRE_DEL_SERVICIO: Record<Servicio, string> = {

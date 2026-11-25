@@ -41,7 +41,10 @@ export const RUTA_DE_LA_CUENTA: Record<Rol, string> = {
 
 /** Opciones del menú de la cuenta de cada rol; «Cerrar sesión» va siempre al final. */
 export const OPCIONES_DE_LA_CUENTA: Record<Rol, Seccion[]> = {
-  JUGADOR: [{ ruta: RUTA_DE_LA_CUENTA.JUGADOR, texto: "Ver mi cuenta" }],
+  JUGADOR: [
+    { ruta: RUTA_DE_LA_CUENTA.JUGADOR, texto: "Ver mi cuenta" },
+    { ruta: "/inicio/reclamos", texto: "Mis reclamos" },
+  ],
   RECEPCIONISTA: [{ ruta: RUTA_DE_LA_CUENTA.RECEPCIONISTA, texto: "Ver mi cuenta" }],
   ADMINISTRADOR: [
     { ruta: RUTA_DE_LA_CUENTA.ADMINISTRADOR, texto: "Ver mi cuenta" },
