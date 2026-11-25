@@ -410,3 +410,32 @@ model Reserva {
   @@index([titularId])
   @@map("reserva")
 }
+
+enum EstadoDeCorreo {
+  PENDIENTE @map("pendiente")
+  ENVIADO   @map("enviado")
+  FALLIDO   @map("fallido")
+
+  @@map("estado_de_correo")
+}
+
+/// Bandeja de salida: cada correo del servicio con su estado de envío. Queda como constancia de lo enviado.
+model CorreoSaliente {
+  id                  Int            @id @default(autoincrement())
+  destinatarioCifrado String         @map("destinatario_cifrado")
+  /// Sin datos personales: solo el motivo del correo y, si aplica, el número de la hoja.
+  asunto              String
+  textoCifrado        String         @map("texto_cifrado")
+  htmlCifrado         String         @map("html_cifrado")
+  estado              EstadoDeCorreo @default(PENDIENTE)
+  intentos            Int            @default(0) @db.SmallInt
+  /// Desde cuándo se puede volver a tomar: el próximo reintento o el fin de la reserva de quien lo envía.
+  proximoIntentoEn    DateTime       @map("proximo_intento_en") @db.Timestamptz(3)
+  ultimoError         String?        @map("ultimo_error")
+  enviadoEn           DateTime?      @map("enviado_en") @db.Timestamptz(3)
+  creadoEn            DateTime       @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn       DateTime       @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  @@index([estado, proximoIntentoEn])
+  @@map("correo_saliente")
+}
