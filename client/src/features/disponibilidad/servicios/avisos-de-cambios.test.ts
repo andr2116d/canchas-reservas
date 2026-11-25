@@ -17,7 +17,7 @@ describe("escucharCambios", () => {
   it("se conecta al canal del mapa por la ruta de la API", () => {
     escucharCambios({ alCambiar: vi.fn(), alCambiarConexion: vi.fn() });
 
-    expect(io).toHaveBeenCalledWith("/disponibilidad", { path: "/api/tiempo-real" });
+    expect(io).toHaveBeenCalledWith("/disponibilidad", { path: "/api/tiempo-real", addTrailingSlash: false });
   });
 
   it("avisa cada cambio del server", () => {

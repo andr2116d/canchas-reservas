@@ -15,7 +15,8 @@ interface AvisosDeCambios {
  * por si algo pasó mientras no había conexión. Devuelve cómo dejar de escuchar.
  */
 export function escucharCambios({ alCambiar, alCambiarConexion }: AvisosDeCambios): () => void {
-  const canal = io("/disponibilidad", { path: RUTA });
+  // Sin barra final: así la ruta coincide con el rewrite de /api en Next.
+  const canal = io("/disponibilidad", { path: RUTA, addTrailingSlash: false });
   let primeraConexion = true;
   canal.on("cambio", alCambiar);
   canal.on("connect", () => {
