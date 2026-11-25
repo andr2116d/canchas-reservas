@@ -195,4 +195,38 @@ describe('atención de las hojas por administración', () => {
     );
     expect(conFecha.body.respuesta).toMatchObject({ cartaEnviadaEl: HOY });
   });
+
+  it('cada acción queda en el historial; la respuesta como importante', async () => {
+    await registrar();
+    await como(api().post(`/api/reclamos/${PRIMERA}/apertura`));
+    await como(api().put(`/api/reclamos/${PRIMERA}/motivo`)).send({
+      motivo: 'OTRO',
+    });
+    await como(api().post(`/api/reclamos/${PRIMERA}/respuesta`)).send({
+      texto: 'Listo.',
+    });
+
+    const { body } = await como(
+      api().get('/api/historial').query({ categoria: 'RECLAMOS' }),
+    );
+
+    expect(
+      body.registros.map((r: { accion: string; importante: boolean }) => [
+        r.accion,
+        r.importante,
+      ]),
+    ).toEqual([
+      ['RESPUESTA', true],
+      ['CLASIFICACION', false],
+      ['APERTURA', false],
+    ]);
+    expect(body.registros[0]).toMatchObject({
+      sujeto: `Hoja ${PRIMERA}`,
+      autor: { nombre: 'Valeria León Paredes' },
+      detalle: [
+        { campo: 'Medio', antes: null, despues: 'Correo' },
+        { campo: 'Plazo', antes: null, despues: 'Dentro del plazo' },
+      ],
+    });
+  });
 });
