@@ -3,13 +3,16 @@ import { useId } from "react";
 const ANCHO = 220;
 const BASE = 22;
 
+// Con dos decimales, el server y el navegador escriben el mismo trazo aunque difieran en el último dígito.
+const n = (valor: number) => Math.round(valor * 100) / 100;
+
 /** Hojas de pasto a lo largo de la línea: más altas al centro, inclinadas y sin repetir el patrón. */
-const HOJAS = Array.from({ length: 44 }, (_, indice) => {
+export const HOJAS = Array.from({ length: 44 }, (_, indice) => {
   const x = 4 + indice * 4.9;
   const centro = Math.sin((Math.PI * indice) / 43);
   const alto = 3 + 7 * centro + ((indice * 7) % 5) * 0.8;
   const inclinacion = ((indice * 5) % 7) - 3;
-  return `M${x} ${BASE}Q${x + 0.8} ${BASE - alto / 2} ${x + 1.6 + inclinacion} ${BASE - alto}Q${x + 2} ${BASE - alto / 2} ${x + 3.2} ${BASE}Z`;
+  return `M${n(x)} ${BASE}Q${n(x + 0.8)} ${n(BASE - alto / 2)} ${n(x + 1.6 + inclinacion)} ${n(BASE - alto)}Q${n(x + 2)} ${n(BASE - alto / 2)} ${n(x + 3.2)} ${BASE}Z`;
 }).join("");
 
 /** Franja de césped donde pica la pelota; se desvanece en los extremos para no parecer una caja. */
