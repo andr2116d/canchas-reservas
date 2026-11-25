@@ -7,9 +7,14 @@ import type { EnviadorDeCorreo } from './enviador-de-correo.port';
 const CORREOS_POR_VUELTA = 20;
 const LARGO_MAXIMO_DEL_ERROR = 500;
 
+// Los servidores SMTP suelen repetir la dirección en el error; se borra antes de guardarlo.
+const DIRECCION_DE_CORREO = /[^\s<>@"']+@[^\s<>@"']+/g;
+
 function describir(error: unknown): string {
   const mensaje = error instanceof Error ? error.message : String(error);
-  return mensaje.slice(0, LARGO_MAXIMO_DEL_ERROR);
+  return mensaje
+    .replace(DIRECCION_DE_CORREO, '[correo]')
+    .slice(0, LARGO_MAXIMO_DEL_ERROR);
 }
 
 /** Envía los correos que toca y reintenta más tarde los que fallan, hasta un máximo de intentos. */

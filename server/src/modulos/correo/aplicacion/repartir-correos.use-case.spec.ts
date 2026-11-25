@@ -93,4 +93,13 @@ describe('RepartirCorreosUseCase', () => {
 
     expect(enviador.enviados).toHaveLength(1);
   });
+
+  it('el error que se guarda no lleva direcciones de correo, que son datos personales', async () => {
+    await bandeja.encolar(unCorreo());
+    enviador.fallarLasProximas(1, '550 5.1.1 <valeria.leon@gmail.com>: no existe');
+
+    await repartir.ejecutar();
+
+    expect(bandeja.ultimoErrorDe(1)).toBe('550 5.1.1 <[correo]>: no existe');
+  });
 });

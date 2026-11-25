@@ -89,6 +89,10 @@ export class EnMemoriaBandejaDeSalida implements BandejaDeSalida {
     return { estado, intentos };
   }
 
+  ultimoErrorDe(id: number): string | undefined {
+    return this.fila(id).ultimoError;
+  }
+
   private fila(id: number): Fila {
     const fila = this.filas.find((f) => f.id === id);
     if (!fila) throw new Error(`No hay correo ${id}.`);

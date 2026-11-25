@@ -5,15 +5,17 @@ import type { Correo } from '../../../src/modulos/correo/dominio/correo';
 export class EnviadorDeCorreoDePrueba implements EnviadorDeCorreo {
   readonly enviados: Correo[] = [];
   private fallasPendientes = 0;
+  private mensajeDeFalla = 'El servidor de correo no respondió.';
 
-  fallarLasProximas(veces: number): void {
+  fallarLasProximas(veces: number, mensaje?: string): void {
     this.fallasPendientes = veces;
+    if (mensaje) this.mensajeDeFalla = mensaje;
   }
 
   enviar(correo: Correo): Promise<void> {
     if (this.fallasPendientes > 0) {
       this.fallasPendientes--;
-      return Promise.reject(new Error('El servidor de correo no respondió.'));
+      return Promise.reject(new Error(this.mensajeDeFalla));
     }
     this.enviados.push({ ...correo });
     return Promise.resolve();
