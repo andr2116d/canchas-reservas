@@ -19,6 +19,10 @@ describe('leerConfiguracionDeCorreo', () => {
     });
   });
 
+  it('sin NODE_ENV (como en npm run dev) también usa el servidor de prueba local', () => {
+    expect(leerConfiguracionDeCorreo({}).servidor).toBe('localhost');
+  });
+
   it('en producción lee el servidor, las credenciales y el remitente, y exige TLS', () => {
     expect(leerConfiguracionDeCorreo(PRODUCCION)).toEqual({
       servidor: 'email-smtp.us-east-1.amazonaws.com',

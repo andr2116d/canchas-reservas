@@ -1,6 +1,5 @@
 import {
   type Entorno,
-  esEntornoLocal,
   exigir,
   leerEntero,
 } from '../../../../compartido/infraestructura/configuracion/configuracion';
@@ -30,13 +29,13 @@ function leerRemitente(entorno: Entorno): string {
 }
 
 /**
- * En desarrollo y pruebas usa Mailpit en localhost:1025. En producción exige el servidor,
- * las credenciales y el remitente del proveedor (por ejemplo, la interfaz SMTP de Amazon SES).
+ * Fuera de producción (NODE_ENV distinto de `production`) usa Mailpit en localhost:1025. En
+ * producción exige el servidor, las credenciales y el remitente del proveedor (por ejemplo, SES).
  */
 export function leerConfiguracionDeCorreo(
   entorno: Entorno,
 ): ConfiguracionDeCorreo {
-  if (esEntornoLocal(entorno)) {
+  if (entorno.NODE_ENV !== 'production') {
     return {
       servidor: entorno.SMTP_SERVIDOR || 'localhost',
       puerto: leerEntero(entorno, 'SMTP_PUERTO', 1025),
