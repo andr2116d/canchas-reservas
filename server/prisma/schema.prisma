@@ -71,6 +71,8 @@ model Usuario {
   adelantosGuardados           AdelantoMinimo[]
   reservasComoTitular          Reserva[]
   hojasDeReclamacion           HojaDeReclamacion[]
+  hojasRespondidas             HojaDeReclamacion[]  @relation("HojasRespondidas")
+  cambiosDeHojas               CambioDeHoja[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -511,12 +513,62 @@ model HojaDeReclamacion {
   version                       Int               @default(0)
   creadoEn                      DateTime          @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn                 DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  /// Clasificación interna que pone administración.
+  motivo                        MotivoDeReclamo?
+  abiertaEn                     DateTime?         @map("abierta_en") @db.Timestamptz(3)
+  /// Acciones adoptadas por el proveedor; no se editan después de responder.
+  respuestaCifrada              String?           @map("respuesta_cifrada")
+  respondidaEn                  DateTime?         @map("respondida_en") @db.Timestamptz(3)
+  respondidaPorId               Int?              @map("respondida_por_id")
+  /// Si la persona eligió carta, el día de Lima en que se envió.
+  cartaEnviadaEl                DateTime?         @map("carta_enviada_el") @db.Date
   titular                       Usuario?          @relation(fields: [titularId], references: [id])
+  respondidaPor                 Usuario?          @relation("HojasRespondidas", fields: [respondidaPorId], references: [id])
+  cambios                       CambioDeHoja[]
 
   @@unique([anio, correlativo])
   @@index([estado, fechaLimite])
   @@index([titularId])
   @@map("hoja_de_reclamacion")
+}
+
+/// Clasificación interna de una hoja.
+enum MotivoDeReclamo {
+  RESERVA_Y_PAGO           @map("reserva_y_pago")
+  CANCELACION_Y_DEVOLUCION @map("cancelacion_y_devolucion")
+  ESTADO_DE_LA_CANCHA      @map("estado_de_la_cancha")
+  ATENCION_DEL_PERSONAL    @map("atencion_del_personal")
+  MATERIAL_ADICIONAL       @map("material_adicional")
+  WEB_Y_CUENTA             @map("web_y_cuenta")
+  OTRO                     @map("otro")
+
+  @@map("motivo_de_reclamo")
+}
+
+enum AccionSobreHoja {
+  APERTURA       @map("apertura")
+  CLASIFICACION  @map("clasificacion")
+  CAMBIO_DE_TIPO @map("cambio_de_tipo")
+  RESPUESTA      @map("respuesta")
+
+  @@map("accion_sobre_hoja")
+}
+
+/// Auditoría de la atención de cada hoja: quién hizo qué y cuándo.
+model CambioDeHoja {
+  id             Int               @id @default(autoincrement())
+  hojaId         Int               @map("hoja_id")
+  accion         AccionSobreHoja
+  /// En una clasificación o cambio de tipo, el antes y el después; en una respuesta, el medio y si fue fuera de plazo.
+  detalle        Json?
+  ejecutadoPorId Int               @map("ejecutado_por_id")
+  ocurridoEn     DateTime          @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  hoja           HojaDeReclamacion @relation(fields: [hojaId], references: [id])
+  ejecutadoPor   Usuario           @relation(fields: [ejecutadoPorId], references: [id])
+
+  @@index([hojaId, ocurridoEn])
+  @@index([ocurridoEn])
+  @@map("cambio_de_hoja")
 }
 
 /// Último correlativo usado en cada año; se sube con un solo UPDATE para que dos hojas no tomen el mismo.
