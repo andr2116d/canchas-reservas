@@ -6,7 +6,7 @@ import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 import { useEdicionDeCancha } from "../hooks/use-edicion-de-cancha";
 import type { Cancha } from "../servicios/canchas";
 import { CampoDelNombre, SelectorDeDetalles, SelectorDeLuz, SelectorDeTamano } from "./controles-de-cancha";
-import { PlantaDeCancha } from "./planta-de-cancha";
+import { PlantaDeCancha } from "@/compartido/canchas/planta-de-cancha";
 import { ReservasAfectadas } from "./reservas-afectadas";
 
 const LARGO_DE_LA_NOTA = 200;

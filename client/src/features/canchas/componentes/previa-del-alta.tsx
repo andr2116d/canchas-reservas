@@ -1,6 +1,6 @@
 import type { Caracteristica } from "../servicios/canchas";
 import type { CanchaPropuesta } from "../utilidades/preparar-alta";
-import { PlantaDeCancha } from "./planta-de-cancha";
+import { PlantaDeCancha } from "@/compartido/canchas/planta-de-cancha";
 
 interface PreviaDelAltaProps {
   canchas: Pick<CanchaPropuesta, "clave" | "tipo" | "nombre">[];

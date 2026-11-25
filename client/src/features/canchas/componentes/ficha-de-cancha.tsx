@@ -7,7 +7,7 @@ import { TEXTO_DE_CARACTERISTICA, type Cancha } from "../servicios/canchas";
 import { describirHasta, describirRango } from "../utilidades/rango-en-lima";
 import { AccionesDeCancha } from "./acciones-de-cancha";
 import { FormularioDeCancha } from "./formulario-de-cancha";
-import { PlantaDeCancha } from "./planta-de-cancha";
+import { PlantaDeCancha } from "@/compartido/canchas/planta-de-cancha";
 
 interface FichaDeCanchaProps {
   cancha: Cancha;
