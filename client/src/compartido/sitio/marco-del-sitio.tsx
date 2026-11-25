@@ -8,10 +8,14 @@ export function MarcoDelSitio({ children }: { children: ReactNode }) {
   return (
     <div className="sitio">
       <a href="#contenido" className="saltar-al-contenido">Saltar al contenido</a>
-      <BarraDelSitio />
+      <div className="print:hidden">
+        <BarraDelSitio />
+      </div>
       <main id="contenido" tabIndex={-1} className="outline-none">{children}</main>
-      <PieDelSitio />
-      <AvisoDeCookies />
+      <div className="print:hidden">
+        <PieDelSitio />
+        <AvisoDeCookies />
+      </div>
     </div>
   );
 }
