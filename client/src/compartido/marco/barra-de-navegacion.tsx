@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CampanaDeAvisos } from "@/compartido/avisos/campana-de-avisos";
 import { MonogramaLaPrevia } from "@/compartido/ui/monograma-la-previa";
 import type { Rol } from "../sesion/destino-de-sesion";
 import { useCerrarSesion } from "../sesion/use-cerrar-sesion";
 import { useVigenciaDeSesion } from "../sesion/use-vigencia-de-sesion";
+import { ContadorDeReclamos } from "./contador-de-reclamos";
 import { MenuDeLaCuenta } from "./menu-de-la-cuenta";
 import { esSeccionActual, NOMBRE_DEL_PANEL, SECCIONES_DEL_PANEL } from "./secciones-del-panel";
 
@@ -25,6 +27,7 @@ function SeccionesDelRol({ rol }: { rol: Rol }) {
             className="barra-de-vidrio__seccion"
           >
             {seccion.texto}
+            {seccion.contador === "reclamos" && <ContadorDeReclamos />}
           </Link>
         );
       })}
@@ -58,7 +61,10 @@ export function BarraDeNavegacion({ rol, venceEn, conSecciones = true }: BarraDe
         {rol && conSecciones && <SeccionesDelRol rol={rol} />}
         <div className="flex items-center gap-1">
           {rol && conSecciones ? (
-            <MenuDeLaCuenta rol={rol} cerrar={cerrar} cerrando={cerrando} />
+            <>
+              <CampanaDeAvisos />
+              <MenuDeLaCuenta rol={rol} cerrar={cerrar} cerrando={cerrando} />
+            </>
           ) : (
             <button type="button" onClick={cerrar} disabled={cerrando} className="barra-de-vidrio__salir">
               {cerrando ? "Cerrando sesión…" : "Cerrar sesión"}

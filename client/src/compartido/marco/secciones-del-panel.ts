@@ -3,6 +3,8 @@ import type { Rol } from "../sesion/destino-de-sesion";
 export interface Seccion {
   ruta: string;
   texto: string;
+  /** Un número junto al texto, como las hojas de reclamación por responder. */
+  contador?: "reclamos";
 }
 
 /** Nombre del panel de cada rol, tal como se muestra en la barra. */
@@ -29,7 +31,7 @@ export const SECCIONES_DEL_PANEL: Record<Rol, Seccion[]> = {
     { ruta: "/administracion/reglas-de-reserva", texto: "Reglas de reserva" },
     { ruta: "/administracion/canchas", texto: "Canchas" },
     { ruta: "/administracion/adicionales", texto: "Adicionales" },
-    { ruta: "/administracion/reclamos", texto: "Reclamos" },
+    { ruta: "/administracion/reclamos", texto: "Reclamos", contador: "reclamos" },
   ],
 };
 

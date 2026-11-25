@@ -5,6 +5,7 @@ import { cerrarSesion } from "../sesion/sesion.api";
 import { BarraDeNavegacion } from "./barra-de-navegacion";
 
 const ruta = vi.hoisted(() => ({ actual: "/administracion/recepcionistas" }));
+vi.mock("@/compartido/avisos/canal-de-avisos", () => ({ escucharAvisos: () => () => undefined }));
 vi.mock("next/navigation", () => ({ usePathname: () => ruta.actual }));
 vi.mock("../sesion/sesion.api", () => ({ cerrarSesion: vi.fn(), consultarTiempoRestante: vi.fn() }));
 const VENCE = new Date(Date.now() + 15 * 60_000).toISOString();
