@@ -10,8 +10,6 @@ import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import {
   elegir,
   MEDIOS_DE_RESPUESTA,
-  type MedioDeRespuesta,
-  type Servicio,
   SERVICIOS,
   TIPOS_DE_HOJA,
 } from './opciones-de-la-hoja';
