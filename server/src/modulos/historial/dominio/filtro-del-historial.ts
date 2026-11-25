@@ -1,12 +1,14 @@
-import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import {
-  leerFecha,
-  momentoEnLima,
-  sumarAFecha,
-} from '../../../compartido/dominio/momento-en-lima';
+  elegirDeLista as elegir,
+  entero,
+  leerPagina,
+  leerTamanoDePagina as leerTamano,
+  opcional,
+  rangoDeDiasDeLima,
+} from '../../../compartido/dominio/consulta-paginada';
 import { MAXIMO_ID } from '../../../compartido/dominio/id';
+import { leerFecha } from '../../../compartido/dominio/momento-en-lima';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
-import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
 import {
   type Accion,
   type Categoria,
@@ -14,7 +16,7 @@ import {
   esCategoria,
 } from './categorias-del-historial';
 
-export const TAMANOS_DE_PAGINA = [10, 25, 50] as const;
+export { TAMANOS_DE_PAGINA } from '../../../compartido/dominio/consulta-paginada';
 export type Orden = 'RECIENTES' | 'ANTIGUOS';
 
 /** Filtros tal como llegan en la consulta; todos opcionales. */
@@ -43,48 +45,11 @@ export interface FiltroDelHistorial {
   porPagina: number;
 }
 
-const vacio = (valor?: string): valor is undefined | '' =>
-  valor === undefined || valor.trim() === '';
-
-function opcional<T>(
-  valor: string | undefined,
-  leer: (texto: string) => T,
-): T | undefined {
-  return vacio(valor) ? undefined : leer(valor.trim());
-}
-
-// Una página más allá de este tope no tendría registros.
-const MAXIMA_PAGINA = 100_000;
-
-function entero(texto: string, mensaje: string, maximo: number): number {
-  const numero = /^\d{1,10}$/.test(texto) ? Number(texto) : 0;
-  if (numero < 1 || numero > maximo) throw new ValorInvalidoError(mensaje);
-  return numero;
-}
-
-function elegir<T>(
-  texto: string,
-  esValido: (valor: string) => valor is T & string,
-  mensaje: string,
-): T {
-  if (!esValido(texto)) throw new ValorInvalidoError(mensaje);
-  return texto;
-}
-
 const esOrden = (valor: string): valor is Orden =>
   valor === 'RECIENTES' || valor === 'ANTIGUOS';
 
 const esSiONo = (valor: string): valor is 'true' | 'false' =>
   valor === 'true' || valor === 'false';
-
-function leerTamano(texto: string): number {
-  const tamano = Number(texto);
-  if (!(TAMANOS_DE_PAGINA as readonly number[]).includes(tamano))
-    throw new ValorInvalidoError('Muestra 10, 25 o 50 registros por página.');
-  return tamano;
-}
-
-const enTextoDePeru = (fecha: string) => fecha.split('-').reverse().join('/');
 
 /** Lee y valida los filtros; un rango con el final antes del inicio se rechaza con su motivo. */
 export function leerFiltroDelHistorial(
@@ -109,10 +74,7 @@ export function leerFiltroDelHistorial(
       opcional(datos.orden, (t) =>
         elegir(t, esOrden, 'Elige más recientes o más antiguos.'),
       ) ?? 'RECIENTES',
-    pagina: () =>
-      opcional(datos.pagina, (t) =>
-        entero(t, `Elige una página del 1 al ${MAXIMA_PAGINA}.`, MAXIMA_PAGINA),
-      ) ?? 1,
+    pagina: () => opcional(datos.pagina, leerPagina) ?? 1,
     porPagina: () => opcional(datos.porPagina, leerTamano) ?? 25,
     soloImportantes: () =>
       opcional(datos.soloImportantes, (t) =>
@@ -120,18 +82,11 @@ export function leerFiltroDelHistorial(
       ) === 'true',
   });
   const { autor, categoria, accion, desde, hasta, ...pagina } = leidos;
-  if (desde && hasta && hasta < desde)
-    throw new ReglaInvalidaError({
-      hasta: `La fecha final es anterior a la inicial: elige una fecha desde el ${enTextoDePeru(desde)}.`,
-    });
   return {
     ...(autor !== undefined && { autorId: autor }),
     ...(categoria && { categoria }),
     ...(accion && { accion }),
-    ...(desde && { desde: momentoEnLima(desde, '00:00') }),
-    ...(hasta && {
-      antesDe: momentoEnLima(sumarAFecha(hasta, { dias: 1 }), '00:00'),
-    }),
+    ...rangoDeDiasDeLima(desde, hasta),
     ...pagina,
   };
 }
