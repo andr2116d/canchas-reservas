@@ -51,6 +51,8 @@ export interface MapaDelDia {
   hoy: string;
   /** El último día que se puede consultar. */
   ultimaFecha: string;
+  /** La hora del server: con ella el navegador mide cuánto falta para `proximoCambio`. */
+  ahora: Date;
   /** Porcentaje del adelanto mínimo; falta si administración no lo guardó. */
   adelanto: number | null;
   local: 'ABIERTO' | 'CERRADO' | 'SIN_HORARIO';
@@ -106,6 +108,7 @@ export class ConsultarDisponibilidadUseCase {
     const base = {
       fecha,
       ...rango,
+      ahora,
       adelanto: adelanto?.porcentaje.valor ?? null,
       tipos: [],
       proximoCambio: null,

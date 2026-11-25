@@ -250,6 +250,7 @@ describe('Fechas que se pueden consultar', () => {
       fecha: '2026-11-24',
       hoy: '2026-11-24',
       ultimaFecha: '2026-12-24',
+      ahora: enLima('2026-11-24', '15:20'),
     });
   });
 
