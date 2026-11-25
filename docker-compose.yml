@@ -14,5 +14,12 @@ services:
       interval: 2s
       timeout: 3s
       retries: 20
+  # Servidor de correo de prueba: recibe lo que envía la API y lo muestra en http://localhost:8025.
+  # No entrega nada a buzones reales. La imagen trae su propia verificación de salud.
+  correo:
+    image: axllent/mailpit:v1.33.1
+    ports:
+      - "${SMTP_PUERTO:-1025}:1025"
+      - "${CORREO_WEB_PUERTO:-8025}:8025"
 volumes:
   db:
