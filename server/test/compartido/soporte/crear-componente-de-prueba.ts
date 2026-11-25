@@ -45,6 +45,12 @@ import { EnMemoriaTarifaRepository } from '../../tarifas/dobles/en-memoria-tarif
 import { EnMemoriaRecepcionistaRepository } from '../../usuarios/dobles/en-memoria-recepcionista.repository';
 import { EnMemoriaUsuarioRepository } from '../../usuarios/dobles/en-memoria-usuario.repository';
 import { RelojDePrueba } from '../dobles/reloj-de-prueba';
+import { BANDEJA_DE_SALIDA } from '../../../src/modulos/correo/aplicacion/bandeja-de-salida.port';
+import { ENVIADOR_DE_CORREO } from '../../../src/modulos/correo/aplicacion/enviador-de-correo.port';
+import { HOJA_REPOSITORY } from '../../../src/modulos/reclamos/dominio/hoja.repository';
+import { EnMemoriaBandejaDeSalida } from '../../correo/dobles/en-memoria-bandeja-de-salida';
+import { EnviadorDeCorreoDePrueba } from '../../correo/dobles/enviador-de-correo-de-prueba';
+import { EnMemoriaHojaRepository } from '../../reclamos/dobles/en-memoria-hoja.repository';
 
 const CLAVE = Buffer.alloc(32, 7).toString('base64');
 
@@ -60,7 +66,11 @@ type Sesion = Partial<
 >;
 
 function crearDobles() {
+  const reloj = new RelojDePrueba();
   return {
+    bandeja: new EnMemoriaBandejaDeSalida(reloj),
+    enviador: new EnviadorDeCorreoDePrueba(),
+    hojas: new EnMemoriaHojaRepository(),
     canchas: new EnMemoriaCanchaRepository(),
     bloqueos: new EnMemoriaBloqueoRepository(),
     reservas: new ReservasDeCanchaDePrueba(),
@@ -76,7 +86,7 @@ function crearDobles() {
     historial: new EnMemoriaHistorialRepository(),
     usuarios: new EnMemoriaUsuarioRepository(),
     recepcionistas: new EnMemoriaRecepcionistaRepository(),
-    reloj: new RelojDePrueba(),
+    reloj,
   };
 }
 
@@ -86,6 +96,9 @@ type Dobles = ReturnType<typeof crearDobles>;
 function dobleDeCadaPuerto(dobles: Dobles): [symbol, unknown][] {
   return [
     [RELOJ, dobles.reloj],
+    [BANDEJA_DE_SALIDA, dobles.bandeja],
+    [ENVIADOR_DE_CORREO, dobles.enviador],
+    [HOJA_REPOSITORY, dobles.hojas],
     [CANCHA_REPOSITORY, dobles.canchas],
     [BLOQUEO_REPOSITORY, dobles.bloqueos],
     [RESERVAS_DE_CANCHA, dobles.reservas],
