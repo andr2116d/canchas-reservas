@@ -39,3 +39,19 @@ export function leerTokenDeSesion(solicitud: Request): string | undefined {
   const valor: unknown = solicitud.cookies?.[NOMBRE_COOKIE_SESION];
   return typeof valor === 'string' ? valor : undefined;
 }
+
+/** El token de la cookie de sesión desde un encabezado `cookie` sin procesar (como el de un socket). */
+export function leerTokenDeCabecera(
+  cabecera: string | undefined,
+): string | undefined {
+  const par = cabecera
+    ?.split(';')
+    .map((p) => p.trim())
+    .find((p) => p.startsWith(`${NOMBRE_COOKIE_SESION}=`));
+  if (!par) return undefined;
+  try {
+    return decodeURIComponent(par.slice(NOMBRE_COOKIE_SESION.length + 1));
+  } catch {
+    return undefined;
+  }
+}

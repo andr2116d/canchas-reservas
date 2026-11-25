@@ -72,6 +72,6 @@ const DEPENDENCIAS = [SESION_REPOSITORY, GENERADOR_TOKEN_SESION, RELOJ];
     },
     { provide: APP_GUARD, useClass: SesionGuard },
   ],
-  exports: [AbrirSesionUseCase],
+  exports: [AbrirSesionUseCase, ValidarSesionUseCase],
 })
 export class SesionesModule {}

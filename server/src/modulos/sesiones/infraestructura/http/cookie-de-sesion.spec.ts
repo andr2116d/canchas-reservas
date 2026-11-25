@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express';
-import { escribirCookieDeSesion, leerTokenDeSesion } from './cookie-de-sesion';
+import {
+  escribirCookieDeSesion,
+  leerTokenDeSesion,
+  leerTokenDeCabecera,
+} from './cookie-de-sesion';
 
 function respuestaQueGuardaLaCookie() {
   const guardada: { nombre?: string; valor?: string; opciones?: object } = {};
@@ -48,5 +52,17 @@ describe('cookie de sesión', () => {
     ).toBe('token-1');
     expect(leerTokenDeSesion({ cookies: {} } as Request)).toBeUndefined();
     expect(leerTokenDeSesion({} as Request)).toBeUndefined();
+  });
+
+  it('lee el token del encabezado cookie de un socket, entre otras cookies', () => {
+    expect(
+      leerTokenDeCabecera(
+        'preferencia_de_cookies=todas; sesion=abc123; otra=1',
+      ),
+    ).toBe('abc123');
+    expect(leerTokenDeCabecera('sesion=a%2Bb')).toBe('a+b');
+    expect(leerTokenDeCabecera('otra=1')).toBeUndefined();
+    expect(leerTokenDeCabecera(undefined)).toBeUndefined();
+    expect(leerTokenDeCabecera('sesion=%E0%A4%A')).toBeUndefined();
   });
 });
