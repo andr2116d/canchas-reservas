@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
 import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // El horario y las tarifas son del local entero: las pruebas que guardan van en
@@ -175,7 +175,7 @@ test("en celular las secciones van en pestañas y nada se sale de la pantalla", 
 test("solo administración define el horario y las tarifas", async ({ page }) => {
   const jugador = unJugadorNuevo();
   await page.request.post("/api/jugadores", {
-    data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: "registro-1" },
+    data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO },
   });
 
   expect((await page.request.put("/api/horario", { data: {} })).status()).toBe(403);

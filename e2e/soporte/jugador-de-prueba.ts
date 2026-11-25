@@ -1,5 +1,8 @@
 import { randomInt, randomUUID } from "node:crypto";
 
+/** Fecha de los términos y la privacidad publicados que acepta quien se registra. */
+export const VERSION_LEGAL_DEL_REGISTRO = "2026-11-24";
+
 /** Datos válidos y únicos para cada prueba, así ninguna choca con otra. */
 export function unJugadorNuevo() {
   return {

@@ -1,6 +1,6 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { guardarReserva } from "../../soporte/base-de-pruebas";
-import { unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
 import { type CanchasDelLocal, fechaDeLima, prepararElLocal } from "../../soporte/local-de-prueba";
 import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
@@ -135,7 +135,7 @@ test("en el celular se ve y se usa sin salirse de la pantalla", async ({ page, i
 });
 
 test("el jugador mira los turnos desde su panel y la portada lo lleva a él", async ({ page }) => {
-  await page.request.post("/api/jugadores", { data: { ...unJugadorNuevo(), tipoDocumento: "DNI", versionLegalAceptada: "registro-1" } });
+  await page.request.post("/api/jugadores", { data: { ...unJugadorNuevo(), tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
 
   await page.goto("/");
   await page.getByRole("link", { name: "Ir a mi panel" }).click();
