@@ -30,6 +30,12 @@ const CON_SUJETO: Partial<Record<Categoria, Verbos>> = {
     REACTIVACION: "reactivó el adicional",
     ELIMINACION: "eliminó el adicional",
   },
+  RECLAMOS: {
+    APERTURA: "abrió la",
+    CLASIFICACION: "clasificó la",
+    CAMBIO_DE_TIPO: "pasó a reclamo la",
+    RESPUESTA: "respondió la",
+  },
 };
 
 /** Lo que no tiene un sujeto propio: la frase ya dice qué se cambió. */

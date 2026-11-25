@@ -1,4 +1,4 @@
-export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS";
+export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS" | "RECLAMOS";
 
 export type Accion =
   | "ALTA"
@@ -15,7 +15,11 @@ export type Accion =
   | "BLOQUEO"
   | "LIBERACION_DE_BLOQUEO"
   | "RETIRO_DE_BLOQUEO"
-  | "INICIO_DE_SESION";
+  | "INICIO_DE_SESION"
+  | "APERTURA"
+  | "CLASIFICACION"
+  | "CAMBIO_DE_TIPO"
+  | "RESPUESTA";
 
 export interface LineaDeDetalle {
   campo: string;
@@ -59,6 +63,7 @@ export const CATEGORIAS: { valor: Categoria; texto: string }[] = [
   { valor: "MANTENIMIENTO", texto: "Mantenimiento" },
   { valor: "ADICIONALES", texto: "Adicionales" },
   { valor: "ACCESOS", texto: "Accesos" },
+  { valor: "RECLAMOS", texto: "Reclamos" },
 ];
 
 export const ACCIONES: { valor: Accion; texto: string }[] = [
@@ -77,6 +82,10 @@ export const ACCIONES: { valor: Accion; texto: string }[] = [
   { valor: "LIBERACION_DE_BLOQUEO", texto: "Liberación de bloqueo" },
   { valor: "RETIRO_DE_BLOQUEO", texto: "Retiro de bloqueo" },
   { valor: "INICIO_DE_SESION", texto: "Inicio de sesión" },
+  { valor: "APERTURA", texto: "Hoja abierta" },
+  { valor: "CLASIFICACION", texto: "Clasificación" },
+  { valor: "CAMBIO_DE_TIPO", texto: "Queja pasada a reclamo" },
+  { valor: "RESPUESTA", texto: "Respuesta" },
 ];
 
 /** Las acciones que puede tener cada categoría, para no ofrecer combinaciones vacías. */
@@ -101,6 +110,7 @@ export const ACCIONES_POR_CATEGORIA: Record<Categoria, Accion[]> = {
   MANTENIMIENTO: ["BLOQUEO", "LIBERACION_DE_BLOQUEO", "RETIRO_DE_BLOQUEO"],
   ADICIONALES: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],
   ACCESOS: ["INICIO_DE_SESION"],
+  RECLAMOS: ["APERTURA", "CLASIFICACION", "CAMBIO_DE_TIPO", "RESPUESTA"],
 };
 
 export const TEXTO_DE_CATEGORIA = Object.fromEntries(CATEGORIAS.map(({ valor, texto }) => [valor, texto])) as Record<Categoria, string>;
