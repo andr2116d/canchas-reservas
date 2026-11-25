@@ -45,5 +45,6 @@ import { PrismaTarifaRepository } from './infraestructura/persistencia/prisma-ta
       inject: [TARIFA_REPOSITORY, HORARIO_REPOSITORY],
     },
   ],
+  exports: [TARIFA_REPOSITORY],
 })
 export class TarifasModule {}
