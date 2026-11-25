@@ -10,7 +10,7 @@ export function Presentacion({ proximos }: { proximos: ReactNode }) {
       <Image src={foto} alt="Un partido de fútbol 5 de noche, bajo los reflectores de una cancha de barrio." fill priority sizes="100vw" placeholder="blur" className="presentacion-del-club__foto" />
       <div className="envoltura-del-sitio flex flex-col gap-10 pt-36 pb-10">
         <div className="flex max-w-2xl flex-col gap-5">
-          <p className="antetitulo-de-la-portada text-capitan">Fútbol 5 y 7 · Trujillo</p>
+          <p className="antetitulo-de-la-portada antetitulo-de-la-portada--sobre-foto">Fútbol 5 y 7 · Trujillo</p>
           <h1 id="presentacion-titulo" className="font-titular text-[clamp(3.6rem,10vw,7.5rem)] leading-[0.9] font-black text-balance text-papel">Nos vemos en la cancha.</h1>
           <p className="max-w-[34rem] text-lg text-pretty text-tiza/90">Mira en vivo qué turnos quedan, elige tu cancha y sepárala con un adelanto. El precio que ves es el que pagas.</p>
           <div className="flex flex-wrap gap-3">
