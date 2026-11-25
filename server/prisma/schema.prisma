@@ -69,6 +69,7 @@ model Usuario {
   bloqueosCreados              BloqueoDeCancha[]
   cambiosDeAdicionales         CambioDeAdicional[]
   adelantosGuardados           AdelantoMinimo[]
+  reservasComoTitular          Reserva[]
 
   @@unique([documentoHash, rol])
   @@map("usuario")
@@ -253,6 +254,7 @@ model Cancha {
   actualizadoEn     DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(3)
   cambios           CambioDeCancha[]
   bloqueos          BloqueoDeCancha[]
+  reservas          Reserva[]
 
   @@map("cancha")
 }
@@ -378,4 +380,33 @@ model AdelantoMinimo {
 
   @@index([guardadoEn])
   @@map("adelanto_minimo")
+}
+
+/// Etapas en que una reserva ocupa su turno.
+enum EstadoDeReserva {
+  PENDIENTE_DE_PAGO       @map("pendiente_de_pago")
+  PENDIENTE_DE_VALIDACION @map("pendiente_de_validacion")
+  CONFIRMADA              @map("confirmada")
+  EN_JUEGO                @map("en_juego")
+
+  @@map("estado_de_reserva")
+}
+
+/// Un turno de una cancha separado por un titular. Dos reservas de la misma cancha no se pisan.
+model Reserva {
+  id            Int             @id @default(autoincrement())
+  canchaId      Int             @map("cancha_id")
+  titularId     Int             @map("titular_id")
+  inicio        DateTime        @db.Timestamptz(3)
+  fin           DateTime        @db.Timestamptz(3)
+  estado        EstadoDeReserva
+  creadoEn      DateTime        @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime        @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  cancha        Cancha          @relation(fields: [canchaId], references: [id])
+  titular       Usuario         @relation(fields: [titularId], references: [id])
+
+  @@index([canchaId, inicio])
+  @@index([inicio])
+  @@index([titularId])
+  @@map("reserva")
 }
