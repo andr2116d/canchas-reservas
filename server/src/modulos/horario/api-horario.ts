@@ -1,6 +1,7 @@
 export {
   DIAS_DE_LA_SEMANA,
   type DiaDeLaSemana,
+  diaDeLaSemanaDe,
   esDiaDeLaSemana,
 } from './dominio/dia-de-la-semana';
 export {
