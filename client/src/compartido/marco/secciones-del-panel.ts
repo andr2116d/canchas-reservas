@@ -29,6 +29,7 @@ export const SECCIONES_DEL_PANEL: Record<Rol, Seccion[]> = {
     { ruta: "/administracion/reglas-de-reserva", texto: "Reglas de reserva" },
     { ruta: "/administracion/canchas", texto: "Canchas" },
     { ruta: "/administracion/adicionales", texto: "Adicionales" },
+    { ruta: "/administracion/reclamos", texto: "Reclamos" },
   ],
 };
 

@@ -22,6 +22,7 @@ describe("BarraDeNavegacion", () => {
       "Reglas de reserva",
       "Canchas",
       "Adicionales",
+      "Reclamos",
     ]);
     expect(within(navegacion).getByRole("link", { name: "Recepcionistas" })).toHaveAttribute("aria-current", "page");
     expect(within(navegacion).getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
