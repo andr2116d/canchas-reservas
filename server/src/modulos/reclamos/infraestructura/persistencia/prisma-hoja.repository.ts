@@ -11,14 +11,19 @@ import type {
   RegistroDeHoja,
 } from '../../dominio/hoja.repository';
 import { NumeroDeHoja } from '../../dominio/numero-de-hoja.value-object';
+import { HojaMapper } from './hoja.mapper';
 
 /** Hojas en PostgreSQL: datos personales y textos libres cifrados, y el código solo como hash. */
 @Injectable()
 export class PrismaHojaRepository implements HojaRepository {
+  private readonly mapper: HojaMapper;
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(CIFRADOR) private readonly cifrador: Cifrador,
-  ) {}
+  ) {
+    this.mapper = new HojaMapper(cifrador);
+  }
 
   async registrar(
     hoja: HojaDeReclamacion,
@@ -37,42 +42,36 @@ export class PrismaHojaRepository implements HojaRepository {
           correlativo: ultimo,
           codigoSeguimientoHash: this.cifrador.hashParaBuscar(codigo),
           titularId,
-          ...this.columnasDeLaHoja(hoja),
+          ...this.mapper.aColumnas(hoja),
         },
       });
       return NumeroDeHoja.de(anio, ultimo);
     });
   }
 
-  private columnasDeLaHoja(hoja: HojaDeReclamacion) {
-    const cifrar = (texto: string) => this.cifrador.cifrar(texto);
-    const cifrarSiHay = (texto: string | null | undefined) =>
-      texto ? cifrar(texto) : null;
-    const { consumidor: c, representante: r, servicio: s } = hoja;
-    return {
-      tipoDocumento: c.documento.tipo as 'DNI' | 'CARNE_EXTRANJERIA',
-      numeroDocumentoCifrado: cifrar(c.documento.numero),
-      nombresCifrado: cifrar(c.nombres),
-      apellidosCifrado: cifrar(c.apellidos),
-      domicilioCifrado: cifrar(c.domicilio),
-      telefonoCifrado: cifrar(c.telefono),
-      correoCifrado: cifrar(c.correo),
-      esMenorDeEdad: r !== null,
-      representanteNombreCifrado: cifrarSiHay(r?.nombre),
-      representanteDomicilioCifrado: cifrarSiHay(r?.domicilio),
-      representanteTelefonoCifrado: cifrarSiHay(r?.telefono),
-      representanteCorreoCifrado: cifrarSiHay(r?.correo),
-      servicio: s.servicio,
-      montoReclamado: s.montoReclamado?.enSoles() ?? null,
-      descripcionDelServicioCifrada: cifrarSiHay(s.descripcion),
-      tipoMarcado: hoja.tipoMarcado,
-      tipo: hoja.tipo,
-      detalleCifrado: cifrar(hoja.detalle),
-      pedidoCifrado: cifrar(hoja.pedido),
-      medioDeRespuesta: hoja.medioDeRespuesta,
-      estado: hoja.estado,
-      registradaEn: hoja.registradaEn,
-      fechaLimite: new Date(`${hoja.fechaLimite}T00:00:00.000Z`),
-    };
+  async buscarPorSeguimiento(numero: NumeroDeHoja, codigo: string) {
+    const fila = await this.prisma.hojaDeReclamacion.findFirst({
+      where: {
+        anio: numero.anio,
+        correlativo: numero.correlativo,
+        codigoSeguimientoHash: this.cifrador.hashParaBuscar(codigo),
+      },
+    });
+    return fila ? this.mapper.aHoja(fila) : undefined;
+  }
+
+  async delTitular(titularId: number) {
+    const filas = await this.prisma.hojaDeReclamacion.findMany({
+      where: { titularId },
+      orderBy: { registradaEn: 'desc' },
+    });
+    return filas.map((fila) => this.mapper.aHoja(fila));
+  }
+
+  async buscarDelTitular(titularId: number, numero: NumeroDeHoja) {
+    const fila = await this.prisma.hojaDeReclamacion.findFirst({
+      where: { titularId, anio: numero.anio, correlativo: numero.correlativo },
+    });
+    return fila ? this.mapper.aHoja(fila) : undefined;
   }
 }

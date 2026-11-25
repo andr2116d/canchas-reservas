@@ -12,6 +12,7 @@ import type {
   Servicio,
   TipoDeHoja,
 } from './opciones-de-la-hoja';
+import type { NumeroDeHoja } from './numero-de-hoja.value-object';
 import { fechaLimiteDeRespuesta } from './plazo-de-respuesta';
 
 export type { DatosDeLaHoja } from './lectura-de-la-hoja';
@@ -43,6 +44,8 @@ export interface PropiedadesDeLaHoja {
 export class HojaDeReclamacion {
   private constructor(
     readonly id: number | null,
+    /** Lo asigna la base al registrarla; `null` antes de guardarla. */
+    readonly numero: NumeroDeHoja | null,
     private propiedades: PropiedadesDeLaHoja,
   ) {}
 
@@ -51,7 +54,7 @@ export class HojaDeReclamacion {
     registradaEn: Date,
   ): HojaDeReclamacion {
     const { consumidor, representante, reclamo } = leerDatosDeLaHoja(datos);
-    return new HojaDeReclamacion(null, {
+    return new HojaDeReclamacion(null, null, {
       consumidor: {
         documento: {
           tipo: consumidor.numeroDocumento.tipo,
@@ -88,9 +91,15 @@ export class HojaDeReclamacion {
 
   static restaurar(
     id: number,
+    numero: NumeroDeHoja,
     propiedades: PropiedadesDeLaHoja,
   ): HojaDeReclamacion {
-    return new HojaDeReclamacion(id, { ...propiedades });
+    return new HojaDeReclamacion(id, numero, { ...propiedades });
+  }
+
+  /** Todo lo que guarda la hoja, para la persistencia y las vistas. */
+  get datos(): Readonly<PropiedadesDeLaHoja> {
+    return this.propiedades;
   }
 
   get consumidor() {

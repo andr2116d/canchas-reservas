@@ -18,4 +18,19 @@ export interface HojaRepository {
     hoja: HojaDeReclamacion,
     registro: RegistroDeHoja,
   ): Promise<NumeroDeHoja>;
+
+  /** La hoja con ese número solo si el código de seguimiento coincide. */
+  buscarPorSeguimiento(
+    numero: NumeroDeHoja,
+    codigo: string,
+  ): Promise<HojaDeReclamacion | undefined>;
+
+  /** Las hojas que registró un jugador con su cuenta, la más reciente primero. */
+  delTitular(titularId: number): Promise<HojaDeReclamacion[]>;
+
+  /** Una hoja del jugador; no da la de otra persona. */
+  buscarDelTitular(
+    titularId: number,
+    numero: NumeroDeHoja,
+  ): Promise<HojaDeReclamacion | undefined>;
 }

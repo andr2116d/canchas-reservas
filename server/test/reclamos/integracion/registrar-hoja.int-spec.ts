@@ -121,7 +121,9 @@ describe('POST /api/libro-de-reclamaciones', () => {
       Array.from({ length: 5 }, () => registrar(unaHojaValida())),
     );
 
-    const numeros = respuestas.map((r) => r.body.numero).sort();
+    const numeros = respuestas
+      .map((r) => String(r.body.numero))
+      .sort((a, b) => a.localeCompare(b));
     expect(numeros).toEqual([1, 2, 3, 4, 5].map((n) => `00000${n}-${ANIO}`));
   });
 
