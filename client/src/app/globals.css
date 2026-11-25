@@ -9,6 +9,7 @@
 @import "../features/adicionales/componentes/adicionales.css";
 @import "../features/historial/componentes/historial.css";
 @import "../features/disponibilidad/componentes/disponibilidad.css";
+@import "../compartido/sitio/sitio.css";
 @import "../features/portada/componentes/portada.css";
 
 @theme {
