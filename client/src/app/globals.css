@@ -9,6 +9,7 @@
 @import "../features/adicionales/componentes/adicionales.css";
 @import "../features/historial/componentes/historial.css";
 @import "../features/disponibilidad/componentes/disponibilidad.css";
+@import "../features/portada/componentes/portada.css";
 
 @theme {
   --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;

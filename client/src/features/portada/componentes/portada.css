@@ -1,0 +1,101 @@
+/* Portada pública: la barra de vidrio flota sobre la foto y el mapa va sobre las franjas de césped. */
+.portada {
+  --acento: var(--color-capitan);
+  --sobre-acento: var(--color-tinta);
+  background-color: #eef3eb;
+  background-image: repeating-linear-gradient(90deg, #eef3eb 0 7rem, #e8efe5 7rem 14rem);
+}
+
+.portada__barra {
+  position: fixed;
+  top: 0.75rem;
+  right: 0;
+  left: 0;
+}
+
+.portada__secciones {
+  display: flex;
+  gap: 0.25rem;
+}
+
+@media (max-width: 767px) {
+  .portada__secciones {
+    display: none;
+  }
+}
+
+.portada__boton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 999px;
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-papel);
+  transition: background-color 160ms ease;
+}
+
+.portada__boton:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.portada__boton--capitan {
+  border-color: transparent;
+  background: var(--color-capitan);
+  color: var(--color-tinta);
+}
+
+.portada__boton--capitan:hover {
+  background: var(--color-papel);
+}
+
+.portada__boton:focus-visible {
+  outline: 2px solid var(--color-capitan);
+  outline-offset: 2px;
+}
+
+.portada__presentacion {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-end;
+  min-height: min(38rem, 88svh);
+  background: var(--color-cancha);
+}
+
+.portada__foto {
+  z-index: -2;
+  object-fit: cover;
+  object-position: 68% 40%;
+}
+
+/* El texto va a la izquierda, donde la foto deja la cancha oscura. */
+.portada__presentacion::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgb(9 33 26 / 0.92) 0%, rgb(9 33 26 / 0.65) 40%, rgb(9 33 26 / 0.05) 75%),
+    linear-gradient(0deg, rgb(9 33 26 / 0.75), transparent 45%);
+  content: "";
+}
+
+.portada__mensaje,
+.portada__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: min(72rem, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.portada__mensaje {
+  padding: 7rem 0 3rem;
+}
+
+.portada__seccion {
+  padding: 3rem 0;
+  scroll-margin-top: 5.5rem;
+}
