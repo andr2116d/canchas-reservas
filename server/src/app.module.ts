@@ -1,37 +1,48 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { RelojModule } from './common/reloj/reloj.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { SaludModule } from './modules/salud/salud.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { UsuariosModule } from './modules/usuarios/usuarios.module';
-import { AuditoriaModule } from './modules/auditoria/auditoria.module';
-import { CanchasModule } from './modules/canchas/canchas.module';
-import { TarifasModule } from './modules/tarifas/tarifas.module';
-import { HorarioModule } from './modules/horario/horario.module';
-import { TurnosModule } from './modules/turnos/turnos.module';
-import { ReservasModule } from './modules/reservas/reservas.module';
-import { ReglaCancelacionModule } from './modules/regla-cancelacion/regla-cancelacion.module';
-import { AdicionalesModule } from './modules/adicionales/adicionales.module';
-import { TiempoRealModule } from './modules/tiempo-real/tiempo-real.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { leerLimiteGeneral } from './compartido/infraestructura/configuracion/configuracion';
+import { CompartidoModule } from './compartido/compartido.module';
+import { AdelantoModule } from './modulos/adelanto/adelanto.module';
+import { CancelacionModule } from './modulos/cancelacion/cancelacion.module';
+import { AdicionalesModule } from './modulos/adicionales/adicionales.module';
+import { AvisosModule } from './modulos/avisos/avisos.module';
+import { CanchasModule } from './modulos/canchas/canchas.module';
+import { ClubModule } from './modulos/club/club.module';
+import { CorreoModule } from './modulos/correo/correo.module';
+import { DisponibilidadModule } from './modulos/disponibilidad/disponibilidad.module';
+import { HistorialModule } from './modulos/historial/historial.module';
+import { HorarioModule } from './modulos/horario/horario.module';
+import { ReclamosModule } from './modulos/reclamos/reclamos.module';
+import { TarifasModule } from './modulos/tarifas/tarifas.module';
+import { UsuariosModule } from './modulos/usuarios/usuarios.module';
+
+// Límite general por IP; las rutas sensibles fijan uno más estricto.
+const LIMITE_GENERAL = {
+  ttl: 60 * 1000,
+  limit: () => leerLimiteGeneral(process.env),
+};
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    PrismaModule,
-    RelojModule,
-    TiempoRealModule,
-    SaludModule,
-    AuthModule,
+    ThrottlerModule.forRoot([LIMITE_GENERAL]),
+    CompartidoModule,
+    CorreoModule,
     UsuariosModule,
-    AuditoriaModule,
-    CanchasModule,
-    TarifasModule,
     HorarioModule,
-    TurnosModule,
-    ReservasModule,
-    ReglaCancelacionModule,
+    TarifasModule,
+    CancelacionModule,
+    AdelantoModule,
+    CanchasModule,
     AdicionalesModule,
+    HistorialModule,
+    DisponibilidadModule,
+    ClubModule,
+    ReclamosModule,
+    AvisosModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -1,0 +1,42 @@
+/*
+ * Cancha a pantalla completa: franjas de césped, línea de medio campo y
+ * círculo central. Fondo de la carga y de los avisos del sitio.
+ */
+.cancha-completa {
+  --ancho-de-franja: clamp(4rem, 9vw, 8rem);
+  --tiza: rgb(244 246 239 / 0.18);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--color-cancha);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-cancha) 0 var(--ancho-de-franja),
+    var(--color-cancha-clara) var(--ancho-de-franja) calc(2 * var(--ancho-de-franja))
+  );
+  color: var(--color-tiza);
+}
+
+/* Línea de medio campo. */
+.cancha-completa::before {
+  position: absolute;
+  inset: 50% 0 auto;
+  z-index: -1;
+  height: 2px;
+  background: var(--tiza);
+  content: "";
+}
+
+/* Círculo central. */
+.cancha-completa::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: min(70vmin, 34rem);
+  aspect-ratio: 1;
+  border: 2px solid var(--tiza);
+  border-radius: 50%;
+  content: "";
+  transform: translate(-50%, -50%);
+}

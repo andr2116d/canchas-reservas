@@ -1,0 +1,101 @@
+import type { ContextoDeCuentas } from './contexto-de-cuentas';
+import { validarCampos } from '../../../compartido/dominio/validar-campos';
+import type {
+  AbrirSesionUseCase,
+  SesionAbierta,
+} from '../../sesiones/api-sesiones';
+import { validarVersionLegal } from '../dominio/aceptacion-legal-registro';
+import { Contrasena } from '../dominio/contrasena.value-object';
+import { Correo } from '../../../compartido/dominio/correo.value-object';
+import {
+  CuentaYaExisteError,
+  type DatoUnico,
+} from '../dominio/cuenta-ya-existe.error';
+import { DocumentoIdentidad } from '../../../compartido/dominio/documento-identidad.value-object';
+import { Dorsal } from '../dominio/dorsal.value-object';
+import { Usuario } from '../dominio/usuario.entity';
+import type { UsuarioRepository } from '../dominio/usuario.repository';
+import {
+  construirDatosPersonales,
+  type DatosPersonalesEscritos,
+} from './datos-personales';
+import type { HasheadorContrasena } from './hasheador-contrasena.port';
+
+/** Datos tal como los escribe la persona en el formulario de registro. */
+export interface DatosRegistroJugador extends DatosPersonalesEscritos {
+  correo: string;
+  contrasena: string;
+  /** Opcional, del 1 al 99. */
+  dorsal?: string;
+  versionLegalAceptada: string;
+}
+
+export interface JugadorRegistrado {
+  id: number;
+  nombres: string;
+  sesion: SesionAbierta;
+}
+
+/** Crea la cuenta de un jugador nuevo, mayor de edad, activa y con rol jugador. */
+export class RegistrarJugadorUseCase {
+  constructor(
+    private readonly usuarios: UsuarioRepository,
+    private readonly hasheador: HasheadorContrasena,
+    private readonly abrirSesion: Pick<AbrirSesionUseCase, 'preparar'>,
+    private readonly contexto: ContextoDeCuentas,
+  ) {}
+
+  /** Valida todos los datos, comprueba que no estén repetidos y guarda la cuenta. */
+  async ejecutar(datos: DatosRegistroJugador): Promise<JugadorRegistrado> {
+    const campos = validarDatosDeRegistro(datos, this.contexto);
+    await this.verificarQueNoTengaCuenta(campos.numeroDocumento, campos.correo);
+
+    const jugador = Usuario.registrarJugador({
+      nombres: campos.nombres,
+      apellidos: campos.apellidos,
+      fechaNacimiento: campos.fechaNacimiento,
+      documento: campos.numeroDocumento,
+      correo: campos.correo,
+      celular: campos.celular,
+      dorsal: campos.dorsal,
+      contrasenaHash: await this.hasheador.hashear(campos.contrasena),
+    });
+    const { datosDeSesion, credencial } = this.abrirSesion.preparar();
+    const id = await this.usuarios.crear(jugador, {
+      sesion: datosDeSesion,
+      aceptacion: {
+        version: campos.versionLegalAceptada,
+        fecha: this.contexto.reloj.ahora(),
+        canal: 'web',
+      },
+    });
+    return { id, nombres: jugador.nombres.texto, sesion: credencial };
+  }
+
+  private async verificarQueNoTengaCuenta(
+    documento: DocumentoIdentidad,
+    correo: Correo,
+  ): Promise<void> {
+    const [documentoUsado, correoUsado] = await Promise.all([
+      this.usuarios.existeConDocumento(documento, 'JUGADOR'),
+      this.usuarios.existeConCorreo(correo),
+    ]);
+    const repetidos: DatoUnico[] = [];
+    if (documentoUsado) repetidos.push('numeroDocumento');
+    if (correoUsado) repetidos.push('correo');
+    if (repetidos.length > 0) throw new CuentaYaExisteError(repetidos);
+  }
+}
+
+function validarDatosDeRegistro(
+  datos: DatosRegistroJugador,
+  { reloj, correos }: ContextoDeCuentas,
+) {
+  return validarCampos({
+    ...construirDatosPersonales(datos, reloj.ahora()),
+    correo: () => correos.exigirParaRol('JUGADOR', Correo.crear(datos.correo)),
+    contrasena: () => Contrasena.crear(datos.contrasena),
+    dorsal: () => Dorsal.crearOpcional(datos.dorsal),
+    versionLegalAceptada: () => validarVersionLegal(datos.versionLegalAceptada),
+  });
+}

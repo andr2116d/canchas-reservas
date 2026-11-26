@@ -1,0 +1,418 @@
+/* Pantallas internas: la cancha detrás del título, tarjetas claras encima y la barra de
+ * vidrio verde. Cada rol cambia solo su color de acento. */
+.marco-interno {
+  --acento: var(--color-capitan);
+  --sobre-acento: var(--color-tinta);
+  --ancho-de-franja: clamp(4rem, 9vw, 8rem);
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  /* Relleno y no margen en la barra: así el fondo cubre también el espacio de arriba. */
+  padding-top: 0.75rem;
+  background-color: #eef3eb;
+  background-image: repeating-linear-gradient(90deg, #eef3eb 0 7rem, #e8efe5 7rem 14rem);
+  color: var(--color-tinta);
+}
+
+.marco-interno[data-rol="RECEPCIONISTA"] {
+  --acento: #a9e5c2;
+}
+
+.marco-interno[data-rol="ADMINISTRADOR"] {
+  --acento: var(--color-papel);
+}
+
+.saltar-al-contenido {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 60;
+  translate: 0 -200%;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-capitan);
+  color: var(--color-tinta);
+  font-weight: 800;
+}
+
+.saltar-al-contenido:focus-visible {
+  translate: none;
+  outline: 3px solid var(--color-papel);
+}
+
+.contenido-interno {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: min(72rem, calc(100% - 1.5rem));
+  margin-inline: auto;
+  padding: 2.5rem 0.25rem 4rem;
+  outline: none;
+}
+
+/*
+ * La cancha va detrás del título: sube hasta detrás de la barra, ocupa todo el
+ * ancho y baja un poco más que el texto, para que las tarjetas suban sobre ella.
+ */
+.encabezado-de-seccion {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Con una tarjeta al lado: el título arriba a la izquierda y la tarjeta a la derecha. */
+.encabezado-de-seccion--con-tarjeta {
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/*
+ * Pantallas de una sola tarea (primer ingreso, contraseña temporal): la cancha llena
+ * la pantalla hasta abajo, sin franja clara al pie, y el relleno inferior es menor.
+ */
+.marco-interno:has(.encabezado-de-seccion--con-tarjeta) {
+  display: flex;
+  flex-direction: column;
+}
+
+.marco-interno:has(.encabezado-de-seccion--con-tarjeta) > .contenido-interno {
+  flex: 1;
+  padding-bottom: 1.5rem;
+}
+
+.encabezado-de-seccion--con-tarjeta {
+  flex: 1;
+}
+
+.encabezado-de-seccion.encabezado-de-seccion--con-tarjeta::before {
+  bottom: -1.5rem;
+  border-bottom: 0;
+}
+
+.encabezado-de-seccion--con-tarjeta > :last-child {
+  flex: 1 1 24rem;
+  max-width: 30rem;
+}
+
+.encabezado-de-seccion--con-tarjeta > :first-child {
+  flex: 1 1 20rem;
+  padding-top: 1rem;
+}
+
+.encabezado-de-seccion::before {
+  position: absolute;
+  inset: -20rem calc(50% - 50vw) -3rem;
+  z-index: -1;
+  border-bottom: 2px solid rgb(244 246 239 / 0.22);
+  background-color: var(--color-cancha);
+  background-image:
+    radial-gradient(circle at 88% 100%, transparent 9.8rem, rgb(244 246 239 / 0.16) 9.9rem, transparent 10.05rem),
+    repeating-linear-gradient(
+      90deg,
+      var(--color-cancha) 0 var(--ancho-de-franja),
+      var(--color-cancha-clara) var(--ancho-de-franja) calc(2 * var(--ancho-de-franja))
+    );
+  content: "";
+}
+
+.barra-de-vidrio {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 40;
+  margin: 0 auto;
+  width: min(72rem, calc(100% - 1.5rem));
+  padding: 0.45rem 0.45rem 0.45rem 0.7rem;
+  border-radius: 1.25rem;
+}
+
+/* Vidrio verde: la barra y cualquier control que flote sobre la cancha. */
+.barra-de-vidrio,
+.vidrio-verde {
+  position: relative;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: linear-gradient(180deg, rgb(28 84 66 / 0.66), rgb(14 59 46 / 0.54));
+  color: var(--color-tiza);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.24),
+    inset 0 -1px 0 rgb(0 0 0 / 0.18),
+    0 18px 40px -18px rgb(8 31 25 / 0.6);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+}
+
+.barra-de-vidrio {
+  position: sticky;
+}
+
+/* Vidrio claro: paneles que flotan sobre el fondo de franjas. */
+.vidrio-claro {
+  border: 1px solid rgb(255 255 255 / 0.9);
+  background: linear-gradient(180deg, rgb(251 252 248 / 0.84), rgb(244 246 239 / 0.72));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 18px 40px -26px rgb(19 38 30 / 0.45);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+/* Reflejo del vidrio: una luz diagonal muy suave que no tapa nada. */
+.barra-de-vidrio::before,
+.vidrio-verde::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgb(255 255 255 / 0.16), transparent 32%, transparent 70%, rgb(255 255 255 / 0.05));
+  pointer-events: none;
+  content: "";
+}
+
+/* Sin desenfoque disponible, el vidrio se vuelve casi opaco para que se lea bien. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .barra-de-vidrio,
+  .vidrio-verde {
+    background: rgb(14 59 46 / 0.97);
+  }
+
+  .vidrio-claro {
+    background: var(--color-papel);
+  }
+}
+
+.barra-de-vidrio__fila {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.barra-de-vidrio__secciones {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* En celular, las secciones bajan a su propia fila y se deslizan de lado. */
+@media (max-width: 767px) {
+  .barra-de-vidrio__secciones {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+
+/*
+ * Con muchas secciones (administración) no caben junto a la marca y las acciones bajo 1120 px:
+ * bajan a su propia fila a todo el ancho. Así la campana y la cuenta nunca caen solas a otra fila.
+ */
+@media (max-width: 1119px) {
+  .barra-de-vidrio[data-muchas-secciones] .barra-de-vidrio__secciones {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+
+/* Desde 1120 px, una sola fila fija: marca, secciones (que se encogen y deslizan si hace falta) y acciones. */
+@media (min-width: 1120px) {
+  .barra-de-vidrio__fila {
+    flex-wrap: nowrap;
+  }
+
+  .barra-de-vidrio__secciones {
+    min-width: 0;
+  }
+}
+
+.barra-de-vidrio__seccion,
+.barra-de-vidrio__cuenta,
+.barra-de-vidrio__salir {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  padding: 0 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgb(244 246 239 / 0.78);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.barra-de-vidrio__seccion:hover,
+.barra-de-vidrio__cuenta:hover,
+.barra-de-vidrio__salir:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: var(--color-papel);
+}
+
+.barra-de-vidrio__seccion[aria-current="page"],
+.barra-de-vidrio__cuenta[aria-current="page"] {
+  background: var(--acento);
+  color: var(--sobre-acento);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 4px 14px -6px rgb(0 0 0 / 0.45);
+}
+
+.barra-de-vidrio__seccion:focus-visible,
+.barra-de-vidrio__cuenta:focus-visible,
+.barra-de-vidrio__salir:focus-visible {
+  outline: 2px solid var(--color-capitan);
+  outline-offset: 2px;
+}
+
+/* En celular, «Mi cuenta» queda como ícono: el nombre sigue disponible para lectores de pantalla. */
+@media (max-width: 479px) {
+  .barra-de-vidrio__cuenta span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.barra-de-vidrio__salir:disabled {
+  opacity: 0.6;
+}
+
+.sello-del-rol {
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-de-vidrio__seccion,
+  .barra-de-vidrio__cuenta,
+  .barra-de-vidrio__salir {
+    transition: none;
+  }
+}
+
+/* Tarjeta flotante para acciones cortas: sube sobre un fondo de cancha velado. */
+.tarjeta-flotante {
+  margin: auto;
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  border: 0;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  box-shadow: 0 30px 60px -20px rgb(8 31 25 / 0.55);
+}
+
+.tarjeta-flotante[open] {
+  animation: tarjeta-flotante-entra 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tarjeta-flotante::backdrop {
+  background: rgb(8 31 25 / 0.55);
+  backdrop-filter: blur(3px);
+}
+
+@keyframes tarjeta-flotante-entra {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta-flotante[open] {
+    animation: none;
+  }
+}
+
+/* Menú de la cuenta: un vidrio verde casi opaco, porque dentro de la barra el desenfoque no alcanza la página. */
+.menu-de-la-cuenta {
+  position: relative;
+}
+
+.barra-de-vidrio__cuenta[data-actual] {
+  background: var(--acento);
+  color: var(--sobre-acento);
+}
+
+.barra-de-vidrio__cuenta[aria-expanded="true"] .menu-de-la-cuenta__flecha {
+  rotate: 180deg;
+}
+
+.menu-de-la-cuenta__flecha {
+  transition: rotate 200ms ease;
+}
+
+.menu-de-la-cuenta__panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 14rem;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 1rem;
+  padding: 0.4rem;
+  background: linear-gradient(180deg, rgb(28 84 66 / 0.97), rgb(14 59 46 / 0.97));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 22px 44px -18px rgb(8 31 25 / 0.75);
+  transform-origin: top right;
+}
+
+.menu-de-la-cuenta__opcion {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  border-radius: 0.7rem;
+  padding: 0 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgb(244 246 239 / 0.86);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.menu-de-la-cuenta__opcion:hover,
+.menu-de-la-cuenta__opcion[aria-current="page"] {
+  background: rgb(255 255 255 / 0.1);
+  color: var(--color-papel);
+}
+
+.menu-de-la-cuenta__opcion:focus-visible {
+  outline: 2px solid var(--color-capitan);
+  outline-offset: -2px;
+}
+
+.menu-de-la-cuenta__salir {
+  margin-top: 0.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 0 0 0.7rem 0.7rem;
+  padding-top: 0.25rem;
+  color: #ffd2cf;
+}
+
+.menu-de-la-cuenta__salir:disabled {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-de-la-cuenta__panel {
+    animation: abrir-menu-de-la-cuenta 180ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+}
+
+@keyframes abrir-menu-de-la-cuenta {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}

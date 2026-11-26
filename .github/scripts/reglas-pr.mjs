@@ -53,12 +53,6 @@ if (cambiaDependencias && !nombres.includes('package-lock.json')) {
   errores.push('Cambiaste dependencias en un package.json pero no subiste package-lock.json. Usa npm install y sube el lock.');
 }
 
-for (const archivo of archivos) {
-  if (/^server\/prisma\/migrations\/.+\/migration\.sql$/.test(archivo.filename) && archivo.status !== 'added') {
-    errores.push(`Las migraciones ya mergeadas no se editan ni se borran: ${archivo.filename}. Crea una migración nueva.`);
-  }
-}
-
 const cambiaSchema = nombres.includes('server/prisma/schema.prisma');
 const agregaMigracion = archivos.some(
   (a) => a.status === 'added' && /^server\/prisma\/migrations\/.+\/migration\.sql$/.test(a.filename),

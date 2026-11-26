@@ -49,12 +49,16 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      # Servidor de correo de prueba: las pruebas de integración leen lo que envía la API.
+      correo:
+        image: axllent/mailpit:v1.33.1
+        ports:
+          - 1025:1025
+          - 8025:8025
     env:
       DATABASE_URL: postgresql://laprevia:laprevia@localhost:5432/laprevia
-      JWT_SECRET: secreto-solo-para-ci
-      CLIENT_URL: http://localhost:3000
-      ADMIN_CORREO: admin@laprevia.pe
-      ADMIN_CONTRASENA: Admin12345
+      CLAVE_CIFRADO: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      CLAVE_HASH: ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA=
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -66,7 +70,5 @@ jobs:
         run: npm run db:deploy -w server
       - name: Verificar que schema.prisma y las migraciones coinciden
         run: node scripts/ci/verificar-migraciones.mjs
-      - name: Cargar el seed dos veces (debe ser idempotente)
-        run: npm run db:seed -w server && npm run db:seed -w server
-      - name: Pruebas e2e
-        run: npm run test:e2e -w server
+      - name: Pruebas de integración
+        run: npm run test:integracion -w server

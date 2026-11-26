@@ -1,0 +1,29 @@
+/* Aviso que sube desde abajo para confirmar una acción. */
+.aviso-flotante {
+  position: fixed;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: calc(100% - 2rem);
+  border-radius: 0.875rem;
+  padding: 0.65rem 1rem;
+  background: var(--color-tinta);
+  color: var(--color-papel);
+  font-size: 0.875rem;
+  font-weight: 600;
+  /* Escondido del todo, aunque esté vacío: baja más que su propia distancia al borde. */
+  translate: -50% calc(100% + 2rem + env(safe-area-inset-bottom, 0px));
+  visibility: hidden;
+  transition:
+    translate 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    visibility 0s linear 0.35s;
+}
+
+.aviso-flotante[data-visible="true"] {
+  translate: -50% 0;
+  visibility: visible;
+  transition-delay: 0s;
+}

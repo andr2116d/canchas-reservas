@@ -1,0 +1,232 @@
+/*
+ * Pelota que rebota: la carga de todo el sitio. Cae acelerando, se aplasta al
+ * tocar el césped, sube frenando y gira; la sombra crece al acercarse al piso.
+ * --tam es el diámetro y --caida, la altura del rebote.
+ */
+.pelota-que-rebota {
+  --tam: 3.5rem;
+  --caida: calc(var(--tam) * 1.3);
+  --ciclo: 1100ms;
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: var(--tam);
+  height: calc(var(--tam) + var(--caida) + var(--tam) * 0.12);
+}
+
+.pelota-que-rebota--mediana {
+  --tam: 2.4rem;
+}
+
+/* En un botón: chica, rebote corto y sin sombra, del alto de la letra. */
+.pelota-que-rebota--boton {
+  --tam: 0.95rem;
+  --caida: calc(var(--tam) * 0.6);
+  --ciclo: 800ms;
+}
+
+.pelota-que-rebota__salto {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--tam);
+  height: var(--tam);
+  animation: pelota-salto var(--ciclo) infinite;
+}
+
+.pelota-que-rebota__forma {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  animation: pelota-aplaste var(--ciclo) infinite;
+}
+
+.pelota-que-rebota__forma svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pelota-que-rebota__gajos {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  animation: pelota-giro calc(var(--ciclo) * 2) linear infinite;
+}
+
+.pelota-que-rebota__sombra {
+  position: absolute;
+  bottom: 0;
+  left: 12%;
+  width: 76%;
+  height: calc(var(--tam) * 0.16);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.42);
+  filter: blur(2px);
+  animation: pelota-sombra var(--ciclo) infinite;
+}
+
+.pelota-que-rebota--boton .pelota-que-rebota__sombra {
+  display: none;
+}
+
+@keyframes pelota-salto {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.9, 0.45);
+  }
+  50% {
+    transform: translateY(var(--caida));
+    animation-timing-function: cubic-bezier(0.1, 0.55, 0.55, 1);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pelota-aplaste {
+  0%,
+  44%,
+  60%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.16, 0.8);
+  }
+  55% {
+    transform: scale(0.94, 1.06);
+  }
+}
+
+@keyframes pelota-sombra {
+  0%,
+  100% {
+    transform: scaleX(0.45);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scaleX(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes pelota-giro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Con movimiento reducido, la pelota queda en el piso y solo late suave. */
+@media (prefers-reduced-motion: reduce) {
+  .pelota-que-rebota__salto,
+  .pelota-que-rebota__gajos,
+  .pelota-que-rebota__sombra {
+    animation: none;
+  }
+
+  .pelota-que-rebota__salto {
+    transform: translateY(var(--caida));
+  }
+
+  .pelota-que-rebota__forma {
+    animation: pelota-respiro 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pelota-respiro {
+    50% {
+      opacity: 0.55;
+    }
+  }
+}
+
+/* Pantalla completa: la cancha cubre todo y la pelota pica sobre el centro. */
+.espera-de-cancha {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+}
+
+/* La sombra de la pelota cae justo sobre la línea de medio campo. */
+.espera-de-cancha__centro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  translate: -50% calc(-3.5rem * 2.42);
+}
+
+.espera-de-cancha__texto {
+  margin: 0;
+  color: var(--color-tiza);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Contenido en espera: la pelota pica sola sobre una línea de césped, sin caja alrededor. */
+.carga-de-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  min-height: 18rem;
+  padding-block: 3rem;
+}
+
+.carga-de-contenido__jugada {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* La sombra de la pelota cae justo sobre el piso de la línea. */
+.carga-de-contenido__jugada .linea-de-cesped {
+  margin-top: calc(-0.9rem);
+}
+
+.carga-de-contenido__texto {
+  margin: 0;
+  color: var(--color-grava);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.linea-de-cesped {
+  display: block;
+  width: 16rem;
+  max-width: 80vw;
+  height: auto;
+}
+
+.linea-de-cesped__hojas {
+  fill: var(--color-botella);
+  opacity: 0.85;
+}
+
+.linea-de-cesped__piso {
+  fill: var(--color-botella-oscura);
+  opacity: 0.55;
+}
+
+/*
+ * Al entrar o recargar, mientras la página sigue llegando, la carga de contenido
+ * se ve como la cancha completa: una sola carga hasta que todo está listo.
+ */
+.carga-de-contenido__pantalla {
+  display: none;
+}
+
+html:not([data-carga-inicial="lista"]) .carga-de-contenido__pantalla {
+  display: contents;
+}
+
+html:not([data-carga-inicial="lista"]) .carga-de-contenido {
+  visibility: hidden;
+}

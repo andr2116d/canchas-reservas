@@ -22,3 +22,7 @@ pnpm-lock.yaml
 yarn.lock
 bun.lock
 server/src/generated/
+
+# Resultados de Playwright
+test-results/
+playwright-report/

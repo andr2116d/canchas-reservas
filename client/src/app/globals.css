@@ -1,34 +1,69 @@
 @import "tailwindcss";
+@import "../compartido/ui/movimiento-de-acceso.css";
+@import "../compartido/ui/cancha-completa.css";
+@import "../compartido/ui/espera-de-cancha.css";
+@import "../compartido/ui/pantalla-de-aviso.css";
+@import "../compartido/ui/avisos-flotantes.css";
+@import "../compartido/marco/marco-interno.css";
+@import "../features/canchas/componentes/canchas.css";
+@import "../features/adicionales/componentes/adicionales.css";
+@import "../features/historial/componentes/historial.css";
+@import "../features/disponibilidad/componentes/disponibilidad.css";
+@import "../compartido/sitio/sitio.css";
+@import "../features/portada/componentes/portada.css";
+@import "../features/legal/componentes/legal.css";
 
 @theme {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-titular: var(--fuente-big-shoulders), "Arial Narrow", sans-serif;
+  --font-texto: var(--fuente-instrument-sans), system-ui, sans-serif;
 
-  --color-cesped-50: #e8f5ee;
-  --color-cesped-600: #157a4a;
-  --color-cesped-700: #0f6038;
-  --color-noche-100: #e3e8f3;
-  --color-noche-900: #13203a;
-  --color-cal-400: #f2b705;
+  /* Paleta del club: césped de noche, verde de camiseta, tiza y brazalete de capitán. */
+  --color-cancha: #0e3b2e;
+  --color-cancha-clara: #13473a;
+  --color-botella: #17573f;
+  --color-botella-oscura: #10412f;
+  --color-tiza: #f4f6ef;
+  --color-papel: #fbfcf8;
+  --color-capitan: #dceb7b;
+  --color-tinta: #13261e;
+  --color-grava: #56655d;
+  --color-linea: #d3dbd1;
+  --color-alerta: #a86b00;
+  --color-error: #b3261e;
+  --color-error-fondo: #fbeceb;
+}
 
-  --color-fondo: #f6f7f4;
-  --color-superficie: #ffffff;
-  --color-linea: #e2e5df;
-  --color-texto: #121a15;
-  --color-texto-suave: #5b665f;
-  --color-texto-apagado: #a3aba6;
-
-  --color-exito: #166534;
-  --color-exito-fondo: #dcfce7;
-  --color-alerta: #92400e;
-  --color-alerta-fondo: #fef3c7;
-  --color-error: #b91c1c;
-  --color-error-fondo: #fee2e2;
-  --color-info: #1d4ed8;
-  --color-info-fondo: #dbeafe;
+/* La página no rebota al llegar a sus bordes y, si el sistema la estira igual, se ve el mismo fondo. */
+html {
+  background: var(--color-tiza);
+  overscroll-behavior: none;
 }
 
 body {
-  background: var(--color-fondo);
-  color: var(--color-texto);
+  background: var(--color-tiza);
+  color: var(--color-tinta);
+  overscroll-behavior: none;
+  /* Nada se sale por los costados: recorta sin crear scroll horizontal ni romper el panel fijo. */
+  overflow-x: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* El sello de la ficha aparece cuando todos los datos son válidos. */
+@keyframes sello {
+  from {
+    transform: scale(1.4) rotate(6deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(6deg);
+    opacity: 1;
+  }
 }

@@ -1,0 +1,11 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".int-spec.ts$",
+  "globalSetup": "<rootDir>/compartido/soporte/preparar-base-de-pruebas.ts",
+  "setupFiles": ["<rootDir>/compartido/soporte/entorno-de-pruebas.ts"],
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}

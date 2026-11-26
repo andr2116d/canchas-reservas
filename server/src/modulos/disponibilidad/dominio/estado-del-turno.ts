@@ -1,0 +1,52 @@
+/** Etapas de una reserva que ocupan su turno. */
+export type EstadoDeReserva =
+  'PENDIENTE_DE_PAGO' | 'PENDIENTE_DE_VALIDACION' | 'CONFIRMADA' | 'EN_JUEGO';
+
+/** Cómo se ve un turno de una cancha. Solo `DISPONIBLE` se puede elegir. */
+export type EstadoDelTurno =
+  | 'DISPONIBLE'
+  | 'PENDIENTE'
+  | 'OCUPADO'
+  | 'MANTENIMIENTO'
+  | 'SIN_LUZ'
+  | 'YA_EMPEZO';
+
+const OCUPAN: EstadoDeReserva[] = ['CONFIRMADA', 'EN_JUEGO'];
+
+interface Rango {
+  inicio: Date;
+  fin: Date;
+}
+
+export interface TurnoDeUnaCancha extends Rango {
+  canchaId: number;
+  /** El turno llega a la noche y la cancha no tiene luz. */
+  necesitaLuzSinTenerla: boolean;
+}
+
+export interface OcupacionConocida {
+  reservas: (Rango & { canchaId: number; estado: EstadoDeReserva })[];
+  bloqueos: (Rango & { canchaId: number })[];
+  ahora: Date;
+}
+
+/**
+ * Estado de un turno: sin luz, en mantenimiento si toca un bloqueo (aunque sea en
+ * parte), ocupado o pendiente según sus reservas y, si nada lo ocupa, ya empezado o libre.
+ */
+export function estadoDelTurno(
+  turno: TurnoDeUnaCancha,
+  { reservas, bloqueos, ahora }: OcupacionConocida,
+): EstadoDelTurno {
+  const cruza = (otro: Rango & { canchaId: number }) =>
+    otro.canchaId === turno.canchaId &&
+    otro.inicio < turno.fin &&
+    turno.inicio < otro.fin;
+  if (turno.necesitaLuzSinTenerla) return 'SIN_LUZ';
+  if (bloqueos.some(cruza)) return 'MANTENIMIENTO';
+  const suyas = reservas.filter(cruza);
+  if (suyas.some((reserva) => OCUPAN.includes(reserva.estado)))
+    return 'OCUPADO';
+  if (suyas.length > 0) return 'PENDIENTE';
+  return turno.inicio <= ahora ? 'YA_EMPEZO' : 'DISPONIBLE';
+}

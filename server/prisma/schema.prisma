@@ -9,530 +9,595 @@ datasource db {
   provider = "postgresql"
 }
 
-// Enums
+enum TipoDocumento {
+  DNI               @map("dni")
+  CARNE_EXTRANJERIA @map("carne_extranjeria")
 
-enum Rol {
-  ADMINISTRADOR
-  RECEPCIONISTA
-  JUGADOR
+  @@map("tipo_documento")
+}
+
+enum RolUsuario {
+  JUGADOR       @map("jugador")
+  ADMINISTRADOR @map("administrador")
+  RECEPCIONISTA @map("recepcionista")
+
+  @@map("rol_usuario")
 }
 
 enum EstadoUsuario {
-  ACTIVO
-  INACTIVO
-}
+  ACTIVO   @map("activo")
+  INACTIVO @map("inactivo")
 
-enum TipoDocumento {
-  DNI
-  CE
+  @@map("estado_usuario")
 }
-
-enum MotivoAcceso {
-  OK
-  CREDENCIALES
-  INACTIVO
-}
-
-enum TamanoCancha {
-  FUTBOL_5
-  FUTBOL_7
-}
-
-enum EstadoCancha {
-  OPERATIVA
-  EN_MANTENIMIENTO
-}
-
-enum Franja {
-  DIA
-  NOCHE
-}
-
-enum TipoCompensacion {
-  DEVOLUCION
-  CREDITO
-}
-
-enum EstadoReserva {
-  PENDIENTE_PAGO
-  PENDIENTE_VALIDACION
-  CONFIRMADA
-  EN_JUEGO
-  FINALIZADA
-  CANCELADA
-  EXPIRADA
-  AUSENTE
-}
-
-enum OrigenReserva {
-  PLATAFORMA
-  RECEPCION
-}
-
-enum ConceptoPago {
-  ADELANTO
-  SALDO
-  ADICIONALES
-}
-
-enum CanalPago {
-  RECEPCION
-  ONLINE
-}
-
-enum MetodoPago {
-  EFECTIVO
-  YAPE
-  PLIN
-  TRANSFERENCIA
-  TARJETA
-  CREDITO
-}
-
-enum EstadoPago {
-  EN_PROCESO
-  PENDIENTE_VALIDACION
-  APROBADO
-  RECHAZADO
-}
-
-enum MotivoCancelacion {
-  CLIENTE
-  INCIDENCIA
-}
-
-enum ResultadoCancelacion {
-  SIN_COMPENSACION
-  DEVOLUCION
-  CREDITO
-  RETENCION
-}
-
-enum EstadoCompensacion {
-  NO_APLICA
-  PENDIENTE
-  PARCIAL
-  ATENDIDA
-}
-
-enum ResultadoCierre {
-  SOBRANTE
-  FALTANTE
-  SIN_DIFERENCIA
-}
-
-// Acceso y usuarios
 
 model Usuario {
-  id              Int           @id @default(autoincrement())
-  nombres         String
-  apellidos       String?
-  tipoDocumento   TipoDocumento @map("tipo_documento")
-  numeroDocumento String        @map("numero_documento")
-  correo          String?       @unique
-  telefono        String
-  passwordHash    String?       @map("password_hash")
-  rol             Rol           @default(JUGADOR)
-  estado          EstadoUsuario @default(ACTIVO)
-  creadoPorId     Int?          @map("creado_por_id")
-  creadoEn        DateTime      @default(now()) @map("creado_en")
-  actualizadoEn   DateTime      @updatedAt @map("actualizado_en")
+  id                           Int                  @id @default(autoincrement())
+  nombresCifrado               String               @map("nombres_cifrado")
+  apellidosCifrado             String               @map("apellidos_cifrado")
+  fechaNacimientoCifrada       String?              @map("fecha_nacimiento_cifrada")
+  dorsal                       Int?                 @db.SmallInt
+  tipoDocumento                TipoDocumento?       @map("tipo_documento")
+  numeroDocumentoCifrado       String?              @map("numero_documento_cifrado")
+  documentoHash                String?              @map("documento_hash")
+  correoCifrado                String               @map("correo_cifrado")
+  correoHash                   String               @unique @map("correo_hash")
+  celularCifrado               String?              @map("celular_cifrado")
+  contrasenaHash               String               @map("contrasena_hash")
+  rol                          RolUsuario
+  estado                       EstadoUsuario
+  creadoEn                     DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn                DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  versionLegalAceptada         String?              @map("version_legal_aceptada")
+  aceptacionLegalEn            DateTime?            @map("aceptacion_legal_en") @db.Timestamptz(3)
+  canalAceptacionLegal         String?              @map("canal_aceptacion_legal")
+  sesiones                     Sesion[]
+  requiereCambiarContrasena    Boolean              @default(false) @map("requiere_cambiar_contrasena")
+  /// Hasta cuándo sirve la contraseña temporal; vacío si la contraseña ya no es temporal.
+  contrasenaTemporalVenceEn    DateTime?            @map("contrasena_temporal_vence_en") @db.Timestamptz(3)
+  /// Cuándo la persona del personal completó o confirmó sus datos; vacío hasta su primer ingreso.
+  datosConfirmadosEn           DateTime?            @map("datos_confirmados_en") @db.Timestamptz(3)
+  /// Cuándo pasó de DNI a carné de extranjería o al revés: solo se permite una vez.
+  documentoCambiadoEn          DateTime?            @map("documento_cambiado_en") @db.Timestamptz(3)
+  accesos                      RegistroAcceso[]
+  accionesRecibidas            RegistroAuditoria[]  @relation("AccionesRecibidas")
+  accionesEjecutadas           RegistroAuditoria[]  @relation("AccionesEjecutadas")
+  tarifasGuardadas             TarifaDeCancha[]
+  horariosGuardados            HorarioDeAtencion[]
+  reglasDeCancelacionGuardadas ReglaDeCancelacion[]
+  cambiosDeCanchas             CambioDeCancha[]
+  bloqueosCreados              BloqueoDeCancha[]
+  cambiosDeAdicionales         CambioDeAdicional[]
+  adelantosGuardados           AdelantoMinimo[]
+  reservasComoTitular          Reserva[]
+  hojasDeReclamacion           HojaDeReclamacion[]
+  hojasRespondidas             HojaDeReclamacion[]  @relation("HojasRespondidas")
+  cambiosDeHojas               CambioDeHoja[]
+  avisos                       Aviso[]
 
-  creadoPor           Usuario?            @relation("UsuarioCreadoPor", fields: [creadoPorId], references: [id])
-  usuariosCreados     Usuario[]           @relation("UsuarioCreadoPor")
-  tokensRecuperacion  TokenRecuperacion[]
-  accesos             RegistroAcceso[]
-  auditorias          Auditoria[]
-  tarifas             Tarifa[]
-  bloqueos            Bloqueo[]
-  reservas            Reserva[]           @relation("ReservaJugador")
-  reservasCreadas     Reserva[]           @relation("ReservaCreadaPor")
-  pagosRegistrados    Pago[]              @relation("PagoRegistradoPor")
-  pagosValidados      Pago[]              @relation("PagoValidadoPor")
-  consumos            ConsumoAdicional[]
-  cancelaciones       Cancelacion[]
-  devoluciones        Devolucion[]
-  creditos            Credito[]           @relation("CreditoJugador")
-  creditosHabilitados Credito[]           @relation("CreditoHabilitadoPor")
-  reubicaciones       Reubicacion[]
-  cierres             CierreCaja[]
-  correccionesCaja    CorreccionCaja[]
-
-  @@unique([tipoDocumento, numeroDocumento])
-  @@index([rol, estado])
-  @@index([telefono])
+  @@unique([documentoHash, rol])
   @@map("usuario")
 }
 
-model TokenRecuperacion {
-  id        Int       @id @default(autoincrement())
-  usuarioId Int       @map("usuario_id")
-  tokenHash String    @unique @map("token_hash")
-  expiraEn  DateTime  @map("expira_en")
-  usadoEn   DateTime? @map("usado_en")
-  creadoEn  DateTime  @default(now()) @map("creado_en")
+model Sesion {
+  id                Int      @id @default(autoincrement())
+  usuarioId         Int      @map("usuario_id")
+  tokenHash         String   @unique @map("token_hash")
+  ultimaActividadEn DateTime @map("ultima_actividad_en") @db.Timestamptz(3)
+  expiraEn          DateTime @map("expira_en") @db.Timestamptz(3)
+  creadaEn          DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+  /// En esta sesión la persona eligió cambiar su contraseña temporal más tarde.
+  cambioOmitido     Boolean  @default(false) @map("cambio_omitido")
+  /// Navegador y sistema desde los que se abrió, como «Chrome en Windows».
+  dispositivo       String?
 
-  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId])
-  @@map("token_recuperacion")
+  @@map("sesion")
 }
 
 model RegistroAcceso {
-  id        Int          @id @default(autoincrement())
-  usuarioId Int?         @map("usuario_id")
-  correo    String
-  exito     Boolean
-  motivo    MotivoAcceso
-  ip        String?
-  fecha     DateTime     @default(now())
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int      @map("usuario_id")
+  ocurridoEn DateTime @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
 
-  usuario Usuario? @relation(fields: [usuarioId], references: [id])
-
-  @@index([fecha])
-  @@index([usuarioId, fecha])
+  @@index([usuarioId, ocurridoEn])
   @@map("registro_acceso")
 }
 
-model Auditoria {
-  id        Int      @id @default(autoincrement())
-  fecha     DateTime @default(now())
-  usuarioId Int?     @map("usuario_id")
-  accion    String
-  entidad   String
-  entidadId Int?     @map("entidad_id")
-  motivo    String?
-  detalle   Json?
+enum AccionAuditada {
+  ALTA                           @map("alta")
+  EDICION                        @map("edicion")
+  DESACTIVACION                  @map("desactivacion")
+  REACTIVACION                   @map("reactivacion")
+  RESTABLECIMIENTO_DE_CONTRASENA @map("restablecimiento_de_contrasena")
+  CONFIRMACION_DE_DATOS          @map("confirmacion_de_datos")
+  EDICION_PROPIA                 @map("edicion_propia")
+  CAMBIO_DE_CONTRASENA           @map("cambio_de_contrasena")
+  CAMBIO_DE_CORREO               @map("cambio_de_correo")
+  CAMBIO_DE_DOCUMENTO            @map("cambio_de_documento")
 
-  usuario Usuario? @relation(fields: [usuarioId], references: [id])
-
-  @@index([fecha])
-  @@index([usuarioId, fecha])
-  @@index([accion, fecha])
-  @@index([entidad, entidadId])
-  @@map("auditoria")
+  @@map("accion_auditada")
 }
 
-// Configuración del complejo
+/// Acción del personal sobre una cuenta: quién la hizo, a quién y cuándo.
+model RegistroAuditoria {
+  id                Int            @id @default(autoincrement())
+  accion            AccionAuditada
+  usuarioAfectadoId Int            @map("usuario_afectado_id")
+  ejecutadoPorId    Int            @map("ejecutado_por_id")
+  ocurridoEn        DateTime       @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  usuarioAfectado   Usuario        @relation("AccionesRecibidas", fields: [usuarioAfectadoId], references: [id])
+  ejecutadoPor      Usuario        @relation("AccionesEjecutadas", fields: [ejecutadoPorId], references: [id])
 
+  @@index([usuarioAfectadoId, ocurridoEn])
+  @@map("registro_auditoria")
+}
+
+enum TipoDeCancha {
+  FUTBOL_5 @map("futbol_5")
+  FUTBOL_7 @map("futbol_7")
+
+  @@map("tipo_de_cancha")
+}
+
+/// Cada versión guardada de la tarifa de un tipo de cancha; la vigente es la más reciente.
+model TarifaDeCancha {
+  id                    Int          @id @default(autoincrement())
+  tipoDeCancha          TipoDeCancha @map("tipo_de_cancha")
+  precioDia             Decimal      @map("precio_dia") @db.Decimal(10, 2)
+  precioNoche           Decimal      @map("precio_noche") @db.Decimal(10, 2)
+  duracionDelTurnoHoras Int          @map("duracion_del_turno_horas") @db.SmallInt
+  /// Si el rato final del día que no alcanza para un turno se ofrece como turno corto.
+  ofreceTurnoCorto      Boolean      @default(false) @map("ofrece_turno_corto")
+  guardadaPorId         Int          @map("guardada_por_id")
+  guardadaEn            DateTime     @default(now()) @map("guardada_en") @db.Timestamptz(3)
+  guardadaPor           Usuario      @relation(fields: [guardadaPorId], references: [id])
+
+  @@index([tipoDeCancha, guardadaEn])
+  @@map("tarifa_de_cancha")
+}
+
+enum DiaDeLaSemana {
+  LUNES     @map("lunes")
+  MARTES    @map("martes")
+  MIERCOLES @map("miercoles")
+  JUEVES    @map("jueves")
+  VIERNES   @map("viernes")
+  SABADO    @map("sabado")
+  DOMINGO   @map("domingo")
+
+  @@map("dia_de_la_semana")
+}
+
+/// Cada versión guardada del horario de atención; la vigente es la más reciente.
+/// Las horas se guardan en minutos desde la medianoche.
+model HorarioDeAtencion {
+  id                      Int             @id @default(autoincrement())
+  minutoDeInicioDeLaNoche Int             @map("minuto_de_inicio_de_la_noche") @db.SmallInt
+  guardadoPorId           Int             @map("guardado_por_id")
+  guardadoEn              DateTime        @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  guardadoPor             Usuario         @relation(fields: [guardadoPorId], references: [id])
+  dias                    HorarioDelDia[]
+
+  @@index([guardadoEn])
+  @@map("horario_de_atencion")
+}
+
+/// Un día abierto de una versión del horario. Un día sin fila está cerrado.
+model HorarioDelDia {
+  horarioId               Int               @map("horario_id")
+  dia                     DiaDeLaSemana
+  minutoDeApertura        Int               @map("minuto_de_apertura") @db.SmallInt
+  minutoDeCierre          Int               @map("minuto_de_cierre") @db.SmallInt
+  minutoDeInicioDeLaNoche Int?              @map("minuto_de_inicio_de_la_noche") @db.SmallInt
+  horario                 HorarioDeAtencion @relation(fields: [horarioId], references: [id], onDelete: Cascade)
+
+  @@id([horarioId, dia])
+  @@map("horario_del_dia")
+}
+
+/// Cada versión guardada de la regla de cancelación del local; la vigente es la más reciente.
+model ReglaDeCancelacion {
+  id            Int                  @id @default(autoincrement())
+  guardadaPorId Int                  @map("guardada_por_id")
+  guardadaEn    DateTime             @default(now()) @map("guardada_en") @db.Timestamptz(3)
+  guardadaPor   Usuario              @relation(fields: [guardadaPorId], references: [id])
+  rangos        RangoDeCancelacion[]
+
+  @@index([guardadaEn])
+  @@map("regla_de_cancelacion")
+}
+
+/// Un rango de una versión de la regla: desde cuántas horas antes rige y cuánto del anticipo devuelve.
+model RangoDeCancelacion {
+  reglaId       Int                @map("regla_id")
+  desdeHoras    Int                @map("desde_horas") @db.SmallInt
+  porcentaje    Int                @db.SmallInt
+  ofreceCredito Boolean            @map("ofrece_credito")
+  regla         ReglaDeCancelacion @relation(fields: [reglaId], references: [id], onDelete: Cascade)
+
+  @@id([reglaId, desdeHoras])
+  @@map("rango_de_cancelacion")
+}
+
+enum EstadoDeCancha {
+  OPERATIVA   @map("operativa")
+  DESACTIVADA @map("desactivada")
+
+  @@map("estado_de_cancha")
+}
+
+enum CaracteristicaDeCancha {
+  TECHADA          @map("techada")
+  BANCAS           @map("bancas")
+  JUNTO_A_LA_PARED @map("junto_a_la_pared")
+  GRADERIAS        @map("graderias")
+  MALLA_ALTA       @map("malla_alta")
+  VESTUARIO_CERCA  @map("vestuario_cerca")
+
+  @@map("caracteristica_de_cancha")
+}
+
+/// Una cancha del local. El nombre normalizado (minúsculas, sin tildes ni espacios de más) no se repite.
 model Cancha {
-  id            Int          @id @default(autoincrement())
-  nombre        String
-  tamano        TamanoCancha
-  iluminacion   Boolean
-  estado        EstadoCancha @default(OPERATIVA)
-  activa        Boolean      @default(true)
-  creadoEn      DateTime     @default(now()) @map("creado_en")
-  actualizadoEn DateTime     @updatedAt @map("actualizado_en")
-
-  tarifas            Tarifa[]
-  bloqueos           Bloqueo[]
-  reservas           Reserva[]
-  reubicacionesDesde Reubicacion[] @relation("ReubicacionCanchaAnterior")
-  reubicacionesHacia Reubicacion[] @relation("ReubicacionCanchaNueva")
+  id                Int                      @id @default(autoincrement())
+  nombre            String
+  nombreNormalizado String                   @unique @map("nombre_normalizado")
+  tipo              TipoDeCancha
+  /// Sin iluminación solo se ofrecen turnos de día.
+  tieneIluminacion  Boolean                  @map("tiene_iluminacion")
+  caracteristicas   CaracteristicaDeCancha[]
+  nota              String?
+  estado            EstadoDeCancha           @default(OPERATIVA)
+  /// Sube en cada escritura: un guardado hecho sobre una versión vieja se rechaza.
+  version           Int                      @default(0)
+  creadoEn          DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn     DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  cambios           CambioDeCancha[]
+  bloqueos          BloqueoDeCancha[]
+  reservas          Reserva[]
 
   @@map("cancha")
 }
 
-model Tarifa {
-  id           Int       @id @default(autoincrement())
-  canchaId     Int       @map("cancha_id")
-  franja       Franja
-  valor        Decimal   @db.Decimal(10, 2)
-  vigenteDesde DateTime  @default(now()) @map("vigente_desde")
-  vigenteHasta DateTime? @map("vigente_hasta")
-  creadoPorId  Int       @map("creado_por_id")
+enum AccionSobreCancha {
+  ALTA                  @map("alta")
+  EDICION               @map("edicion")
+  DESACTIVACION         @map("desactivacion")
+  REACTIVACION          @map("reactivacion")
+  ELIMINACION           @map("eliminacion")
+  BLOQUEO               @map("bloqueo")
+  LIBERACION_DE_BLOQUEO @map("liberacion_de_bloqueo")
+  RETIRO_DE_BLOQUEO     @map("retiro_de_bloqueo")
 
-  cancha    Cancha  @relation(fields: [canchaId], references: [id])
-  creadoPor Usuario @relation(fields: [creadoPorId], references: [id])
-
-  @@index([canchaId, franja, vigenteHasta])
-  @@map("tarifa")
+  @@map("accion_sobre_cancha")
 }
 
-model HorarioDia {
-  diaSemana Int     @id @map("dia_semana")
-  abierto   Boolean @default(false)
-  apertura  String?
-  cierre    String?
+/// Auditoría de las canchas: quién hizo cada acción y cuándo. Conserva el nombre si la cancha se elimina.
+model CambioDeCancha {
+  id               Int               @id @default(autoincrement())
+  canchaId         Int?              @map("cancha_id")
+  nombreDeLaCancha String            @map("nombre_de_la_cancha")
+  accion           AccionSobreCancha
+  /// En una edición, el valor anterior y el nuevo de cada dato que cambió.
+  detalle          Json?
+  ejecutadoPorId   Int               @map("ejecutado_por_id")
+  ocurridoEn       DateTime          @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  cancha           Cancha?           @relation(fields: [canchaId], references: [id], onDelete: SetNull)
+  ejecutadoPor     Usuario           @relation(fields: [ejecutadoPorId], references: [id])
 
-  @@map("horario_dia")
+  @@index([ocurridoEn])
+  @@index([canchaId])
+  @@map("cambio_de_cancha")
 }
 
-model Configuracion {
-  id                    Int      @id @default(1)
-  inicioNoche           String   @default("18:00") @map("inicio_noche")
-  tiempoLimitePagoMin   Int      @default(15) @map("tiempo_limite_pago_min")
-  minutosAntesCheckIn   Int      @default(30) @map("minutos_antes_check_in")
-  toleranciaAusenciaMin Int      @default(15) @map("tolerancia_ausencia_min")
-  actualizadoEn         DateTime @updatedAt @map("actualizado_en")
+enum TipoDeBloqueo {
+  PROGRAMADO @map("programado")
+  EMERGENCIA @map("emergencia")
 
-  @@map("configuracion")
+  @@map("tipo_de_bloqueo")
 }
 
-model Bloqueo {
-  id            Int      @id @default(autoincrement())
-  canchaId      Int      @map("cancha_id")
-  inicio        DateTime
-  fin           DateTime
-  motivo        String
-  creadoPorId   Int      @map("creado_por_id")
-  creadoEn      DateTime @default(now()) @map("creado_en")
-  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+/// Rango en que una cancha no se puede reservar por mantenimiento. Dos bloqueos de la misma cancha no se pisan.
+model BloqueoDeCancha {
+  id          Int           @id @default(autoincrement())
+  canchaId    Int           @map("cancha_id")
+  tipo        TipoDeBloqueo
+  motivo      String
+  inicio      DateTime      @db.Timestamptz(3)
+  fin         DateTime      @db.Timestamptz(3)
+  /// Si se liberó antes de terminar, desde cuándo la cancha volvió a estar disponible.
+  liberadoEn  DateTime?     @map("liberado_en") @db.Timestamptz(3)
+  creadoPorId Int           @map("creado_por_id")
+  creadoEn    DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
+  cancha      Cancha        @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  creadoPor   Usuario       @relation(fields: [creadoPorId], references: [id])
 
-  cancha    Cancha  @relation(fields: [canchaId], references: [id])
-  creadoPor Usuario @relation(fields: [creadoPorId], references: [id])
-
-  @@index([canchaId, inicio, fin])
-  @@map("bloqueo")
+  @@index([canchaId, inicio])
+  @@index([fin])
+  @@map("bloqueo_de_cancha")
 }
 
-model ReglaCancelacion {
-  id                Int              @id @default(1)
-  horasAnticipacion Int              @default(24) @map("horas_anticipacion")
-  tipoCompensacion  TipoCompensacion @default(CREDITO) @map("tipo_compensacion")
-  actualizadoEn     DateTime         @updatedAt @map("actualizado_en")
+enum EstadoDeAdicional {
+  ACTIVO      @map("activo")
+  DESACTIVADO @map("desactivado")
 
-  @@map("regla_cancelacion")
+  @@map("estado_de_adicional")
 }
 
+/// Material que el local presta en la cancha y su precio por unidad perdida o rota, con IGV.
 model Adicional {
-  id            Int      @id @default(autoincrement())
-  nombre        String
-  precio        Decimal  @db.Decimal(10, 2)
-  activo        Boolean  @default(true)
-  creadoEn      DateTime @default(now()) @map("creado_en")
-  actualizadoEn DateTime @updatedAt @map("actualizado_en")
-
-  consumos ConsumoAdicional[]
+  id                Int                 @id @default(autoincrement())
+  nombre            String
+  nombreNormalizado String              @unique @map("nombre_normalizado")
+  descripcion       String?
+  precio            Decimal             @db.Decimal(10, 2)
+  estado            EstadoDeAdicional   @default(ACTIVO)
+  /// Sube en cada escritura: un guardado hecho sobre una versión vieja se rechaza.
+  version           Int                 @default(0)
+  creadoEn          DateTime            @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn     DateTime            @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  cambios           CambioDeAdicional[]
 
   @@map("adicional")
 }
 
-// Reservas
+enum AccionSobreAdicional {
+  ALTA          @map("alta")
+  EDICION       @map("edicion")
+  DESACTIVACION @map("desactivacion")
+  REACTIVACION  @map("reactivacion")
+  ELIMINACION   @map("eliminacion")
 
+  @@map("accion_sobre_adicional")
+}
+
+/// Auditoría de los adicionales: quién hizo cada acción y cuándo. Conserva el nombre si el adicional se elimina.
+model CambioDeAdicional {
+  id                 Int                  @id @default(autoincrement())
+  adicionalId        Int?                 @map("adicional_id")
+  nombreDelAdicional String               @map("nombre_del_adicional")
+  accion             AccionSobreAdicional
+  /// En un alta, los valores con que se creó; en una edición, el valor anterior y el nuevo de lo que cambió.
+  detalle            Json?
+  ejecutadoPorId     Int                  @map("ejecutado_por_id")
+  ocurridoEn         DateTime             @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  adicional          Adicional?           @relation(fields: [adicionalId], references: [id], onDelete: SetNull)
+  ejecutadoPor       Usuario              @relation(fields: [ejecutadoPorId], references: [id])
+
+  @@index([ocurridoEn])
+  @@index([adicionalId])
+  @@map("cambio_de_adicional")
+}
+
+/// Cada versión guardada del adelanto mínimo del local; la vigente es la más reciente.
+model AdelantoMinimo {
+  id            Int      @id @default(autoincrement())
+  /// Porcentaje entero del precio del turno, de 1 a 100.
+  porcentaje    Int      @db.SmallInt
+  guardadoPorId Int      @map("guardado_por_id")
+  guardadoEn    DateTime @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  guardadoPor   Usuario  @relation(fields: [guardadoPorId], references: [id])
+
+  @@index([guardadoEn])
+  @@map("adelanto_minimo")
+}
+
+/// Etapas en que una reserva ocupa su turno.
+enum EstadoDeReserva {
+  PENDIENTE_DE_PAGO       @map("pendiente_de_pago")
+  PENDIENTE_DE_VALIDACION @map("pendiente_de_validacion")
+  CONFIRMADA              @map("confirmada")
+  EN_JUEGO                @map("en_juego")
+
+  @@map("estado_de_reserva")
+}
+
+/// Un turno de una cancha separado por un titular. Dos reservas de la misma cancha no se pisan.
 model Reserva {
-  id                     Int              @id @default(autoincrement())
-  codigo                 String           @unique
-  jugadorId              Int              @map("jugador_id")
-  creadoPorId            Int              @map("creado_por_id")
-  origen                 OrigenReserva    @default(PLATAFORMA)
-  canchaId               Int              @map("cancha_id")
-  fecha                  DateTime         @db.Date
-  horaInicio             String           @map("hora_inicio")
-  horaFin                String           @map("hora_fin")
-  inicioEn               DateTime         @map("inicio_en")
-  finEn                  DateTime         @map("fin_en")
-  franja                 Franja
-  valorTurno             Decimal          @map("valor_turno") @db.Decimal(10, 2)
-  adelantoMinimo         Decimal          @map("adelanto_minimo") @db.Decimal(10, 2)
-  estado                 EstadoReserva    @default(PENDIENTE_PAGO)
-  venceEn                DateTime?        @map("vence_en")
-  reglaHorasAnticipacion Int              @map("regla_horas_anticipacion")
-  reglaTipoCompensacion  TipoCompensacion @map("regla_tipo_compensacion")
-  confirmadaEn           DateTime?        @map("confirmada_en")
-  checkInEn              DateTime?        @map("check_in_en")
-  finalizadaEn           DateTime?        @map("finalizada_en")
-  ausenteEn              DateTime?        @map("ausente_en")
-  canceladaEn            DateTime?        @map("cancelada_en")
-  expiradaEn             DateTime?        @map("expirada_en")
-  creadoEn               DateTime         @default(now()) @map("creado_en")
-  actualizadoEn          DateTime         @updatedAt @map("actualizado_en")
+  id            Int             @id @default(autoincrement())
+  canchaId      Int             @map("cancha_id")
+  titularId     Int             @map("titular_id")
+  inicio        DateTime        @db.Timestamptz(3)
+  fin           DateTime        @db.Timestamptz(3)
+  estado        EstadoDeReserva
+  creadoEn      DateTime        @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime        @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  cancha        Cancha          @relation(fields: [canchaId], references: [id])
+  titular       Usuario         @relation(fields: [titularId], references: [id])
 
-  jugador       Usuario            @relation("ReservaJugador", fields: [jugadorId], references: [id])
-  creadoPor     Usuario            @relation("ReservaCreadaPor", fields: [creadoPorId], references: [id])
-  cancha        Cancha             @relation(fields: [canchaId], references: [id])
-  pagos         Pago[]
-  consumos      ConsumoAdicional[]
-  cancelacion   Cancelacion?
-  reubicaciones Reubicacion[]
-
-  @@index([fecha, canchaId])
-  @@index([jugadorId, estado])
-  @@index([estado, venceEn])
+  @@index([canchaId, inicio])
+  @@index([inicio])
+  @@index([titularId])
   @@map("reserva")
 }
 
-// Pagos y adicionales
+enum EstadoDeCorreo {
+  PENDIENTE @map("pendiente")
+  ENVIADO   @map("enviado")
+  FALLIDO   @map("fallido")
 
-model Pago {
-  id                Int          @id @default(autoincrement())
-  reservaId         Int          @map("reserva_id")
-  concepto          ConceptoPago
-  canal             CanalPago
-  metodo            MetodoPago
-  monto             Decimal      @db.Decimal(10, 2)
-  estado            EstadoPago
-  numeroOperacion   String?      @map("numero_operacion")
-  comprobanteUrl    String?      @map("comprobante_url")
-  codigoTransaccion String?      @unique @map("codigo_transaccion")
-  respuestaPasarela Json?        @map("respuesta_pasarela")
-  registradoPorId   Int          @map("registrado_por_id")
-  validadoPorId     Int?         @map("validado_por_id")
-  validadoEn        DateTime?    @map("validado_en")
-  motivoRechazo     String?      @map("motivo_rechazo")
-  cierreCajaId      Int?         @map("cierre_caja_id")
-  creadoEn          DateTime     @default(now()) @map("creado_en")
-  actualizadoEn     DateTime     @updatedAt @map("actualizado_en")
-
-  reserva       Reserva            @relation(fields: [reservaId], references: [id])
-  registradoPor Usuario            @relation("PagoRegistradoPor", fields: [registradoPorId], references: [id])
-  validadoPor   Usuario?           @relation("PagoValidadoPor", fields: [validadoPorId], references: [id])
-  cierreCaja    CierreCaja?        @relation(fields: [cierreCajaId], references: [id])
-  creditoUsos   CreditoUso[]
-  consumos      ConsumoAdicional[]
-
-  @@index([reservaId, concepto, estado])
-  @@index([registradoPorId, cierreCajaId])
-  @@map("pago")
+  @@map("estado_de_correo")
 }
 
-model ConsumoAdicional {
-  id              Int      @id @default(autoincrement())
-  reservaId       Int      @map("reserva_id")
-  adicionalId     Int      @map("adicional_id")
-  nombre          String
-  precioUnitario  Decimal  @map("precio_unitario") @db.Decimal(10, 2)
-  cantidad        Int
-  subtotal        Decimal  @db.Decimal(10, 2)
-  pagoId          Int?     @map("pago_id")
-  registradoPorId Int      @map("registrado_por_id")
-  creadoEn        DateTime @default(now()) @map("creado_en")
-  actualizadoEn   DateTime @updatedAt @map("actualizado_en")
+/// Bandeja de salida: cada correo del servicio con su estado de envío. Queda como constancia de lo enviado.
+model CorreoSaliente {
+  id                  Int            @id @default(autoincrement())
+  destinatarioCifrado String         @map("destinatario_cifrado")
+  /// Sin datos personales: solo el motivo del correo y, si aplica, el número de la hoja.
+  asunto              String
+  textoCifrado        String         @map("texto_cifrado")
+  htmlCifrado         String         @map("html_cifrado")
+  estado              EstadoDeCorreo @default(PENDIENTE)
+  intentos            Int            @default(0) @db.SmallInt
+  /// Desde cuándo se puede volver a tomar: el próximo reintento o el fin de la reserva de quien lo envía.
+  proximoIntentoEn    DateTime       @map("proximo_intento_en") @db.Timestamptz(3)
+  ultimoError         String?        @map("ultimo_error")
+  enviadoEn           DateTime?      @map("enviado_en") @db.Timestamptz(3)
+  creadoEn            DateTime       @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn       DateTime       @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  reserva       Reserva   @relation(fields: [reservaId], references: [id])
-  adicional     Adicional @relation(fields: [adicionalId], references: [id])
-  pago          Pago?     @relation(fields: [pagoId], references: [id])
-  registradoPor Usuario   @relation(fields: [registradoPorId], references: [id])
-
-  @@index([reservaId])
-  @@map("consumo_adicional")
+  @@index([estado, proximoIntentoEn])
+  @@map("correo_saliente")
 }
 
-// Cancelaciones, devoluciones y créditos
+/// Reclamo: disconformidad con el servicio. Queja: malestar con la atención.
+enum TipoDeHoja {
+  RECLAMO @map("reclamo")
+  QUEJA   @map("queja")
 
-model Cancelacion {
-  id                  Int                  @id @default(autoincrement())
-  reservaId           Int                  @unique @map("reserva_id")
-  canceladaPorId      Int                  @map("cancelada_por_id")
-  motivo              MotivoCancelacion
-  detalleMotivo       String?              @map("detalle_motivo")
-  adelantoPagado      Decimal              @map("adelanto_pagado") @db.Decimal(10, 2)
-  resultado           ResultadoCancelacion
-  importeCompensacion Decimal              @map("importe_compensacion") @db.Decimal(10, 2)
-  importeRetenido     Decimal              @map("importe_retenido") @db.Decimal(10, 2)
-  estadoCompensacion  EstadoCompensacion   @map("estado_compensacion")
-  creadoEn            DateTime             @default(now()) @map("creado_en")
-
-  reserva      Reserva      @relation(fields: [reservaId], references: [id])
-  canceladaPor Usuario      @relation(fields: [canceladaPorId], references: [id])
-  devoluciones Devolucion[]
-  creditos     Credito[]
-
-  @@index([estadoCompensacion])
-  @@map("cancelacion")
+  @@map("tipo_de_hoja")
 }
 
-model Devolucion {
-  id              Int        @id @default(autoincrement())
-  cancelacionId   Int        @map("cancelacion_id")
-  monto           Decimal    @db.Decimal(10, 2)
-  metodo          MetodoPago
-  numeroOperacion String?    @map("numero_operacion")
-  registradoPorId Int        @map("registrado_por_id")
-  cierreCajaId    Int?       @map("cierre_caja_id")
-  creadoEn        DateTime   @default(now()) @map("creado_en")
+enum ServicioReclamado {
+  RESERVA_DE_CANCHA  @map("reserva_de_cancha")
+  MATERIAL_ADICIONAL @map("material_adicional")
+  OTRO               @map("otro")
 
-  cancelacion   Cancelacion @relation(fields: [cancelacionId], references: [id])
-  registradoPor Usuario     @relation(fields: [registradoPorId], references: [id])
-  cierreCaja    CierreCaja? @relation(fields: [cierreCajaId], references: [id])
-
-  @@index([registradoPorId, cierreCajaId])
-  @@map("devolucion")
+  @@map("servicio_reclamado")
 }
 
-model Credito {
-  id              Int      @id @default(autoincrement())
-  jugadorId       Int      @map("jugador_id")
-  monto           Decimal  @db.Decimal(10, 2)
-  saldo           Decimal  @db.Decimal(10, 2)
-  cancelacionId   Int?     @map("cancelacion_id")
-  habilitadoPorId Int?     @map("habilitado_por_id")
-  creadoEn        DateTime @default(now()) @map("creado_en")
+/// Por dónde quiere recibir la respuesta quien reclama.
+enum MedioDeRespuesta {
+  CORREO @map("correo")
+  CARTA  @map("carta")
 
-  jugador       Usuario      @relation("CreditoJugador", fields: [jugadorId], references: [id])
-  habilitadoPor Usuario?     @relation("CreditoHabilitadoPor", fields: [habilitadoPorId], references: [id])
-  cancelacion   Cancelacion? @relation(fields: [cancelacionId], references: [id])
-  usos          CreditoUso[]
-
-  @@index([jugadorId])
-  @@map("credito")
+  @@map("medio_de_respuesta")
 }
 
-model CreditoUso {
-  id        Int     @id @default(autoincrement())
-  creditoId Int     @map("credito_id")
-  pagoId    Int     @map("pago_id")
-  monto     Decimal @db.Decimal(10, 2)
+enum EstadoDeHoja {
+  NUEVA       @map("nueva")
+  EN_ATENCION @map("en_atencion")
+  RESPONDIDA  @map("respondida")
 
-  credito Credito @relation(fields: [creditoId], references: [id])
-  pago    Pago    @relation(fields: [pagoId], references: [id])
-
-  @@index([creditoId])
-  @@index([pagoId])
-  @@map("credito_uso")
+  @@map("estado_de_hoja")
 }
 
-model Reubicacion {
-  id               Int      @id @default(autoincrement())
-  reservaId        Int      @map("reserva_id")
-  canchaAnteriorId Int      @map("cancha_anterior_id")
-  canchaNuevaId    Int      @map("cancha_nueva_id")
-  motivo           String
-  registradoPorId  Int      @map("registrado_por_id")
-  creadoEn         DateTime @default(now()) @map("creado_en")
+/// Hoja del Libro de Reclamaciones. Los datos personales y los textos libres van cifrados. No se borra.
+model HojaDeReclamacion {
+  id                            Int               @id @default(autoincrement())
+  /// Año y correlativo forman el número de la hoja: 000014-2026.
+  anio                          Int               @db.SmallInt
+  correlativo                   Int
+  codigoSeguimientoHash         String            @map("codigo_seguimiento_hash")
+  /// La cuenta de jugador si reclamó con sesión iniciada; así la ve en «Mis reclamos».
+  titularId                     Int?              @map("titular_id")
+  tipoDocumento                 TipoDocumento     @map("tipo_documento")
+  numeroDocumentoCifrado        String            @map("numero_documento_cifrado")
+  nombresCifrado                String            @map("nombres_cifrado")
+  apellidosCifrado              String            @map("apellidos_cifrado")
+  domicilioCifrado              String            @map("domicilio_cifrado")
+  telefonoCifrado               String            @map("telefono_cifrado")
+  correoCifrado                 String            @map("correo_cifrado")
+  esMenorDeEdad                 Boolean           @map("es_menor_de_edad")
+  representanteNombreCifrado    String?           @map("representante_nombre_cifrado")
+  representanteDomicilioCifrado String?           @map("representante_domicilio_cifrado")
+  representanteTelefonoCifrado  String?           @map("representante_telefono_cifrado")
+  representanteCorreoCifrado    String?           @map("representante_correo_cifrado")
+  servicio                      ServicioReclamado
+  montoReclamado                Decimal?          @map("monto_reclamado") @db.Decimal(10, 2)
+  descripcionDelServicioCifrada String?           @map("descripcion_del_servicio_cifrada")
+  /// Lo que marcó la persona; `tipo` cambia si administración la tramita como reclamo.
+  tipoMarcado                   TipoDeHoja        @map("tipo_marcado")
+  tipo                          TipoDeHoja
+  detalleCifrado                String            @map("detalle_cifrado")
+  pedidoCifrado                 String            @map("pedido_cifrado")
+  medioDeRespuesta              MedioDeRespuesta  @map("medio_de_respuesta")
+  estado                        EstadoDeHoja      @default(NUEVA)
+  registradaEn                  DateTime          @map("registrada_en") @db.Timestamptz(3)
+  /// Último día del plazo legal, en fecha de Lima.
+  fechaLimite                   DateTime          @map("fecha_limite") @db.Date
+  /// Sube en cada escritura: un guardado hecho sobre una versión vieja se rechaza.
+  version                       Int               @default(0)
+  creadoEn                      DateTime          @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn                 DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  /// Clasificación interna que pone administración.
+  motivo                        MotivoDeReclamo?
+  abiertaEn                     DateTime?         @map("abierta_en") @db.Timestamptz(3)
+  /// Acciones adoptadas por el proveedor; no se editan después de responder.
+  respuestaCifrada              String?           @map("respuesta_cifrada")
+  respondidaEn                  DateTime?         @map("respondida_en") @db.Timestamptz(3)
+  respondidaPorId               Int?              @map("respondida_por_id")
+  /// Si la persona eligió carta, el día de Lima en que se envió.
+  cartaEnviadaEl                DateTime?         @map("carta_enviada_el") @db.Date
+  titular                       Usuario?          @relation(fields: [titularId], references: [id])
+  respondidaPor                 Usuario?          @relation("HojasRespondidas", fields: [respondidaPorId], references: [id])
+  cambios                       CambioDeHoja[]
 
-  reserva        Reserva @relation(fields: [reservaId], references: [id])
-  canchaAnterior Cancha  @relation("ReubicacionCanchaAnterior", fields: [canchaAnteriorId], references: [id])
-  canchaNueva    Cancha  @relation("ReubicacionCanchaNueva", fields: [canchaNuevaId], references: [id])
-  registradoPor  Usuario @relation(fields: [registradoPorId], references: [id])
-
-  @@index([reservaId])
-  @@map("reubicacion")
+  @@unique([anio, correlativo])
+  @@index([estado, fechaLimite])
+  @@index([titularId])
+  @@map("hoja_de_reclamacion")
 }
 
-// Caja
+/// Clasificación interna de una hoja.
+enum MotivoDeReclamo {
+  RESERVA_Y_PAGO           @map("reserva_y_pago")
+  CANCELACION_Y_DEVOLUCION @map("cancelacion_y_devolucion")
+  ESTADO_DE_LA_CANCHA      @map("estado_de_la_cancha")
+  ATENCION_DEL_PERSONAL    @map("atencion_del_personal")
+  MATERIAL_ADICIONAL       @map("material_adicional")
+  WEB_Y_CUENTA             @map("web_y_cuenta")
+  OTRO                     @map("otro")
 
-model CierreCaja {
-  id               Int             @id @default(autoincrement())
-  recepcionistaId  Int             @map("recepcionista_id")
-  cerradoEn        DateTime        @default(now()) @map("cerrado_en")
-  totales          Json
-  efectivoEsperado Decimal         @map("efectivo_esperado") @db.Decimal(10, 2)
-  efectivoContado  Decimal         @map("efectivo_contado") @db.Decimal(10, 2)
-  diferencia       Decimal         @db.Decimal(10, 2)
-  resultado        ResultadoCierre
-  observacion      String?
-
-  recepcionista Usuario          @relation(fields: [recepcionistaId], references: [id])
-  pagos         Pago[]
-  devoluciones  Devolucion[]
-  correcciones  CorreccionCaja[]
-
-  @@index([recepcionistaId, cerradoEn])
-  @@map("cierre_caja")
+  @@map("motivo_de_reclamo")
 }
 
-model CorreccionCaja {
-  id       Int      @id @default(autoincrement())
-  cierreId Int      @map("cierre_id")
-  adminId  Int      @map("admin_id")
-  motivo   String
-  detalle  Json
-  creadoEn DateTime @default(now()) @map("creado_en")
+enum AccionSobreHoja {
+  APERTURA       @map("apertura")
+  CLASIFICACION  @map("clasificacion")
+  CAMBIO_DE_TIPO @map("cambio_de_tipo")
+  RESPUESTA      @map("respuesta")
 
-  cierre CierreCaja @relation(fields: [cierreId], references: [id])
-  admin  Usuario    @relation(fields: [adminId], references: [id])
+  @@map("accion_sobre_hoja")
+}
 
-  @@map("correccion_caja")
+/// Auditoría de la atención de cada hoja: quién hizo qué y cuándo.
+model CambioDeHoja {
+  id             Int               @id @default(autoincrement())
+  hojaId         Int               @map("hoja_id")
+  accion         AccionSobreHoja
+  /// En una clasificación o cambio de tipo, el antes y el después; en una respuesta, el medio y si fue fuera de plazo.
+  detalle        Json?
+  ejecutadoPorId Int               @map("ejecutado_por_id")
+  ocurridoEn     DateTime          @default(now()) @map("ocurrido_en") @db.Timestamptz(3)
+  hoja           HojaDeReclamacion @relation(fields: [hojaId], references: [id])
+  ejecutadoPor   Usuario           @relation(fields: [ejecutadoPorId], references: [id])
+
+  @@index([hojaId, ocurridoEn])
+  @@index([ocurridoEn])
+  @@map("cambio_de_hoja")
+}
+
+/// Último correlativo usado en cada año; se sube con un solo UPDATE para que dos hojas no tomen el mismo.
+model CorrelativoDeHoja {
+  anio   Int @id @db.SmallInt
+  ultimo Int
+
+  @@map("correlativo_de_hoja")
+}
+
+enum TipoDeAviso {
+  NUEVO_RECLAMO      @map("nuevo_reclamo")
+  RECLAMO_RESPONDIDO @map("reclamo_respondido")
+
+  @@map("tipo_de_aviso")
+}
+
+/// Aviso para una persona en su campana. Sin datos personales: el tipo y a qué se refiere.
+model Aviso {
+  id             Int         @id @default(autoincrement())
+  destinatarioId Int         @map("destinatario_id")
+  tipo           TipoDeAviso
+  /// A qué se refiere, por ejemplo el número de una hoja: 000014-2026.
+  referencia     String
+  creadoEn       DateTime    @default(now()) @map("creado_en") @db.Timestamptz(3)
+  leidoEn        DateTime?   @map("leido_en") @db.Timestamptz(3)
+  destinatario   Usuario     @relation(fields: [destinatarioId], references: [id])
+
+  @@index([destinatarioId, creadoEn])
+  @@map("aviso")
 }

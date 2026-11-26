@@ -1,0 +1,291 @@
+/* Páginas públicas: la barra de vidrio flota fija, el contenido alterna tiza y franjas de césped
+ * y el pie oscuro reúne lo legal. Cada control tiene su ancho natural. */
+.sitio {
+  --acento: var(--color-capitan);
+  --sobre-acento: var(--color-tinta);
+  background: var(--color-tiza);
+  color: var(--color-tinta);
+}
+
+.envoltura-del-sitio {
+  width: min(74rem, 100%);
+  margin-inline: auto;
+  padding-inline: max(1.25rem, env(safe-area-inset-left, 0px));
+}
+
+/* Barra */
+.barra-del-sitio {
+  position: fixed;
+  top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  right: 0;
+  left: 0;
+  z-index: 40;
+}
+
+.barra-del-sitio__vidrio {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(73rem, calc(100% - 1.5rem));
+  margin-inline: auto;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 1.25rem;
+  padding: 0.45rem 0.45rem 0.45rem 0.8rem;
+  background: linear-gradient(180deg, rgb(28 84 66 / 0.72), rgb(14 59 46 / 0.62));
+  color: var(--color-tiza);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.24), 0 18px 40px -18px rgb(8 31 25 / 0.6);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .barra-del-sitio__vidrio {
+    background: rgb(14 59 46 / 0.97);
+  }
+}
+
+.menu-del-sitio ul {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.menu-del-sitio a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.6rem;
+  border-radius: 999px;
+  padding: 0 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgb(244 246 239 / 0.85);
+  transition: background-color 150ms ease;
+}
+
+.menu-del-sitio a:hover {
+  background: rgb(255 255 255 / 0.12);
+  color: var(--color-papel);
+}
+
+.menu-del-sitio a:focus-visible,
+.menu-del-sitio__boton:focus-visible,
+.boton-del-sitio:focus-visible {
+  outline: 2px solid var(--color-capitan);
+  outline-offset: 2px;
+}
+
+.menu-del-sitio__boton {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .menu-del-sitio {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    left: 0;
+    display: none;
+    border-radius: 1.1rem;
+    padding: 0.5rem;
+    background: rgb(14 59 46 / 0.97);
+    box-shadow: 0 20px 40px -16px rgb(0 0 0 / 0.6);
+  }
+
+  .menu-del-sitio[data-abierto] {
+    display: block;
+  }
+
+  .menu-del-sitio ul {
+    flex-direction: column;
+  }
+
+  .menu-del-sitio a {
+    width: 100%;
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+
+  .menu-del-sitio__boton {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.6rem;
+    margin-left: auto;
+    border: 1px solid rgb(255 255 255 / 0.3);
+    border-radius: 999px;
+    padding: 0 0.95rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--color-papel);
+  }
+}
+
+.boton-del-sitio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.6rem;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  padding: 0 1.05rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: background-color 150ms ease;
+}
+
+.boton-del-sitio--grande {
+  min-height: 3.1rem;
+  padding: 0 1.5rem;
+  font-size: 1rem;
+}
+
+.boton-del-sitio--capitan {
+  background: var(--color-capitan);
+  color: var(--color-tinta);
+}
+
+.boton-del-sitio--capitan:hover {
+  background: #e8f39c;
+}
+
+.boton-del-sitio--vidrio {
+  border-color: rgb(255 255 255 / 0.35);
+  background: rgb(255 255 255 / 0.08);
+  color: var(--color-papel);
+}
+
+.boton-del-sitio--vidrio:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+/* Pie */
+.pie-del-sitio {
+  background: #0a2e24;
+  padding-block: 4rem calc(2rem + env(safe-area-inset-bottom, 0px));
+  font-size: 0.92rem;
+  color: rgb(244 246 239 / 0.75);
+}
+
+.pie-del-sitio__columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid rgb(244 246 239 / 0.12);
+}
+
+@media (max-width: 900px) {
+  .pie-del-sitio__columnas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pie-del-sitio__columnas > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .pie-del-sitio__columnas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pie-del-sitio__titulo {
+  margin-bottom: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-capitan);
+}
+
+.pie-del-sitio__enlace {
+  color: rgb(244 246 239 / 0.82);
+}
+
+.pie-del-sitio__enlace:hover {
+  color: var(--color-papel);
+  text-decoration: underline;
+}
+
+.pie-del-sitio__proveedor {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding-top: 1.6rem;
+  font-size: 0.84rem;
+}
+
+.insignia-del-libro {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: fit-content;
+  border-radius: 0.9rem;
+  padding: 0.7rem 1rem;
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-weight: 800;
+}
+
+.insignia-del-libro svg {
+  width: 2.4rem;
+  height: auto;
+}
+
+.insignia-del-libro small {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-grava);
+}
+
+.dato-por-configurar {
+  display: inline-flex;
+  border-radius: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  background: #fbf1dc;
+  color: #7a4e00;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Aviso de cookies */
+.aviso-de-cookies {
+  position: fixed;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  left: max(1rem, env(safe-area-inset-left, 0px));
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: min(27rem, calc(100% - 2rem));
+  border: 1px solid var(--color-linea);
+  border-radius: 1.3rem;
+  padding: 1.3rem;
+  background: var(--color-papel);
+  box-shadow: 0 24px 50px -20px rgb(8 31 25 / 0.55);
+}
+
+/* Rechazar y aceptar pesan lo mismo: mismo tamaño, solo cambia el relleno. */
+.aviso-de-cookies__boton {
+  min-height: 2.8rem;
+  border: 1.5px solid var(--color-botella);
+  border-radius: 999px;
+  padding: 0 1rem;
+  font-weight: 800;
+  color: var(--color-botella);
+}
+
+.aviso-de-cookies__boton--lleno {
+  background: var(--color-botella);
+  color: var(--color-papel);
+}
+
+.aviso-de-cookies__boton:focus-visible {
+  outline: 3px solid var(--color-botella);
+  outline-offset: 2px;
+}
