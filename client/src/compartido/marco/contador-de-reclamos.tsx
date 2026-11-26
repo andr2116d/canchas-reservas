@@ -15,7 +15,10 @@ function useReclamosPorResponder() {
   return { porResponder, cargar };
 }
 
-/** Número junto a «Reclamos» en la barra de administración. Sin pendientes no se muestra. */
+/**
+ * Número junto a «Reclamos» en la barra de administración. Sin pendientes no se muestra. Es `relative`
+ * porque su texto oculto es absoluto: sin un contenedor posicionado, ensancharía la página en celular.
+ */
 export function ContadorDeReclamos() {
   const { porResponder, cargar } = useReclamosPorResponder();
   const ruta = usePathname();
@@ -25,7 +28,7 @@ export function ContadorDeReclamos() {
   useEffect(() => escucharAvisos(() => void cargar()), [cargar]);
   if (porResponder === 0) return null;
   return (
-    <span className="ml-1.5 inline-flex min-w-5 justify-center rounded-full bg-error px-1.5 text-xs leading-5 font-bold text-white tabular-nums">
+    <span className="relative ml-1.5 inline-flex min-w-5 justify-center rounded-full bg-error px-1.5 text-xs leading-5 font-bold text-white tabular-nums">
       {porResponder}
       <span className="sr-only"> por responder</span>
     </span>
