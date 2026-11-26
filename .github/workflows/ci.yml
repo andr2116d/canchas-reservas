@@ -49,6 +49,12 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      # Servidor de correo de prueba: las pruebas de integración leen lo que envía la API.
+      correo:
+        image: axllent/mailpit:v1.33.1
+        ports:
+          - 1025:1025
+          - 8025:8025
     env:
       DATABASE_URL: postgresql://laprevia:laprevia@localhost:5432/laprevia
       CLAVE_CIFRADO: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
