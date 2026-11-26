@@ -1,7 +1,12 @@
 import { ESTADOS_DEL_FILTRO, type EstadoDelFiltro, type Motivo, NOMBRE_DEL_MOTIVO, type TipoDeHoja } from "../servicios/reclamos";
 
 export const TAMANOS_DE_PAGINA = [10, 25, 50] as const;
-export const PERIODOS = { TODO: "Todo", "7": "Últimos 7 días", "30": "Últimos 30 días" } as const;
+/** Lista y no objeto: las claves numéricas de un objeto se ordenan antes que «TODO». */
+export const PERIODOS = [
+  ["TODO", "Todo"],
+  ["7", "Últimos 7 días"],
+  ["30", "Últimos 30 días"],
+] as const;
 export const ORDENES = { VENCE_PRIMERO: "Vence primero", RECIENTES: "Más recientes", ANTIGUAS: "Más antiguas" } as const;
 
 export interface FiltrosDeReclamos {
@@ -9,7 +14,7 @@ export interface FiltrosDeReclamos {
   tipo?: TipoDeHoja;
   motivo?: Motivo | "SIN_MOTIVO";
   numero?: string;
-  periodo: keyof typeof PERIODOS;
+  periodo: (typeof PERIODOS)[number][0];
   orden: keyof typeof ORDENES;
   pagina: number;
   porPagina: number;
@@ -30,7 +35,7 @@ export function leerFiltros(parametros: Parametros): FiltrosDeReclamos {
     tipo: de(uno(parametros.tipo), ["RECLAMO", "QUEJA"] as const),
     motivo: de(uno(parametros.motivo), [...(Object.keys(NOMBRE_DEL_MOTIVO) as Motivo[]), "SIN_MOTIVO" as const]),
     numero: numero && /^\d{1,6}-\d{4}$/.test(numero) ? numero : undefined,
-    periodo: de(uno(parametros.periodo), Object.keys(PERIODOS) as (keyof typeof PERIODOS)[]) ?? "TODO",
+    periodo: de(uno(parametros.periodo), PERIODOS.map(([valor]) => valor)) ?? "TODO",
     orden: de(uno(parametros.orden), Object.keys(ORDENES) as (keyof typeof ORDENES)[]) ?? "VENCE_PRIMERO",
     pagina: Number.isInteger(pagina) && pagina >= 1 && pagina <= 100_000 ? pagina : 1,
     porPagina: (TAMANOS_DE_PAGINA as readonly number[]).includes(porPagina) ? porPagina : 25,

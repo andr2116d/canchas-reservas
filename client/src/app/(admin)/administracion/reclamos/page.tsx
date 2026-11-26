@@ -32,7 +32,7 @@ async function ReclamosCargados({ parametros }: { parametros: Parametros }) {
           <Link href={aDireccion(leerFiltros({ estado: "TODAS" }))} className="mt-2 inline-block font-bold text-botella underline">Ver todas las hojas</Link>
         </div>
       )}
-      <PaginacionDeReclamos pagina={pagina} filtros={filtros} />
+      <PaginacionDeReclamos pagina={pagina} filtros={filtros} abajo />
     </div>
   );
 }

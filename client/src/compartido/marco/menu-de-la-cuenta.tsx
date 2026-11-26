@@ -32,7 +32,8 @@ export function MenuDeLaCuenta({ rol, cerrar, cerrando }: MenuDeLaCuentaProps) {
     <div ref={contenedor} className="menu-de-la-cuenta">
       <button ref={boton} type="button" aria-expanded={abierto} aria-controls={id} onClick={alternar} data-actual={enUnaOpcion || undefined} className="barra-de-vidrio__cuenta">
         <IconoDeLaCuenta />
-        <span>Mi cuenta</span>
+        {/* Bajo 1440 px solo el ícono, para que la barra quepa en una línea; el nombre del botón no cambia. */}
+        <span className="max-[90rem]:sr-only">Mi cuenta</span>
         <svg aria-hidden="true" viewBox="0 0 12 12" className="menu-de-la-cuenta__flecha size-3" focusable="false">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
