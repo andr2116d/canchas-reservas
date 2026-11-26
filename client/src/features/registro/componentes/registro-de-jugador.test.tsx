@@ -39,6 +39,14 @@ describe("RegistroDeJugador", () => {
     expect(screen.queryByRole("banner")).toBeNull();
   });
 
+  it("permite volver a la portada desde el panel sin agregar barra superior", () => {
+    mostrarRegistro();
+
+    expect(screen.getByRole("link", { name: "La Previa, ir a la portada" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Volver a la portada" })).toHaveAttribute("href", "/");
+    expect(screen.queryByRole("banner")).toBeNull();
+  });
+
   describe("campos obligatorios", () => {
     it("marca los campos obligatorios", () => {
       mostrarRegistro();
