@@ -206,6 +206,28 @@
   }
 }
 
+/*
+ * Con muchas secciones (administración) no caben junto a la marca y las acciones bajo 1120 px:
+ * bajan a su propia fila a todo el ancho. Así la campana y la cuenta nunca caen solas a otra fila.
+ */
+@media (max-width: 1119px) {
+  .barra-de-vidrio[data-muchas-secciones] .barra-de-vidrio__secciones {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+
+/* Desde 1120 px, una sola fila fija: marca, secciones (que se encogen y deslizan si hace falta) y acciones. */
+@media (min-width: 1120px) {
+  .barra-de-vidrio__fila {
+    flex-wrap: nowrap;
+  }
+
+  .barra-de-vidrio__secciones {
+    min-width: 0;
+  }
+}
+
 .barra-de-vidrio__seccion,
 .barra-de-vidrio__cuenta,
 .barra-de-vidrio__salir {

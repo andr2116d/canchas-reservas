@@ -35,6 +35,9 @@ function SeccionesDelRol({ rol }: { rol: Rol }) {
   );
 }
 
+/** Con más secciones, la barra pasa a dos filas bajo 1120 px y deja solo íconos en una fila. */
+const MAXIMO_DE_SECCIONES_EN_UNA_FILA = 4;
+
 interface BarraDeNavegacionProps {
   rol?: Rol;
   venceEn: string;
@@ -51,11 +54,11 @@ export function BarraDeNavegacion({ rol, venceEn, conSecciones = true }: BarraDe
   useVigenciaDeSesion(venceEn);
 
   return (
-    <header className="barra-de-vidrio">
+    <header className="barra-de-vidrio group" data-muchas-secciones={rol && conSecciones && SECCIONES_DEL_PANEL[rol].length > MAXIMO_DE_SECCIONES_EN_UNA_FILA ? "" : undefined}>
       <div className="barra-de-vidrio__fila">
         <div className="flex items-center gap-3">
           <MonogramaLaPrevia className="h-9 w-auto" />
-          <span className="font-titular text-xl leading-none font-black text-papel max-[90rem]:sr-only">La Previa</span>
+          <span className="font-titular text-xl leading-none font-black text-papel max-sm:sr-only min-[70rem]:group-data-muchas-secciones:sr-only">La Previa</span>
           {rol && <span className="sello-del-rol">{NOMBRE_DEL_PANEL[rol]}</span>}
         </div>
         {rol && conSecciones && <SeccionesDelRol rol={rol} />}
