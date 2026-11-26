@@ -59,6 +59,7 @@ export default defineConfig({
         LIMITE_REGISTROS_POR_HORA: "1000",
         LIMITE_INICIOS_POR_IP: "1000",
         LIMITE_GENERAL_POR_MINUTO: "100000",
+        LIMITE_HOJAS_POR_HORA: "1000",
       },
       reuseExistingServer: false,
       timeout: 120_000,
