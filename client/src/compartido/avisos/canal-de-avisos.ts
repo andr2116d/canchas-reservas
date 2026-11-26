@@ -7,14 +7,11 @@ let canal: Socket | undefined;
 function abrir(): Socket {
   // Sin barra final: así la ruta coincide con el rewrite de /api en Next. La cookie de sesión va sola.
   const nuevo = io("/avisos", { path: RUTA, addTrailingSlash: false });
-  let primeraConexion = true;
   const avisarATodos = () => oyentes.forEach((oyente) => oyente());
   nuevo.on("avisos", avisarATodos);
-  nuevo.on("connect", () => {
-    // Tras reconectarse se vuelve a pedir, por si llegó algo mientras no había conexión.
-    if (!primeraConexion) avisarATodos();
-    primeraConexion = false;
-  });
+  // Al conectarse (la primera vez y al volver) se pide de nuevo: un aviso pudo llegar mientras
+  // el canal aún no estaba abierto.
+  nuevo.on("connect", avisarATodos);
   return nuevo;
 }
 
