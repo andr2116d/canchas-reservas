@@ -34,10 +34,24 @@ export interface TurnoDeUnaCancha extends Rango {
   necesitaLuzSinTenerla: boolean;
 }
 
+export interface ReservaConocida extends Rango {
+  canchaId: number;
+  estado: EstadoDeReserva;
+  venceEn: Date | null;
+}
+
 export interface OcupacionConocida {
-  reservas: (Rango & { canchaId: number; estado: EstadoDeReserva })[];
+  reservas: ReservaConocida[];
   bloqueos: (Rango & { canchaId: number })[];
   ahora: Date;
+}
+
+/** Una reserva pendiente de pago deja de retener el turno al vencer, sin esperar a ninguna tarea. */
+export function retieneElTurno(
+  { venceEn }: Pick<ReservaConocida, 'venceEn'>,
+  ahora: Date,
+): boolean {
+  return venceEn === null || venceEn > ahora;
 }
 
 /**
@@ -54,7 +68,9 @@ export function estadoDelTurno(
     turno.inicio < otro.fin;
   if (turno.necesitaLuzSinTenerla) return 'SIN_LUZ';
   if (bloqueos.some(cruza)) return 'MANTENIMIENTO';
-  const suyas = reservas.filter(cruza);
+  const suyas = reservas.filter(
+    (reserva) => cruza(reserva) && retieneElTurno(reserva, ahora),
+  );
   if (suyas.some((reserva) => SE_VEN_OCUPADAS.includes(reserva.estado)))
     return 'OCUPADO';
   if (suyas.length > 0) return 'PENDIENTE';

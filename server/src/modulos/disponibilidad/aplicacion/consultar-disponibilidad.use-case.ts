@@ -57,7 +57,7 @@ export interface MapaDelDia {
   adelanto: number | null;
   local: 'ABIERTO' | 'CERRADO' | 'SIN_HORARIO';
   tipos: TipoDelMapa[];
-  /** Cuándo cambia algo solo por la hora (empieza un turno, empieza o termina un bloqueo). */
+  /** Cuándo cambia algo solo por la hora (empieza un turno, empieza o termina un bloqueo, vence una reserva). */
   proximoCambio: Date | null;
 }
 
@@ -77,9 +77,12 @@ const sinTipo = ({ id, nombre, tieneIluminacion }: CanchaConsultada) => ({
 
 function proximoCambio(
   tipos: TipoDelMapa[],
-  { bloqueos, ahora }: OcupacionConocida,
+  { bloqueos, reservas, ahora }: OcupacionConocida,
 ): Date | null {
   const momentos = [
+    ...reservas.flatMap((reserva) =>
+      reserva.venceEn ? [reserva.venceEn] : [],
+    ),
     ...tipos.flatMap((t) =>
       t.estado === 'CON_TURNOS' ? t.turnos.map((turno) => turno.inicio) : [],
     ),

@@ -35,7 +35,13 @@ export class PrismaOcupacionDelDiaAdapter implements OcupacionDelDia {
           fin: { gt: inicio },
           estado: { in: [...ESTADOS_QUE_OCUPAN] },
         },
-        select: { canchaId: true, inicio: true, fin: true, estado: true },
+        select: {
+          canchaId: true,
+          inicio: true,
+          fin: true,
+          estado: true,
+          venceEn: true,
+        },
       }),
       this.prisma.bloqueoDeCancha.findMany({
         where: { inicio: { lt: fin }, fin: { gt: inicio } },
