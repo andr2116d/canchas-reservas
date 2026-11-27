@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type EstadoDeLaConexion, escucharCambios } from "../servicios/avisos-de-cambios";
+import { type EstadoDeLaConexion, escucharCambios } from "@/compartido/disponibilidad/avisos-de-cambios";
 import type { MapaDelDia } from "../servicios/disponibilidad";
 import { consultarMapa } from "../servicios/disponibilidad.api";
 

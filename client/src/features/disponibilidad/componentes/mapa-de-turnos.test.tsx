@@ -2,14 +2,14 @@ import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mapaDePrueba } from "../../../../test/features/disponibilidad/mapa-de-prueba";
-import { escucharCambios } from "../servicios/avisos-de-cambios";
+import { escucharCambios } from "@/compartido/disponibilidad/avisos-de-cambios";
 import type { MapaDelDia } from "../servicios/disponibilidad";
 import { consultarMapa } from "../servicios/disponibilidad.api";
 import { MapaDeTurnos } from "./mapa-de-turnos";
 import type { ContextoDelMapa } from "./tu-turno";
 
 vi.mock("../servicios/disponibilidad.api", () => ({ consultarMapa: vi.fn() }));
-vi.mock("../servicios/avisos-de-cambios", () => ({ escucharCambios: vi.fn() }));
+vi.mock("@/compartido/disponibilidad/avisos-de-cambios", () => ({ escucharCambios: vi.fn() }));
 
 function mostrar(mapa: MapaDelDia = mapaDePrueba(), contexto: ContextoDelMapa = "publico") {
   vi.mocked(consultarMapa).mockResolvedValue({ tipo: "consultado", mapa });

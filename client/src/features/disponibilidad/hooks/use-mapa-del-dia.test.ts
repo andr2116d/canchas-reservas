@@ -1,12 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mapaDePrueba } from "../../../../test/features/disponibilidad/mapa-de-prueba";
-import { escucharCambios } from "../servicios/avisos-de-cambios";
+import { escucharCambios } from "@/compartido/disponibilidad/avisos-de-cambios";
 import { consultarMapa } from "../servicios/disponibilidad.api";
 import { useMapaDelDia } from "./use-mapa-del-dia";
 
 vi.mock("../servicios/disponibilidad.api", () => ({ consultarMapa: vi.fn() }));
-vi.mock("../servicios/avisos-de-cambios", () => ({ escucharCambios: vi.fn() }));
+vi.mock("@/compartido/disponibilidad/avisos-de-cambios", () => ({ escucharCambios: vi.fn() }));
 
 /** Lo que el hook pasó a la escucha, para simular avisos del server. */
 function escucha() {
