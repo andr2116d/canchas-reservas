@@ -1,0 +1,59 @@
+import type { EstadoQueOcupa } from '../../../compartido/dominio/reserva-que-ocupa';
+import type { Monto } from '../../../compartido/dominio/monto.value-object';
+import type { TipoDeCancha } from '../../../compartido/dominio/tipo-de-cancha';
+import type { RangoDeCancelacion } from '../../cancelacion/api-cancelacion';
+
+export const RESERVA_REPOSITORY = Symbol('RESERVA_REPOSITORY');
+
+export type EstadoDeReserva = EstadoQueOcupa | 'EXPIRADA';
+
+/** Una reserva por guardar, con los montos y la regla de su momento. */
+export interface ReservaNueva {
+  codigo: string;
+  canchaId: number;
+  titularId: number;
+  creadaPorId: number;
+  inicio: Date;
+  fin: Date;
+  precio: Monto;
+  porcentajeDeAdelanto: number;
+  adelanto: Monto;
+  reglaDeCancelacionId: number;
+  canal: 'WEB';
+  creadaEn: Date;
+  venceEn: Date;
+  adicionalIds: number[];
+}
+
+/** Una reserva guardada, con lo que su titular necesita ver. */
+export interface ReservaGuardada {
+  codigo: string;
+  estado: EstadoDeReserva;
+  cancha: { nombre: string; tipo: TipoDeCancha; tieneIluminacion: boolean };
+  inicio: Date;
+  fin: Date;
+  precio: Monto;
+  porcentajeDeAdelanto: number;
+  adelanto: Monto;
+  venceEn: Date | null;
+  creadaEn: Date;
+  /** Los rangos de la regla de cancelación que regía al crearla. */
+  rangos: RangoDeCancelacion[];
+  adicionales: { nombre: string; precio: Monto }[];
+}
+
+/** Puerto de las reservas. */
+export interface ReservaRepository {
+  /**
+   * Guarda la reserva en una operación: expira las vencidas que estorban y respeta el
+   * máximo de pendientes de pago. Lanza TurnoNoDisponibleError, LimiteDePendientesError
+   * o CodigoRepetidoError.
+   */
+  crear(reserva: ReservaNueva, maximoDePendientes: number): Promise<void>;
+
+  /** Solo si la reserva es de esa persona. */
+  delTitular(
+    titularId: number,
+    codigo: string,
+  ): Promise<ReservaGuardada | undefined>;
+}
