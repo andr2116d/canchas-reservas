@@ -2,6 +2,7 @@ import { ValorInvalidoError } from './valor-invalido.error';
 import {
   fechaEnLima,
   leerFecha,
+  horaEnLima,
   momentoEnLima,
   sumarAFecha,
 } from './momento-en-lima';
@@ -23,6 +24,11 @@ describe('momento en Lima', () => {
     expect(fechaEnLima(new Date('2026-11-29T03:00:00.000Z'))).toBe(
       '2026-11-28',
     );
+  });
+
+  it('da la hora de Lima de un instante, con dos cifras', () => {
+    expect(horaEnLima(new Date('2026-11-28T00:05:00.000Z'))).toBe('19:05');
+    expect(horaEnLima(new Date('2026-11-28T14:00:00.000Z'))).toBe('09:00');
   });
 
   it('rechaza fechas con otro formato o que no existen', () => {
