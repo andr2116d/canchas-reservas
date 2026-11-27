@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { NOMBRE_DEL_TIPO, type TipoDeCancha } from "@/compartido/canchas/tipo-de-cancha";
 import { RUTA_DE_ACCESO } from "@/compartido/sesion/destino-de-sesion";
+import { conElTurno, RUTA_DE_CONFIRMACION } from "@/compartido/sesion/turno-elegido";
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
+import { diaLargo, enSoles } from "@/compartido/ui/textos-del-local";
 import type { CanchaDelMapa, TurnoDelMapa } from "../servicios/disponibilidad";
-import { nombreLargo } from "../utilidades/fechas-de-la-tira";
-import { enSoles } from "../utilidades/textos-del-mapa";
 
 /** Quién mira el mapa: cambia lo que se puede hacer con el turno elegido. */
 export type ContextoDelMapa = "publico" | "jugador" | "recepcion";
@@ -25,19 +25,32 @@ interface TuTurnoProps {
   alCerrar: () => void;
 }
 
-function QueHacer({ contexto }: { contexto: ContextoDelMapa }) {
+/** Qué se puede hacer con el turno elegido según quién mira el mapa. */
+function QueHacer({ contexto, fecha, elegido }: { contexto: ContextoDelMapa; fecha: string; elegido: TurnoParaMostrar }) {
+  const { turno, cancha } = elegido;
+  const elegidoEnLaDireccion = { canchaId: cancha.id, fecha, desde: turno.desde };
   if (contexto === "publico") {
     return (
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-grava">Para reservar necesitas tu cuenta de jugador.</p>
+        <p className="text-sm text-grava">Para reservar necesitas tu cuenta de jugador. Volverás a este mismo turno.</p>
         <div className="flex flex-wrap gap-2">
-          <Link href={RUTA_DE_ACCESO} className={BOTON_PRINCIPAL}>Ingresar para reservar</Link>
-          <Link href="/registro" className={BOTON_SECUNDARIO}>Crear cuenta</Link>
+          <Link href={conElTurno(RUTA_DE_ACCESO, elegidoEnLaDireccion)} className={BOTON_PRINCIPAL}>Ingresar para reservar</Link>
+          <Link href={conElTurno("/registro", elegidoEnLaDireccion)} className={BOTON_SECUNDARIO}>Crear cuenta</Link>
         </div>
       </div>
     );
   }
-  return <p className="rounded-xl bg-tiza px-3 py-2 text-sm text-grava">{contexto === "jugador" ? "Pronto podrás pagar el adelanto y separarlo desde aquí." : "Pronto podrás crear la reserva desde aquí."}</p>;
+  if (contexto === "jugador") {
+    return (
+      <div className="flex flex-col gap-2">
+        <Link href={conElTurno(RUTA_DE_CONFIRMACION, elegidoEnLaDireccion)} className={BOTON_PRINCIPAL}>
+          Reservar {cancha.nombre} · {turno.desde}–{turno.hasta}
+        </Link>
+        <p className="text-xs text-grava">Antes de confirmar ves la regla de cancelación. Todavía no se cobra nada.</p>
+      </div>
+    );
+  }
+  return <p className="rounded-xl bg-tiza px-3 py-2 text-sm text-grava">Pronto podrás crear la reserva desde aquí.</p>;
 }
 
 function Detalle({ fecha, porcentaje, elegido }: { fecha: string; porcentaje: number | null; elegido: TurnoParaMostrar }) {
@@ -49,7 +62,7 @@ function Detalle({ fecha, porcentaje, elegido }: { fecha: string; porcentaje: nu
         <span className="block tabular-nums">{turno.desde}–{turno.hasta}</span>
       </h2>
       <dl className="grid gap-1.5 text-sm">
-        <div className="flex justify-between gap-3"><dt className="text-grava">Fecha</dt><dd className="font-semibold first-letter:uppercase">{nombreLargo(fecha)}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-grava">Fecha</dt><dd className="font-semibold first-letter:uppercase">{diaLargo(fecha)}</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-grava">Cancha</dt><dd className="font-semibold">{NOMBRE_DEL_TIPO[tipo]} · {cancha.tieneIluminacion ? "con luz" : "solo luz natural"}</dd></div>
       </dl>
       <div>
@@ -82,7 +95,7 @@ export function TuTurno({ contexto, fecha, porcentaje, elegido, aviso, alCerrar 
           </>
         )}
       </div>
-      {elegido && <QueHacer contexto={contexto} />}
+      {elegido && <QueHacer contexto={contexto} fecha={fecha} elegido={elegido} />}
       {elegido && <button type="button" onClick={alCerrar} className={`${BOTON_SECUNDARIO} lg:hidden`}>Cerrar</button>}
     </aside>
   );

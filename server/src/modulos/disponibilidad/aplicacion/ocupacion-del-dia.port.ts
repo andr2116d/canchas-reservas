@@ -20,6 +20,8 @@ export interface BloqueoDelDia {
 
 export interface ReservaDelDia extends BloqueoDelDia {
   estado: EstadoDeReserva;
+  /** Desde cuándo una reserva pendiente de pago deja de retener el turno. */
+  venceEn: Date | null;
 }
 
 /** Lo que se lee de canchas, reservas y bloqueos para armar el mapa de un día. */

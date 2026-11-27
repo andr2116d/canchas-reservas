@@ -86,6 +86,7 @@ export class PrismaReglaDeCancelacionRepository implements ReglaDeCancelacionRep
 
   private aVersion(fila: FilaDeLaRegla): VersionDeLaRegla {
     return {
+      id: fila.id,
       regla: ReglaDeCancelacion.restaurar(
         fila.rangos.map(({ desdeHoras, porcentaje, ofreceCredito }) => ({
           desdeHoras,

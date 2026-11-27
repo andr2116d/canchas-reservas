@@ -74,5 +74,6 @@ const REGLAS_DEL_TURNO = Symbol('REGLAS_DEL_TURNO');
       inject: [REGLAS_DEL_TURNO, OCUPACION_DEL_DIA, RELOJ],
     },
   ],
+  exports: [ConsultarDisponibilidadUseCase],
 })
 export class DisponibilidadModule {}

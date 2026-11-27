@@ -2,7 +2,8 @@
 
 import { Fragment, useState } from "react";
 import type { CanchaDelMapa, TurnoDelMapa, TurnoElegido } from "../servicios/disponibilidad";
-import { enSoles, TEXTO_DEL_ESTADO, textoDeLaFranja } from "../utilidades/textos-del-mapa";
+import { enSoles } from "@/compartido/ui/textos-del-local";
+import { TEXTO_DEL_ESTADO, textoDeLaFranja } from "../utilidades/textos-del-mapa";
 
 interface TablaDeTurnosProps {
   canchas: CanchaDelMapa[];

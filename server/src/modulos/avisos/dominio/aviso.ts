@@ -1,7 +1,11 @@
 import type { RolUsuario } from '../../../compartido/dominio/rol-usuario';
 
 /** Qué pasó. El texto lo arma la pantalla; la base no guarda datos personales en el aviso. */
-export const TIPOS_DE_AVISO = ['NUEVO_RECLAMO', 'RECLAMO_RESPONDIDO'] as const;
+export const TIPOS_DE_AVISO = [
+  'NUEVO_RECLAMO',
+  'RECLAMO_RESPONDIDO',
+  'NUEVA_RESERVA',
+] as const;
 export type TipoDeAviso = (typeof TIPOS_DE_AVISO)[number];
 
 /** Un aviso para una persona: el tipo y a qué se refiere (por ejemplo, el número de una hoja). */

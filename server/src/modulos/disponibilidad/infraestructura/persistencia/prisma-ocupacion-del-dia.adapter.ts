@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
+import {
+  ESTADOS_QUE_OCUPAN,
+  ocupaElTurno,
+} from '../../../../compartido/dominio/reserva-que-ocupa';
 import type {
   BloqueoDelDia,
   CanchaConsultada,
@@ -26,8 +30,18 @@ export class PrismaOcupacionDelDiaAdapter implements OcupacionDelDia {
   ): Promise<{ reservas: ReservaDelDia[]; bloqueos: BloqueoDelDia[] }> {
     const [reservas, bloqueos] = await Promise.all([
       this.prisma.reserva.findMany({
-        where: { inicio: { lt: fin }, fin: { gt: inicio } },
-        select: { canchaId: true, inicio: true, fin: true, estado: true },
+        where: {
+          inicio: { lt: fin },
+          fin: { gt: inicio },
+          estado: { in: [...ESTADOS_QUE_OCUPAN] },
+        },
+        select: {
+          canchaId: true,
+          inicio: true,
+          fin: true,
+          estado: true,
+          venceEn: true,
+        },
       }),
       this.prisma.bloqueoDeCancha.findMany({
         where: { inicio: { lt: fin }, fin: { gt: inicio } },
@@ -35,7 +49,9 @@ export class PrismaOcupacionDelDiaAdapter implements OcupacionDelDia {
       }),
     ]);
     return {
-      reservas,
+      reservas: reservas.flatMap(({ estado, ...resto }) =>
+        ocupaElTurno(estado) ? [{ ...resto, estado }] : [],
+      ),
       // Un bloqueo liberado deja de contar desde que se liberó.
       bloqueos: bloqueos.map(({ canchaId, inicio, fin, liberadoEn }) => ({
         canchaId,

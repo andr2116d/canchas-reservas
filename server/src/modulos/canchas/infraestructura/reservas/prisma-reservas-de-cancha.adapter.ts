@@ -4,10 +4,15 @@ import {
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
 import {
+  RELOJ,
+  type Reloj,
+} from '../../../../compartido/aplicacion/reloj.port';
+import {
   COLUMNAS_DEL_AUTOR,
   nombreDelAutor,
 } from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
+import { reservasQueRetienen } from '../../../../compartido/infraestructura/prisma/reservas-que-retienen';
 import type { Prisma } from '../../../../generated/prisma/client';
 import type {
   ConsultaDeReservas,
@@ -21,17 +26,18 @@ const CON_TITULAR = {
 
 type FilaDeReserva = Prisma.ReservaGetPayload<{ include: typeof CON_TITULAR }>;
 
-/** Las reservas guardadas, vistas desde lo que el módulo de canchas necesita saber. */
+/** Las reservas que retienen su turno, vistas desde lo que el módulo de canchas necesita saber. */
 @Injectable()
 export class PrismaReservasDeCanchaAdapter implements ReservasDeCancha {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(CIFRADOR) private readonly cifrador: Cifrador,
+    @Inject(RELOJ) private readonly reloj: Reloj,
   ) {}
 
   async porJugar(canchaId: number, desde: Date): Promise<ReservaAfectada[]> {
     const filas = await this.prisma.reserva.findMany({
-      where: { canchaId, fin: { gt: desde } },
+      where: { canchaId, fin: { gt: desde }, ...reservasQueRetienen(desde) },
       orderBy: { inicio: 'asc' },
       include: CON_TITULAR,
     });
@@ -44,11 +50,16 @@ export class PrismaReservasDeCanchaAdapter implements ReservasDeCancha {
     if (consultas.length === 0) return [];
     const filas = await this.prisma.reserva.findMany({
       where: {
-        OR: consultas.map(({ canchaId, inicio, fin }) => ({
-          canchaId,
-          inicio: { lt: fin },
-          fin: { gt: inicio },
-        })),
+        AND: [
+          reservasQueRetienen(this.reloj.ahora()),
+          {
+            OR: consultas.map(({ canchaId, inicio, fin }) => ({
+              canchaId,
+              inicio: { lt: fin },
+              fin: { gt: inicio },
+            })),
+          },
+        ],
       },
       orderBy: [{ inicio: 'asc' }, { canchaId: 'asc' }],
       include: CON_TITULAR,

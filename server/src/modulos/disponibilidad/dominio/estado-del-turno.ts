@@ -1,6 +1,10 @@
+import {
+  type EstadoQueOcupa,
+  retieneElTurno,
+} from '../../../compartido/dominio/reserva-que-ocupa';
+
 /** Etapas de una reserva que ocupan su turno. */
-export type EstadoDeReserva =
-  'PENDIENTE_DE_PAGO' | 'PENDIENTE_DE_VALIDACION' | 'CONFIRMADA' | 'EN_JUEGO';
+export type EstadoDeReserva = EstadoQueOcupa;
 
 /** Cómo se ve un turno de una cancha. Solo `DISPONIBLE` se puede elegir. */
 export type EstadoDelTurno =
@@ -11,7 +15,8 @@ export type EstadoDelTurno =
   | 'SIN_LUZ'
   | 'YA_EMPEZO';
 
-const OCUPAN: EstadoDeReserva[] = ['CONFIRMADA', 'EN_JUEGO'];
+/** Con el pago validado el turno se ve ocupado; antes, pendiente. */
+const SE_VEN_OCUPADAS: EstadoDeReserva[] = ['CONFIRMADA', 'EN_JUEGO'];
 
 interface Rango {
   inicio: Date;
@@ -24,8 +29,14 @@ export interface TurnoDeUnaCancha extends Rango {
   necesitaLuzSinTenerla: boolean;
 }
 
+export interface ReservaConocida extends Rango {
+  canchaId: number;
+  estado: EstadoDeReserva;
+  venceEn: Date | null;
+}
+
 export interface OcupacionConocida {
-  reservas: (Rango & { canchaId: number; estado: EstadoDeReserva })[];
+  reservas: ReservaConocida[];
   bloqueos: (Rango & { canchaId: number })[];
   ahora: Date;
 }
@@ -44,8 +55,10 @@ export function estadoDelTurno(
     turno.inicio < otro.fin;
   if (turno.necesitaLuzSinTenerla) return 'SIN_LUZ';
   if (bloqueos.some(cruza)) return 'MANTENIMIENTO';
-  const suyas = reservas.filter(cruza);
-  if (suyas.some((reserva) => OCUPAN.includes(reserva.estado)))
+  const suyas = reservas.filter(
+    (reserva) => cruza(reserva) && retieneElTurno(reserva, ahora),
+  );
+  if (suyas.some((reserva) => SE_VEN_OCUPADAS.includes(reserva.estado)))
     return 'OCUPADO';
   if (suyas.length > 0) return 'PENDIENTE';
   return turno.inicio <= ahora ? 'YA_EMPEZO' : 'DISPONIBLE';

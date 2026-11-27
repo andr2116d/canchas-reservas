@@ -22,6 +22,15 @@ export interface RangoDeCancelacion {
   ofreceCredito: boolean;
 }
 
+/** Hasta qué momento (incluido) rige un rango para un turno concreto. */
+export interface PlazoDeCancelacion {
+  hasta: Date;
+  porcentaje: number;
+  ofreceCredito: boolean;
+}
+
+const MS_POR_HORA = 60 * 60 * 1000;
+
 interface RangoLeido extends RangoDeCancelacion {
   indice: number;
 }
@@ -155,6 +164,17 @@ export class ReglaDeCancelacion {
       (posible) => minutosDeAnticipacion >= posible.desdeHoras * 60,
     );
     return rango ?? this.rangos[this.rangos.length - 1];
+  }
+
+  /** Los plazos de un turno que aún no pasaron, del que devuelve más al que devuelve menos. */
+  plazosPara(inicio: Date, ahora: Date): PlazoDeCancelacion[] {
+    return this.rangos
+      .map(({ desdeHoras, porcentaje, ofreceCredito }) => ({
+        hasta: new Date(inicio.getTime() - desdeHoras * MS_POR_HORA),
+        porcentaje,
+        ofreceCredito,
+      }))
+      .filter((plazo) => plazo.hasta >= ahora);
   }
 
   igualA(otra: ReglaDeCancelacion): boolean {

@@ -1,5 +1,6 @@
 import { ListaDeCambiosRecientes } from "@/compartido/ui/lista-de-cambios-recientes";
-import { type AccionSobreAdicional, type CambioDeAdicional, type CambiosDeAdicional, enSoles, type ResumenDeAdicional } from "../servicios/adicionales";
+import { enSoles } from "@/compartido/ui/textos-del-local";
+import type { AccionSobreAdicional, CambioDeAdicional, CambiosDeAdicional, ResumenDeAdicional } from "../servicios/adicionales";
 
 const VERBO: Record<AccionSobreAdicional, string> = {
   ALTA: "creó",

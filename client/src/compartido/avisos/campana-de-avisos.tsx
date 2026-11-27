@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId } from "react";
 import { useMenuDesplegable } from "../marco/use-menu-desplegable";
+import type { Rol } from "../sesion/destino-de-sesion";
 import { describirAviso } from "./avisos";
 import { useAvisos } from "./use-avisos";
 
@@ -35,7 +36,7 @@ function AvisoQueLlega({ titulo, enlace, alCerrar }: { titulo: string; enlace: s
 }
 
 /** Campana de la barra: cuántos avisos sin leer, la lista y marcar como leídos. Llegan en tiempo real. */
-export function CampanaDeAvisos() {
+export function CampanaDeAvisos({ rol }: { rol: Rol }) {
   const { avisos, sinLeer, nuevo, descartarNuevo, marcarLeido, marcarTodos } = useAvisos();
   const { abierto, alternar, cerrarMenu, contenedor, boton } = useMenuDesplegable();
   const id = useId();
@@ -58,7 +59,7 @@ export function CampanaDeAvisos() {
           ) : (
             <ul className="flex max-h-[60vh] flex-col overflow-y-auto">
               {avisos.map((aviso) => {
-                const { titulo, enlace } = describirAviso(aviso);
+                const { titulo, enlace } = describirAviso(aviso, rol);
                 return (
                   <li key={aviso.id}>
                     <Link href={enlace} onClick={() => { void marcarLeido(aviso.id); cerrarMenu(); }} className="menu-de-la-cuenta__opcion flex-col items-start gap-0.5">
@@ -76,7 +77,7 @@ export function CampanaDeAvisos() {
           )}
         </div>
       )}
-      {nuevo && <AvisoQueLlega {...describirAviso(nuevo)} alCerrar={descartarNuevo} />}
+      {nuevo && <AvisoQueLlega {...describirAviso(nuevo, rol)} alCerrar={descartarNuevo} />}
     </div>
   );
 }

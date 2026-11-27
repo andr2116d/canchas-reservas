@@ -125,6 +125,39 @@ describe('ReglaDeCancelacion', () => {
     expect(regla.rangoPara(0).porcentaje).toBe(0);
   });
 
+  it('da los plazos de un turno con su fecha y hora: hasta cuándo rige cada rango', () => {
+    const regla = ReglaDeCancelacion.crear(DEL_NEGOCIO);
+    const inicio = new Date('2026-11-28T19:00:00-05:00');
+    const ahora = new Date('2026-11-27T10:00:00-05:00');
+
+    expect(regla.plazosPara(inicio, ahora)).toEqual([
+      {
+        hasta: new Date('2026-11-28T17:00:00-05:00'),
+        porcentaje: 100,
+        ofreceCredito: true,
+      },
+      {
+        hasta: new Date('2026-11-28T18:00:00-05:00'),
+        porcentaje: 50,
+        ofreceCredito: false,
+      },
+      { hasta: inicio, porcentaje: 0, ofreceCredito: false },
+    ]);
+  });
+
+  it('no da los plazos que ya pasaron; el límite exacto aún cuenta', () => {
+    const regla = ReglaDeCancelacion.crear(DEL_NEGOCIO);
+    const inicio = new Date('2026-11-28T19:00:00-05:00');
+
+    const porcentajesA = (hora: string) =>
+      regla
+        .plazosPara(inicio, new Date(`2026-11-28T${hora}-05:00`))
+        .map((plazo) => plazo.porcentaje);
+
+    expect(porcentajesA('17:00:00')).toEqual([100, 50, 0]);
+    expect(porcentajesA('17:00:01')).toEqual([50, 0]);
+  });
+
   it('compara dos reglas por sus valores', () => {
     const una = ReglaDeCancelacion.crear(DEL_NEGOCIO);
 

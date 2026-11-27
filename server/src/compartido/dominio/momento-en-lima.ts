@@ -31,12 +31,17 @@ export function momentoEnLima(fecha: string, hora: string): Date {
   );
 }
 
+const relojDeLima = (momento: Date) =>
+  new Date(momento.getTime() - MINUTOS_DE_LIMA_DETRAS_DE_UTC * MS_POR_MINUTO);
+
 /** La fecha `AAAA-MM-DD` de Lima en ese instante. */
 export function fechaEnLima(momento: Date): string {
-  const enLima = new Date(
-    momento.getTime() - MINUTOS_DE_LIMA_DETRAS_DE_UTC * MS_POR_MINUTO,
-  );
-  return enLima.toISOString().slice(0, 10);
+  return relojDeLima(momento).toISOString().slice(0, 10);
+}
+
+/** La hora `HH:MM` de Lima en ese instante. */
+export function horaEnLima(momento: Date): string {
+  return relojDeLima(momento).toISOString().slice(11, 16);
 }
 
 /** Suma días o meses a una fecha; si el mes de destino no tiene ese día, usa el último. */

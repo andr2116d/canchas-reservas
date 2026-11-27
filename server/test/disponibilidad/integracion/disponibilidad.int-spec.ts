@@ -151,6 +151,27 @@ describe('Disponibilidad pública', () => {
     expect(text).not.toContain('Valeria');
   });
 
+  it('una reserva pendiente de pago que venció deja libre su turno, y una expirada también', async () => {
+    await guardarReserva(prisma, {
+      canchaId: canchas[0].id,
+      inicio: `${MANANA()}T16:00:00-05:00`,
+      estado: 'PENDIENTE_DE_PAGO',
+      venceEn: new Date(Date.now() - 1000),
+    });
+    await guardarReserva(prisma, {
+      canchaId: canchas[1].id,
+      inicio: `${MANANA()}T16:00:00-05:00`,
+      estado: 'EXPIRADA',
+    });
+
+    const { body } = await consultar().expect(200);
+
+    expect(turnosDeFutbol5(body)[0].canchas.map((c) => c.estado)).toEqual([
+      'DISPONIBLE',
+      'DISPONIBLE',
+    ]);
+  });
+
   it('no muestra las canchas desactivadas', async () => {
     await comoAdministrador(
       'post',

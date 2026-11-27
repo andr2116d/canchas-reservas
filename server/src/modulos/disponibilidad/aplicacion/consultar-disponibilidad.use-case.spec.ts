@@ -1,90 +1,10 @@
-import { EnMemoriaAdelantoRepository } from '../../../../test/adelanto/dobles/en-memoria-adelanto.repository';
-import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
-import { OcupacionDePrueba } from '../../../../test/disponibilidad/dobles/ocupacion-de-prueba';
-import { EnMemoriaHorarioRepository } from '../../../../test/horario/dobles/en-memoria-horario.repository';
-import { EnMemoriaTarifaRepository } from '../../../../test/tarifas/dobles/en-memoria-tarifa.repository';
-import { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
-import { PorcentajeDeAdelanto } from '../../adelanto/api-adelanto';
-import { construirHorario } from '../../horario/api-horario';
-import { construirTarifa } from '../../tarifas/api-tarifas';
 import {
-  ConsultarDisponibilidadUseCase,
-  type MapaDelDia,
-} from './consultar-disponibilidad.use-case';
-
-const MANANA = '2026-11-25';
-const GUARDADO = { guardadoEn: new Date(0), guardadoPor: 'Valeria León' };
-const DIAS = [
-  'LUNES',
-  'MARTES',
-  'MIERCOLES',
-  'JUEVES',
-  'VIERNES',
-  'SABADO',
-  'DOMINGO',
-];
-const enLima = (fecha: string, hora: string) =>
-  new Date(`${fecha}T${hora}:00-05:00`);
-
-/** El local abre de 16:00 a 22:00 y la noche empieza a las 18:00; fútbol 5 tiene tarifa, fútbol 7 no. */
-function preparar({ ahora = enLima('2026-11-24', '15:20') } = {}) {
-  const tarifas = new EnMemoriaTarifaRepository();
-  const horarios = new EnMemoriaHorarioRepository();
-  const adelantos = new EnMemoriaAdelantoRepository();
-  const ocupacion = new OcupacionDePrueba();
-  horarios.versiones.push({
-    ...GUARDADO,
-    horario: construirHorario({
-      inicioDeLaNoche: '18:00',
-      dias: DIAS.map((dia) => ({
-        dia,
-        abierto: true,
-        abre: '16:00',
-        cierra: '22:00',
-      })),
-    }),
-  });
-  tarifas.versiones.push({
-    guardadaEn: new Date(0),
-    guardadaPor: 'Valeria León',
-    tarifa: construirTarifa('FUTBOL_5', {
-      precioDia: '60',
-      precioNoche: '80',
-      duracionDelTurno: '1',
-      ofreceTurnoCorto: false,
-    }),
-  });
-  adelantos.versiones.push({
-    guardadoEn: new Date(0),
-    guardadoPor: 'Valeria León',
-    porcentaje: PorcentajeDeAdelanto.crear('50'),
-  });
-  ocupacion.canchas.push(
-    { id: 1, nombre: 'Cancha 1', tipo: 'FUTBOL_5', tieneIluminacion: true },
-    { id: 2, nombre: 'Cancha 2', tipo: 'FUTBOL_5', tieneIluminacion: false },
-    { id: 3, nombre: 'Cancha 3', tipo: 'FUTBOL_7', tieneIluminacion: true },
-  );
-  const consultar = new ConsultarDisponibilidadUseCase({
-    tarifas,
-    horarios,
-    adelantos,
-    ocupacion,
-    reloj: new RelojDePrueba(ahora),
-  });
-  return { consultar, ocupacion, adelantos, horarios };
-}
-
-function futbol5(mapa: MapaDelDia) {
-  const tipo = mapa.tipos.find((t) => t.tipo === 'FUTBOL_5');
-  if (tipo?.estado !== 'CON_TURNOS') throw new Error('Sin turnos de fútbol 5');
-  return tipo;
-}
-
-const estadoEn = (mapa: MapaDelDia, desde: string, canchaId: number) =>
-  futbol5(mapa)
-    .turnos.find((t) => t.desde === desde)
-    ?.canchas.find((c) => c.canchaId === canchaId)?.estado;
-
+  enLima,
+  estadoEn,
+  futbol5,
+  MANANA,
+  prepararElLocal as preparar,
+} from '../../../../test/disponibilidad/fabricas/local-de-prueba';
 describe('Consultar la disponibilidad de un día', () => {
   it('muestra cada cancha activa con los turnos del día, su precio y el adelanto mínimo', async () => {
     const { consultar } = preparar();
@@ -131,6 +51,7 @@ describe('Consultar la disponibilidad de un día', () => {
       inicio: enLima(MANANA, hora),
       fin: enLima(MANANA, `${Number(hora.slice(0, 2)) + 1}:00`),
       estado: estado as never,
+      venceEn: null,
     });
     ocupacion.reservas.push(
       reserva('16:00', 'PENDIENTE_DE_PAGO'),
@@ -173,6 +94,7 @@ describe('Consultar la disponibilidad de un día', () => {
       inicio: enLima('2026-11-24', '16:00'),
       fin: enLima('2026-11-24', '17:00'),
       estado: 'CONFIRMADA',
+      venceEn: null,
     });
 
     const mapa = await consultar.ejecutar('2026-11-24');
@@ -224,55 +146,5 @@ describe('Consultar la disponibilidad de un día', () => {
     const mapa = await consultar.ejecutar(MANANA);
 
     expect(mapa).toMatchObject({ local: 'SIN_HORARIO', tipos: [] });
-  });
-
-  it('dice cuándo cambia algo solo por la hora: el próximo inicio de turno o fin de bloqueo', async () => {
-    const { consultar, ocupacion } = preparar();
-    ocupacion.bloqueos.push({
-      canchaId: 1,
-      inicio: enLima('2026-11-24', '15:00'),
-      fin: enLima('2026-11-24', '15:45'),
-    });
-
-    const hoy = await consultar.ejecutar('2026-11-24');
-
-    expect(hoy.proximoCambio).toEqual(enLima('2026-11-24', '15:45'));
-  });
-});
-
-describe('Fechas que se pueden consultar', () => {
-  it('sin fecha consulta hoy y dice hasta qué día se puede consultar', async () => {
-    const { consultar } = preparar();
-
-    const mapa = await consultar.ejecutar(undefined);
-
-    expect(mapa).toMatchObject({
-      fecha: '2026-11-24',
-      hoy: '2026-11-24',
-      ultimaFecha: '2026-12-24',
-      ahora: enLima('2026-11-24', '15:20'),
-    });
-  });
-
-  it('acepta hasta 30 días hacia adelante', async () => {
-    const { consultar } = preparar();
-
-    await expect(consultar.ejecutar('2026-12-24')).resolves.toBeDefined();
-  });
-
-  it.each([
-    ['2026-11-23', 'Elige una fecha desde hoy.'],
-    ['2026-12-25', 'Solo se pueden consultar los próximos 30 días.'],
-    ['2026-02-30', 'Ingresa una fecha válida.'],
-    ['mañana', 'Ingresa una fecha válida.'],
-  ])('rechaza %s', async (fecha, mensaje) => {
-    const { consultar } = preparar();
-
-    const rechazo = consultar.ejecutar(fecha);
-
-    await expect(rechazo).rejects.toThrow(ReglaInvalidaError);
-    await expect(rechazo).rejects.toMatchObject({
-      errores: { fecha: mensaje },
-    });
   });
 });

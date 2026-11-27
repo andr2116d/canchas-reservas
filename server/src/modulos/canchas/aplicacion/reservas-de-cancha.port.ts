@@ -16,10 +16,10 @@ export interface ConsultaDeReservas {
 
 /** Lo que el módulo de canchas necesita saber de las reservas. */
 export interface ReservasDeCancha {
-  /** Reservas confirmadas de la cancha que aún no terminan en el momento dado (en juego o por empezar), la más próxima primero. */
+  /** Reservas que retienen su turno y aún no terminan en el momento dado (en juego o por empezar), la más próxima primero. */
   porJugar(canchaId: number, desde: Date): Promise<ReservaAfectada[]>;
 
-  /** Reservas confirmadas que se cruzan con alguno de los rangos de cada cancha. */
+  /** Reservas que retienen su turno y se cruzan con alguno de los rangos de cada cancha. */
   enRangos(
     consultas: ConsultaDeReservas[],
   ): Promise<(ReservaAfectada & { canchaId: number })[]>;

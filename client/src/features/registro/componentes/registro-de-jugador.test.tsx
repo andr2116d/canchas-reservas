@@ -39,6 +39,24 @@ describe("RegistroDeJugador", () => {
     expect(screen.queryByRole("banner")).toBeNull();
   });
 
+  it("el enlace a iniciar sesión conserva el turno elegido", () => {
+    window.history.replaceState({}, "", "/registro?cancha=3&fecha=2026-11-28&desde=19:00");
+    mostrarRegistro();
+
+    expect(screen.getByRole("link", { name: "Inicia sesión" })).toHaveAttribute(
+      "href",
+      "/iniciar-sesion?cancha=3&fecha=2026-11-28&desde=19%3A00",
+    );
+  });
+
+  it("permite volver a la portada desde el panel sin agregar barra superior", () => {
+    mostrarRegistro();
+
+    expect(screen.getByRole("link", { name: "La Previa, ir a la portada" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Volver a la portada" })).toHaveAttribute("href", "/");
+    expect(screen.queryByRole("banner")).toBeNull();
+  });
+
   describe("campos obligatorios", () => {
     it("marca los campos obligatorios", () => {
       mostrarRegistro();
@@ -141,6 +159,17 @@ describe("RegistroDeJugador", () => {
       await persona.click(botonCrearCuenta());
 
       expect(reemplazarRuta).toHaveBeenCalledWith("/inicio");
+    });
+
+    it("con un turno elegido en la dirección, al crear la cuenta vuelve a confirmarlo", async () => {
+      window.history.replaceState({}, "", "/registro?cancha=3&fecha=2026-11-28&desde=19:00");
+      registrarJugadorSimulado.mockResolvedValue({ tipo: "registrado", nombres: "Valeria" });
+      const persona = mostrarRegistro();
+      await llenarYaceptar(persona);
+
+      await persona.click(botonCrearCuenta());
+
+      expect(reemplazarRuta).toHaveBeenCalledWith("/inicio/reservar/confirmar?cancha=3&fecha=2026-11-28&desde=19%3A00");
     });
 
     it("muestra junto al campo que ya existe una cuenta con ese correo", async () => {

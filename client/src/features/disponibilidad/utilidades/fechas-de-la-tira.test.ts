@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fechasEntre, nombreCorto, nombreDelMes, nombreLargo, numeroDelDia } from "./fechas-de-la-tira";
+import { fechasEntre, nombreCorto, nombreDelMes, numeroDelDia } from "./fechas-de-la-tira";
 
 describe("fechas de la tira", () => {
   it("lista los días entre dos fechas, ambas incluidas, aunque cambie el mes", () => {
@@ -13,8 +13,7 @@ describe("fechas de la tira", () => {
     expect(nombreCorto("2026-11-26", "2026-11-24")).toBe("jue");
   });
 
-  it("escribe la fecha completa, el número del día y el mes", () => {
-    expect(nombreLargo("2026-11-25")).toBe("miércoles, 25 de noviembre");
+  it("escribe el número del día y el mes", () => {
     expect(numeroDelDia("2026-12-01")).toBe(1);
     expect(nombreDelMes("2026-12-01")).toBe("Diciembre");
   });

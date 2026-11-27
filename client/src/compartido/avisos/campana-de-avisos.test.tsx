@@ -25,7 +25,7 @@ describe("CampanaDeAvisos", () => {
   it("dice cuántos avisos hay sin leer y los lista con su enlace", async () => {
     const persona = userEvent.setup();
     conAvisos([unAviso(2), unAviso(1, true)]);
-    render(<CampanaDeAvisos />);
+    render(<CampanaDeAvisos rol="ADMINISTRADOR" />);
 
     await persona.click(await screen.findByRole("button", { name: "Avisos, 1 sin leer" }));
 
@@ -37,7 +37,7 @@ describe("CampanaDeAvisos", () => {
   it("al abrir un aviso lo marca como leído", async () => {
     const persona = userEvent.setup();
     conAvisos([unAviso(2)]);
-    render(<CampanaDeAvisos />);
+    render(<CampanaDeAvisos rol="ADMINISTRADOR" />);
     await persona.click(await screen.findByRole("button", { name: "Avisos, 1 sin leer" }));
 
     await persona.click(screen.getByRole("link", { name: /000002-2026/ }));
@@ -49,7 +49,7 @@ describe("CampanaDeAvisos", () => {
   it("marca todos como leídos de una vez", async () => {
     const persona = userEvent.setup();
     conAvisos([unAviso(2), unAviso(1)]);
-    render(<CampanaDeAvisos />);
+    render(<CampanaDeAvisos rol="ADMINISTRADOR" />);
     await persona.click(await screen.findByRole("button", { name: "Avisos, 2 sin leer" }));
 
     await persona.click(screen.getByRole("button", { name: "Marcar todo como leído" }));
@@ -60,7 +60,7 @@ describe("CampanaDeAvisos", () => {
 
   it("cuando llega uno nuevo por el canal, lo muestra flotando", async () => {
     conAvisos([unAviso(1, true)]);
-    render(<CampanaDeAvisos />);
+    render(<CampanaDeAvisos rol="ADMINISTRADOR" />);
     await screen.findByRole("button", { name: "Avisos" });
     const alLlegar = vi.mocked(escucharAvisos).mock.calls[0][0];
 

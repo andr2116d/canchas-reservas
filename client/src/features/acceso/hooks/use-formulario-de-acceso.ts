@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { destinoDeSesion } from "@/compartido/sesion/destino-de-sesion";
+import { destinoConTurno, turnoDeLaDireccion } from "@/compartido/sesion/turno-elegido";
 import { iniciarSesion } from "../servicios/acceso.api";
 import { guardarCorreoRecordado, obtenerCorreoRecordado } from "../servicios/correo-recordado";
 
-/** Envía las credenciales y recuerda el correo cuando la persona lo elige. */
+/** Envía las credenciales, recuerda el correo si se elige y vuelve al turno elegido, si lo hay. */
 export function useFormularioDeAcceso() {
   const router = useRouter();
   const campoCorreo = useRef<HTMLInputElement>(null);
@@ -35,7 +36,7 @@ export function useFormularioDeAcceso() {
     if (resultado.tipo === "autenticado") {
       guardarCorreoRecordado(datos.has("recordar") ? correo : undefined);
       // Solo navegar: un refresh recargaría el acceso y competiría con la navegación al panel.
-      router.replace(destinoDeSesion(resultado));
+      router.replace(destinoConTurno(destinoDeSesion(resultado), turnoDeLaDireccion()));
       return;
     }
     setError(resultado.mensaje);

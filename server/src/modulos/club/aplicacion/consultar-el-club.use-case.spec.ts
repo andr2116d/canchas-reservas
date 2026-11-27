@@ -140,6 +140,7 @@ describe('Consultar lo que se muestra del club', () => {
     });
     reglas.versiones.push({
       ...GUARDADA,
+      id: 1,
       regla: ReglaDeCancelacion.crear([
         { desdeHoras: '24', porcentaje: '100', ofreceCredito: true },
         { desdeHoras: '0', porcentaje: '0', ofreceCredito: false },

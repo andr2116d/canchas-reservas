@@ -65,7 +65,7 @@ export function BarraDeNavegacion({ rol, venceEn, conSecciones = true }: BarraDe
         <div className="flex items-center gap-1">
           {rol && conSecciones ? (
             <>
-              <CampanaDeAvisos />
+              <CampanaDeAvisos rol={rol} />
               <MenuDeLaCuenta rol={rol} cerrar={cerrar} cerrando={cerrando} />
             </>
           ) : (
