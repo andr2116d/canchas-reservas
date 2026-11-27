@@ -6,6 +6,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { atenderRechazo } from "@/compartido/formulario/marcar-errores-del-server";
 import { useAjustarDocumentoAlCambiarTipo } from "@/compartido/formulario/use-ajustar-documento";
+import { PANELES } from "@/compartido/sesion/destino-de-sesion";
+import { destinoConTurno, turnoDeLaDireccion } from "@/compartido/sesion/turno-elegido";
 import { type DatosRegistro, esquemaRegistro } from "../esquemas/registro.schema";
 import { registrarJugador } from "../servicios/registro.api";
 
@@ -24,7 +26,7 @@ const DATOS_INICIALES: DatosRegistro = {
 
 /**
  * Estado y envío del formulario de registro: valida cada campo mientras se
- * escribe y, al registrarse, lleva al inicio del jugador.
+ * escribe y, al registrarse, lleva al inicio del jugador o al turno que eligió.
  */
 export function useRegistrarJugador() {
   const router = useRouter();
@@ -40,7 +42,7 @@ export function useRegistrarJugador() {
     setErrorGeneral(undefined);
     const resultado = await registrarJugador(datos);
     if (resultado.tipo === "registrado") {
-      router.replace("/inicio");
+      router.replace(destinoConTurno(PANELES.JUGADOR, turnoDeLaDireccion()));
     } else {
       setErrorGeneral(atenderRechazo(formulario, resultado));
     }

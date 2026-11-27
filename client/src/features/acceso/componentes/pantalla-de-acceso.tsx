@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Suspense } from "react";
+import { EnlaceConElTurno } from "@/compartido/sesion/enlace-con-el-turno";
 import { FondoDeCancha } from "@/compartido/ui/fondo-de-cancha";
 import { CAMBIO_DE_ACCESO, TransicionDeAcceso } from "@/compartido/ui/transicion-de-acceso";
 import { AvisoDeInactividad, type ParametrosDeAcceso } from "./aviso-de-inactividad";
@@ -16,7 +16,7 @@ export function PantallaDeAcceso({ parametros }: { parametros: ParametrosDeAcces
   return (
     <div className="relative isolate min-h-dvh overflow-hidden bg-cancha">
       <Suspense fallback={null}>
-        <RedirigirSiHaySesion />
+        <RedirigirSiHaySesion parametros={parametros} />
       </Suspense>
       <FondoDeCancha encuadre="acceso" />
       <TransicionDeAcceso parte="tarjeta">
@@ -27,13 +27,13 @@ export function PantallaDeAcceso({ parametros }: { parametros: ParametrosDeAcces
           <FormularioDeAcceso />
           <p className="mt-4 text-center text-sm text-grava sm:mt-6">
             ¿Todavía no tienes cuenta?{" "}
-            <Link
+            <EnlaceConElTurno
               href="/registro"
               transitionTypes={[CAMBIO_DE_ACCESO]}
               className="inline-flex min-h-11 items-center rounded-sm font-bold text-botella underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-botella"
             >
               Crea tu cuenta de jugador
-            </Link>
+            </EnlaceConElTurno>
           </p>
         </TarjetaDeAcceso>
       </TransicionDeAcceso>

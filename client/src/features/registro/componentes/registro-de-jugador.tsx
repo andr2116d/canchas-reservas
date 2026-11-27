@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { FormProvider } from "react-hook-form";
 import { RUTA_DE_ACCESO } from "@/compartido/sesion/destino-de-sesion";
+import { EnlaceConElTurno } from "@/compartido/sesion/enlace-con-el-turno";
 import { CAMBIO_DE_ACCESO, TransicionDeAcceso } from "@/compartido/ui/transicion-de-acceso";
 import { useRegistrarJugador } from "../hooks/use-registrar-jugador";
 import { FormularioRegistro } from "./formulario-registro";
@@ -21,13 +21,13 @@ export function RegistroDeJugador() {
             <div className="mx-auto max-w-xl">
               <p className="mb-1 flex flex-wrap items-center gap-x-2 text-sm text-grava">
                 ¿Ya tienes cuenta?
-                <Link
+                <EnlaceConElTurno
                   href={RUTA_DE_ACCESO}
                   transitionTypes={[CAMBIO_DE_ACCESO]}
                   className="inline-flex min-h-11 items-center rounded-sm font-bold text-botella underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-botella"
                 >
                   Inicia sesión
-                </Link>
+                </EnlaceConElTurno>
               </p>
               <h1 className="mb-6 font-titular text-4xl font-black text-balance text-tinta sm:mb-8 sm:text-5xl">
                 Crea tu cuenta de jugador

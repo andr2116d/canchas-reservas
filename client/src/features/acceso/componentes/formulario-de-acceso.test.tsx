@@ -41,6 +41,19 @@ describe("FormularioDeAcceso", () => {
     expect(navegar.refresh).not.toHaveBeenCalled();
   });
 
+  it("con un turno elegido en la dirección, el jugador vuelve a confirmarlo", async () => {
+    window.history.replaceState({}, "", "/iniciar-sesion?cancha=3&fecha=2026-11-28&desde=19:00");
+    vi.mocked(iniciarSesion).mockResolvedValue({ tipo: "autenticado", rol: "JUGADOR", requiereCambiarContrasena: false });
+    const usuario = userEvent.setup();
+    render(<FormularioDeAcceso />);
+    await escribirCredenciales(usuario);
+
+    await usuario.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+
+    expect(navegar.replace).toHaveBeenCalledWith("/inicio/reservar/confirmar?cancha=3&fecha=2026-11-28&desde=19%3A00");
+    window.history.replaceState({}, "", "/");
+  });
+
   it("recupera el correo elegido y ofrece al navegador el campo de contraseña actual", async () => {
     vi.mocked(iniciarSesion).mockResolvedValue({ tipo: "autenticado", rol: "JUGADOR", requiereCambiarContrasena: false });
     const usuario = userEvent.setup();
