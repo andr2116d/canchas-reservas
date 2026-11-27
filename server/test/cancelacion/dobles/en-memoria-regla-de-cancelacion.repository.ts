@@ -24,6 +24,7 @@ export class EnMemoriaReglaDeCancelacionRepository implements ReglaDeCancelacion
     const actual = await this.vigente();
     if (actual?.regla.igualA(regla)) return { cambio: false, version: actual };
     const version = {
+      id: this.versiones.length + 1,
       regla,
       guardadaEn,
       guardadaPor: `Administración ${guardadaPorId}`,

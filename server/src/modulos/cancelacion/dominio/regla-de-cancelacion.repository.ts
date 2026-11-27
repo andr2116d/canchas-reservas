@@ -6,6 +6,7 @@ export const REGLA_DE_CANCELACION_REPOSITORY = Symbol(
 
 /** Una regla guardada, con quién la guardó y cuándo empezó a regir. */
 export interface VersionDeLaRegla {
+  id: number;
   regla: ReglaDeCancelacion;
   guardadaEn: Date;
   guardadaPor: string;
