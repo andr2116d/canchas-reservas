@@ -1,0 +1,85 @@
+/* Confirmar una reserva: el turno y la regla a la izquierda; el total, fijo a la derecha. */
+.confirmar-reserva {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 64rem;
+}
+
+@media (min-width: 1024px) {
+  .confirmar-reserva {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    align-items: start;
+  }
+
+  .confirmar-reserva > * {
+    grid-column: 1;
+  }
+
+  .confirmar-reserva > .total-de-la-reserva {
+    position: sticky;
+    top: 6rem;
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+}
+
+/* El turno sobre el verde de la cancha, con la línea de mitad de campo. */
+.turno-por-confirmar {
+  background:
+    radial-gradient(circle at 100% 50%, transparent 4.5rem, rgb(255 255 255 / 0.14) 4.5rem 4.6rem, transparent 4.6rem),
+    linear-gradient(135deg, var(--color-cancha-clara), var(--color-cancha));
+}
+
+/* Línea de tiempo: un punto por plazo, verde si devuelve algo. */
+.plazos-de-cancelacion {
+  display: grid;
+  gap: 0.9rem;
+  border-left: 2px solid var(--color-linea);
+  margin-left: 0.4rem;
+  padding-left: 1.1rem;
+}
+
+.plazos-de-cancelacion li {
+  position: relative;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.plazos-de-cancelacion li::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  left: -1.55rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid white;
+  border-radius: 999px;
+  background: #b9c3bc;
+  box-shadow: 0 0 0 1px var(--color-linea);
+}
+
+.plazos-de-cancelacion li[data-devuelve]::before {
+  background: var(--color-botella);
+}
+
+.material-del-local__opcion {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  border: 1px solid var(--color-linea);
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+}
+
+.material-del-local__opcion:has(input:checked) {
+  border-color: var(--color-botella);
+  background: #f1f8f3;
+}
+
+.material-del-local__opcion input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.15rem;
+  accent-color: var(--color-botella);
+}
