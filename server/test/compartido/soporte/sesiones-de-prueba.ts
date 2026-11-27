@@ -2,6 +2,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
 import { RegistrarPersonalUseCase } from '../../../src/modulos/usuarios/aplicacion/registrar-personal.use-case';
+import { unaRecepcionistaValida } from '../../usuarios/fabricas/datos-recepcionista';
 import { unJugadorValido } from '../../usuarios/fabricas/datos-registro-jugador';
 import { cookieDe } from './cookie-de-sesion';
 
@@ -88,4 +89,25 @@ export function iniciarSesion(
   contrasena: string,
 ) {
   return iniciar(app, correo, contrasena);
+}
+
+/** Administración crea a Rosa Quispe y ella entra con su temporal, dejando el cambio para después. */
+export async function sesionDeRecepcionista(
+  app: NestExpressApplication,
+  administrador: string,
+): Promise<string> {
+  await request(app.getHttpServer())
+    .post('/api/recepcionistas')
+    .set('Cookie', administrador)
+    .send(unaRecepcionistaValida())
+    .expect(201);
+  await confirmarDatosDelPersonal(app);
+  const sesion = cookieDe(
+    await iniciar(app, 'rosa.quispe@laprevia.pe', CONTRASENA_TEMPORAL),
+  );
+  await request(app.getHttpServer())
+    .post('/api/sesiones/actual/cambio-omitido')
+    .set('Cookie', sesion)
+    .expect(204);
+  return sesion;
 }
