@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { MonogramaLaPrevia } from "@/compartido/ui/monograma-la-previa";
-import { AccesoDelSitio } from "./acceso-del-sitio";
+import { AccesoDelSitio, MenuSegunLaSesion } from "./acceso-del-sitio";
 import { MenuDelSitio } from "./menu-del-sitio";
 
 /** Barra de vidrio de las páginas públicas: marca, secciones de la portada y acceso a la cuenta. */
@@ -13,7 +13,9 @@ export function BarraDelSitio() {
           <MonogramaLaPrevia className="h-9 w-auto" aria-hidden="true" />
           <span className="font-titular text-2xl leading-none font-black text-papel max-[420px]:hidden">La Previa</span>
         </Link>
-        <MenuDelSitio />
+        <Suspense fallback={<MenuDelSitio />}>
+          <MenuSegunLaSesion />
+        </Suspense>
         <div className="flex items-center gap-1.5">
           <Suspense fallback={<span className="boton-del-sitio invisible">Crear cuenta</span>}>
             <AccesoDelSitio />
