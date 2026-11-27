@@ -6,6 +6,7 @@ import { EnMemoriaReglaDeCancelacionRepository } from '../../cancelacion/dobles/
 import { RelojDePrueba } from '../../compartido/dobles/reloj-de-prueba';
 import { EnMemoriaReservaRepository } from '../dobles/en-memoria-reserva.repository';
 import {
+  AvisosDeReservaDePrueba,
   CatalogoDePrueba,
   CodigosDePrueba,
   TitularesDePrueba,
@@ -91,6 +92,7 @@ export function prepararReservas({
     reservas,
     reloj,
     codigos: new CodigosDePrueba(codigos),
+    avisos: new AvisosDeReservaDePrueba(),
   };
   return {
     ...dependencias,

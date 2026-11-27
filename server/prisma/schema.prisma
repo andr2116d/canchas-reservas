@@ -621,6 +621,7 @@ model CorrelativoDeHoja {
 enum TipoDeAviso {
   NUEVO_RECLAMO      @map("nuevo_reclamo")
   RECLAMO_RESPONDIDO @map("reclamo_respondido")
+  NUEVA_RESERVA      @map("nueva_reserva")
 
   @@map("tipo_de_aviso")
 }

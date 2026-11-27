@@ -112,6 +112,22 @@ describe('Reservar un turno desde el mapa', () => {
     ).toBeLessThanOrEqual(15 * 60 * 1000);
   });
 
+  it('administración recibe el aviso «Nueva reserva» con el código', async () => {
+    const { body } = await separar(separarALas19(cancha)).expect(201);
+
+    const { body: avisos } = await api()
+      .get('/api/avisos')
+      .set('Cookie', local.administrador)
+      .expect(200);
+
+    expect(avisos.avisos).toEqual([
+      expect.objectContaining({
+        tipo: 'NUEVA_RESERVA',
+        referencia: body.codigo,
+      }),
+    ]);
+  });
+
   it('un turno ya separado no se vuelve a separar', async () => {
     const otro = await unJugadorMas(app, 2);
     await separar(separarALas19(cancha)).expect(201);

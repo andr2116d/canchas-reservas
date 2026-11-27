@@ -12,6 +12,7 @@ import type {
   ReservaNueva,
   ReservaRepository,
 } from '../dominio/reserva.repository';
+import type { AvisosDeReserva } from './avisos-de-reserva.port';
 import type { CatalogoDeAdicionales } from './catalogo-de-adicionales.port';
 import type { GeneradorDeCodigo } from './generador-de-codigo.port';
 import { exigirTitularHabilitado } from './titular-habilitado';
@@ -44,6 +45,7 @@ export interface DependenciasDeLaReserva extends DependenciasDelTurno {
   titulares: Titulares;
   reservas: ReservaRepository;
   codigos: GeneradorDeCodigo;
+  avisos: AvisosDeReserva;
   reloj: Reloj;
 }
 
@@ -71,7 +73,7 @@ function exigirMismosMontos(
 
 /**
  * Separa un turno libre para su titular: queda pendiente de pago, con los montos y la
- * regla de cancelación de este momento, y retiene el turno hasta que vence.
+ * regla de cancelación de este momento, retiene el turno hasta que vence y avisa al personal.
  */
 export class ReservarTurnoUseCase {
   constructor(private readonly de: DependenciasDeLaReserva) {}
@@ -98,6 +100,7 @@ export class ReservarTurnoUseCase {
       venceEn,
       adicionalIds: await this.adicionalesActivos(pedido.adicionales),
     });
+    await this.de.avisos.nuevaReserva(codigo);
     return { codigo, estado: 'PENDIENTE_DE_PAGO', venceEn };
   }
 

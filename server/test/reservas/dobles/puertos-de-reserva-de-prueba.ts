@@ -2,6 +2,7 @@ import type {
   AdicionalOfrecido,
   CatalogoDeAdicionales,
 } from '../../../src/modulos/reservas/aplicacion/catalogo-de-adicionales.port';
+import type { AvisosDeReserva } from '../../../src/modulos/reservas/aplicacion/avisos-de-reserva.port';
 import type { GeneradorDeCodigo } from '../../../src/modulos/reservas/aplicacion/generador-de-codigo.port';
 import type {
   DatosDelTitular,
@@ -35,5 +36,15 @@ export class CodigosDePrueba implements GeneradorDeCodigo {
     return (
       this.codigos.shift() ?? `RSV${String(this.siguiente).padStart(3, '2')}`
     );
+  }
+}
+
+/** Guarda los códigos de las reservas avisadas. */
+export class AvisosDeReservaDePrueba implements AvisosDeReserva {
+  readonly nuevas: string[] = [];
+
+  nuevaReserva(codigo: string): Promise<void> {
+    this.nuevas.push(codigo);
+    return Promise.resolve();
   }
 }

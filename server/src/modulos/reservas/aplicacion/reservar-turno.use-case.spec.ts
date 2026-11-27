@@ -35,6 +35,14 @@ describe('Reservar un turno', () => {
     expect(reservas.reservas[0].adelanto.enSoles()).toBe('40.00');
   });
 
+  it('avisa a recepción y a administración de la reserva nueva', async () => {
+    const { reservar, avisos } = prepararReservas({ codigos: ['7K3Q9X'] });
+
+    await reservar.ejecutar(unPedido());
+
+    expect(avisos.nuevas).toEqual(['7K3Q9X']);
+  });
+
   it('retiene el turno 15 minutos, o hasta su inicio si empieza antes', async () => {
     const temprano = prepararReservas();
     const justo = prepararReservas({ ahora: enLima('2026-11-28', '18:50') });

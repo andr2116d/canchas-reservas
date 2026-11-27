@@ -5,7 +5,12 @@ import {
   REGLA_DE_CANCELACION_REPOSITORY,
   type ReglaDeCancelacionRepository,
 } from '../cancelacion/api-cancelacion';
+import { AvisosModule } from '../avisos/api-avisos';
 import { DisponibilidadModule } from '../disponibilidad/api-disponibilidad';
+import {
+  AVISOS_DE_RESERVA,
+  type AvisosDeReserva,
+} from './aplicacion/avisos-de-reserva.port';
 import {
   CATALOGO_DE_ADICIONALES,
   type CatalogoDeAdicionales,
@@ -29,6 +34,7 @@ import {
   RESERVA_REPOSITORY,
   type ReservaRepository,
 } from './dominio/reserva.repository';
+import { CampanaAvisosDeReservaAdapter } from './infraestructura/avisos/campana-avisos-de-reserva.adapter';
 import { ReservasController } from './infraestructura/http/reservas.controller';
 import { MapaTurnosDelLocalAdapter } from './infraestructura/mapa/mapa-turnos-del-local.adapter';
 import { CryptoGeneradorDeCodigoAdapter } from './infraestructura/persistencia/crypto-generador-de-codigo.adapter';
@@ -37,24 +43,30 @@ import { PrismaReservaRepository } from './infraestructura/persistencia/prisma-r
 import { PrismaTitularesAdapter } from './infraestructura/persistencia/prisma-titulares.adapter';
 
 const LO_QUE_SE_OFRECE = Symbol('LO_QUE_SE_OFRECE');
-const QUIEN_Y_DONDE = Symbol('QUIEN_Y_DONDE');
+const REGISTRO = Symbol('REGISTRO_DE_RESERVAS');
 
 /** El turno, la regla de cancelación y el material: lo que se muestra antes de separar. */
 type LoQueSeOfrece = Pick<
   DependenciasDeLaReserva,
   'turnos' | 'reglas' | 'catalogo'
 >;
-/** Quién reserva, dónde se guarda, con qué código y a qué hora. */
-type QuienYDonde = Omit<DependenciasDeLaReserva, keyof LoQueSeOfrece>;
+/** Dónde se guarda, con qué código y a quién se avisa. */
+type Registro = Pick<
+  DependenciasDeLaReserva,
+  'reservas' | 'codigos' | 'avisos'
+>;
 
-const dependencias = (ofrece: LoQueSeOfrece, quien: QuienYDonde) => ({
-  ...ofrece,
-  ...quien,
-});
+const dependencias = (
+  ofrece: LoQueSeOfrece,
+  registro: Registro,
+  titulares: Titulares,
+  reloj: Reloj,
+): DependenciasDeLaReserva => ({ ...ofrece, ...registro, titulares, reloj });
+const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
 
 /** Reservas del jugador: separar un turno del mapa y consultar la reserva propia. */
 @Module({
-  imports: [DisponibilidadModule, CancelacionModule],
+  imports: [DisponibilidadModule, CancelacionModule, AvisosModule],
   controllers: [ReservasController],
   providers: [
     { provide: TURNOS_DEL_LOCAL, useClass: MapaTurnosDelLocalAdapter },
@@ -65,6 +77,7 @@ const dependencias = (ofrece: LoQueSeOfrece, quien: QuienYDonde) => ({
     { provide: TITULARES, useClass: PrismaTitularesAdapter },
     { provide: RESERVA_REPOSITORY, useClass: PrismaReservaRepository },
     { provide: GENERADOR_DE_CODIGO, useClass: CryptoGeneradorDeCodigoAdapter },
+    { provide: AVISOS_DE_RESERVA, useClass: CampanaAvisosDeReservaAdapter },
     {
       provide: LO_QUE_SE_OFRECE,
       useFactory: (
@@ -79,26 +92,25 @@ const dependencias = (ofrece: LoQueSeOfrece, quien: QuienYDonde) => ({
       ],
     },
     {
-      provide: QUIEN_Y_DONDE,
+      provide: REGISTRO,
       useFactory: (
-        titulares: Titulares,
         reservas: ReservaRepository,
         codigos: GeneradorDeCodigo,
-        reloj: Reloj,
-      ): QuienYDonde => ({ titulares, reservas, codigos, reloj }),
-      inject: [TITULARES, RESERVA_REPOSITORY, GENERADOR_DE_CODIGO, RELOJ],
+        avisos: AvisosDeReserva,
+      ): Registro => ({ reservas, codigos, avisos }),
+      inject: [RESERVA_REPOSITORY, GENERADOR_DE_CODIGO, AVISOS_DE_RESERVA],
     },
     {
       provide: ResumirReservaUseCase,
-      useFactory: (ofrece: LoQueSeOfrece, quien: QuienYDonde) =>
-        new ResumirReservaUseCase(dependencias(ofrece, quien)),
-      inject: [LO_QUE_SE_OFRECE, QUIEN_Y_DONDE],
+      useFactory: (...deps: Parameters<typeof dependencias>) =>
+        new ResumirReservaUseCase(dependencias(...deps)),
+      inject: INYECTADAS,
     },
     {
       provide: ReservarTurnoUseCase,
-      useFactory: (ofrece: LoQueSeOfrece, quien: QuienYDonde) =>
-        new ReservarTurnoUseCase(dependencias(ofrece, quien)),
-      inject: [LO_QUE_SE_OFRECE, QUIEN_Y_DONDE],
+      useFactory: (...deps: Parameters<typeof dependencias>) =>
+        new ReservarTurnoUseCase(dependencias(...deps)),
+      inject: INYECTADAS,
     },
     {
       provide: ConsultarMiReservaUseCase,
