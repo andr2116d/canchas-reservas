@@ -1,0 +1,27 @@
+/* El punto de «En vivo»: late mientras hay conexión y cambia de color al reconectar. */
+.en-vivo__punto {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #2fa36b;
+}
+
+.en-vivo[data-conexion="reconectando"] .en-vivo__punto {
+  background: var(--color-alerta);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .en-vivo[data-conexion="conectado"] .en-vivo__punto {
+    animation: latido-en-vivo 2s infinite;
+  }
+}
+
+@keyframes latido-en-vivo {
+  0% {
+    box-shadow: 0 0 0 0 rgb(47 163 107 / 0.6);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px rgb(47 163 107 / 0);
+  }
+}

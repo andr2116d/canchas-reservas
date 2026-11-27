@@ -5,6 +5,7 @@
 @import "../compartido/ui/pantalla-de-aviso.css";
 @import "../compartido/ui/avisos-flotantes.css";
 @import "../compartido/marco/marco-interno.css";
+@import "../compartido/disponibilidad/estado-en-vivo.css";
 @import "../features/canchas/componentes/canchas.css";
 @import "../features/adicionales/componentes/adicionales.css";
 @import "../features/historial/componentes/historial.css";

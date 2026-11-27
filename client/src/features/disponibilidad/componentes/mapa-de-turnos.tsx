@@ -7,7 +7,7 @@ import { ListaDePestanas } from "@/compartido/ui/lista-de-pestanas";
 import { useMapaDelDia } from "../hooks/use-mapa-del-dia";
 import { useTurnoElegido } from "../hooks/use-turno-elegido";
 import type { MapaDelDia, TipoDelMapa } from "../servicios/disponibilidad";
-import { EstadoEnVivo } from "./estado-en-vivo";
+import { EstadoEnVivo } from "@/compartido/disponibilidad/estado-en-vivo";
 import { LeyendaDeEstados } from "./leyenda-de-estados";
 import { SelectorDeFecha } from "./selector-de-fecha";
 import { TablaDeTurnos } from "./tabla-de-turnos";
