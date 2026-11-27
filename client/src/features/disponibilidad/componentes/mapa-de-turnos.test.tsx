@@ -64,16 +64,22 @@ describe("MapaDeTurnos", () => {
     expect(tuTurno()).toHaveTextContent("Cancha 118:00–19:00");
     expect(tuTurno()).toHaveTextContent("S/ 80.00");
     expect(tuTurno()).toHaveTextContent("Lo separas con S/ 40.00 de adelanto (50 %)");
-    expect(within(tuTurno()).getByRole("link", { name: "Ingresar para reservar" })).toHaveAttribute("href", "/iniciar-sesion");
+    const turno = "cancha=1&fecha=2026-11-25&desde=18%3A00";
+    expect(within(tuTurno()).getByRole("link", { name: "Ingresar para reservar" })).toHaveAttribute("href", `/iniciar-sesion?${turno}`);
+    expect(within(tuTurno()).getByRole("link", { name: "Crear cuenta" })).toHaveAttribute("href", `/registro?${turno}`);
   });
 
-  it("dentro del panel del jugador no pide iniciar sesión", async () => {
+  it("dentro del panel del jugador lleva a confirmar el turno elegido, sin pedir iniciar sesión", async () => {
     const usuario = userEvent.setup();
     mostrar(mapaDePrueba(), "jugador");
 
     await usuario.click(await screen.findByRole("button", { name: /Cancha 1, de 18:00 a 19:00: libre/ }));
 
     expect(within(tuTurno()).queryByRole("link", { name: "Ingresar para reservar" })).not.toBeInTheDocument();
+    expect(within(tuTurno()).getByRole("link", { name: "Reservar Cancha 1 · 18:00–19:00" })).toHaveAttribute(
+      "href",
+      "/inicio/reservar/confirmar?cancha=1&fecha=2026-11-25&desde=18%3A00",
+    );
   });
 
   it("si el turno elegido se ocupa mientras se mira, lo quita y avisa", async () => {
