@@ -128,6 +128,25 @@ describe('Reservar un turno desde el mapa', () => {
     ]);
   });
 
+  it('la reserva entra al historial de cambios como importante, con quién la separó', async () => {
+    const { body } = await separar(separarALas19(cancha)).expect(201);
+
+    const { body: pagina } = await api()
+      .get('/api/historial')
+      .query({ categoria: 'RESERVAS' })
+      .set('Cookie', local.administrador)
+      .expect(200);
+
+    expect(pagina.registros).toEqual([
+      expect.objectContaining({
+        accion: 'SEPARACION',
+        importante: true,
+        sujeto: `Reserva ${body.codigo}`,
+        autor: expect.objectContaining({ nombre: 'Valeria León Paredes' }),
+      }),
+    ]);
+  });
+
   it('un turno ya separado no se vuelve a separar', async () => {
     const otro = await unJugadorMas(app, 2);
     await separar(separarALas19(cancha)).expect(201);
