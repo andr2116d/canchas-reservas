@@ -8,6 +8,7 @@ import {
   type PlazoDeCancelacion,
   ReglaDeCancelacion,
 } from '../../cancelacion/api-cancelacion';
+import { esCodigoDeReserva } from '../dominio/codigo-de-reserva';
 import { ReservaNoEncontradaError } from '../dominio/reserva-no-encontrada.error';
 import type {
   EstadoDeReserva,
@@ -52,7 +53,9 @@ export class ConsultarMiReservaUseCase {
   ) {}
 
   async ejecutar(titularId: number, codigo: string): Promise<VistaDeMiReserva> {
-    const reserva = await this.reservas.delTitular(titularId, codigo);
+    const reserva = esCodigoDeReserva(codigo)
+      ? await this.reservas.delTitular(titularId, codigo)
+      : undefined;
     if (!reserva) throw new ReservaNoEncontradaError();
     const ahora = this.reloj.ahora();
     return {

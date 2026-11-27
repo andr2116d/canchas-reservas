@@ -56,5 +56,8 @@ describe('Consultar la reserva propia', () => {
     await expect(consultar.ejecutar(JUGADOR, 'ZZZZZZ')).rejects.toThrow(
       ReservaNoEncontradaError,
     );
+    await expect(consultar.ejecutar(JUGADOR, '7k3q9x\u0000')).rejects.toThrow(
+      ReservaNoEncontradaError,
+    );
   });
 });
