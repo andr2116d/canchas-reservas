@@ -1,6 +1,15 @@
-/** Etapas de una reserva que ocupan su turno. */
-export type EstadoDeReserva =
-  'PENDIENTE_DE_PAGO' | 'PENDIENTE_DE_VALIDACION' | 'CONFIRMADA' | 'EN_JUEGO';
+/** Etapas de una reserva que ocupan su turno, las mismas que la exclusión de la base. */
+export const ESTADOS_QUE_OCUPAN = [
+  'PENDIENTE_DE_PAGO',
+  'PENDIENTE_DE_VALIDACION',
+  'CONFIRMADA',
+  'EN_JUEGO',
+] as const;
+export type EstadoDeReserva = (typeof ESTADOS_QUE_OCUPAN)[number];
+
+export function ocupaElTurno(estado: string): estado is EstadoDeReserva {
+  return (ESTADOS_QUE_OCUPAN as readonly string[]).includes(estado);
+}
 
 /** Cómo se ve un turno de una cancha. Solo `DISPONIBLE` se puede elegir. */
 export type EstadoDelTurno =
@@ -11,7 +20,8 @@ export type EstadoDelTurno =
   | 'SIN_LUZ'
   | 'YA_EMPEZO';
 
-const OCUPAN: EstadoDeReserva[] = ['CONFIRMADA', 'EN_JUEGO'];
+/** Con el pago validado el turno se ve ocupado; antes, pendiente. */
+const SE_VEN_OCUPADAS: EstadoDeReserva[] = ['CONFIRMADA', 'EN_JUEGO'];
 
 interface Rango {
   inicio: Date;
@@ -45,7 +55,7 @@ export function estadoDelTurno(
   if (turno.necesitaLuzSinTenerla) return 'SIN_LUZ';
   if (bloqueos.some(cruza)) return 'MANTENIMIENTO';
   const suyas = reservas.filter(cruza);
-  if (suyas.some((reserva) => OCUPAN.includes(reserva.estado)))
+  if (suyas.some((reserva) => SE_VEN_OCUPADAS.includes(reserva.estado)))
     return 'OCUPADO';
   if (suyas.length > 0) return 'PENDIENTE';
   return turno.inicio <= ahora ? 'YA_EMPEZO' : 'DISPONIBLE';

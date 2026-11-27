@@ -69,7 +69,8 @@ model Usuario {
   bloqueosCreados              BloqueoDeCancha[]
   cambiosDeAdicionales         CambioDeAdicional[]
   adelantosGuardados           AdelantoMinimo[]
-  reservasComoTitular          Reserva[]
+  reservasComoTitular          Reserva[]            @relation("ReservasComoTitular")
+  reservasCreadas              Reserva[]            @relation("ReservasCreadas")
   hojasDeReclamacion           HojaDeReclamacion[]
   hojasRespondidas             HojaDeReclamacion[]  @relation("HojasRespondidas")
   cambiosDeHojas               CambioDeHoja[]
@@ -206,6 +207,7 @@ model ReglaDeCancelacion {
   guardadaEn    DateTime             @default(now()) @map("guardada_en") @db.Timestamptz(3)
   guardadaPor   Usuario              @relation(fields: [guardadaPorId], references: [id])
   rangos        RangoDeCancelacion[]
+  reservas      Reserva[]
 
   @@index([guardadaEn])
   @@map("regla_de_cancelacion")
@@ -341,6 +343,7 @@ model Adicional {
   creadoEn          DateTime            @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn     DateTime            @updatedAt @map("actualizado_en") @db.Timestamptz(3)
   cambios           CambioDeAdicional[]
+  pedidos           AdicionalPedido[]
 
   @@map("adicional")
 }
@@ -392,27 +395,62 @@ enum EstadoDeReserva {
   PENDIENTE_DE_VALIDACION @map("pendiente_de_validacion")
   CONFIRMADA              @map("confirmada")
   EN_JUEGO                @map("en_juego")
+  /// Venció sin pago: ya no ocupa el turno.
+  EXPIRADA                @map("expirada")
 
   @@map("estado_de_reserva")
 }
 
+/// Por dónde se creó la reserva.
+enum CanalDeReserva {
+  WEB @map("web")
+
+  @@map("canal_de_reserva")
+}
+
 /// Un turno de una cancha separado por un titular. Dos reservas de la misma cancha no se pisan.
 model Reserva {
-  id            Int             @id @default(autoincrement())
-  canchaId      Int             @map("cancha_id")
-  titularId     Int             @map("titular_id")
-  inicio        DateTime        @db.Timestamptz(3)
-  fin           DateTime        @db.Timestamptz(3)
-  estado        EstadoDeReserva
-  creadoEn      DateTime        @default(now()) @map("creado_en") @db.Timestamptz(3)
-  actualizadoEn DateTime        @updatedAt @map("actualizado_en") @db.Timestamptz(3)
-  cancha        Cancha          @relation(fields: [canchaId], references: [id])
-  titular       Usuario         @relation(fields: [titularId], references: [id])
+  id                   Int                @id @default(autoincrement())
+  canchaId             Int                @map("cancha_id")
+  titularId            Int                @map("titular_id")
+  inicio               DateTime           @db.Timestamptz(3)
+  fin                  DateTime           @db.Timestamptz(3)
+  estado               EstadoDeReserva
+  /// Lo que se muestra en el local para encontrarla, como «7K3Q9X».
+  codigo               String             @unique
+  /// Precio final del turno con IGV al crearla: un cambio de tarifa no la altera.
+  precio               Decimal            @db.Decimal(10, 2)
+  porcentajeDeAdelanto Int                @map("porcentaje_de_adelanto") @db.SmallInt
+  adelanto             Decimal            @db.Decimal(10, 2)
+  /// La regla de cancelación vigente al crearla.
+  reglaDeCancelacionId Int                @map("regla_de_cancelacion_id")
+  canal                CanalDeReserva
+  creadaPorId          Int                @map("creada_por_id")
+  /// Hasta cuándo retiene el turno sin pago; vacío si ya no espera pago.
+  venceEn              DateTime?          @map("vence_en") @db.Timestamptz(3)
+  creadoEn             DateTime           @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn        DateTime           @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  cancha               Cancha             @relation(fields: [canchaId], references: [id])
+  titular              Usuario            @relation("ReservasComoTitular", fields: [titularId], references: [id])
+  creadaPor            Usuario            @relation("ReservasCreadas", fields: [creadaPorId], references: [id])
+  reglaDeCancelacion   ReglaDeCancelacion @relation(fields: [reglaDeCancelacionId], references: [id])
+  adicionalesPedidos   AdicionalPedido[]
 
   @@index([canchaId, inicio])
   @@index([inicio])
-  @@index([titularId])
+  @@index([titularId, estado])
   @@map("reserva")
+}
+
+/// Material que el jugador pidió que le tengan listo. No es un cobro.
+model AdicionalPedido {
+  reservaId   Int       @map("reserva_id")
+  adicionalId Int       @map("adicional_id")
+  reserva     Reserva   @relation(fields: [reservaId], references: [id], onDelete: Cascade)
+  adicional   Adicional @relation(fields: [adicionalId], references: [id], onDelete: Cascade)
+
+  @@id([reservaId, adicionalId])
+  @@map("adicional_pedido")
 }
 
 enum EstadoDeCorreo {
