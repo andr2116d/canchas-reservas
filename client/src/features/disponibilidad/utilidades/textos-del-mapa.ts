@@ -17,4 +17,3 @@ export function textoDeLaFranja(franja: TurnoDelMapa["franja"], inicioDeLaNoche:
   return "Empieza de día y termina de noche";
 }
 
-export const enSoles = (monto: string) => `S/ ${monto}`;

@@ -5,7 +5,8 @@ import { useState } from "react";
 import { useAvisar } from "@/compartido/ui/avisos-flotantes";
 import { TarjetaFlotante } from "@/compartido/ui/tarjeta-flotante";
 import { editarAdicional } from "../servicios/adicionales.api";
-import { type Adicional, enSoles } from "../servicios/adicionales";
+import { enSoles } from "@/compartido/ui/textos-del-local";
+import type { Adicional } from "../servicios/adicionales";
 import { AccionesDeAdicional } from "./acciones-de-adicional";
 import { FormularioDeAdicional } from "./formulario-de-adicional";
 

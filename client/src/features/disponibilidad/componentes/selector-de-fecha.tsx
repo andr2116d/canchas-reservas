@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useDiasALaVista } from "../hooks/use-dias-a-la-vista";
-import { fechasEntre, nombreCorto, nombreDelMes, nombreLargo, numeroDelDia } from "../utilidades/fechas-de-la-tira";
+import { diaLargo } from "@/compartido/ui/textos-del-local";
+import { fechasEntre, nombreCorto, nombreDelMes, numeroDelDia } from "../utilidades/fechas-de-la-tira";
 
 interface SelectorDeFechaProps {
   fecha: string;
@@ -36,7 +37,7 @@ export function SelectorDeFecha({ fecha, hoy, ultimaFecha, alElegir }: SelectorD
               key={dia}
               type="button"
               aria-pressed={dia === fecha}
-              aria-label={nombreLargo(dia)}
+              aria-label={diaLargo(dia)}
               onClick={() => alElegir(dia)}
               className="group grid w-12 justify-items-center rounded-xl py-1 transition-colors hover:bg-tiza focus-visible:outline-2 focus-visible:outline-botella aria-pressed:bg-cancha aria-pressed:text-papel aria-pressed:hover:bg-cancha"
             >
@@ -48,7 +49,7 @@ export function SelectorDeFecha({ fecha, hoy, ultimaFecha, alElegir }: SelectorD
         <button type="button" aria-label="Días siguientes" disabled={inicio + aLaVista >= dias.length} onClick={() => mover(aLaVista)} className={FLECHA}>›</button>
       </div>
       <p className="text-sm text-grava">
-        {nombreDelMes(visibles[0])} · puedes ver hasta el {nombreLargo(ultimaFecha).replace(/^\S+ /, "")}
+        {nombreDelMes(visibles[0])} · puedes ver hasta el {diaLargo(ultimaFecha).replace(/^\S+ /, "")}
       </p>
     </div>
   );

@@ -3,9 +3,8 @@ import { NOMBRE_DEL_TIPO, type TipoDeCancha } from "@/compartido/canchas/tipo-de
 import { RUTA_DE_ACCESO } from "@/compartido/sesion/destino-de-sesion";
 import { conElTurno, RUTA_DE_CONFIRMACION } from "@/compartido/sesion/turno-elegido";
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO } from "@/compartido/ui/estilos";
+import { diaLargo, enSoles } from "@/compartido/ui/textos-del-local";
 import type { CanchaDelMapa, TurnoDelMapa } from "../servicios/disponibilidad";
-import { nombreLargo } from "../utilidades/fechas-de-la-tira";
-import { enSoles } from "../utilidades/textos-del-mapa";
 
 /** Quién mira el mapa: cambia lo que se puede hacer con el turno elegido. */
 export type ContextoDelMapa = "publico" | "jugador" | "recepcion";
@@ -63,7 +62,7 @@ function Detalle({ fecha, porcentaje, elegido }: { fecha: string; porcentaje: nu
         <span className="block tabular-nums">{turno.desde}–{turno.hasta}</span>
       </h2>
       <dl className="grid gap-1.5 text-sm">
-        <div className="flex justify-between gap-3"><dt className="text-grava">Fecha</dt><dd className="font-semibold first-letter:uppercase">{nombreLargo(fecha)}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-grava">Fecha</dt><dd className="font-semibold first-letter:uppercase">{diaLargo(fecha)}</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-grava">Cancha</dt><dd className="font-semibold">{NOMBRE_DEL_TIPO[tipo]} · {cancha.tieneIluminacion ? "con luz" : "solo luz natural"}</dd></div>
       </dl>
       <div>

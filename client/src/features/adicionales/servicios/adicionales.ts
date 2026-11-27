@@ -38,5 +38,3 @@ export interface CambioDeAdicional {
   detalle: ResumenDeAdicional | CambiosDeAdicional | null;
 }
 
-/** «15.50» → «S/ 15.50». */
-export const enSoles = (precio: string) => `S/ ${precio}`;
