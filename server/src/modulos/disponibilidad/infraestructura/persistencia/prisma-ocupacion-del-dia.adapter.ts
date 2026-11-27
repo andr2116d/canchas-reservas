@@ -3,7 +3,7 @@ import { PrismaService } from '../../../../compartido/infraestructura/prisma/pri
 import {
   ESTADOS_QUE_OCUPAN,
   ocupaElTurno,
-} from '../../dominio/estado-del-turno';
+} from '../../../../compartido/dominio/reserva-que-ocupa';
 import type {
   BloqueoDelDia,
   CanchaConsultada,

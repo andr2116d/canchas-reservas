@@ -1,15 +1,10 @@
-/** Etapas de una reserva que ocupan su turno, las mismas que la exclusión de la base. */
-export const ESTADOS_QUE_OCUPAN = [
-  'PENDIENTE_DE_PAGO',
-  'PENDIENTE_DE_VALIDACION',
-  'CONFIRMADA',
-  'EN_JUEGO',
-] as const;
-export type EstadoDeReserva = (typeof ESTADOS_QUE_OCUPAN)[number];
+import {
+  type EstadoQueOcupa,
+  retieneElTurno,
+} from '../../../compartido/dominio/reserva-que-ocupa';
 
-export function ocupaElTurno(estado: string): estado is EstadoDeReserva {
-  return (ESTADOS_QUE_OCUPAN as readonly string[]).includes(estado);
-}
+/** Etapas de una reserva que ocupan su turno. */
+export type EstadoDeReserva = EstadoQueOcupa;
 
 /** Cómo se ve un turno de una cancha. Solo `DISPONIBLE` se puede elegir. */
 export type EstadoDelTurno =
@@ -44,14 +39,6 @@ export interface OcupacionConocida {
   reservas: ReservaConocida[];
   bloqueos: (Rango & { canchaId: number })[];
   ahora: Date;
-}
-
-/** Una reserva pendiente de pago deja de retener el turno al vencer, sin esperar a ninguna tarea. */
-export function retieneElTurno(
-  { venceEn }: Pick<ReservaConocida, 'venceEn'>,
-  ahora: Date,
-): boolean {
-  return venceEn === null || venceEn > ahora;
 }
 
 /**
