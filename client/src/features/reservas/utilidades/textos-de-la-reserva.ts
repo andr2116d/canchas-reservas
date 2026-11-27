@@ -15,6 +15,11 @@ export function momentoDelLocal(instante: string): string {
   return MOMENTO.format(new Date(instante)).replace(/\./g, "").replace(/^(\S+),/, "$1");
 }
 
+const HORA = new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+/** La hora del local de un instante: «19:00». */
+export const horaDelLocal = (instante: string) => HORA.format(new Date(instante));
+
 /** Hasta cuándo rige un plazo de cancelación y qué devuelve. */
 export function textoDelPlazo({ hasta, porcentaje, ofreceCredito }: PlazoDeCancelacion): { cuando: string; que: string } {
   const cuando = `Hasta el ${momentoDelLocal(hasta)}`;
