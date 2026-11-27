@@ -12,14 +12,23 @@ import {
   type AvisosDeReserva,
 } from './aplicacion/avisos-de-reserva.port';
 import {
+  AGENDA_DEL_LOCAL,
+  type AgendaDelLocal,
+} from './aplicacion/agenda-del-local.port';
+import {
   CATALOGO_DE_ADICIONALES,
   type CatalogoDeAdicionales,
 } from './aplicacion/catalogo-de-adicionales.port';
+import { ConsultarAgendaUseCase } from './aplicacion/consultar-agenda.use-case';
 import { ConsultarMiReservaUseCase } from './aplicacion/consultar-mi-reserva.use-case';
 import {
   GENERADOR_DE_CODIGO,
   type GeneradorDeCodigo,
 } from './aplicacion/generador-de-codigo.port';
+import {
+  PAGOS_DE_RESERVAS,
+  type PagosDeReservas,
+} from './aplicacion/pagos-de-reservas.port';
 import {
   type DependenciasDeLaReserva,
   ReservarTurnoUseCase,
@@ -35,12 +44,15 @@ import {
   type ReservaRepository,
 } from './dominio/reserva.repository';
 import { CampanaAvisosDeReservaAdapter } from './infraestructura/avisos/campana-avisos-de-reserva.adapter';
+import { AgendaController } from './infraestructura/http/agenda.controller';
 import { ReservasController } from './infraestructura/http/reservas.controller';
 import { MapaTurnosDelLocalAdapter } from './infraestructura/mapa/mapa-turnos-del-local.adapter';
 import { CryptoGeneradorDeCodigoAdapter } from './infraestructura/persistencia/crypto-generador-de-codigo.adapter';
+import { PrismaAgendaDelLocalAdapter } from './infraestructura/persistencia/prisma-agenda-del-local.adapter';
 import { PrismaCatalogoDeAdicionalesAdapter } from './infraestructura/persistencia/prisma-catalogo-de-adicionales.adapter';
 import { PrismaReservaRepository } from './infraestructura/persistencia/prisma-reserva.repository';
 import { PrismaTitularesAdapter } from './infraestructura/persistencia/prisma-titulares.adapter';
+import { SinPagosAdapter } from './infraestructura/persistencia/sin-pagos.adapter';
 
 const LO_QUE_SE_OFRECE = Symbol('LO_QUE_SE_OFRECE');
 const REGISTRO = Symbol('REGISTRO_DE_RESERVAS');
@@ -64,10 +76,10 @@ const dependencias = (
 ): DependenciasDeLaReserva => ({ ...ofrece, ...registro, titulares, reloj });
 const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
 
-/** Reservas del jugador: separar un turno del mapa y consultar la reserva propia. */
+/** Reservas: el jugador separa un turno y ve la suya; el personal consulta la agenda del día. */
 @Module({
   imports: [DisponibilidadModule, CancelacionModule, AvisosModule],
-  controllers: [ReservasController],
+  controllers: [ReservasController, AgendaController],
   providers: [
     { provide: TURNOS_DEL_LOCAL, useClass: MapaTurnosDelLocalAdapter },
     {
@@ -78,6 +90,8 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
     { provide: RESERVA_REPOSITORY, useClass: PrismaReservaRepository },
     { provide: GENERADOR_DE_CODIGO, useClass: CryptoGeneradorDeCodigoAdapter },
     { provide: AVISOS_DE_RESERVA, useClass: CampanaAvisosDeReservaAdapter },
+    { provide: AGENDA_DEL_LOCAL, useClass: PrismaAgendaDelLocalAdapter },
+    { provide: PAGOS_DE_RESERVAS, useClass: SinPagosAdapter },
     {
       provide: LO_QUE_SE_OFRECE,
       useFactory: (
@@ -117,6 +131,15 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
       useFactory: (reservas: ReservaRepository, reloj: Reloj) =>
         new ConsultarMiReservaUseCase(reservas, reloj),
       inject: [RESERVA_REPOSITORY, RELOJ],
+    },
+    {
+      provide: ConsultarAgendaUseCase,
+      useFactory: (
+        agenda: AgendaDelLocal,
+        pagos: PagosDeReservas,
+        reloj: Reloj,
+      ) => new ConsultarAgendaUseCase(agenda, pagos, reloj),
+      inject: [AGENDA_DEL_LOCAL, PAGOS_DE_RESERVAS, RELOJ],
     },
   ],
 })
