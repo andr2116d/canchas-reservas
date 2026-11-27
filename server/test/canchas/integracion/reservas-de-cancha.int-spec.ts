@@ -95,6 +95,33 @@ describe('Canchas con reservas guardadas', () => {
     ]);
   });
 
+  it('una reserva que venció sin pago o una expirada no impiden desactivar ni bloquear', async () => {
+    await guardarReserva(prisma, {
+      canchaId,
+      inicio: `${dentroDe(3)}T10:00:00-05:00`,
+      estado: 'PENDIENTE_DE_PAGO',
+      venceEn: new Date(Date.now() - 1000),
+    });
+    await guardarReserva(prisma, {
+      canchaId,
+      inicio: `${dentroDe(3)}T11:00:00-05:00`,
+      estado: 'EXPIRADA',
+    });
+
+    await api()
+      .post('/api/bloqueos')
+      .set('Cookie', administrador)
+      .send(
+        unBloqueoValido({
+          canchaIds: [canchaId],
+          desdeFecha: dentroDe(3),
+          hastaFecha: dentroDe(3),
+        }),
+      )
+      .expect(201);
+    await desactivar().expect(204);
+  });
+
   it('la base no deja guardar dos reservas que se pisan en la misma cancha', async () => {
     const inicio = `${dentroDe(4)}T18:00:00-05:00`;
     await guardarReserva(prisma, { canchaId, inicio, minutos: 120 });
