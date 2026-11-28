@@ -1,4 +1,4 @@
-import { type APIRequestContext, expect } from "@playwright/test";
+import { type APIRequestContext, expect, type Page } from "@playwright/test";
 import { randomInt, randomUUID } from "node:crypto";
 
 /** Fecha de los términos y la privacidad publicados que acepta quien se registra. */
@@ -24,4 +24,16 @@ export async function registrarPorApi(request: APIRequestContext, jugador: Jugad
   const respuesta = await request.post("/api/jugadores", { data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
   expect(respuesta.status()).toBe(201);
   return jugador;
+}
+
+/** Llena el formulario de registro; las etiquetas terminan en asterisco y se buscan por su comienzo. */
+export async function llenarRegistro(pagina: Page, jugador: JugadorDePrueba) {
+  const campo = (nombre: string) => pagina.getByLabel(new RegExp(`^${nombre}`));
+  await campo("Nombres").fill(jugador.nombres);
+  await campo("Apellidos").fill(jugador.apellidos);
+  await campo("Fecha de nacimiento").fill(jugador.fechaNacimiento);
+  await campo("Número de documento").fill(jugador.numeroDocumento);
+  await campo("Celular").fill(jugador.celular);
+  await campo("Correo").fill(jugador.correo);
+  await campo("Contraseña").fill(jugador.contrasena);
 }
