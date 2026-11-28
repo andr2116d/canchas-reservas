@@ -1,11 +1,7 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { destinoDeSesion, RUTA_DE_ACCESO } from "@/compartido/sesion/destino-de-sesion";
-import { consultarSesionEnServidor } from "@/compartido/sesion/sesion.servidor";
+import { sesionDeLaVisita } from "@/compartido/sesion/sesion.servidor";
 import { MenuDelSitio } from "./menu-del-sitio";
-
-const sesionDeLaVisita = async () =>
-  consultarSesionEnServidor((await cookies()).toString()).catch(() => undefined);
 
 /** El menú de secciones, que en el celular ofrece ingresar solo a quien no tiene sesión. */
 export async function MenuSegunLaSesion() {

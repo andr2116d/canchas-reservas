@@ -23,6 +23,11 @@ export async function consultarSesionEnServidor(cookie: string): Promise<EstadoD
   return await respuesta.json() as EstadoDeSesion;
 }
 
+/** La sesión de quien visita una página pública, o nada si no tiene o no se pudo comprobar. */
+export async function sesionDeLaVisita(): Promise<EstadoDeSesion | undefined> {
+  return consultarSesionEnServidor((await cookies()).toString()).catch(() => undefined);
+}
+
 export async function exigirPanel(rol: Rol) {
   const cookie = (await cookies()).toString();
   const sesion = await consultarSesionEnServidor(cookie);
