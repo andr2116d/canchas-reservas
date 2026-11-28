@@ -36,7 +36,7 @@ const CON_SUJETO: Partial<Record<Categoria, Verbos>> = {
     CAMBIO_DE_TIPO: "pasó a reclamo la",
     RESPUESTA: "respondió la",
   },
-  RESERVAS: { SEPARACION: "separó la" },
+  RESERVAS: { SEPARACION: "separó la", EXPIRACION: "dio por vencida la" },
 };
 
 /** Lo que no tiene un sujeto propio: la frase ya dice qué se cambió. */
@@ -44,6 +44,7 @@ const SIN_SUJETO: Partial<Record<Categoria, Verbos>> = {
   HORARIO: { ALTA: "definió el horario de atención", EDICION: "cambió el horario de atención" },
   CANCELACION: { ALTA: "definió la regla de cancelación", EDICION: "cambió la regla de cancelación" },
   ADELANTO: { ALTA: "definió el adelanto mínimo", EDICION: "cambió el adelanto mínimo" },
+  PLAZO_DE_PAGO: { ALTA: "definió el plazo para pagar el adelanto", EDICION: "cambió el plazo para pagar el adelanto" },
   ACCESOS: { INICIO_DE_SESION: "inició sesión" },
   CUENTAS: {
     CONFIRMACION_DE_DATOS: "confirmó sus datos",

@@ -144,6 +144,24 @@ describe("Historial de cambios", () => {
       expect(within(ayer).getByRole("listitem")).toHaveTextContent("08:05Rosa Díaz inició sesión");
     });
 
+    it("lo que hace el sistema, como una reserva que vence, se lee con el autor «Sistema»", () => {
+      const vencida: Registro = {
+        id: "vencimiento-3",
+        ocurridoEn: "2026-11-24T15:16:00.000Z",
+        categoria: "RESERVAS",
+        accion: "EXPIRACION",
+        importante: false,
+        autor: { id: null, nombre: "Sistema" },
+        sujeto: "Reserva 7K3Q9X",
+        detalle: [],
+      };
+
+      render(<LineaDeTiempo pagina={pagina({ registros: [vencida], total: 1 })} hoy="2026-11-24" />);
+
+      expect(screen.getByRole("listitem")).toHaveTextContent("10:16Sistema dio por vencida la Reserva 7K3Q9X");
+      expect(screen.getByText("Reservas")).toBeInTheDocument();
+    });
+
     it("el detalle muestra el antes y el después", () => {
       render(<LineaDeTiempo pagina={pagina()} hoy="2026-11-24" />);
 
