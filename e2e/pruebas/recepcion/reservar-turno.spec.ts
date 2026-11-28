@@ -1,6 +1,7 @@
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { datosDeReserva } from "../../soporte/base-de-pruebas";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { type CanchasDelLocal, fechaDeLima, prepararElLocal } from "../../soporte/local-de-prueba";
 import { abrirElDia, celda, tuTurno } from "../../soporte/mapa-de-prueba";
 import { altaPorRecepcion, buscarDocumento, campo, cobrosDeReserva, datosDeCliente, datosDelAviso, llenarAlta, pedirDesdeRecepcion, reservarPorRecepcion, rutaDeReservaEnRecepcion } from "../../soporte/recepcion-de-prueba";
@@ -186,10 +187,16 @@ test("14. atribuye el adelanto a la caja de quien lo cobró", async () => {
 });
 
 test("15. guarda el autor y el momento de la reserva en el historial como importante", async () => {
-  const { codigo } = await reservarPorRecepcion(api(), turno("18:30"), await alta(), { monto: "40.00", metodo: "EFECTIVO" });
+  const { codigo } = await reservarPorRecepcion(api(), turno("18:30"), await alta(), { monto: "45.00", metodo: "EFECTIVO" });
   const respuesta = await administracion.request.get(`/api/historial?categoria=RESERVAS&accion=SEPARACION&autor=${recepcionistaId}`);
   expect(respuesta.status(), await respuesta.text()).toBe(200);
-  expect((await respuesta.json()).registros).toEqual(expect.arrayContaining([expect.objectContaining({ sujeto: `Reserva ${codigo}`, importante: true, ocurridoEn: expect.any(String), autor: expect.objectContaining({ id: recepcionistaId }) })]));
+  expect((await respuesta.json()).registros).toEqual(expect.arrayContaining([expect.objectContaining({
+    sujeto: `Reserva ${codigo}`,
+    importante: true,
+    ocurridoEn: expect.any(String),
+    autor: expect.objectContaining({ id: recepcionistaId }),
+    detalle: expect.arrayContaining([expect.objectContaining({ campo: "Adelanto", despues: "S/ 45.00" })]),
+  })]));
 });
 
 test("16. el mapa se actualiza y recepción y administración reciben el aviso", async () => {

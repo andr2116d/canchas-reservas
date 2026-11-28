@@ -10,11 +10,12 @@ export function crearAdministradorDePrueba() {
   const base = new URL(process.env.DATABASE_URL ?? "");
   const nombre = base.pathname.replace(/_pruebas$/, "");
   base.pathname = nombre + "_pruebas";
-  execFileSync("npm", [
-    "run", "personal:crear-administrador", "-w", "server", "--",
+  execFileSync(process.execPath, [
+    require.resolve("ts-node/dist/bin.js"), "--transpile-only",
+    "src/modulos/usuarios/infraestructura/comandos/crear-administrador.ts",
     correo, "Valeria", "León Paredes",
   ], {
-    cwd: resolve(__dirname, "../.."),
+    cwd: resolve(__dirname, "../../server"),
     env: {
       ...process.env,
       DATABASE_URL: base.toString(),

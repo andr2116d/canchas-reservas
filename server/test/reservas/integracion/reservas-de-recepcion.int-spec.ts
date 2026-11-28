@@ -132,7 +132,7 @@ describe('Reservar en recepción', () => {
   it('registra un solo pago al disputar el turno y nunca deja una reserva tras una operación duplicada', async () => {
     const { body } = await alta().expect(201);
     const titular = Number(body.cliente.id);
-    const cobro = { monto: '40.00', metodo: 'YAPE', numeroOperacion: 'ABC125' };
+    const cobro = { monto: '45.00', metodo: 'YAPE', numeroOperacion: 'ABC125' };
     const respuestas = await Promise.all([
       reservar(titular, undefined, cobro),
       reservar(titular, undefined, cobro),
@@ -162,7 +162,7 @@ describe('Reservar en recepción', () => {
         },
       ],
     });
-    expect(reserva.pagos[0].monto.toFixed(2)).toBe('40.00');
+    expect(reserva.pagos[0].monto.toFixed(2)).toBe('45.00');
     expect(await prisma.reserva.count()).toBe(1);
     const agenda = await api()
       .get('/api/agenda')
@@ -170,7 +170,20 @@ describe('Reservar en recepción', () => {
       .set('Cookie', recepcion)
       .expect(200);
     expect(agenda.body.turnos).toMatchObject([
-      { codigo: aceptada.body.codigo, pagado: '40.00', saldo: '40.00' },
+      { codigo: aceptada.body.codigo, pagado: '45.00', saldo: '35.00' },
+    ]);
+    const historial = await api()
+      .get('/api/historial')
+      .set('Cookie', local.administrador)
+      .query({ categoria: 'RESERVAS', accion: 'SEPARACION' })
+      .expect(200);
+    expect(historial.body.registros).toMatchObject([
+      {
+        sujeto: `Reserva ${aceptada.body.codigo}`,
+        detalle: expect.arrayContaining([
+          expect.objectContaining({ campo: 'Adelanto', despues: 'S/ 45.00' }),
+        ]),
+      },
     ]);
   });
 
