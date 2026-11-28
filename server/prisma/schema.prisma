@@ -463,7 +463,8 @@ model AdicionalPedido {
   reservaId   Int       @map("reserva_id")
   adicionalId Int       @map("adicional_id")
   reserva     Reserva   @relation(fields: [reservaId], references: [id], onDelete: Cascade)
-  adicional   Adicional @relation(fields: [adicionalId], references: [id], onDelete: Cascade)
+  /// Lo que una reserva pidió no se borra con el catálogo: el adicional se desactiva.
+  adicional   Adicional @relation(fields: [adicionalId], references: [id], onDelete: Restrict)
 
   @@id([reservaId, adicionalId])
   @@map("adicional_pedido")
