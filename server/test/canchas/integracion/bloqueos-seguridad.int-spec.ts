@@ -9,6 +9,11 @@ import {
   sesionDeAdministrador,
   sesionDeJugador,
 } from '../../compartido/soporte/sesiones-de-prueba';
+import { dentroDe } from '../../compartido/soporte/fechas-de-prueba';
+
+// Con fecha fija, el bloqueo quedaría en el pasado y la prueba fallaría por eso y no por lo que revisa.
+const unBloqueoFuturo = () =>
+  unBloqueoValido({ desdeFecha: dentroDe(3), hastaFecha: dentroDe(3) });
 
 type Metodo = 'get' | 'post' | 'delete';
 const RUTAS: [Metodo, string][] = [
@@ -45,7 +50,7 @@ describe('Bloqueos · seguridad', () => {
     const { body } = await api()
       .post('/api/bloqueos')
       .set('Cookie', administrador)
-      .send({ ...unBloqueoValido(), creadoPorId: 1, liberadoEn: '2026-01-01' })
+      .send({ ...unBloqueoFuturo(), creadoPorId: 1, liberadoEn: '2026-01-01' })
       .expect(400);
 
     expect(body.errores).toEqual({
@@ -60,7 +65,7 @@ describe('Bloqueos · seguridad', () => {
     const { body } = await api()
       .post('/api/bloqueos')
       .set('Cookie', administrador)
-      .send({ ...unBloqueoValido(), canchaIds: [99999999999, 0] })
+      .send({ ...unBloqueoFuturo(), canchaIds: [99999999999, 0] })
       .expect(400);
 
     expect(body.errores).toEqual({ canchaIds: 'Elige canchas de la lista.' });
