@@ -48,10 +48,9 @@ export function AgendaDelDia({ ruta }: { ruta: string }) {
   const elegirFecha = (fecha: string) => cambiar({ ...filtros, fecha: fecha === agenda.hoy ? undefined : fecha });
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <NavegacionDeFecha fecha={agenda.fecha} hoy={agenda.hoy} ultimaFecha={agenda.ultimaFecha} alElegir={elegirFecha} />
+      <NavegacionDeFecha fecha={agenda.fecha} hoy={agenda.hoy} ultimaFecha={agenda.ultimaFecha} alElegir={elegirFecha}>
         <EstadoEnVivo conexion={conexion} cargando={cargando} />
-      </div>
+      </NavegacionDeFecha>
       {error && <p role="alert" className="font-semibold text-error">{error}</p>}
       <FiltrosDeLaAgenda ruta={ruta} filtros={filtros} agenda={agenda} alCambiar={cambiar} />
       <Turnos agenda={agenda} ruta={ruta} filtros={filtros} />

@@ -17,7 +17,7 @@ const celularLegible = (celular: string) => celular.replace(/^(\d{3})(\d{3})(\d{
 
 function Cliente({ cliente }: { cliente: TurnoDeLaAgenda["cliente"] }) {
   return (
-    <span className="flex min-w-0 flex-col">
+    <span className="col-span-2 flex min-w-0 flex-col lg:order-2 lg:col-span-1">
       <span className="truncate font-semibold text-tinta">{cliente.nombre}</span>
       {cliente.celular ? (
         <a href={`tel:+51${cliente.celular}`} className="w-fit text-sm text-botella tabular-nums underline-offset-4 hover:underline">
@@ -32,7 +32,7 @@ function Cliente({ cliente }: { cliente: TurnoDeLaAgenda["cliente"] }) {
 
 function Estado({ turno }: { turno: TurnoDeLaAgenda }) {
   return (
-    <span className="flex flex-col items-start gap-1">
+    <span className="flex flex-col items-end gap-1 text-right lg:order-3 lg:items-start lg:text-left">
       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap ${COLOR_DEL_ESTADO[turno.estado]}`}>{NOMBRE_DEL_ESTADO[turno.estado]}</span>
       {turno.venceEn && <span className="text-xs text-grava">Retiene el turno hasta las {horaEnLima(turno.venceEn)}</span>}
     </span>
@@ -43,12 +43,16 @@ function Estado({ turno }: { turno: TurnoDeLaAgenda }) {
 function Cobro({ turno }: { turno: TurnoDeLaAgenda }) {
   const confirmada = turno.estado === "CONFIRMADA";
   return (
-    <span className="flex flex-col gap-1 text-sm">
-      <dl className="grid grid-cols-[auto_auto] justify-start gap-x-3 tabular-nums">
-        <dt className="text-grava">Pagado</dt>
-        <dd className="text-right font-semibold text-tinta">{enSoles(turno.pagado)}</dd>
-        <dt className="text-grava">Saldo</dt>
-        <dd className="text-right font-semibold text-tinta">{enSoles(turno.saldo)}</dd>
+    <span className="col-span-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm lg:order-4 lg:col-span-1 lg:flex-col lg:items-start">
+      <dl className="flex gap-x-4 tabular-nums lg:grid lg:grid-cols-[auto_auto] lg:gap-x-3">
+        <div className="flex gap-1.5 lg:contents">
+          <dt className="text-grava">Pagado</dt>
+          <dd className="font-semibold text-tinta lg:text-right">{enSoles(turno.pagado)}</dd>
+        </div>
+        <div className="flex gap-1.5 lg:contents">
+          <dt className="text-grava">Saldo</dt>
+          <dd className="font-semibold text-tinta lg:text-right">{enSoles(turno.saldo)}</dd>
+        </div>
       </dl>
       {confirmada && turno.pagada && <span className="w-fit rounded-full bg-[#e3f2e8] px-2.5 py-0.5 text-xs font-bold text-[#1f7a4d]">Pagada</span>}
       {confirmada && !turno.pagada && <span className="w-fit rounded-full bg-[#fbf1dc] px-2.5 py-0.5 text-xs font-bold text-[#7a4d00]">Falta cobrar {enSoles(turno.saldo)}</span>}
@@ -62,15 +66,15 @@ export function TurnoDeLaAgenda({ turno }: { turno: TurnoDeLaAgenda }) {
   return (
     <li
       data-estado={turno.estado}
-      className={`grid gap-x-5 gap-y-3 rounded-2xl border bg-papel px-4 py-3.5 shadow-sm sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] lg:grid-cols-[7.5rem_minmax(0,1fr)_10rem_10rem_auto] lg:items-center ${conSaldo ? "border-[#e8c97a]" : "border-white/80"} ${turno.estado === "EXPIRADA" ? "opacity-70" : ""}`}
+      className={`grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 rounded-2xl border bg-papel px-4 py-3 shadow-sm lg:grid-cols-[7.5rem_minmax(0,1fr)_13rem_10rem_auto] lg:items-center lg:py-3.5 ${conSaldo ? "border-[#e8c97a]" : "border-white/80"} ${turno.estado === "EXPIRADA" ? "opacity-70" : ""}`}
     >
-      <span className="flex flex-col">
+      <span className="flex flex-col lg:order-1">
         <span className="font-titular text-xl leading-none font-black text-cancha tabular-nums">{`${turno.desde}–${turno.hasta}`}</span>
         <span className="text-sm font-semibold text-tinta">{turno.cancha.nombre}</span>
         <span className="text-xs text-grava">{NOMBRE_DEL_TIPO[turno.cancha.tipo]} · {turno.codigo}</span>
       </span>
-      <Cliente cliente={turno.cliente} />
       <Estado turno={turno} />
+      <Cliente cliente={turno.cliente} />
       <Cobro turno={turno} />
       <AccionesDelTurno turno={turno} />
     </li>
