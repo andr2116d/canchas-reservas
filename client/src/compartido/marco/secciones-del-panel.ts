@@ -27,6 +27,7 @@ export const SECCIONES_DEL_PANEL: Record<Rol, Seccion[]> = {
   ],
   ADMINISTRADOR: [
     { ruta: "/administracion", texto: "Resumen" },
+    { ruta: "/administracion/agenda", texto: "Agenda" },
     { ruta: "/administracion/recepcionistas", texto: "Recepcionistas" },
     { ruta: "/administracion/reglas-de-reserva", texto: "Reglas de reserva" },
     { ruta: "/administracion/canchas", texto: "Canchas" },

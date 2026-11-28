@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { CargaDelPanel } from "@/compartido/marco/carga-del-panel";
-import { PanelDelPersonal } from "@/features/acceso/componentes/panel-del-personal";
+import { PaginaDeLaAgenda } from "@/features/agenda/componentes/pagina-de-la-agenda";
 
-export const metadata: Metadata = { title: "Recepción · La Previa" };
+export const metadata: Metadata = { title: "Agenda · La Previa" };
 
-export default function PaginaDeRecepcion() {
-  return (
-    <Suspense fallback={<CargaDelPanel />}>
-      <PanelDelPersonal rol="RECEPCIONISTA" />
-    </Suspense>
-  );
+export default function PaginaDeAgenda() {
+  return <PaginaDeLaAgenda ruta="/recepcion" />;
 }
