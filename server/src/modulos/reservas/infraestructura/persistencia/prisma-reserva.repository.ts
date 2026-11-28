@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Monto } from '../../../../compartido/dominio/monto.value-object';
 import { exclusionViolada } from '../../../../compartido/infraestructura/prisma/exclusion-violada';
 import { indiceUnicoViolado } from '../../../../compartido/infraestructura/prisma/indice-unico-violado';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { Prisma } from '../../../../generated/prisma/client';
+import { aMonto } from './monto-de-la-base';
 import { CodigoRepetidoError } from '../../dominio/codigo-repetido.error';
 import { LimiteDePendientesError } from '../../dominio/limite-de-pendientes.error';
 import type {
@@ -23,8 +23,6 @@ const DETALLE = {
 } as const satisfies Prisma.ReservaInclude;
 
 type FilaDeReserva = Prisma.ReservaGetPayload<{ include: typeof DETALLE }>;
-
-const aMonto = (decimal: Prisma.Decimal) => Monto.crear(decimal.toFixed(2));
 
 /** Reservas sobre PostgreSQL: la base impide que dos reservas que retienen su turno se pisen. */
 @Injectable()

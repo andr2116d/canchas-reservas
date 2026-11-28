@@ -3,13 +3,13 @@ import {
   CIFRADOR,
   type Cifrador,
 } from '../../../../compartido/aplicacion/cifrador.port';
-import { Monto } from '../../../../compartido/dominio/monto.value-object';
 import {
   COLUMNAS_DEL_AUTOR,
   nombreDelAutor,
 } from '../../../../compartido/infraestructura/cifrado/nombre-del-autor';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { Prisma } from '../../../../generated/prisma/client';
+import { aMonto } from './monto-de-la-base';
 import type {
   AgendaDelLocal,
   CanchaDeLaAgenda,
@@ -33,8 +33,6 @@ const FILA = {
 } as const satisfies Prisma.ReservaSelect;
 
 type FilaDeLaAgenda = Prisma.ReservaGetPayload<{ select: typeof FILA }>;
-
-const aMonto = (decimal: Prisma.Decimal) => Monto.crear(decimal.toFixed(2));
 
 /** Lee las reservas de un día con el nombre y el celular del titular descifrados. */
 @Injectable()
