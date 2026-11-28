@@ -62,3 +62,14 @@ describe('Resumir una reserva antes de separarla', () => {
     );
   });
 });
+
+describe('Resumir la reserva con el plazo vigente', () => {
+  it('dice los minutos que guardó administración para pagar', async () => {
+    const local = prepararReservas();
+    local.plazos.minutos = 45;
+
+    const resumen = await local.resumir.ejecutar(PEDIDO, JUGADOR);
+
+    expect(resumen.minutosDeRetencion).toBe(45);
+  });
+});

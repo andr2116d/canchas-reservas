@@ -4,10 +4,7 @@ import { Monto } from '../../../compartido/dominio/monto.value-object';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { CodigoRepetidoError } from '../dominio/codigo-repetido.error';
 import { MontosCambiaronError } from '../dominio/montos-cambiaron.error';
-import {
-  finDeLaRetencion,
-  MAXIMO_DE_PENDIENTES_DE_PAGO,
-} from '../dominio/reglas-de-la-reserva';
+import { MAXIMO_DE_PENDIENTES_DE_PAGO } from '../dominio/reglas-de-la-reserva';
 import type {
   ReservaNueva,
   ReservaRepository,
@@ -83,8 +80,8 @@ export class ReservarTurnoUseCase {
     await exigirTitularHabilitado(this.de.titulares, pedido.titularId, ahora);
     const elegido = await turnoParaReservar(this.de, pedido);
     exigirMismosMontos(pedido, elegido);
-    const { turno, regla } = elegido;
-    const venceEn = finDeLaRetencion(ahora, turno.inicio);
+    const { turno, regla, plazo } = elegido;
+    const venceEn = plazo.vencimiento(ahora, turno.inicio);
     const codigo = await this.guardar({
       canchaId: turno.cancha.id,
       titularId: pedido.titularId,

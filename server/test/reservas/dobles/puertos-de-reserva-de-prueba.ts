@@ -1,3 +1,4 @@
+import { MinutosParaPagar } from '../../../src/modulos/plazo-de-pago/api-plazo-de-pago';
 import type {
   AdicionalOfrecido,
   CatalogoDeAdicionales,
@@ -46,5 +47,14 @@ export class AvisosDeReservaDePrueba implements AvisosDeReserva {
   nuevaReserva(codigo: string): Promise<void> {
     this.nuevas.push(codigo);
     return Promise.resolve();
+  }
+}
+
+/** El plazo para pagar que rige; empieza en los 15 minutos por defecto. */
+export class PlazoDePrueba {
+  minutos = 15;
+
+  ejecutar(): Promise<MinutosParaPagar> {
+    return Promise.resolve(MinutosParaPagar.restaurar(this.minutos));
   }
 }

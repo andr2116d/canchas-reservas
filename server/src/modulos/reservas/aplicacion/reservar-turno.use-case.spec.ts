@@ -54,6 +54,16 @@ describe('Reservar un turno', () => {
     expect(alLimite.venceEn).toEqual(enLima('2026-11-28', '19:00'));
   });
 
+  it('con el plazo que guardó administración, vence a esos minutos', async () => {
+    const local = prepararReservas();
+    local.plazos.minutos = 30;
+
+    const { venceEn } = await local.reservar.ejecutar(unPedido());
+
+    expect(venceEn).toEqual(enLima('2026-11-27', '10:30'));
+    expect(local.reservas.reservas[0].venceEn).toEqual(venceEn);
+  });
+
   it('no separa un turno que no está libre o que no existe', async () => {
     const { reservar, turnos } = prepararReservas();
     turnos.turnos[0] = unTurnoLibre({ libre: false });
