@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { expect, type Page } from "@playwright/test";
 import { DOMINIO_DE_PRUEBA } from "./personal-de-prueba";
+import { cerrarSesion, confirmarMisDatos, entrarComoAdministrador, iniciarSesion } from "./sesiones-de-prueba";
 
 const LETRAS = "abcdefghijklmnopqrstuvwxyz";
 
@@ -34,4 +35,16 @@ export async function crearPorApi(pagina: Page, recepcionista = unaRecepcionista
   const respuesta = await pagina.request.post("/api/recepcionistas", { data: recepcionista });
   expect(respuesta.status()).toBe(201);
   return { ...recepcionista, id: ((await respuesta.json()) as { id: number }).id };
+}
+
+/** Un administrador crea una recepcionista nueva y ella entra a su agenda, dejando el cambio de contraseña. */
+export async function entrarComoRecepcion(pagina: Page) {
+  await entrarComoAdministrador(pagina);
+  const recepcionista = await crearPorApi(pagina);
+  await cerrarSesion(pagina);
+  await iniciarSesion(pagina, correoDe(recepcionista), "temporal2026");
+  await confirmarMisDatos(pagina);
+  await pagina.getByRole("button", { name: "Ahora no" }).click();
+  await expect(pagina).toHaveURL("/recepcion", { timeout: 20_000 });
+  return recepcionista;
 }

@@ -2,8 +2,9 @@ import { type Browser, expect, type Page, test } from "@playwright/test";
 import { cambiarEstadoDeReserva, vencerReserva } from "../../soporte/base-de-pruebas";
 import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { type CanchasDelLocal, fechaDeLima, prepararElLocal } from "../../soporte/local-de-prueba";
-import { correoDe, crearPorApi } from "../../soporte/recepcionistas-de-prueba";
-import { cerrarSesion, confirmarMisDatos, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
+import { entrarComoRecepcion } from "../../soporte/recepcionistas-de-prueba";
+import { separarPorApi } from "../../soporte/reserva-de-prueba";
+import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // Usa el horario, las tarifas y las canchas «Disp» de la disponibilidad: corre después y en orden.
 test.describe.configure({ mode: "serial" });
@@ -14,27 +15,13 @@ const diaLargo = (fecha: string) => DIA_LARGO.format(new Date(`${fecha}T00:00:00
 let canchas: CanchasDelLocal;
 let fecha: string;
 
-/** Un jugador nuevo separa el turno (S/ 60 de día o S/ 80 de noche, con 50 % de adelanto) y devuelve el código y su celular. */
-async function separarTurno(navegador: Browser, cancha: number, desde: string) {
+/** Un jugador nuevo separa el turno por la API y devuelve el código y su celular. */
+async function separarTurno(navegador: Browser, canchaId: number, desde: string) {
   const contexto = await navegador.newContext();
-  const pagina = await contexto.newPage();
-  const jugador = await registrarPorApi(pagina.request);
-  const [precio, adelanto] = desde >= "18:00" ? ["80.00", "40.00"] : ["60.00", "30.00"];
-  const reserva = await pagina.request.post("/api/reservas", { data: { canchaId: cancha, fecha, desde, precio, adelanto, adicionales: [] } });
-  expect(reserva.status(), await reserva.text()).toBe(201);
-  const { codigo } = (await reserva.json()) as { codigo: string };
+  const jugador = await registrarPorApi(contexto.request);
+  const codigo = await separarPorApi(contexto.request, { canchaId, fecha, desde });
   await contexto.close();
   return { codigo, celular: jugador.celular };
-}
-
-async function entrarComoRecepcion(pagina: Page) {
-  await entrarComoAdministrador(pagina);
-  const recepcionista = await crearPorApi(pagina);
-  await cerrarSesion(pagina);
-  await iniciarSesion(pagina, correoDe(recepcionista), "temporal2026");
-  await confirmarMisDatos(pagina);
-  await pagina.getByRole("button", { name: "Ahora no" }).click();
-  await expect(pagina).toHaveURL("/recepcion", { timeout: 20_000 });
 }
 
 const turnos = (pagina: Page) => pagina.getByRole("list", { name: "Turnos del día" }).getByRole("listitem");
