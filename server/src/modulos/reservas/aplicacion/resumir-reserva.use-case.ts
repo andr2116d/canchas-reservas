@@ -44,6 +44,21 @@ export class ResumirReservaUseCase {
   ): Promise<ResumenDeReserva> {
     const ahora = this.de.reloj.ahora();
     await exigirTitularHabilitado(this.de.titulares, titularId, ahora);
+    return this.resumir(pedido, ahora);
+  }
+
+  async desdeRecepcion(pedido: TurnoPedido, titularId: number) {
+    const { adicionales: _adicionales, ...resumen } = await this.ejecutar(
+      pedido,
+      titularId,
+    );
+    return resumen;
+  }
+
+  private async resumir(
+    pedido: TurnoPedido,
+    ahora: Date,
+  ): Promise<ResumenDeReserva> {
     const [{ turno, regla }, adicionales] = await Promise.all([
       turnoParaReservar(this.de, pedido),
       this.de.catalogo.activos(),

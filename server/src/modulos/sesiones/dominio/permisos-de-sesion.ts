@@ -31,6 +31,7 @@ const PERMISOS_POR_ROL = {
     'cuenta:propia',
     'tarifas:calcular',
     'agenda:consultar',
+    'reservas:gestionar-en-recepcion',
   ],
   JUGADOR: [
     'panel:jugador',

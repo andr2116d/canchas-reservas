@@ -1,6 +1,9 @@
 import { enSoles, type LineaDeDetalle, rangoEnLima } from './linea-de-detalle';
 
-const NOMBRE_DEL_CANAL: Record<string, string> = { web: 'Web' };
+const NOMBRE_DEL_CANAL: Record<string, string> = {
+  web: 'Web',
+  recepcion: 'Recepción',
+};
 
 const texto = (valor: unknown) => (typeof valor === 'string' ? valor : null);
 

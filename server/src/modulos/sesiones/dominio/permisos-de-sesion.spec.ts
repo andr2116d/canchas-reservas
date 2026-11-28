@@ -97,6 +97,18 @@ describe('Permisos de sesión', () => {
     );
   });
 
+  it.each(['ADMINISTRADOR', 'RECEPCIONISTA', 'JUGADOR'] as const)(
+    'solo recepción puede reservar en mostrador (%s)',
+    (rol) => {
+      expect(
+        puedeAcceder(
+          { rol, requiereCambiarContrasena: false },
+          'reservas:gestionar-en-recepcion',
+        ),
+      ).toBe(rol === 'RECEPCIONISTA');
+    },
+  );
+
   it('ignora la omisión si la contraseña ya no es temporal', () => {
     expect(
       puedeAcceder(

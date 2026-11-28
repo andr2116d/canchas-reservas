@@ -46,13 +46,14 @@ import {
 import { CampanaAvisosDeReservaAdapter } from './infraestructura/avisos/campana-avisos-de-reserva.adapter';
 import { AgendaController } from './infraestructura/http/agenda.controller';
 import { ReservasController } from './infraestructura/http/reservas.controller';
+import { ReservasDeRecepcionController } from './infraestructura/http/reservas-de-recepcion.controller';
 import { MapaTurnosDelLocalAdapter } from './infraestructura/mapa/mapa-turnos-del-local.adapter';
 import { CryptoGeneradorDeCodigoAdapter } from './infraestructura/persistencia/crypto-generador-de-codigo.adapter';
 import { PrismaAgendaDelLocalAdapter } from './infraestructura/persistencia/prisma-agenda-del-local.adapter';
 import { PrismaCatalogoDeAdicionalesAdapter } from './infraestructura/persistencia/prisma-catalogo-de-adicionales.adapter';
 import { PrismaReservaRepository } from './infraestructura/persistencia/prisma-reserva.repository';
 import { PrismaTitularesAdapter } from './infraestructura/persistencia/prisma-titulares.adapter';
-import { SinPagosAdapter } from './infraestructura/persistencia/sin-pagos.adapter';
+import { PrismaPagosDeReservasAdapter } from './infraestructura/persistencia/prisma-pagos-de-reservas.adapter';
 
 const LO_QUE_SE_OFRECE = Symbol('LO_QUE_SE_OFRECE');
 const REGISTRO = Symbol('REGISTRO_DE_RESERVAS');
@@ -79,7 +80,11 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
 /** Reservas: el jugador separa un turno y ve la suya; el personal consulta la agenda del día. */
 @Module({
   imports: [DisponibilidadModule, CancelacionModule, AvisosModule],
-  controllers: [ReservasController, AgendaController],
+  controllers: [
+    ReservasController,
+    AgendaController,
+    ReservasDeRecepcionController,
+  ],
   providers: [
     { provide: TURNOS_DEL_LOCAL, useClass: MapaTurnosDelLocalAdapter },
     {
@@ -91,7 +96,7 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
     { provide: GENERADOR_DE_CODIGO, useClass: CryptoGeneradorDeCodigoAdapter },
     { provide: AVISOS_DE_RESERVA, useClass: CampanaAvisosDeReservaAdapter },
     { provide: AGENDA_DEL_LOCAL, useClass: PrismaAgendaDelLocalAdapter },
-    { provide: PAGOS_DE_RESERVAS, useClass: SinPagosAdapter },
+    { provide: PAGOS_DE_RESERVAS, useClass: PrismaPagosDeReservasAdapter },
     {
       provide: LO_QUE_SE_OFRECE,
       useFactory: (

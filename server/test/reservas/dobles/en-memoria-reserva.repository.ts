@@ -36,7 +36,7 @@ export class EnMemoriaReservaRepository implements ReservaRepository {
         otra.titularId === reserva.titularId &&
         otra.estado === 'PENDIENTE_DE_PAGO',
     );
-    if (pendientes.length >= maximoDePendientes)
+    if (!reserva.cobro && pendientes.length >= maximoDePendientes)
       return Promise.reject(new LimiteDePendientesError(maximoDePendientes));
     const cruza = vigentes.some(
       (otra) =>
@@ -45,7 +45,10 @@ export class EnMemoriaReservaRepository implements ReservaRepository {
         reserva.inicio < otra.fin,
     );
     if (cruza) return Promise.reject(new TurnoNoDisponibleError());
-    this.reservas.push({ ...reserva, estado: 'PENDIENTE_DE_PAGO' });
+    this.reservas.push({
+      ...reserva,
+      estado: reserva.cobro ? 'CONFIRMADA' : 'PENDIENTE_DE_PAGO',
+    });
     return Promise.resolve();
   }
 

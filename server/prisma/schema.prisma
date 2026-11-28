@@ -40,10 +40,11 @@ model Usuario {
   tipoDocumento                TipoDocumento?       @map("tipo_documento")
   numeroDocumentoCifrado       String?              @map("numero_documento_cifrado")
   documentoHash                String?              @map("documento_hash")
-  correoCifrado                String               @map("correo_cifrado")
-  correoHash                   String               @unique @map("correo_hash")
+  correoCifrado                String?              @map("correo_cifrado")
+  correoHash                   String?              @unique @map("correo_hash")
   celularCifrado               String?              @map("celular_cifrado")
-  contrasenaHash               String               @map("contrasena_hash")
+  celularHash                  String?              @map("celular_hash")
+  contrasenaHash               String?              @map("contrasena_hash")
   rol                          RolUsuario
   estado                       EstadoUsuario
   creadoEn                     DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
@@ -51,6 +52,9 @@ model Usuario {
   versionLegalAceptada         String?              @map("version_legal_aceptada")
   aceptacionLegalEn            DateTime?            @map("aceptacion_legal_en") @db.Timestamptz(3)
   canalAceptacionLegal         String?              @map("canal_aceptacion_legal")
+  avisoDePrivacidadInformadoPorId Int?              @map("aviso_de_privacidad_informado_por_id")
+  avisoDePrivacidadInformadoPor   Usuario?          @relation("AvisosDePrivacidadInformados", fields: [avisoDePrivacidadInformadoPorId], references: [id])
+  avisosDePrivacidadInformados    Usuario[]         @relation("AvisosDePrivacidadInformados")
   sesiones                     Sesion[]
   requiereCambiarContrasena    Boolean              @default(false) @map("requiere_cambiar_contrasena")
   /// Hasta cuándo sirve la contraseña temporal; vacío si la contraseña ya no es temporal.
@@ -71,12 +75,14 @@ model Usuario {
   adelantosGuardados           AdelantoMinimo[]
   reservasComoTitular          Reserva[]            @relation("ReservasComoTitular")
   reservasCreadas              Reserva[]            @relation("ReservasCreadas")
+  pagosRegistrados             Pago[]
   hojasDeReclamacion           HojaDeReclamacion[]
   hojasRespondidas             HojaDeReclamacion[]  @relation("HojasRespondidas")
   cambiosDeHojas               CambioDeHoja[]
   avisos                       Aviso[]
 
   @@unique([documentoHash, rol])
+  @@index([rol, celularHash])
   @@map("usuario")
 }
 
@@ -403,7 +409,8 @@ enum EstadoDeReserva {
 
 /// Por dónde se creó la reserva.
 enum CanalDeReserva {
-  WEB @map("web")
+  WEB       @map("web")
+  RECEPCION @map("recepcion")
 
   @@map("canal_de_reserva")
 }
@@ -435,11 +442,44 @@ model Reserva {
   creadaPor            Usuario            @relation("ReservasCreadas", fields: [creadaPorId], references: [id])
   reglaDeCancelacion   ReglaDeCancelacion @relation(fields: [reglaDeCancelacionId], references: [id])
   adicionalesPedidos   AdicionalPedido[]
+  pagos                Pago[]
 
   @@index([canchaId, inicio])
   @@index([inicio])
   @@index([titularId, estado])
   @@map("reserva")
+}
+
+enum MetodoDePago {
+  EFECTIVO @map("efectivo")
+  YAPE     @map("yape")
+  PLIN     @map("plin")
+
+  @@map("metodo_de_pago")
+}
+
+enum ConceptoDePago {
+  ADELANTO @map("adelanto")
+
+  @@map("concepto_de_pago")
+}
+
+/// Cobro efectuado en recepción y atribuible a la caja de quien lo registró.
+model Pago {
+  id               Int            @id @default(autoincrement())
+  reservaId        Int            @map("reserva_id")
+  concepto         ConceptoDePago
+  monto            Decimal        @db.Decimal(10, 2)
+  metodo           MetodoDePago
+  numeroOperacion  String?        @unique @map("numero_operacion")
+  registradoPorId  Int            @map("registrado_por_id")
+  registradoEn     DateTime       @map("registrado_en") @db.Timestamptz(3)
+  reserva          Reserva        @relation(fields: [reservaId], references: [id])
+  registradoPor    Usuario        @relation(fields: [registradoPorId], references: [id])
+
+  @@index([reservaId])
+  @@index([registradoPorId, registradoEn])
+  @@map("pago")
 }
 
 /// Material que el jugador pidió que le tengan listo. No es un cobro.

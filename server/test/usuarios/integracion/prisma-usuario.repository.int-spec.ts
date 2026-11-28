@@ -88,7 +88,9 @@ describe('PrismaUsuarioRepository', () => {
     ]) {
       expect(guardado).not.toContain(dato);
     }
-    expect(cifrador.descifrar(fila.correoCifrado)).toBe('valeria@gmail.com');
+    expect(fila.correoCifrado && cifrador.descifrar(fila.correoCifrado)).toBe(
+      'valeria@gmail.com',
+    );
   });
 
   it('guarda el rol jugador y el estado activo', async () => {

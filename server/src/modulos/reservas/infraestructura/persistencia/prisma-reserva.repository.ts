@@ -12,6 +12,7 @@ import type {
   ReservaRepository,
 } from '../../dominio/reserva.repository';
 import { TurnoNoDisponibleError } from '../../dominio/turno-no-disponible.error';
+import { rechazarOperacionRepetida } from './prisma-pagos-de-reservas.adapter';
 
 const DETALLE = {
   cancha: { select: { nombre: true, tipo: true, tieneIluminacion: true } },
@@ -39,7 +40,11 @@ export class PrismaReservaRepository implements ReservaRepository {
         throw new TurnoNoDisponibleError();
       if (indiceUnicoViolado(error) === 'reserva_codigo_key')
         throw new CodigoRepetidoError();
-      throw error;
+      return rechazarOperacionRepetida(
+        this.prisma,
+        error,
+        reserva.cobro?.numeroOperacion ?? null,
+      );
     }
   }
 
@@ -76,11 +81,13 @@ export class PrismaReservaRepository implements ReservaRepository {
       },
       data: { estado: 'EXPIRADA' },
     });
-    const pendientes = await tx.reserva.count({
-      where: { titularId, estado: 'PENDIENTE_DE_PAGO' },
-    });
-    if (pendientes >= maximoDePendientes)
-      throw new LimiteDePendientesError(maximoDePendientes);
+    if (!reserva.cobro) {
+      const pendientes = await tx.reserva.count({
+        where: { titularId, estado: 'PENDIENTE_DE_PAGO' },
+      });
+      if (pendientes >= maximoDePendientes)
+        throw new LimiteDePendientesError(maximoDePendientes);
+    }
     await tx.reserva.create({ data: aFila(reserva) });
   }
 }
@@ -90,14 +97,27 @@ function aFila({
   precio,
   adelanto,
   creadaEn,
+  cobro,
   ...resto
 }: ReservaNueva): Prisma.ReservaUncheckedCreateInput {
   return {
     ...resto,
-    estado: 'PENDIENTE_DE_PAGO',
+    estado: cobro ? 'CONFIRMADA' : 'PENDIENTE_DE_PAGO',
     precio: precio.enSoles(),
     adelanto: adelanto.enSoles(),
     creadoEn: creadaEn,
+    pagos: cobro
+      ? {
+          create: {
+            concepto: 'ADELANTO',
+            monto: cobro.monto.enSoles(),
+            metodo: cobro.metodo,
+            numeroOperacion: cobro.numeroOperacion,
+            registradoPorId: resto.creadaPorId,
+            registradoEn: creadaEn,
+          },
+        }
+      : undefined,
     adicionalesPedidos: {
       create: adicionalIds.map((adicionalId) => ({ adicionalId })),
     },
@@ -115,6 +135,7 @@ function aGuardada(fila: FilaDeReserva): ReservaGuardada {
     porcentajeDeAdelanto: fila.porcentajeDeAdelanto,
     adelanto: aMonto(fila.adelanto),
     venceEn: fila.venceEn,
+    canal: fila.canal,
     creadaEn: fila.creadoEn,
     rangos: fila.reglaDeCancelacion.rangos.map(
       ({ desdeHoras, porcentaje, ofreceCredito }) => ({
