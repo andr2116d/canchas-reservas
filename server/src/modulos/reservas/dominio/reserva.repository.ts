@@ -46,14 +46,26 @@ export interface ReservaGuardada {
   adicionales: { nombre: string; precio: Monto }[];
 }
 
+/** Una reserva que pasó a expirada por vencer sin pago: a su titular se le avisa. */
+export interface ReservaExpirada {
+  codigo: string;
+  titularId: number;
+}
+
 /** Puerto de las reservas. */
 export interface ReservaRepository {
   /**
    * Guarda la reserva en una operación: expira las vencidas que estorban y respeta el
-   * máximo de pendientes de pago. Lanza TurnoNoDisponibleError, LimiteDePendientesError
-   * o CodigoRepetidoError.
+   * máximo de pendientes de pago. Devuelve las que expiró. Lanza TurnoNoDisponibleError,
+   * LimiteDePendientesError o CodigoRepetidoError.
    */
-  crear(reserva: ReservaNueva, maximoDePendientes: number): Promise<void>;
+  crear(
+    reserva: ReservaNueva,
+    maximoDePendientes: number,
+  ): Promise<ReservaExpirada[]>;
+
+  /** Pasa a expiradas las pendientes de pago que vencieron hasta `ahora` y las devuelve. */
+  expirarVencidas(ahora: Date): Promise<ReservaExpirada[]>;
 
   /** Solo si la reserva es de esa persona. */
   delTitular(

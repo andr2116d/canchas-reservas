@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { leerLimiteGeneral } from './compartido/infraestructura/configuracion/configuracion';
 import { CompartidoModule } from './compartido/compartido.module';
 import { AdelantoModule } from './modulos/adelanto/adelanto.module';
+import { PlazoDePagoModule } from './modulos/plazo-de-pago/plazo-de-pago.module';
 import { CancelacionModule } from './modulos/cancelacion/cancelacion.module';
 import { AdicionalesModule } from './modulos/adicionales/adicionales.module';
 import { AvisosModule } from './modulos/avisos/avisos.module';
@@ -29,6 +31,7 @@ const LIMITE_GENERAL = {
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([LIMITE_GENERAL]),
+    ScheduleModule.forRoot(),
     CompartidoModule,
     CorreoModule,
     UsuariosModule,
@@ -36,6 +39,7 @@ const LIMITE_GENERAL = {
     TarifasModule,
     CancelacionModule,
     AdelantoModule,
+    PlazoDePagoModule,
     CanchasModule,
     AdicionalesModule,
     HistorialModule,

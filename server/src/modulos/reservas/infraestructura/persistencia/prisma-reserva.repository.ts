@@ -7,6 +7,7 @@ import { aMonto } from './monto-de-la-base';
 import { CodigoRepetidoError } from '../../dominio/codigo-repetido.error';
 import { LimiteDePendientesError } from '../../dominio/limite-de-pendientes.error';
 import type {
+  ReservaExpirada,
   ReservaGuardada,
   ReservaNueva,
   ReservaRepository,
@@ -25,14 +26,20 @@ const DETALLE = {
 
 type FilaDeReserva = Prisma.ReservaGetPayload<{ include: typeof DETALLE }>;
 
+// Solo lo que hace falta para avisar a quien tenía la reserva.
+const EXPIRADA = { codigo: true, titularId: true } as const;
+
 /** Reservas sobre PostgreSQL: la base impide que dos reservas que retienen su turno se pisen. */
 @Injectable()
 export class PrismaReservaRepository implements ReservaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async crear(reserva: ReservaNueva, maximoDePendientes: number) {
+  async crear(
+    reserva: ReservaNueva,
+    maximoDePendientes: number,
+  ): Promise<ReservaExpirada[]> {
     try {
-      await this.prisma.$transaction((tx) =>
+      return await this.prisma.$transaction((tx) =>
         this.crearEn(tx, reserva, maximoDePendientes),
       );
     } catch (error) {
@@ -48,6 +55,14 @@ export class PrismaReservaRepository implements ReservaRepository {
     }
   }
 
+  expirarVencidas(ahora: Date): Promise<ReservaExpirada[]> {
+    return this.prisma.reserva.updateManyAndReturn({
+      where: { estado: 'PENDIENTE_DE_PAGO', venceEn: { lte: ahora } },
+      data: { estado: 'EXPIRADA', expiradaEn: ahora },
+      select: EXPIRADA,
+    });
+  }
+
   async delTitular(
     titularId: number,
     codigo: string,
@@ -61,16 +76,16 @@ export class PrismaReservaRepository implements ReservaRepository {
 
   /**
    * Con la cuenta bloqueada, expira las pendientes vencidas que estorban (las del titular y
-   * las que chocan con el turno), cuenta las pendientes vigentes y guarda.
+   * las que chocan con el turno), cuenta las pendientes vigentes, guarda y devuelve las expiradas.
    */
   private async crearEn(
     tx: Prisma.TransactionClient,
     reserva: ReservaNueva,
     maximoDePendientes: number,
-  ) {
+  ): Promise<ReservaExpirada[]> {
     const { titularId, canchaId, inicio, fin, creadaEn } = reserva;
     await tx.$queryRaw`SELECT id FROM usuario WHERE id = ${titularId} FOR UPDATE`;
-    await tx.reserva.updateMany({
+    const expiradas = await tx.reserva.updateManyAndReturn({
       where: {
         estado: 'PENDIENTE_DE_PAGO',
         venceEn: { lte: creadaEn },
@@ -79,7 +94,8 @@ export class PrismaReservaRepository implements ReservaRepository {
           { canchaId, inicio: { lt: fin }, fin: { gt: inicio } },
         ],
       },
-      data: { estado: 'EXPIRADA' },
+      data: { estado: 'EXPIRADA', expiradaEn: creadaEn },
+      select: EXPIRADA,
     });
     if (!reserva.cobro) {
       const pendientes = await tx.reserva.count({
@@ -96,6 +112,7 @@ export class PrismaReservaRepository implements ReservaRepository {
     await tx.reserva.create({
       data: { ...aFila(reserva), ventanaDeLlegadaId: ventana?.id },
     });
+    return expiradas;
   }
 }
 

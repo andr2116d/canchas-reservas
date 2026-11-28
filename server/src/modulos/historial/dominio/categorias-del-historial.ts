@@ -5,6 +5,7 @@ export const CATEGORIAS = [
   'HORARIO',
   'CANCELACION',
   'ADELANTO',
+  'PLAZO_DE_PAGO',
   'CANCHAS',
   'MANTENIMIENTO',
   'ADICIONALES',
@@ -38,6 +39,7 @@ export const ACCIONES = [
   'RESPUESTA',
   'SEPARACION',
   'CHECK_IN',
+  'EXPIRACION',
 ] as const;
 
 export type Accion = (typeof ACCIONES)[number];

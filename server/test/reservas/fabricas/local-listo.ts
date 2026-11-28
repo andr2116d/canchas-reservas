@@ -1,9 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import {
-  fechaEnLima,
-  sumarAFecha,
-} from '../../../src/compartido/dominio/momento-en-lima';
+import { dentroDe } from '../../compartido/soporte/fechas-de-prueba';
 import { unaCanchaValida } from '../../canchas/fabricas/datos-cancha';
 import { cookieDe } from '../../compartido/soporte/cookie-de-sesion';
 import { sesionDeAdministrador } from '../../compartido/soporte/sesiones-de-prueba';
@@ -19,8 +16,6 @@ const DIAS = [
   'DOMINGO',
 ];
 
-export const dentroDe = (dias: number) =>
-  sumarAFecha(fechaEnLima(new Date()), { dias });
 export const MANANA = () => dentroDe(1);
 
 /** Registra el jugador número `n` (con correo y documento propios) y devuelve su cookie. */

@@ -5,6 +5,8 @@ import { consultarHorario } from "@/compartido/horario/horario.servidor";
 import { PanelDePestana, PestanasDeHorarioYTarifas, ProveedorDePestanas } from "@/compartido/horario/pestanas";
 import { TarjetaDelAdelanto } from "@/features/adelanto/componentes/tarjeta-del-adelanto";
 import { consultarAdelanto } from "@/features/adelanto/servicios/adelanto.servidor";
+import { TarjetaDelPlazo } from "@/features/plazo-de-pago/componentes/tarjeta-del-plazo";
+import { consultarPlazo } from "@/features/plazo-de-pago/servicios/plazo-de-pago.servidor";
 import { EncabezadoDeSeccion } from "@/compartido/marco/encabezado-de-seccion";
 import { CargaDeContenido } from "@/compartido/ui/carga-de-contenido";
 import { FormularioDeRegla } from "@/features/cancelacion/componentes/formulario-de-regla";
@@ -22,7 +24,14 @@ export const metadata: Metadata = { title: "Reglas de reserva · La Previa" };
 
 /** Horario, tarifas y cancelación en pestañas; al costado, la vista previa de la pestaña elegida. */
 async function ReglasDeReserva() {
-  const [horario, { tarifas }, regla, adelanto, ventana] = await Promise.all([consultarHorario(), consultarTarifas(), consultarRegla(), consultarAdelanto(), consultarVentanaDeLlegada()]);
+  const [horario, { tarifas }, regla, adelanto, ventana, plazo] = await Promise.all([
+    consultarHorario(),
+    consultarTarifas(),
+    consultarRegla(),
+    consultarAdelanto(),
+    consultarVentanaDeLlegada(),
+    consultarPlazo(),
+  ]);
   return (
     <ProveedorDelBorrador>
       <ProveedorDeLaRegla>
@@ -38,6 +47,7 @@ async function ReglasDeReserva() {
               <div className="flex flex-col gap-6">
                 <TarifasDelLocal tarifas={tarifas} />
                 <TarjetaDelAdelanto consultado={adelanto} />
+                <TarjetaDelPlazo consultado={plazo} />
               </div>
             </PanelDePestana>
             <PanelDePestana pestana="cancelacion"><FormularioDeRegla consultada={regla} /></PanelDePestana>

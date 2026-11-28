@@ -73,6 +73,7 @@ model Usuario {
   bloqueosCreados                 BloqueoDeCancha[]
   cambiosDeAdicionales            CambioDeAdicional[]
   adelantosGuardados              AdelantoMinimo[]
+  plazosDePagoGuardados           PlazoDePago[]
   reservasComoTitular             Reserva[]            @relation("ReservasComoTitular")
   reservasCreadas                 Reserva[]            @relation("ReservasCreadas")
   pagosRegistrados                Pago[]
@@ -188,6 +189,8 @@ model HorarioDeAtencion {
   minutoDeInicioDeLaNoche Int             @map("minuto_de_inicio_de_la_noche") @db.SmallInt
   guardadoPorId           Int             @map("guardado_por_id")
   guardadoEn              DateTime        @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  /// Códigos de las reservas por jugar que esta versión dejó fuera y se respetan.
+  reservasFueraDeHorario  String[]        @default([]) @map("reservas_fuera_de_horario")
   guardadoPor             Usuario         @relation(fields: [guardadoPorId], references: [id])
   dias                    HorarioDelDia[]
 
@@ -410,6 +413,18 @@ model VentanaDeLlegada {
   @@index([guardadoEn])
   @@map("ventana_de_llegada")
 }
+/// Cuánto tiempo tiene quien separa un turno para pagar el adelanto. Cada guardado es una versión.
+model PlazoDePago {
+  id            Int      @id @default(autoincrement())
+  /// Minutos enteros, de 1 a 1440.
+  minutos       Int      @db.SmallInt
+  guardadoPorId Int      @map("guardado_por_id")
+  guardadoEn    DateTime @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  guardadoPor   Usuario  @relation(fields: [guardadoPorId], references: [id])
+
+  @@index([guardadoEn])
+  @@map("plazo_de_pago")
+}
 
 /// Etapas en que una reserva ocupa su turno.
 enum EstadoDeReserva {
@@ -457,6 +472,8 @@ model Reserva {
   venceEn              DateTime?          @map("vence_en") @db.Timestamptz(3)
   checkInEn            DateTime?          @map("check_in_en") @db.Timestamptz(3)
   checkInPorId         Int?               @map("check_in_por_id")
+  /// Cuándo pasó a expirada por vencer sin pago; vacío si no expiró.
+  expiradaEn           DateTime?          @map("expirada_en") @db.Timestamptz(3)
   creadoEn             DateTime           @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn        DateTime           @updatedAt @map("actualizado_en") @db.Timestamptz(3)
   cancha               Cancha             @relation(fields: [canchaId], references: [id])
@@ -512,7 +529,8 @@ model AdicionalPedido {
   reservaId   Int       @map("reserva_id")
   adicionalId Int       @map("adicional_id")
   reserva     Reserva   @relation(fields: [reservaId], references: [id], onDelete: Cascade)
-  adicional   Adicional @relation(fields: [adicionalId], references: [id], onDelete: Cascade)
+  /// Lo que una reserva pidió no se borra con el catálogo: el adicional se desactiva.
+  adicional   Adicional @relation(fields: [adicionalId], references: [id], onDelete: Restrict)
 
   @@id([reservaId, adicionalId])
   @@map("adicional_pedido")
@@ -687,6 +705,7 @@ enum TipoDeAviso {
   NUEVO_RECLAMO      @map("nuevo_reclamo")
   RECLAMO_RESPONDIDO @map("reclamo_respondido")
   NUEVA_RESERVA      @map("nueva_reserva")
+  RESERVA_VENCIDA    @map("reserva_vencida")
 
   @@map("tipo_de_aviso")
 }

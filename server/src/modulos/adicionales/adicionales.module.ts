@@ -19,7 +19,7 @@ import {
 import { AdicionalesController } from './infraestructura/http/adicionales.controller';
 import { EstadoDeAdicionalController } from './infraestructura/http/estado-de-adicional.controller';
 import { PrismaAdicionalRepository } from './infraestructura/persistencia/prisma-adicional.repository';
-import { SinUsosAdapter } from './infraestructura/usos/sin-usos.adapter';
+import { PrismaUsosDeAdicionalAdapter } from './infraestructura/usos/prisma-usos-de-adicional.adapter';
 
 const CON_USOS = [ADICIONAL_REPOSITORY, USOS_DE_ADICIONAL, RELOJ];
 
@@ -28,7 +28,7 @@ const CON_USOS = [ADICIONAL_REPOSITORY, USOS_DE_ADICIONAL, RELOJ];
   controllers: [AdicionalesController, EstadoDeAdicionalController],
   providers: [
     { provide: ADICIONAL_REPOSITORY, useClass: PrismaAdicionalRepository },
-    { provide: USOS_DE_ADICIONAL, useClass: SinUsosAdapter },
+    { provide: USOS_DE_ADICIONAL, useClass: PrismaUsosDeAdicionalAdapter },
     {
       provide: ConsultarAdicionalesUseCase,
       useFactory: (a: AdicionalRepository, u: UsosDeAdicional) =>

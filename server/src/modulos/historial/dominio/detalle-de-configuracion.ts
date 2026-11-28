@@ -39,6 +39,9 @@ export interface VersionDeVentana {
   minutosAntes: number;
   minutosDespues: number;
 }
+export interface VersionDelPlazo {
+  minutos: number;
+}
 
 /** El detalle de una versión: la anterior (nula en la primera) y la guardada. */
 export interface Versiones<T> {
@@ -93,10 +96,31 @@ function textoDelDia(horario: VersionDelHorario, dia: string): string {
     : `${horas}, noche desde ${enHora(abierto.noche)}`;
 }
 
+/** Lo que cambió del horario y, si dejó reservas por jugar fuera, cuáles se respetan. */
 export function detalleDelHorario({
   antes,
   despues,
-}: Versiones<VersionDelHorario>): LineaDeDetalle[] {
+  reservasFueraDeHorario = [],
+}: Versiones<VersionDelHorario> & {
+  reservasFueraDeHorario?: string[];
+}): LineaDeDetalle[] {
+  const fuera: LineaDeDetalle[] =
+    reservasFueraDeHorario.length > 0
+      ? [
+          {
+            campo: 'Reservas que quedaron fuera y se respetan',
+            antes: null,
+            despues: reservasFueraDeHorario.join(', '),
+          },
+        ]
+      : [];
+  return [...cambiosDelHorario(antes, despues), ...fuera];
+}
+
+function cambiosDelHorario(
+  antes: VersionDelHorario | null,
+  despues: VersionDelHorario,
+): LineaDeDetalle[] {
   return lineasQueCambian<VersionDelHorario>(
     [
       ['Inicio de la noche', (h) => enHora(h.noche)],
@@ -136,6 +160,17 @@ export function detalleDelAdelanto({
 }: Versiones<VersionDelAdelanto>): LineaDeDetalle[] {
   return lineasQueCambian(
     [['Porcentaje del turno', (a) => `${a.porcentaje} %`]],
+    antes,
+    despues,
+  );
+}
+
+export function detalleDelPlazo({
+  antes,
+  despues,
+}: Versiones<VersionDelPlazo>): LineaDeDetalle[] {
+  return lineasQueCambian(
+    [['Minutos para pagar', (p) => `${p.minutos} min`]],
     antes,
     despues,
   );

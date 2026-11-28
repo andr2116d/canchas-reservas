@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { ponerHora } from "../../soporte/horario-de-prueba";
 import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
@@ -18,12 +19,6 @@ async function abrirPantalla(pagina: Page, pestana: "Horario" | "Tarifas" | "Can
 const horario = (pagina: Page) => pagina.getByRole("region", { name: "Horario de atención" });
 const tarjetaDe = (pagina: Page, nombre: string) => pagina.getByRole("region", { name: nombre, exact: true });
 const vistaPrevia = (pagina: Page) => pagina.getByRole("region", { name: "Turnos del día" });
-
-async function ponerHora(zona: Locator, etiqueta: string, hora: string) {
-  const [horas, minutos] = hora.split(":");
-  await zona.getByRole("spinbutton", { name: `Horas de ${etiqueta}` }).first().fill(horas);
-  await zona.getByRole("spinbutton", { name: `Minutos de ${etiqueta}` }).first().fill(minutos);
-}
 
 async function ponerDuracion(tarjeta: Locator, horas: number) {
   const grupo = tarjeta.getByRole("group", { name: "Cada turno dura" });

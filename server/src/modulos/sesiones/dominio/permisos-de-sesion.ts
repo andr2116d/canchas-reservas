@@ -21,6 +21,7 @@ const PERMISOS_POR_ROL = {
     'cancelacion:gestionar',
     'adelanto:gestionar',
     'ventana-de-llegada:gestionar',
+    'plazo-de-pago:gestionar',
     'canchas:gestionar',
     'adicionales:gestionar',
     'historial:consultar',

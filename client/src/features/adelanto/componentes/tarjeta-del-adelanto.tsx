@@ -8,7 +8,8 @@ import { fechaEnLima } from "@/compartido/ui/fecha-en-lima";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 import { VersionesAnteriores } from "@/compartido/ui/versiones-anteriores";
 import { esquemaDelAdelanto, filtrarPorcentaje } from "../esquemas/adelanto.schema";
-import { type AvisoDeGuardado, useAdelanto } from "../hooks/use-adelanto";
+import type { AvisoDeGuardado } from "@/compartido/formulario/use-formulario-de-version";
+import { useAdelanto } from "../hooks/use-adelanto";
 import type { AdelantoConsultado, VistaDelAdelanto } from "../servicios/adelanto";
 
 const AVISOS: Record<AvisoDeGuardado, string> = {

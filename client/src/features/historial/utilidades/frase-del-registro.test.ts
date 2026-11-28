@@ -19,6 +19,9 @@ describe("fraseDelRegistro", () => {
     { categoria: "RECLAMOS", accion: "CAMBIO_DE_TIPO", sujeto: "Hoja 000014-2026", verbo: "pasó a reclamo la", destacado: "Hoja 000014-2026" },
     { categoria: "RECLAMOS", accion: "RESPUESTA", sujeto: "Hoja 000014-2026", verbo: "respondió la", destacado: "Hoja 000014-2026" },
     { categoria: "RESERVAS", accion: "SEPARACION", sujeto: "Reserva 7K3Q9X", verbo: "separó la", destacado: "Reserva 7K3Q9X" },
+    { categoria: "RESERVAS", accion: "EXPIRACION", sujeto: "Reserva 7K3Q9X", verbo: "dio por vencida la", destacado: "Reserva 7K3Q9X" },
+    { categoria: "PLAZO_DE_PAGO", accion: "ALTA", sujeto: "Plazo para pagar el adelanto", verbo: "definió el plazo para pagar el adelanto", destacado: null },
+    { categoria: "PLAZO_DE_PAGO", accion: "EDICION", sujeto: "Plazo para pagar el adelanto", verbo: "cambió el plazo para pagar el adelanto", destacado: null },
   ] as const)("$categoria · $accion", ({ categoria, accion, sujeto, verbo, destacado }) => {
     expect(fraseDelRegistro({ categoria, accion, sujeto })).toEqual({ verbo, sujeto: destacado });
   });

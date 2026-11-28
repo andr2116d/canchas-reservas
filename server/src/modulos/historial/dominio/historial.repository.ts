@@ -10,13 +10,21 @@ export interface Autor {
   rol: 'ADMINISTRADOR' | 'RECEPCIONISTA';
 }
 
+/** Quien hizo un registro: una cuenta o, si nadie lo hizo (una reserva que vence), el sistema. */
+export interface AutorDelRegistro {
+  id: number | null;
+  nombre: string;
+}
+
+export const AUTOR_SISTEMA: AutorDelRegistro = { id: null, nombre: 'Sistema' };
+
 /** Un registro tal como sale de la base, con el nombre de quien lo hizo. */
 export interface RegistroGuardado extends RegistroSinDescribir {
   /** Único entre todas las fuentes, como `cancha-12`. */
   id: string;
   ocurridoEn: Date;
   importante: boolean;
-  autor: Omit<Autor, 'rol'>;
+  autor: AutorDelRegistro;
 }
 
 /** Puerto de solo lectura: el historial no se edita ni se borra. */

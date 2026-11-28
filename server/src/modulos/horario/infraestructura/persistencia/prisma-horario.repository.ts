@@ -63,6 +63,7 @@ export class PrismaHorarioRepository implements HorarioRepository {
     horario: HorarioSemanal,
     guardadoPorId: number,
     guardadoEn: Date,
+    reservasFueraDeHorario: string[],
   ): Promise<{ cambio: boolean; version: VersionDeHorario }> {
     return this.prisma.$transaction(async (tx) => {
       // Un guardado a la vez: dos iguales al mismo tiempo no se duplican.
@@ -79,6 +80,7 @@ export class PrismaHorarioRepository implements HorarioRepository {
           minutoDeInicioDeLaNoche: horario.inicioDeLaNoche.minutos,
           guardadoPorId,
           guardadoEn,
+          reservasFueraDeHorario,
           dias: { create: this.filasDeLosDias(horario) },
         },
         include: COMPLETO,

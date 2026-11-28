@@ -1,6 +1,5 @@
 import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
 import type { PlazoDeCancelacion } from '../../cancelacion/api-cancelacion';
-import { MINUTOS_DE_RETENCION } from '../dominio/reglas-de-la-reserva';
 import type {
   AdicionalOfrecido,
   CatalogoDeAdicionales,
@@ -59,7 +58,7 @@ export class ResumirReservaUseCase {
     pedido: TurnoPedido,
     ahora: Date,
   ): Promise<ResumenDeReserva> {
-    const [{ turno, regla }, adicionales] = await Promise.all([
+    const [{ turno, regla, plazo }, adicionales] = await Promise.all([
       turnoParaReservar(this.de, pedido),
       this.de.catalogo.activos(),
     ]);
@@ -72,7 +71,7 @@ export class ResumirReservaUseCase {
       precio: turno.precio,
       adelanto: turno.adelanto.monto,
       porcentajeDeAdelanto: turno.adelanto.porcentaje,
-      minutosDeRetencion: MINUTOS_DE_RETENCION,
+      minutosDeRetencion: plazo.valor,
       plazos: regla.regla.plazosPara(turno.inicio, ahora),
       adicionales,
     };

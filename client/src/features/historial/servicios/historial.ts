@@ -1,4 +1,4 @@
-export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS" | "RECLAMOS" | "RESERVAS" | "VENTANA_DE_LLEGADA";
+export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "PLAZO_DE_PAGO" | "VENTANA_DE_LLEGADA" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS" | "RECLAMOS" | "RESERVAS";
 
 export type Accion =
   | "ALTA"
@@ -21,7 +21,8 @@ export type Accion =
   | "CAMBIO_DE_TIPO"
   | "RESPUESTA"
   | "SEPARACION"
-  | "CHECK_IN";
+  | "CHECK_IN"
+  | "EXPIRACION";
 
 export interface LineaDeDetalle {
   campo: string;
@@ -36,7 +37,8 @@ export interface Registro {
   categoria: Categoria;
   accion: Accion;
   importante: boolean;
-  autor: { id: number; nombre: string };
+  /** Sin id cuando lo hizo el sistema, como una reserva que vence. */
+  autor: { id: number | null; nombre: string };
   sujeto: string | null;
   detalle: LineaDeDetalle[];
 }
@@ -61,6 +63,7 @@ export const CATEGORIAS: { valor: Categoria; texto: string }[] = [
   { valor: "HORARIO", texto: "Horario" },
   { valor: "CANCELACION", texto: "Cancelación" },
   { valor: "ADELANTO", texto: "Adelanto" },
+  { valor: "PLAZO_DE_PAGO", texto: "Plazo de pago" },
   { valor: "CANCHAS", texto: "Canchas" },
   { valor: "MANTENIMIENTO", texto: "Mantenimiento" },
   { valor: "ADICIONALES", texto: "Adicionales" },
@@ -92,6 +95,7 @@ export const ACCIONES: { valor: Accion; texto: string }[] = [
   { valor: "RESPUESTA", texto: "Respuesta" },
   { valor: "SEPARACION", texto: "Reserva separada" },
   { valor: "CHECK_IN", texto: "Check-in" },
+  { valor: "EXPIRACION", texto: "Reserva vencida" },
 ];
 
 /** Las acciones que puede tener cada categoría, para no ofrecer combinaciones vacías. */
@@ -112,12 +116,13 @@ export const ACCIONES_POR_CATEGORIA: Record<Categoria, Accion[]> = {
   HORARIO: ["ALTA", "EDICION"],
   CANCELACION: ["ALTA", "EDICION"],
   ADELANTO: ["ALTA", "EDICION"],
+  PLAZO_DE_PAGO: ["ALTA", "EDICION"],
   CANCHAS: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],
   MANTENIMIENTO: ["BLOQUEO", "LIBERACION_DE_BLOQUEO", "RETIRO_DE_BLOQUEO"],
   ADICIONALES: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],
   ACCESOS: ["INICIO_DE_SESION"],
   RECLAMOS: ["APERTURA", "CLASIFICACION", "CAMBIO_DE_TIPO", "RESPUESTA"],
-  RESERVAS: ["SEPARACION", "CHECK_IN"],
+  RESERVAS: ["SEPARACION", "CHECK_IN", "EXPIRACION"],
   VENTANA_DE_LLEGADA: ["ALTA", "EDICION"],
 };
 

@@ -3,8 +3,8 @@ import request from 'supertest';
 import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
 import { crearAppDePrueba } from '../../compartido/soporte/crear-app-de-prueba';
 import { limpiarTablas } from '../../compartido/soporte/limpiar-tablas';
+import { dentroDe } from '../../compartido/soporte/fechas-de-prueba';
 import {
-  dentroDe,
   MANANA,
   prepararElLocal,
   separarALas19,
@@ -88,6 +88,30 @@ describe('Reservar un turno desde el mapa', () => {
     expect(guardada.adelanto.toFixed(2)).toBe('40.00');
     expect(guardada.creadaPorId).toBe(guardada.titularId);
     expect(await estadoEnElMapa(cancha, '19:00')).toBe('PENDIENTE');
+  });
+
+  it('el plazo para pagar que guarda administración rige solo para las reservas nuevas', async () => {
+    const { body: anterior } = await separar(separarALas19(cancha)).expect(201);
+    await local.guardar('put', '/api/plazo-de-pago', { minutos: '45' });
+
+    const resumen = await api()
+      .get('/api/reservas/resumen')
+      .query({ canchaId: String(cancha), fecha: MANANA(), desde: '20:00' })
+      .set('Cookie', jugador)
+      .expect(200);
+    const { body: nueva } = await separar(
+      separarALas19(cancha, { desde: '20:00' }),
+    ).expect(201);
+
+    const minutos = (reserva: { venceEn: string }, desde: number) =>
+      (new Date(reserva.venceEn).getTime() - desde) / 60_000;
+    const creadas = await prisma.reserva.findMany({
+      orderBy: { id: 'asc' },
+      select: { creadoEn: true },
+    });
+    expect(resumen.body.minutosDeRetencion).toBe(45);
+    expect(minutos(anterior, creadas[0].creadoEn.getTime())).toBe(15);
+    expect(minutos(nueva, creadas[1].creadoEn.getTime())).toBe(45);
   });
 
   it('el titular ve su reserva con cuánto falta para que venza', async () => {

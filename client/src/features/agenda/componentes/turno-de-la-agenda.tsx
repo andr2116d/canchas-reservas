@@ -1,6 +1,6 @@
 import { NOMBRE_DEL_TIPO } from "@/compartido/canchas/tipo-de-cancha";
 import { horaEnLima } from "@/compartido/ui/fecha-en-lima";
-import { enSoles } from "@/compartido/ui/textos-del-local";
+import { celularLegible, enSoles } from "@/compartido/ui/textos-del-local";
 import { type EstadoDeReserva, NOMBRE_DEL_ESTADO, type TurnoDeLaAgenda } from "../servicios/agenda";
 import { AccionesDelTurno } from "./acciones-del-turno";
 
@@ -14,9 +14,6 @@ const COLOR_DEL_ESTADO: Record<EstadoDeReserva, string> = {
   AUSENTE: "bg-error-fondo text-error",
   FINALIZADA: "bg-tiza text-grava",
 };
-
-/** Un celular de 9 dígitos se lee de tres en tres: «987 654 321». */
-const celularLegible = (celular: string) => celular.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
 
 function Cliente({ cliente }: { cliente: TurnoDeLaAgenda["cliente"] }) {
   return (

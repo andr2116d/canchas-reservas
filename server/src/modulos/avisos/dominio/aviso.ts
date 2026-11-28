@@ -5,6 +5,7 @@ export const TIPOS_DE_AVISO = [
   'NUEVO_RECLAMO',
   'RECLAMO_RESPONDIDO',
   'NUEVA_RESERVA',
+  'RESERVA_VENCIDA',
 ] as const;
 export type TipoDeAviso = (typeof TIPOS_DE_AVISO)[number];
 

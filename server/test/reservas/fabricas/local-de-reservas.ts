@@ -9,6 +9,7 @@ import {
   AvisosDeReservaDePrueba,
   CatalogoDePrueba,
   CodigosDePrueba,
+  PlazoDePrueba,
   TitularesDePrueba,
 } from '../dobles/puertos-de-reserva-de-prueba';
 import { TurnosDelLocalDePrueba } from '../dobles/turnos-del-local-de-prueba';
@@ -91,6 +92,7 @@ export function prepararReservas({
     titulares,
     reservas,
     reloj,
+    plazos: new PlazoDePrueba(),
     codigos: new CodigosDePrueba(codigos),
     avisos: new AvisosDeReservaDePrueba(),
   };
