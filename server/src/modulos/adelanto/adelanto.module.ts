@@ -8,12 +8,20 @@ import {
 } from './dominio/adelanto.repository';
 import { AdelantoController } from './infraestructura/http/adelanto.controller';
 import { PrismaAdelantoRepository } from './infraestructura/persistencia/prisma-adelanto.repository';
+import {
+  VENTANAS_DE_LLEGADA,
+  VentanaDeLlegadaUseCase,
+} from './aplicacion/ventana-de-llegada.use-case';
+import { VentanaDeLlegadaController } from './infraestructura/http/ventana-de-llegada.controller';
+import { PrismaVentanasDeLlegadaAdapter } from './infraestructura/persistencia/prisma-ventanas-de-llegada.adapter';
 
 /** Adelanto mínimo del local y su historial. */
 @Module({
-  controllers: [AdelantoController],
+  controllers: [AdelantoController, VentanaDeLlegadaController],
   providers: [
     { provide: ADELANTO_REPOSITORY, useClass: PrismaAdelantoRepository },
+    { provide: VENTANAS_DE_LLEGADA, useClass: PrismaVentanasDeLlegadaAdapter },
+    VentanaDeLlegadaUseCase,
     {
       provide: DefinirAdelantoUseCase,
       useFactory: (adelantos: AdelantoRepository, reloj: Reloj) =>

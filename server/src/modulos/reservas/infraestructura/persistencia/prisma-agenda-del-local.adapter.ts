@@ -28,6 +28,7 @@ const FILA = {
   venceEn: true,
   precio: true,
   adelanto: true,
+  ventanaDeLlegada: { select: { minutosAntes: true, minutosDespues: true } },
   cancha: { select: CANCHA },
   titular: { select: { ...COLUMNAS_DEL_AUTOR, celularCifrado: true } },
 } as const satisfies Prisma.ReservaSelect;

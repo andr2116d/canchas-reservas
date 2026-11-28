@@ -20,6 +20,7 @@ const PERMISOS_POR_ROL = {
     'horario:gestionar',
     'cancelacion:gestionar',
     'adelanto:gestionar',
+    'ventana-de-llegada:gestionar',
     'canchas:gestionar',
     'adicionales:gestionar',
     'historial:consultar',
@@ -32,6 +33,7 @@ const PERMISOS_POR_ROL = {
     'tarifas:calcular',
     'agenda:consultar',
     'reservas:gestionar-en-recepcion',
+    'reservas:hacer-check-in',
   ],
   JUGADOR: [
     'panel:jugador',

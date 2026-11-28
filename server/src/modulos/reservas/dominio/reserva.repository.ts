@@ -6,7 +6,8 @@ import type { CobroDeReserva } from './cobro-de-reserva';
 
 export const RESERVA_REPOSITORY = Symbol('RESERVA_REPOSITORY');
 
-export type EstadoDeReserva = EstadoQueOcupa | 'EXPIRADA';
+export type EstadoDeReserva =
+  EstadoQueOcupa | 'EXPIRADA' | 'CANCELADA' | 'AUSENTE' | 'FINALIZADA';
 
 /** Una reserva por guardar, con los montos y la regla de su momento. */
 export interface ReservaNueva {

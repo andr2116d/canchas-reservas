@@ -108,7 +108,7 @@ describe('Consultar la agenda de turnos', () => {
     expect(enLaDos.body.turnos).toHaveLength(1);
     expect(confirmadas.body.turnos[0]).toMatchObject({
       cancha: { id: dos },
-      acciones: ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
+      acciones: ['MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
     });
     expect(confirmadas.body.conteos).toMatchObject({
       PENDIENTE_DE_PAGO: 1,

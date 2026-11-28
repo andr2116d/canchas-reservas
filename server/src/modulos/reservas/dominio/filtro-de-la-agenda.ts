@@ -14,6 +14,9 @@ export const ESTADOS_DE_RESERVA: readonly EstadoDeReserva[] = [
   'CONFIRMADA',
   'EN_JUEGO',
   'EXPIRADA',
+  'CANCELADA',
+  'AUSENTE',
+  'FINALIZADA',
 ];
 
 const esEstado = (texto: string): texto is EstadoDeReserva =>

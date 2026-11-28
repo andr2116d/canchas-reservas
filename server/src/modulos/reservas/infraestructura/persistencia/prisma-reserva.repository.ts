@@ -88,7 +88,14 @@ export class PrismaReservaRepository implements ReservaRepository {
       if (pendientes >= maximoDePendientes)
         throw new LimiteDePendientesError(maximoDePendientes);
     }
-    await tx.reserva.create({ data: aFila(reserva) });
+    const ventana = await tx.ventanaDeLlegada.findFirst({
+      where: { guardadoEn: { lte: creadaEn } },
+      orderBy: [{ guardadoEn: 'desc' }, { id: 'desc' }],
+      select: { id: true },
+    });
+    await tx.reserva.create({
+      data: { ...aFila(reserva), ventanaDeLlegadaId: ventana?.id },
+    });
   }
 }
 

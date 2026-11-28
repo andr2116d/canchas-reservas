@@ -4,8 +4,10 @@ import {
   detalleDelAdelanto,
   detalleDelHorario,
   detalleDeTarifa,
+  detalleDeVentana,
   type RangoDeLaRegla,
   type VersionDeTarifa,
+  type VersionDeVentana,
   type VersionDelAdelanto,
   type VersionDelHorario,
   type Versiones,
@@ -16,7 +18,7 @@ import {
   detalleDeCancha,
 } from './detalle-del-catalogo';
 import { detalleDeReclamo } from './detalle-de-reclamos';
-import { detalleDeReserva } from './detalle-de-reservas';
+import { detalleDeReserva, detalleDelCheckIn } from './detalle-de-reservas';
 import { type LineaDeDetalle, tamanoLegible } from './linea-de-detalle';
 
 /** Lo que trae cada registro antes de escribirlo para leerse. */
@@ -32,6 +34,7 @@ const SUJETO_FIJO: Partial<Record<Categoria, string>> = {
   HORARIO: 'Horario de atención',
   CANCELACION: 'Regla de cancelación',
   ADELANTO: 'Adelanto mínimo',
+  VENTANA_DE_LLEGADA: 'Ventana de llegada',
 };
 
 function sujetoLegible({
@@ -57,6 +60,8 @@ function lineas({
       return detalleDeLaRegla(detalle as Versiones<RangoDeLaRegla[]>);
     case 'ADELANTO':
       return detalleDelAdelanto(detalle as Versiones<VersionDelAdelanto>);
+    case 'VENTANA_DE_LLEGADA':
+      return detalleDeVentana(detalle as Versiones<VersionDeVentana>);
     case 'CANCHAS':
       return accion === 'EDICION'
         ? detalleDeCancha(detalle as Parameters<typeof detalleDeCancha>[0])
@@ -70,7 +75,9 @@ function lineas({
     case 'RECLAMOS':
       return detalleDeReclamo(accion, detalle as Record<string, unknown>);
     case 'RESERVAS':
-      return detalleDeReserva(detalle as Record<string, unknown>);
+      return accion === 'CHECK_IN'
+        ? detalleDelCheckIn(detalle as Record<string, unknown>)
+        : detalleDeReserva(detalle as Record<string, unknown>);
     default:
       return [];
   }

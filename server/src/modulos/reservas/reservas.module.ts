@@ -54,6 +54,12 @@ import { PrismaCatalogoDeAdicionalesAdapter } from './infraestructura/persistenc
 import { PrismaReservaRepository } from './infraestructura/persistencia/prisma-reserva.repository';
 import { PrismaTitularesAdapter } from './infraestructura/persistencia/prisma-titulares.adapter';
 import { PrismaPagosDeReservasAdapter } from './infraestructura/persistencia/prisma-pagos-de-reservas.adapter';
+import {
+  CheckInDeReservaUseCase,
+  REGISTRO_DE_CHECK_IN,
+} from './aplicacion/check-in-de-reserva.use-case';
+import { CheckInDeReservaController } from './infraestructura/http/check-in-de-reserva.controller';
+import { PrismaRegistroDeCheckInAdapter } from './infraestructura/persistencia/prisma-registro-de-check-in.adapter';
 
 const LO_QUE_SE_OFRECE = Symbol('LO_QUE_SE_OFRECE');
 const REGISTRO = Symbol('REGISTRO_DE_RESERVAS');
@@ -84,6 +90,7 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
     ReservasController,
     AgendaController,
     ReservasDeRecepcionController,
+    CheckInDeReservaController,
   ],
   providers: [
     { provide: TURNOS_DEL_LOCAL, useClass: MapaTurnosDelLocalAdapter },
@@ -97,6 +104,8 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
     { provide: AVISOS_DE_RESERVA, useClass: CampanaAvisosDeReservaAdapter },
     { provide: AGENDA_DEL_LOCAL, useClass: PrismaAgendaDelLocalAdapter },
     { provide: PAGOS_DE_RESERVAS, useClass: PrismaPagosDeReservasAdapter },
+    { provide: REGISTRO_DE_CHECK_IN, useClass: PrismaRegistroDeCheckInAdapter },
+    CheckInDeReservaUseCase,
     {
       provide: LO_QUE_SE_OFRECE,
       useFactory: (

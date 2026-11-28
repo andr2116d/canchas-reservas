@@ -23,7 +23,10 @@ export function validarCobro(
 ): CobroDeReserva {
   return validarCampos({
     monto: () => {
-      const monto = Monto.crear(datos.monto ?? '');
+      const texto = datos.monto?.trim() ?? '';
+      const monto = /^0+(?:[.,]0{1,2})?$/.test(texto)
+        ? Monto.desdeCentimos(0)
+        : Monto.crear(texto);
       exigirMonto(monto);
       return monto;
     },

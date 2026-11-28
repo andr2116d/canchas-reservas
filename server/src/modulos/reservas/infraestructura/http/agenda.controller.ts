@@ -1,5 +1,9 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { RequerirPermiso } from '../../../sesiones/api-sesiones';
+import {
+  RequerirPermiso,
+  SesionDeLaSolicitud,
+  type SesionValida,
+} from '../../../sesiones/api-sesiones';
 import {
   type AgendaDelDia,
   ConsultarAgendaUseCase,
@@ -13,7 +17,10 @@ export class AgendaController {
   constructor(private readonly consultar: ConsultarAgendaUseCase) {}
 
   @Get()
-  delDia(@Query() consulta: ConsultarAgendaDto): Promise<AgendaDelDia> {
-    return this.consultar.ejecutar(consulta);
+  delDia(
+    @Query() consulta: ConsultarAgendaDto,
+    @SesionDeLaSolicitud() sesion: SesionValida,
+  ): Promise<AgendaDelDia> {
+    return this.consultar.ejecutar(consulta, sesion.rol === 'RECEPCIONISTA');
   }
 }
