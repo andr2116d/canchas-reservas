@@ -3,8 +3,8 @@ import request from 'supertest';
 import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
 import { crearAppDePrueba } from '../../compartido/soporte/crear-app-de-prueba';
 import { limpiarTablas } from '../../compartido/soporte/limpiar-tablas';
+import { dentroDe } from '../../compartido/soporte/fechas-de-prueba';
 import {
-  dentroDe,
   MANANA,
   prepararElLocal,
   separarALas19,
