@@ -1,5 +1,9 @@
 import { HoraDelDia } from '../../../compartido/dominio/hora-del-dia.value-object';
-import { DIAS_DE_LA_SEMANA, type DiaDeLaSemana } from './dia-de-la-semana';
+import {
+  DIAS_DE_LA_SEMANA,
+  type DiaDeLaSemana,
+  diaDeLaSemanaDe,
+} from './dia-de-la-semana';
 import type { HorarioDelDia } from './horario-del-dia';
 
 /** Hora de la noche mientras administración no defina otra. Es el único lugar con este valor. */
@@ -29,6 +33,12 @@ export class HorarioSemanal {
   /** Horario del día, o nada si ese día no se abre. */
   del(dia: DiaDeLaSemana): HorarioDelDia | undefined {
     return this.dias.get(dia);
+  }
+
+  /** Si el local está abierto todo ese rato de la fecha (en minutos del día de Lima). */
+  atiende(fecha: string, desde: number, hasta: number): boolean {
+    const dia = this.del(diaDeLaSemanaDe(fecha));
+    return !!dia && dia.abre.minutos <= desde && hasta <= dia.cierra.minutos;
   }
 
   inicioDeLaNocheDel(dia: DiaDeLaSemana): HoraDelDia {

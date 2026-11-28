@@ -25,6 +25,8 @@ import { BLOQUEO_REPOSITORY } from '../../../src/modulos/canchas/dominio/bloqueo
 import { CANCHA_REPOSITORY } from '../../../src/modulos/canchas/dominio/cancha.repository';
 import { HISTORIAL_REPOSITORY } from '../../../src/modulos/historial/dominio/historial.repository';
 import { HORARIO_REPOSITORY } from '../../../src/modulos/horario/dominio/horario.repository';
+import { RESERVAS_POR_JUGAR } from '../../../src/modulos/horario/aplicacion/reservas-por-jugar.port';
+import { ReservasPorJugarDePrueba } from '../../horario/dobles/reservas-por-jugar-de-prueba';
 import {
   type SesionValida,
   ValidarSesionUseCase,
@@ -83,6 +85,7 @@ function crearDobles() {
     usos: new UsosDeAdicionalDePrueba(),
     tarifas: new EnMemoriaTarifaRepository(),
     horario: new EnMemoriaHorarioRepository(),
+    reservasPorJugar: new ReservasPorJugarDePrueba(),
     cancelacion: new EnMemoriaReglaDeCancelacionRepository(),
     adelanto: new EnMemoriaAdelantoRepository(),
     ocupacion: new OcupacionDePrueba(),
@@ -113,6 +116,7 @@ function dobleDeCadaPuerto(dobles: Dobles): [symbol, unknown][] {
     [USOS_DE_ADICIONAL, dobles.usos],
     [TARIFA_REPOSITORY, dobles.tarifas],
     [HORARIO_REPOSITORY, dobles.horario],
+    [RESERVAS_POR_JUGAR, dobles.reservasPorJugar],
     [REGLA_DE_CANCELACION_REPOSITORY, dobles.cancelacion],
     [ADELANTO_REPOSITORY, dobles.adelanto],
     [OCUPACION_DEL_DIA, dobles.ocupacion],
