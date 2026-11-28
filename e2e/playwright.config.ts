@@ -10,8 +10,8 @@ const PUERTO_WEB = 3100;
 const baseDePruebas = new URL(process.env.DATABASE_URL ?? "");
 baseDePruebas.pathname = `${baseDePruebas.pathname.replace(/_pruebas$/, "")}_pruebas`;
 
-const DISPONIBILIDAD = /disponibilidad\/.*\.spec\.ts/;
-const RESERVAS = /(reservas|agenda)\/.*\.spec\.ts/;
+const DISPONIBILIDAD = /pruebas\/disponibilidad\/.*\.spec\.ts/;
+const RESERVAS = /pruebas\/(reservas|agenda)\/.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./pruebas",
