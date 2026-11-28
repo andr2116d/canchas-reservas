@@ -1,3 +1,4 @@
+import { sumarDias } from "@/compartido/ui/fecha-en-lima";
 import { ESTADOS_DEL_FILTRO, type EstadoDelFiltro, type Motivo, NOMBRE_DEL_MOTIVO, type TipoDeHoja } from "../servicios/reclamos";
 
 export const TAMANOS_DE_PAGINA = [10, 25, 50] as const;
@@ -42,11 +43,7 @@ export function leerFiltros(parametros: Parametros): FiltrosDeReclamos {
   };
 }
 
-const restarDias = (fecha: string, dias: number) => {
-  const momento = new Date(`${fecha}T12:00:00.000Z`);
-  momento.setUTCDate(momento.getUTCDate() - dias);
-  return momento.toISOString().slice(0, 10);
-};
+const restarDias = (fecha: string, dias: number) => sumarDias(fecha, -dias);
 
 /** La consulta para la API: el período se vuelve una fecha de inicio contada desde hoy en Lima. */
 export function aConsulta(filtros: FiltrosDeReclamos, hoy: string): URLSearchParams {

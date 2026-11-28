@@ -1,3 +1,4 @@
+import { sumarDias } from "@/compartido/ui/fecha-en-lima";
 import { ACCIONES, ACCIONES_POR_CATEGORIA, type Accion, CATEGORIAS, type Categoria } from "../servicios/historial";
 
 export const TAMANOS_DE_PAGINA = [10, 25, 50] as const;
@@ -121,8 +122,7 @@ export const PERIODOS: { valor: Periodo; texto: string }[] = [
   { valor: "TREINTA_DIAS", texto: "30 días" },
 ];
 
-const restarDias = (fecha: string, dias: number) =>
-  new Date(Date.parse(`${fecha}T00:00:00Z`) - dias * 86_400_000).toISOString().slice(0, 10);
+const restarDias = (fecha: string, dias: number) => sumarDias(fecha, -dias);
 
 /** Desde y hasta de un atajo; «Todo» no filtra por fechas. */
 export function rangoDelPeriodo(periodo: Periodo, hoy: string): Pick<Filtros, "desde" | "hasta"> {

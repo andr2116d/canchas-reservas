@@ -1,7 +1,7 @@
 import { NOMBRE_DEL_TIPO } from "@/compartido/canchas/tipo-de-cancha";
+import { horaEnLima } from "@/compartido/ui/fecha-en-lima";
 import { enSoles } from "@/compartido/ui/textos-del-local";
 import { type EstadoDeReserva, NOMBRE_DEL_ESTADO, type TurnoDeLaAgenda } from "../servicios/agenda";
-import { horaEnLima } from "../utilidades/fechas";
 import { AccionesDelTurno } from "./acciones-del-turno";
 
 const COLOR_DEL_ESTADO: Record<EstadoDeReserva, string> = {

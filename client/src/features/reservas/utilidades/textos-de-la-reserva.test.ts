@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { horaDelLocal, momentoDelLocal, saldoEnElLocal, textoDelPlazo, tiempoRestante } from "./textos-de-la-reserva";
+import { momentoDelLocal, saldoEnElLocal, textoDelPlazo, tiempoRestante } from "./textos-de-la-reserva";
 
 describe("textos de la reserva", () => {
   it("escribe un momento con el día y la hora de Lima", () => {
     expect(momentoDelLocal("2026-11-28T00:00:00.000Z")).toBe("vie 27 nov, 19:00");
-    expect(horaDelLocal("2026-11-28T00:15:00.000Z")).toBe("19:15");
   });
 
   it("dice cuánto se devuelve en cada plazo, y que el crédito es opcional", () => {

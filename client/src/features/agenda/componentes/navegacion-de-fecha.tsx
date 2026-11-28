@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { diaLargo } from "@/compartido/ui/textos-del-local";
-import { sumarDias } from "../utilidades/fechas";
+import { sumarDias } from "@/compartido/ui/fecha-en-lima";
 
 interface NavegacionDeFechaProps {
   fecha: string;
