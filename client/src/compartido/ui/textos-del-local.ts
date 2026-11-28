@@ -7,3 +7,6 @@ export const enSoles = (monto: string) => `S/ ${monto}`;
 export function diaLargo(fecha: string): string {
   return DIA_LARGO.format(new Date(`${fecha}T00:00:00Z`));
 }
+
+/** Un celular de 9 dígitos se lee de tres en tres: «987 654 321». */
+export const celularLegible = (celular: string) => celular.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
