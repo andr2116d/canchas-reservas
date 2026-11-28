@@ -143,7 +143,7 @@ describe('Consultar la agenda de turnos', () => {
     const { body } = await agenda({
       fecha: '2026-02-30',
       canchaId: '999',
-      estado: 'CANCELADA',
+      estado: 'DESCONOCIDA',
     }).expect(400);
 
     expect(body.errores).toEqual({

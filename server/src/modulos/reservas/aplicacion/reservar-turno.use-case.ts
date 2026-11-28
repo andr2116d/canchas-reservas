@@ -129,6 +129,7 @@ export class ReservarTurnoUseCase {
       codigo,
       estado: cobro ? ('CONFIRMADA' as const) : ('PENDIENTE_DE_PAGO' as const),
       venceEn,
+      ahora: this.de.reloj.ahora(),
     };
   }
 

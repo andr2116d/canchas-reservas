@@ -13,8 +13,10 @@ import { horaEnLima } from "@/compartido/ui/fecha-en-lima";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 import { diaLargo, enSoles } from "@/compartido/ui/textos-del-local";
 import { cobroParaEnviar, esquemaDeCobro, type DatosDeCobro } from "../esquemas/recepcion.schema";
+import { useCuentaRegresiva } from "../hooks/use-cuenta-regresiva";
 import { useResumenDeRecepcion } from "../hooks/use-reserva-en-recepcion";
 import { mensajeDeRecepcion, reservarDesdeRecepcion, type ClienteDeRecepcion, type ReservaDeRecepcion, type ResumenDeRecepcion } from "../servicios/recepcion.api";
+import { tiempoRestante } from "../utilidades/textos-de-la-reserva";
 import { CamposDelCobro } from "./campos-del-cobro";
 import { ElegirCliente, identidad } from "./elegir-cliente";
 import { PlazosDeCancelacion } from "./plazos-de-cancelacion";
@@ -73,18 +75,25 @@ function TurnoDelCliente({ turno, cliente, alReservar }: { turno: TurnoElegido; 
   return <ConfirmarEnRecepcion turno={turno} cliente={cliente} resumen={resultado.cuerpo} alReservar={alReservar} actualizar={volverAConsultar} />;
 }
 
+function ReservaRegistrada({ reserva, fecha }: { reserva: ReservaDeRecepcion; fecha: string }) {
+  const segundos = useCuentaRegresiva(reserva.venceEn, reserva.ahora);
+  const estado = reserva.estado === "CONFIRMADA" ? "Reserva confirmada" : segundos === 0 ? "Reserva expirada" : "Reserva pendiente de pago";
+  return (
+    <section className={`${TARJETA} flex flex-col items-start gap-3`}>
+      <h2 className="font-titular text-3xl font-black text-cancha">{estado}</h2>
+      <p>Código de la reserva <strong>{reserva.codigo}</strong></p>
+      {reserva.venceEn && segundos !== undefined && segundos > 0 && (
+        <p className="tabular-nums">Retención restante <strong role="timer" aria-label="Tiempo restante de la reserva">{tiempoRestante(segundos)}</strong> · Hasta las {horaEnLima(reserva.venceEn)}.</p>
+      )}
+      <Link href={`/recepcion?fecha=${fecha}`} className={BOTON_PRINCIPAL}>Ir a la agenda</Link>
+    </section>
+  );
+}
+
 export function ReservarEnRecepcion({ turno }: { turno: TurnoElegido }) {
   const [seleccion, setSeleccion] = useState<{ cliente: ClienteDeRecepcion; repetido?: boolean }>();
   const [reserva, setReserva] = useState<ReservaDeRecepcion>();
-  if (reserva) return (
-    <section className={`${TARJETA} flex flex-col items-start gap-3`}>
-      <h2 className="font-titular text-3xl font-black text-cancha">{reserva.estado === "CONFIRMADA" ? "Reserva confirmada" : "Reserva pendiente de pago"}</h2>
-      <p>Código de la reserva <strong>{reserva.codigo}</strong></p>
-      {reserva.venceEn && <p>El turno se retiene hasta las {horaEnLima(reserva.venceEn)}.</p>}
-      <Link href={`/recepcion?fecha=${turno.fecha}`} className={BOTON_PRINCIPAL}>Ir a la agenda</Link>
-    </section>
-  );
-
+  if (reserva) return <ReservaRegistrada reserva={reserva} fecha={turno.fecha} />;
   if (!seleccion) return <ElegirCliente alElegir={(cliente, repetido) => setSeleccion({ cliente, repetido })} />;
   return (
     <div className="grid gap-4">

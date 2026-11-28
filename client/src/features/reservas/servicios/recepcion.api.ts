@@ -16,6 +16,7 @@ export interface ReservaDeRecepcion {
   codigo: string;
   estado: "CONFIRMADA" | "PENDIENTE_DE_PAGO";
   venceEn: string | null;
+  ahora: string;
 }
 
 export function buscarClientes({ por, tipoDocumento, numeroDocumento, celular }: DatosDeBusqueda) {

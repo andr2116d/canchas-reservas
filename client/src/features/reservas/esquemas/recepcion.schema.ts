@@ -27,8 +27,7 @@ export type DatosDeAlta = z.infer<typeof esquemaDeAlta>;
 export type DatosDeBusqueda = z.infer<typeof esquemaDeBusqueda>;
 
 export const METODOS_DE_COBRO = { EFECTIVO: "Efectivo", YAPE: "Yape", PLIN: "Plin" } as const;
-export type MetodoDeCobro = keyof typeof METODOS_DE_COBRO;
-export const aCentimos = (monto: string) => Math.round(Number(monto.replace(",", ".")) * 100);
+const aCentimos = (monto: string) => Math.round(Number(monto.replace(",", ".")) * 100);
 
 export function esquemaDeCobro(minimo: string, maximo: string) {
   return z.object({
