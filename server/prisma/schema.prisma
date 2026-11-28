@@ -181,6 +181,8 @@ model HorarioDeAtencion {
   minutoDeInicioDeLaNoche Int             @map("minuto_de_inicio_de_la_noche") @db.SmallInt
   guardadoPorId           Int             @map("guardado_por_id")
   guardadoEn              DateTime        @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  /// Códigos de las reservas por jugar que esta versión dejó fuera y se respetan.
+  reservasFueraDeHorario  String[]        @default([]) @map("reservas_fuera_de_horario")
   guardadoPor             Usuario         @relation(fields: [guardadoPorId], references: [id])
   dias                    HorarioDelDia[]
 
