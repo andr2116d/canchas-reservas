@@ -85,3 +85,13 @@ export function datosDeReserva(codigo: string) {
     return rows[0];
   });
 }
+
+/** Hace que la reserva venza dentro de unos segundos, para ver el cambio sin esperar su plazo. */
+export function vencerEn(codigo: string, segundos: number) {
+  return enLaBase((cliente) => cliente.query("UPDATE reserva SET vence_en = now() + make_interval(secs => $2) WHERE codigo = $1", [codigo, segundos]));
+}
+
+/** Deja la reserva con el pago por validar y su plazo ya pasado, como si el pago hubiera llegado a tiempo. */
+export function ponerPorValidarVencida(codigo: string) {
+  return enLaBase((cliente) => cliente.query("UPDATE reserva SET estado = 'pendiente_de_validacion', vence_en = now() - interval '1 minute' WHERE codigo = $1", [codigo]));
+}
