@@ -96,6 +96,23 @@ describe('Cambiar el horario con reservas por jugar', () => {
     expect(version.reservasFueraDeHorario).toEqual([codigo]);
   });
 
+  it('el historial dice qué reservas quedaron fuera y marca el cambio como importante', async () => {
+    await guardar(unHorario('16:00', '18:30', true)).expect(200);
+
+    const { body } = await api()
+      .get('/api/historial')
+      .query({ categoria: 'HORARIO', accion: 'EDICION' })
+      .set('Cookie', local.administrador)
+      .expect(200);
+
+    expect(body.registros[0]).toMatchObject({ importante: true });
+    expect(body.registros[0].detalle).toContainEqual({
+      campo: 'Reservas que quedaron fuera y se respetan',
+      antes: null,
+      despues: codigo,
+    });
+  });
+
   it('si la reserva sigue dentro, guarda sin preguntar y los turnos nuevos que la pisan no se ofrecen', async () => {
     await guardar(unHorario('16:30', '22:00')).expect(200);
 

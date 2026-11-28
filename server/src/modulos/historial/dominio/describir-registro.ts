@@ -8,7 +8,6 @@ import {
   type RangoDeLaRegla,
   type VersionDeTarifa,
   type VersionDelAdelanto,
-  type VersionDelHorario,
   type VersionDelPlazo,
   type Versiones,
 } from './detalle-de-configuracion';
@@ -55,7 +54,9 @@ function lineas({
     case 'TARIFAS':
       return detalleDeTarifa(detalle as Versiones<VersionDeTarifa>);
     case 'HORARIO':
-      return detalleDelHorario(detalle as Versiones<VersionDelHorario>);
+      return detalleDelHorario(
+        detalle as Parameters<typeof detalleDelHorario>[0],
+      );
     case 'CANCELACION':
       return detalleDeLaRegla(detalle as Versiones<RangoDeLaRegla[]>);
     case 'ADELANTO':

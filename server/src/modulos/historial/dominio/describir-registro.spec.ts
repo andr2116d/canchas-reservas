@@ -55,6 +55,35 @@ describe('describirRegistro', () => {
     ]);
   });
 
+  it('el horario dice qué reservas por jugar quedaron fuera y se respetan', () => {
+    const version = {
+      noche: 1080,
+      dias: [{ dia: 'LUNES', apertura: 480, cierre: 1380, noche: null }],
+    };
+    const descrito = describirRegistro({
+      categoria: 'HORARIO',
+      accion: 'EDICION',
+      sujeto: null,
+      detalle: {
+        antes: version,
+        despues: {
+          ...version,
+          dias: [{ dia: 'LUNES', apertura: 480, cierre: 1110, noche: null }],
+        },
+        reservasFueraDeHorario: ['7K3Q9X', 'ABCDEF'],
+      },
+    });
+
+    expect(descrito.detalle).toEqual([
+      { campo: 'Lunes', antes: '08:00 – 23:00', despues: '08:00 – 18:30' },
+      {
+        campo: 'Reservas que quedaron fuera y se respetan',
+        antes: null,
+        despues: '7K3Q9X, ABCDEF',
+      },
+    ]);
+  });
+
   it('el horario muestra los días y la noche que cambiaron', () => {
     const descrito = describirRegistro({
       categoria: 'HORARIO',

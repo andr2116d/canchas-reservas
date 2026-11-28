@@ -78,10 +78,31 @@ function textoDelDia(horario: VersionDelHorario, dia: string): string {
     : `${horas}, noche desde ${enHora(abierto.noche)}`;
 }
 
+/** Lo que cambió del horario y, si dejó reservas por jugar fuera, cuáles se respetan. */
 export function detalleDelHorario({
   antes,
   despues,
-}: Versiones<VersionDelHorario>): LineaDeDetalle[] {
+  reservasFueraDeHorario = [],
+}: Versiones<VersionDelHorario> & {
+  reservasFueraDeHorario?: string[];
+}): LineaDeDetalle[] {
+  const fuera: LineaDeDetalle[] =
+    reservasFueraDeHorario.length > 0
+      ? [
+          {
+            campo: 'Reservas que quedaron fuera y se respetan',
+            antes: null,
+            despues: reservasFueraDeHorario.join(', '),
+          },
+        ]
+      : [];
+  return [...cambiosDelHorario(antes, despues), ...fuera];
+}
+
+function cambiosDelHorario(
+  antes: VersionDelHorario | null,
+  despues: VersionDelHorario,
+): LineaDeDetalle[] {
   return lineasQueCambian<VersionDelHorario>(
     [
       ['Inicio de la noche', (h) => enHora(h.noche)],
