@@ -1,13 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { correoDe, crearPorApi } from "../../soporte/recepcionistas-de-prueba";
 import { cerrarSesion, confirmarMisDatos, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
 
 test("el jugador cambia su celular y su contraseña desde Mi cuenta", async ({ page }) => {
-  const jugador = unJugadorNuevo();
-  await page.request.post("/api/jugadores", {
-    data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO },
-  });
+  const jugador = await registrarPorApi(page.request);
   await page.goto("/inicio");
   await page.getByRole("button", { name: "Mi cuenta" }).click();
   await page.getByRole("link", { name: "Ver mi cuenta" }).click();

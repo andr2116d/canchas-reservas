@@ -1,6 +1,6 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { cambiarEstadoDeReserva, vencerReserva } from "../../soporte/base-de-pruebas";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { type CanchasDelLocal, fechaDeLima, prepararElLocal } from "../../soporte/local-de-prueba";
 import { correoDe, crearPorApi } from "../../soporte/recepcionistas-de-prueba";
 import { cerrarSesion, confirmarMisDatos, entrarComoAdministrador, iniciarSesion } from "../../soporte/sesiones-de-prueba";
@@ -18,9 +18,7 @@ let fecha: string;
 async function separarTurno(navegador: Browser, cancha: number, desde: string) {
   const contexto = await navegador.newContext();
   const pagina = await contexto.newPage();
-  const jugador = unJugadorNuevo();
-  const registro = await pagina.request.post("/api/jugadores", { data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
-  expect(registro.status()).toBe(201);
+  const jugador = await registrarPorApi(pagina.request);
   const [precio, adelanto] = desde >= "18:00" ? ["80.00", "40.00"] : ["60.00", "30.00"];
   const reserva = await pagina.request.post("/api/reservas", { data: { canchaId: cancha, fecha, desde, precio, adelanto, adicionales: [] } });
   expect(reserva.status(), await reserva.text()).toBe(201);

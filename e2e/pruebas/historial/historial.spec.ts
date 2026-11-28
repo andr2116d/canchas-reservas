@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { crearAdministradorDePrueba } from "../../soporte/personal-de-prueba";
 import { crearPorApi } from "../../soporte/recepcionistas-de-prueba";
 import { completarDatosDelAdministrador, entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
@@ -77,8 +77,7 @@ test.describe("en escritorio", () => {
 });
 
 test("un jugador no ve el historial ni puede abrirlo por la dirección", async ({ page }) => {
-  const jugador = unJugadorNuevo();
-  await page.request.post("/api/jugadores", { data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
+  await registrarPorApi(page.request);
   await page.goto("/inicio");
 
   await page.getByRole("button", { name: "Mi cuenta" }).click();

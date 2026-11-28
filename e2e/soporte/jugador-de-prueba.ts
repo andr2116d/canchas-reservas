@@ -1,3 +1,4 @@
+import { type APIRequestContext, expect } from "@playwright/test";
 import { randomInt, randomUUID } from "node:crypto";
 
 /** Fecha de los términos y la privacidad publicados que acepta quien se registra. */
@@ -17,3 +18,10 @@ export function unJugadorNuevo() {
 }
 
 export type JugadorDePrueba = ReturnType<typeof unJugadorNuevo>;
+
+/** Registra un jugador por la API; el contexto de `request` queda con su sesión abierta. */
+export async function registrarPorApi(request: APIRequestContext, jugador: JugadorDePrueba = unJugadorNuevo()) {
+  const respuesta = await request.post("/api/jugadores", { data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
+  expect(respuesta.status()).toBe(201);
+  return jugador;
+}

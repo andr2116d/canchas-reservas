@@ -1,7 +1,8 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { guardarReserva } from "../../soporte/base-de-pruebas";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { type CanchasDelLocal, fechaDeLima, prepararElLocal } from "../../soporte/local-de-prueba";
+import { celda, fila, mapa, tuTurno } from "../../soporte/mapa-de-prueba";
 import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // Esta prueba es dueña del horario, las tarifas y las canchas «Disp»: corre al final y en orden.
@@ -33,10 +34,6 @@ test.beforeAll(async ({ browser }) => {
   await comoAdministrador(browser, (admin) => bloquear(admin, canchas["Disp Uno"], "10:30", "11:30"));
 });
 
-const mapa = (pagina: Page) => pagina.getByRole("table");
-const fila = (pagina: Page, hora: string) => mapa(pagina).getByRole("row").filter({ has: pagina.getByRole("rowheader", { name: new RegExp(`^${hora}`) }) });
-const celda = (pagina: Page, cancha: string, hora: string) => mapa(pagina).getByLabel(new RegExp(`^${cancha}, de ${hora} a`));
-const tuTurno = (pagina: Page) => pagina.getByRole("complementary", { name: "Tu turno" });
 
 async function abrirManana(pagina: Page, ruta = "/") {
   await pagina.goto(ruta);
@@ -135,7 +132,7 @@ test("en el celular se ve y se usa sin salirse de la pantalla", async ({ page, i
 });
 
 test("el jugador mira los turnos desde su panel y la portada lo lleva a él", async ({ page }) => {
-  await page.request.post("/api/jugadores", { data: { ...unJugadorNuevo(), tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
+  await registrarPorApi(page.request);
 
   await page.goto("/");
   await page.getByRole("link", { name: "Ir a mi panel" }).click();

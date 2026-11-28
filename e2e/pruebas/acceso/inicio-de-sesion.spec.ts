@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { CONTRASENA_TEMPORAL, crearAdministradorDePrueba, DOMINIO_DE_PRUEBA } from "../../soporte/personal-de-prueba";
 import { completarDatosDelAdministrador, confirmarMisDatos } from "../../soporte/sesiones-de-prueba";
 
@@ -8,11 +8,7 @@ const RUTA_DE_ACCESO = "/iniciar-sesion";
 const CONTRASENA_NUEVA = "definitiva2026";
 
 async function crearJugador(page: Page) {
-  const jugador = unJugadorNuevo();
-  const respuesta = await page.request.post("/api/jugadores", {
-    data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO },
-  });
-  expect(respuesta.status()).toBe(201);
+  const jugador = await registrarPorApi(page.request);
   await page.request.delete("/api/sesiones/actual");
   return jugador;
 }
@@ -100,8 +96,7 @@ test("recuerda el correo al cerrar sesión y permite que el navegador complete l
 });
 
 test("lleva al panel aunque el panel tarde en cargar", async ({ page, request }) => {
-  const jugador = unJugadorNuevo();
-  await request.post("/api/jugadores", { data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
+  const jugador = await registrarPorApi(request);
   await page.context().clearCookies();
   await page.route("**/inicio**", async (ruta) => {
     await new Promise((resolver) => setTimeout(resolver, 2500));
