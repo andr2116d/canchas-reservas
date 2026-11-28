@@ -43,8 +43,8 @@ export function guardarReserva(canchaId: number, fecha: string, hora: string, es
     await cliente.query(
       `INSERT INTO reserva (cancha_id, titular_id, creada_por_id, inicio, fin, estado, codigo, precio,
          porcentaje_de_adelanto, adelanto, regla_de_cancelacion_id, canal, vence_en, actualizado_en)
-       VALUES ($1, $2, $2, $3::timestamptz, $3::timestamptz + interval '1 hour', $4, $5, 60, 50, 30, $6, 'web',
-         CASE WHEN $4 = 'pendiente_de_pago' THEN $3::timestamptz END, now())
+       VALUES ($1, $2, $2, $3::timestamptz, $3::timestamptz + interval '1 hour', $4::text::estado_de_reserva, $5, 60, 50,
+         30, $6, 'web', CASE WHEN $4::text = 'pendiente_de_pago' THEN $3::timestamptz END, now())
        ON CONFLICT DO NOTHING`,
       [canchaId, titular, inicio, estado, unCodigo(), await reglaVigente(cliente, titular)],
     );
