@@ -442,6 +442,8 @@ model Reserva {
   creadaPorId          Int                @map("creada_por_id")
   /// Hasta cuándo retiene el turno sin pago; vacío si ya no espera pago.
   venceEn              DateTime?          @map("vence_en") @db.Timestamptz(3)
+  /// Cuándo pasó a expirada por vencer sin pago; vacío si no expiró.
+  expiradaEn           DateTime?          @map("expirada_en") @db.Timestamptz(3)
   creadoEn             DateTime           @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn        DateTime           @updatedAt @map("actualizado_en") @db.Timestamptz(3)
   cancha               Cancha             @relation(fields: [canchaId], references: [id])
