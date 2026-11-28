@@ -84,12 +84,14 @@ describe("AgendaDelDia", () => {
     expect(within(fila).getByText("Retiene el turno hasta las 15:15")).toBeInTheDocument();
   });
 
-  it("no muestra botones de procesos que todavía no existen, ni en una expirada", async () => {
+  it("ofrece el check-in solo cuando el server incluye esa acción", async () => {
     mostrar(agendaDePrueba({ turnos: [turnoDePrueba(), turnoDePrueba({ codigo: "EXP000", estado: "EXPIRADA", acciones: [] })] }));
 
     const filas = await turnos();
 
-    for (const fila of filas) expect(within(fila).queryByRole("link", { name: /check-in|ausente|cancelar|reubicar|finalizar/i })).not.toBeInTheDocument();
+    expect(within(filas[0]).getByRole("link", { name: "Hacer check-in" })).toHaveAttribute("href", "/recepcion/reservas/7K3Q9X/check-in");
+    for (const fila of filas) expect(within(fila).queryByRole("link", { name: /ausente|cancelar|reubicar|finalizar/i })).not.toBeInTheDocument();
+    expect(within(filas[1]).queryByRole("link", { name: "Hacer check-in" })).not.toBeInTheDocument();
   });
 
   it("al elegir el día siguiente cambia la fecha en la dirección", async () => {
@@ -126,7 +128,7 @@ describe("AgendaDelDia", () => {
   });
 
   it("filtra por estado con el conteo de cada uno", async () => {
-    mostrar(agendaDePrueba({ conteos: { PENDIENTE_DE_PAGO: 2, PENDIENTE_DE_VALIDACION: 0, CONFIRMADA: 1, EN_JUEGO: 0, EXPIRADA: 0 } }));
+    mostrar(agendaDePrueba({ conteos: { ...agendaDePrueba().conteos, PENDIENTE_DE_PAGO: 2 } }));
 
     const porPagar = await screen.findByRole("link", { name: "Por pagar 2" });
 

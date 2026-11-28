@@ -32,7 +32,7 @@ export function agendaDePrueba(cambios: Partial<AgendaDelDia> = {}): AgendaDelDi
       { id: 1, nombre: "Cancha 1", tipo: "FUTBOL_5" },
       { id: 2, nombre: "Cancha 2", tipo: "FUTBOL_7" },
     ],
-    conteos: { PENDIENTE_DE_PAGO: 0, PENDIENTE_DE_VALIDACION: 0, CONFIRMADA: 1, EN_JUEGO: 0, EXPIRADA: 0 },
+    conteos: { PENDIENTE_DE_PAGO: 0, PENDIENTE_DE_VALIDACION: 0, CONFIRMADA: 1, EN_JUEGO: 0, EXPIRADA: 0, CANCELADA: 0, AUSENTE: 0, FINALIZADA: 0 },
     turnos: [turnoDePrueba()],
     ...cambios,
   };

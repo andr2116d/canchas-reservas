@@ -39,7 +39,7 @@ export function esquemaDeCobro(minimo: string, maximo: string) {
   }).superRefine((datos, contexto) => {
     if (!datos.cobrar) return;
     const marcar = (campo: string, message: string) => contexto.addIssue({ code: "custom", path: [campo], message });
-    const problema = reglaDeMonto(datos.monto);
+    const problema = /^0+(?:[.,]0{1,2})?$/.test(datos.monto.trim()) ? undefined : reglaDeMonto(datos.monto);
     const importe = aCentimos(datos.monto);
     if (problema) marcar("monto", problema);
     else if (importe < aCentimos(minimo)) marcar("monto", minimo === maximo ? `Falta cobrar ${enSoles(((aCentimos(minimo) - importe) / 100).toFixed(2))}.` : `El adelanto mínimo es ${enSoles(minimo)}.`);

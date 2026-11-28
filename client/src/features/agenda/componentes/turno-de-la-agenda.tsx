@@ -10,6 +10,9 @@ const COLOR_DEL_ESTADO: Record<EstadoDeReserva, string> = {
   CONFIRMADA: "bg-[#e3f2e8] text-[#1f7a4d]",
   EN_JUEGO: "bg-cancha text-capitan",
   EXPIRADA: "bg-tiza text-grava",
+  CANCELADA: "bg-error-fondo text-error",
+  AUSENTE: "bg-error-fondo text-error",
+  FINALIZADA: "bg-tiza text-grava",
 };
 
 /** Un celular de 9 dígitos se lee de tres en tres: «987 654 321». */
