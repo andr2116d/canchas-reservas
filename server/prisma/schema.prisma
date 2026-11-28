@@ -638,6 +638,7 @@ enum TipoDeAviso {
   NUEVO_RECLAMO      @map("nuevo_reclamo")
   RECLAMO_RESPONDIDO @map("reclamo_respondido")
   NUEVA_RESERVA      @map("nueva_reserva")
+  RESERVA_VENCIDA    @map("reserva_vencida")
 
   @@map("tipo_de_aviso")
 }
