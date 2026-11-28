@@ -5,7 +5,7 @@ describe("describirAviso", () => {
   it("una reserva nueva lleva a recepción a su mapa de turnos y a administración al historial de reservas", () => {
     const aviso = { tipo: "NUEVA_RESERVA", referencia: "7K3Q9X" } as const;
 
-    expect(describirAviso(aviso, "RECEPCIONISTA")).toEqual({ titulo: "Nueva reserva 7K3Q9X", enlace: "/recepcion/disponibilidad" });
+    expect(describirAviso(aviso, "RECEPCIONISTA")).toEqual({ titulo: "Nueva reserva 7K3Q9X", enlace: "/recepcion" });
     expect(describirAviso(aviso, "ADMINISTRADOR")).toEqual({
       titulo: "Nueva reserva 7K3Q9X",
       enlace: "/administracion/historial?categoria=RESERVAS",

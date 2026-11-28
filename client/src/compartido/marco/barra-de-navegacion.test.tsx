@@ -19,6 +19,7 @@ describe("BarraDeNavegacion", () => {
     const navegacion = screen.getByRole("navigation", { name: "Secciones" });
     expect(within(navegacion).getAllByRole("link").map((enlace) => enlace.textContent)).toEqual([
       "Resumen",
+      "Agenda",
       "Recepcionistas",
       "Reglas de reserva",
       "Canchas",

@@ -1,7 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
-import { unaRecepcionistaValida } from '../fabricas/datos-recepcionista';
 import { unJugadorValido } from '../fabricas/datos-registro-jugador';
 import { cookieDe } from '../../compartido/soporte/cookie-de-sesion';
 import { crearAppDePrueba } from '../../compartido/soporte/crear-app-de-prueba';
@@ -10,7 +9,7 @@ import {
   iniciarSesion,
   sesionDeAdministrador,
   sesionDeJugador,
-  confirmarDatosDelPersonal,
+  sesionDeRecepcionista as sesionDeRecepcionistaDePrueba,
 } from '../../compartido/soporte/sesiones-de-prueba';
 
 describe('Mi cuenta', () => {
@@ -27,23 +26,8 @@ describe('Mi cuenta', () => {
 
   const api = () => request(app.getHttpServer());
 
-  async function sesionDeRecepcionista(): Promise<string> {
-    const administrador = await sesionDeAdministrador(app);
-    await api()
-      .post('/api/recepcionistas')
-      .set('Cookie', administrador)
-      .send(unaRecepcionistaValida())
-      .expect(201);
-    await confirmarDatosDelPersonal(app);
-    const sesion = cookieDe(
-      await iniciarSesion(app, 'rosa.quispe@laprevia.pe', 'temporal2026'),
-    );
-    await api()
-      .post('/api/sesiones/actual/cambio-omitido')
-      .set('Cookie', sesion)
-      .expect(204);
-    return sesion;
-  }
+  const sesionDeRecepcionista = async () =>
+    sesionDeRecepcionistaDePrueba(app, await sesionDeAdministrador(app));
 
   it('muestra los propios datos y lo que se puede cambiar, sin hashes ni cifrados', async () => {
     const { body } = await api()

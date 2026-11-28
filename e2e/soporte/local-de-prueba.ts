@@ -1,6 +1,6 @@
 import { type Browser, expect, type Page } from "@playwright/test";
 import { quitarTarifaDe } from "./base-de-pruebas";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "./jugador-de-prueba";
+import { registrarPorApi } from "./jugador-de-prueba";
 import { entrarComoAdministrador } from "./sesiones-de-prueba";
 
 const DIAS = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
@@ -63,9 +63,6 @@ export async function prepararElLocal(navegador: Browser): Promise<CanchasDelLoc
 
 async function registrarUnJugador(navegador: Browser) {
   const delJugador = await navegador.newContext();
-  const registro = await (await delJugador.newPage()).request.post("/api/jugadores", {
-    data: { ...unJugadorNuevo(), tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO },
-  });
-  expect(registro.status()).toBe(201);
+  await registrarPorApi(delJugador.request);
   await delJugador.close();
 }

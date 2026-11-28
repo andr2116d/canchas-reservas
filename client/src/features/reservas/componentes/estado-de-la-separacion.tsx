@@ -2,7 +2,8 @@ import Link from "next/link";
 import { BOTON_PRINCIPAL, TARJETA } from "@/compartido/ui/estilos";
 import { enSoles } from "@/compartido/ui/textos-del-local";
 import type { MiReserva } from "../servicios/reservas";
-import { horaDelLocal, tiempoRestante } from "../utilidades/textos-de-la-reserva";
+import { horaEnLima } from "@/compartido/ui/fecha-en-lima";
+import { tiempoRestante } from "../utilidades/textos-de-la-reserva";
 
 const TITULO_DEL_ESTADO: Record<MiReserva["estado"], string> = {
   PENDIENTE_DE_PAGO: "Turno separado",
@@ -29,7 +30,7 @@ function PorPagar({ reserva, restantes }: { reserva: MiReserva; restantes: numbe
         <span role="timer" aria-label="Tiempo que queda" className="font-titular text-4xl leading-none font-black tabular-nums">{tiempoRestante(restantes)}</span>
       </p>
       <p className="text-sm text-grava">
-        Si no se paga el adelanto antes de las {horaDelLocal(reserva.venceEn ?? reserva.inicio)}, el turno se libera solo y no se cobra nada.
+        Si no se paga el adelanto antes de las {horaEnLima(reserva.venceEn ?? reserva.inicio)}, el turno se libera solo y no se cobra nada.
       </p>
       <button type="button" disabled className={`${BOTON_PRINCIPAL} disabled:cursor-not-allowed`}>
         Pagar {enSoles(reserva.adelanto)} de adelanto

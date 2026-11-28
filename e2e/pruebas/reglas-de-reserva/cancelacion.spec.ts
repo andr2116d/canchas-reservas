@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
 // La regla de cancelación es una sola para el local: las pruebas que guardan van en orden y en un solo proyecto.
@@ -89,8 +89,7 @@ test.describe("en escritorio", () => {
 });
 
 test("solo administración define la regla de cancelación", async ({ page }) => {
-  const jugador = unJugadorNuevo();
-  await page.request.post("/api/jugadores", { data: { ...jugador, tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
+  await registrarPorApi(page.request);
 
   expect((await page.request.put("/api/cancelacion/regla", { data: { rangos: [] } })).status()).toBe(403);
   await page.goto("/administracion/reglas-de-reserva");

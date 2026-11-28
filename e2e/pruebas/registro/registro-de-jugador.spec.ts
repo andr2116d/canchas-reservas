@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { type JugadorDePrueba, unJugadorNuevo } from "../../soporte/jugador-de-prueba";
+import { type JugadorDePrueba, llenarRegistro, unJugadorNuevo } from "../../soporte/jugador-de-prueba";
 
 // La etiqueta visible termina en asterisco; se busca por su comienzo.
 const campo = (pagina: Page, nombre: string) => pagina.getByLabel(new RegExp(`^${nombre}`));
@@ -13,16 +13,6 @@ const crearCuenta = (pagina: Page) => pagina.getByRole("button", { name: "Crear 
 async function abrirRegistro(pagina: Page, ruta = "/registro") {
   await pagina.goto(ruta);
   await expect(campo(pagina, "Nombres")).toBeEnabled();
-}
-
-async function llenarRegistro(pagina: Page, jugador: JugadorDePrueba) {
-  await campo(pagina, "Nombres").fill(jugador.nombres);
-  await campo(pagina, "Apellidos").fill(jugador.apellidos);
-  await campo(pagina, "Fecha de nacimiento").fill(jugador.fechaNacimiento);
-  await campo(pagina, "Número de documento").fill(jugador.numeroDocumento);
-  await campo(pagina, "Celular").fill(jugador.celular);
-  await campo(pagina, "Correo").fill(jugador.correo);
-  await campo(pagina, "Contraseña").fill(jugador.contrasena);
 }
 
 async function registrar(pagina: Page, jugador: JugadorDePrueba) {

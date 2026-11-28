@@ -64,7 +64,7 @@ export function TablaDeTurnos({ canchas, turnos, inicioDeLaNoche, duracionDelTur
 
   return (
     <div className="mapa-de-turnos">
-      <table>
+      <table aria-label="Mapa de turnos">
         <thead>
           <tr>
             <th scope="col" className="py-3 pl-4 text-left align-bottom text-xs font-semibold text-grava">Turno de {duracionDelTurnoHoras} h</th>

@@ -67,6 +67,22 @@ describe('Permisos de sesión', () => {
     ).toBe(false);
   });
 
+  it.each([
+    ['ADMINISTRADOR', true],
+    ['RECEPCIONISTA', true],
+    ['JUGADOR', false],
+  ] as const)(
+    'la agenda de turnos la consulta el personal: %s → %s',
+    (rol, permitido) => {
+      expect(
+        puedeAcceder(
+          { rol, requiereCambiarContrasena: false },
+          'agenda:consultar',
+        ),
+      ).toBe(permitido);
+    },
+  );
+
   it('al omitir el cambio, abre el panel del rol y sigue permitiendo cambiar la contraseña', () => {
     const acceso = {
       rol: 'RECEPCIONISTA',

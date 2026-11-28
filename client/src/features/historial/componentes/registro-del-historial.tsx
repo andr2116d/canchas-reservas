@@ -1,7 +1,7 @@
+import { horaEnLima } from "@/compartido/ui/fecha-en-lima";
 import { type Registro, TEXTO_DE_CATEGORIA } from "../servicios/historial";
 import { fraseDelRegistro } from "../utilidades/frase-del-registro";
 
-const HORA_EN_LIMA = new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 const iniciales = (nombre: string) =>
   nombre
@@ -38,7 +38,7 @@ export function RegistroDelHistorial({ registro }: { registro: Registro }) {
   const { verbo, sujeto } = fraseDelRegistro(registro);
   return (
     <li className="registro-del-historial" data-importante={registro.importante || undefined}>
-      <time dateTime={registro.ocurridoEn} className="registro-del-historial__hora">{HORA_EN_LIMA.format(new Date(registro.ocurridoEn))}</time>
+      <time dateTime={registro.ocurridoEn} className="registro-del-historial__hora">{horaEnLima(registro.ocurridoEn)}</time>
       <span aria-hidden="true" data-iniciales={iniciales(registro.autor.nombre)} className="registro-del-historial__autor" />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 pt-1 text-sm text-tinta">

@@ -28,9 +28,9 @@ export function marcarTodosLeidos(): Promise<RespuestaDeLaApi<undefined>> {
   return enviarJson("/api/avisos/lectura", "POST");
 }
 
-/** Dónde ve cada rol las reservas nuevas, hasta que tengan su propia pantalla. */
+/** Dónde ve cada rol las reservas nuevas: recepción, en su agenda; administración, en el historial. */
 const RESERVAS_DEL_ROL: Record<Rol, string> = {
-  RECEPCIONISTA: "/recepcion/disponibilidad",
+  RECEPCIONISTA: "/recepcion",
   ADMINISTRADOR: "/administracion/historial?categoria=RESERVAS",
   JUGADOR: "/inicio/reservar",
 };

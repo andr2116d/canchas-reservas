@@ -3,12 +3,12 @@ import {
   fechaEnLima,
   horaEnLima,
 } from '../../../compartido/dominio/momento-en-lima';
-import { retieneElTurno } from '../../../compartido/dominio/reserva-que-ocupa';
 import {
   type PlazoDeCancelacion,
   ReglaDeCancelacion,
 } from '../../cancelacion/api-cancelacion';
 import { esCodigoDeReserva } from '../dominio/codigo-de-reserva';
+import { estadoALaVista, horaDeFin } from '../dominio/reserva-a-la-vista';
 import { ReservaNoEncontradaError } from '../dominio/reserva-no-encontrada.error';
 import type {
   EstadoDeReserva,
@@ -34,17 +34,6 @@ export interface VistaDeMiReserva {
   adicionales: { nombre: string; precio: string }[];
 }
 
-/** Una pendiente de pago que ya venció se ve expirada aunque aún no se haya marcado así. */
-function estadoA(reserva: ReservaGuardada, ahora: Date): EstadoDeReserva {
-  const vencida =
-    reserva.estado === 'PENDIENTE_DE_PAGO' && !retieneElTurno(reserva, ahora);
-  return vencida ? 'EXPIRADA' : reserva.estado;
-}
-
-/** Un turno que termina a medianoche se muestra hasta las 24:00. */
-const horaDeFin = ({ inicio, fin }: ReservaGuardada) =>
-  fechaEnLima(fin) > fechaEnLima(inicio) ? '24:00' : horaEnLima(fin);
-
 /** La reserva de su titular; la de otra persona responde como si no existiera. */
 export class ConsultarMiReservaUseCase {
   constructor(
@@ -60,7 +49,7 @@ export class ConsultarMiReservaUseCase {
     const ahora = this.reloj.ahora();
     return {
       codigo: reserva.codigo,
-      estado: estadoA(reserva, ahora),
+      estado: estadoALaVista(reserva, ahora),
       cancha: reserva.cancha,
       fecha: fechaEnLima(reserva.inicio),
       desde: horaEnLima(reserva.inicio),

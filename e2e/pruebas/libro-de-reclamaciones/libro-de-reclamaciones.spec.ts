@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { unJugadorNuevo, VERSION_LEGAL_DEL_REGISTRO } from "../../soporte/jugador-de-prueba";
+import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { asuntosRecibidos, correoUnico, llenarHoja, registrarHojaPorApi } from "../../soporte/libro-de-prueba";
 import { entrarComoAdministrador } from "../../soporte/sesiones-de-prueba";
 
@@ -103,7 +103,7 @@ test("la lista de reclamos filtra por estado y número, y la respuesta queda en 
 test("el jugador ve en «Mis reclamos» la respuesta a la hoja que registró con su cuenta", async ({ page, browser }) => {
   // Inicia sesión de administración y recorre la atención completa.
   test.setTimeout(60_000);
-  await page.request.post("/api/jugadores", { data: { ...unJugadorNuevo(), tipoDocumento: "DNI", versionLegalAceptada: VERSION_LEGAL_DEL_REGISTRO } });
+  await registrarPorApi(page.request);
   const { numero } = await registrarHojaPorApi(page.request);
 
   const administracion = await browser.newPage();

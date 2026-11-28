@@ -1,3 +1,4 @@
+import { horaEnLima } from "@/compartido/ui/fecha-en-lima";
 import type { TipoDocumento } from "@/compartido/formulario/reglas-de-datos-personales";
 
 export type TipoDeHoja = "RECLAMO" | "QUEJA";
@@ -118,13 +119,12 @@ export const NOMBRE_DEL_ESTADO: Record<EstadoDeHoja, string> = {
 };
 
 const FECHA_DE_LIMA = new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", day: "2-digit", month: "2-digit", year: "numeric" });
-const HORA_DE_LIMA = new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const DIA_DE_LA_SEMANA = new Intl.DateTimeFormat("es-PE", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
 
 /** «25/11/2026, 10:00», en hora de Lima. */
 export function fechaYHora(momento: string): string {
   const fecha = new Date(momento);
-  return `${FECHA_DE_LIMA.format(fecha)}, ${HORA_DE_LIMA.format(fecha)}`;
+  return `${FECHA_DE_LIMA.format(fecha)}, ${horaEnLima(fecha)}`;
 }
 
 /** «2026-12-16» como «miércoles 16 de diciembre». */
