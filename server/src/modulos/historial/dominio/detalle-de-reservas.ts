@@ -4,7 +4,7 @@ const NOMBRE_DEL_CANAL: Record<string, string> = { web: 'Web' };
 
 const texto = (valor: unknown) => (typeof valor === 'string' ? valor : null);
 
-/** Lo que guardó una reserva al separarse: cancha, turno, montos y por dónde se hizo. */
+/** Lo que guardó una reserva: cancha, turno y, al separarse, sus montos y por dónde se hizo. */
 export function detalleDeReserva(
   detalle: Record<string, unknown>,
 ): LineaDeDetalle[] {
@@ -25,5 +25,5 @@ export function detalleDeReserva(
       antes: null,
       despues: canal && (NOMBRE_DEL_CANAL[canal] ?? canal),
     },
-  ];
+  ].filter((linea) => linea.despues !== null);
 }

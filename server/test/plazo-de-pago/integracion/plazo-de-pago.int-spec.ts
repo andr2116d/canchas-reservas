@@ -80,6 +80,26 @@ describe('Plazo para pagar el adelanto', () => {
     await definir({}).set('Cookie', administrador).expect(400);
   });
 
+  it('cada cambio entra al historial con los minutos de antes y después', async () => {
+    await definir({ minutos: '30' }).set('Cookie', administrador).expect(200);
+    await definir({ minutos: '45' }).set('Cookie', administrador).expect(200);
+
+    const { body } = await api()
+      .get('/api/historial')
+      .query({ categoria: 'PLAZO_DE_PAGO' })
+      .set('Cookie', administrador)
+      .expect(200);
+
+    expect(body.registros[0]).toMatchObject({
+      accion: 'EDICION',
+      sujeto: 'Plazo para pagar el adelanto',
+      importante: false,
+      detalle: [
+        { campo: 'Minutos para pagar', antes: '30 min', despues: '45 min' },
+      ],
+    });
+  });
+
   it('solo administración consulta y define el plazo', async () => {
     const jugador = await sesionDeJugador(app);
 

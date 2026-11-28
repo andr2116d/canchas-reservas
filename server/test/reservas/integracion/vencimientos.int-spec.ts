@@ -111,6 +111,33 @@ describe('Reservas que vencen sin pago', () => {
     ]);
   });
 
+  it('cada reserva que vence entra al historial con el autor «Sistema»', async () => {
+    const { codigo } = await separar(jugador);
+    await vencer(codigo);
+    await expirar();
+
+    const { body } = await api()
+      .get('/api/historial')
+      .query({ categoria: 'RESERVAS', accion: 'EXPIRACION' })
+      .set('Cookie', local.administrador)
+      .expect(200);
+    const { body: autores } = await api()
+      .get('/api/historial/autores')
+      .set('Cookie', local.administrador)
+      .expect(200);
+
+    expect(body.registros).toEqual([
+      expect.objectContaining({
+        autor: { id: null, nombre: 'Sistema' },
+        sujeto: `Reserva ${codigo}`,
+        importante: false,
+      }),
+    ]);
+    expect(autores).toEqual([
+      expect.objectContaining({ nombre: 'Valeria León Paredes' }),
+    ]);
+  });
+
   it('dos tareas a la vez expiran cada reserva una sola vez', async () => {
     const { codigo } = await separar(jugador);
     await vencer(codigo);

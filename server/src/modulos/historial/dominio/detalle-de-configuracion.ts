@@ -35,6 +35,10 @@ export interface VersionDelAdelanto {
   porcentaje: number;
 }
 
+export interface VersionDelPlazo {
+  minutos: number;
+}
+
 /** El detalle de una versión: la anterior (nula en la primera) y la guardada. */
 export interface Versiones<T> {
   antes: T | null;
@@ -117,6 +121,17 @@ export function detalleDelAdelanto({
 }: Versiones<VersionDelAdelanto>): LineaDeDetalle[] {
   return lineasQueCambian(
     [['Porcentaje del turno', (a) => `${a.porcentaje} %`]],
+    antes,
+    despues,
+  );
+}
+
+export function detalleDelPlazo({
+  antes,
+  despues,
+}: Versiones<VersionDelPlazo>): LineaDeDetalle[] {
+  return lineasQueCambian(
+    [['Minutos para pagar', (p) => `${p.minutos} min`]],
     antes,
     despues,
   );
