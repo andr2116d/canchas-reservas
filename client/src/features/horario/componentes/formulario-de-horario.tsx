@@ -8,6 +8,7 @@ import { type AvisoDeGuardado, useHorario } from "../hooks/use-horario";
 import { CampoDeHora } from "./campo-de-hora";
 import { DiasDistintos } from "./dias-distintos";
 import { DiasQueAbre } from "./dias-que-abre";
+import { ReservasFueraDeHorario } from "./reservas-fuera-de-horario";
 import { SemanaResumida } from "./semana-resumida";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 import { ErrorGeneral } from "@/compartido/formulario/error-general";
@@ -28,7 +29,7 @@ function Vigencia({ consultado: { vigente } }: { consultado: HorarioConsultado }
 
 /** Horario de atención: un horario para los días que abre y, si hace falta, días que abren a otra hora. */
 export function FormularioDeHorario({ consultado }: { consultado: HorarioConsultado }) {
-  const { formulario, enviar, aviso, errorGeneral } = useHorario(consultado);
+  const { formulario, enviar, aviso, errorGeneral, reservasFuera, confirmando, guardarIgual, revisar } = useHorario(consultado);
   const { isSubmitting } = formulario.formState;
 
   return (
@@ -53,6 +54,7 @@ export function FormularioDeHorario({ consultado }: { consultado: HorarioConsult
             <SemanaResumida />
           </div>
           <ErrorGeneral mensaje={errorGeneral} />
+          {reservasFuera && <ReservasFueraDeHorario reservas={reservasFuera} confirmando={confirmando} alGuardarIgual={() => void guardarIgual()} alRevisar={revisar} />}
           <div className="flex flex-wrap items-center gap-4">
             <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className={BOTON_PRINCIPAL}>
               <TextoDeEnvio enviando={isSubmitting} texto="Guardar horario" textoAlEnviar="Guardando…" />
