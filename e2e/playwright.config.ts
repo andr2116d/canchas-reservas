@@ -11,6 +11,7 @@ const baseDePruebas = new URL(process.env.DATABASE_URL ?? "");
 baseDePruebas.pathname = `${baseDePruebas.pathname.replace(/_pruebas$/, "")}_pruebas`;
 
 const DISPONIBILIDAD = /disponibilidad\/.*\.spec\.ts/;
+const RESERVAS = /(reservas|agenda)\/.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./pruebas",
@@ -27,11 +28,11 @@ export default defineConfig({
     locale: "es-PE",
     trace: "retain-on-failure",
   },
-  // La disponibilidad pinta el horario, las tarifas y las canchas, que son del local entero y
-  // otras pruebas cambian: corre al final, primero en escritorio y después en celular.
+  // La disponibilidad, las reservas y la agenda usan el horario, las tarifas y las canchas, que son
+  // del local entero y otras pruebas cambian: corren al final, una tras otra, en escritorio y celular.
   projects: [
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: DISPONIBILIDAD },
-    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: DISPONIBILIDAD },
+    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: [DISPONIBILIDAD, RESERVAS] },
+    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: [DISPONIBILIDAD, RESERVAS] },
     {
       name: "disponibilidad-escritorio",
       use: { ...devices["Desktop Chrome"] },
@@ -43,6 +44,18 @@ export default defineConfig({
       use: { ...devices["Pixel 7"] },
       testMatch: DISPONIBILIDAD,
       dependencies: ["disponibilidad-escritorio"],
+    },
+    {
+      name: "reservas-escritorio",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: RESERVAS,
+      dependencies: ["disponibilidad-celular"],
+    },
+    {
+      name: "reservas-celular",
+      use: { ...devices["Pixel 7"] },
+      testMatch: RESERVAS,
+      dependencies: ["reservas-escritorio"],
     },
   ],
   webServer: [

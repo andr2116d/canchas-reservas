@@ -55,3 +55,13 @@ export function guardarReserva(canchaId: number, fecha: string, hora: string, es
 export function quitarTarifaDe(tipo: "futbol_5" | "futbol_7") {
   return enLaBase((cliente) => cliente.query("DELETE FROM tarifa_de_cancha WHERE tipo_de_cancha = $1", [tipo]));
 }
+
+/** Hace vencer ya la retención de una reserva pendiente de pago, como si hubieran pasado sus 15 minutos. */
+export function vencerReserva(codigo: string) {
+  return enLaBase((cliente) => cliente.query("UPDATE reserva SET vence_en = now() - interval '1 second' WHERE codigo = $1", [codigo]));
+}
+
+/** Pasa una reserva a otro estado, como lo harán el pago o el check-in; la reserva deja de esperar pago. */
+export function cambiarEstadoDeReserva(codigo: string, estado: "confirmada" | "en_juego") {
+  return enLaBase((cliente) => cliente.query("UPDATE reserva SET estado = $2, vence_en = NULL WHERE codigo = $1", [codigo, estado]));
+}
