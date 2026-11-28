@@ -14,6 +14,7 @@ const DISPONIBILIDAD = /pruebas\/disponibilidad\/.*\.spec\.ts/;
 const RESERVAS = /pruebas\/reservas\/.*\.spec\.ts/;
 const AGENDA = /pruebas\/agenda\/.*\.spec\.ts/;
 const VENCIMIENTOS = /pruebas\/vencimientos\/.*\.spec\.ts/;
+const HORARIO_CON_RESERVAS = /pruebas\/horario-con-reservas\/.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./pruebas",
@@ -33,8 +34,8 @@ export default defineConfig({
   // La disponibilidad, las reservas, la agenda y los vencimientos usan y cambian reglas del local entero
   // (horario, tarifas, regla, plazo y canchas): corren al final, una tras otra, en escritorio y celular.
   projects: [
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, VENCIMIENTOS] },
-    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, VENCIMIENTOS] },
+    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, VENCIMIENTOS, HORARIO_CON_RESERVAS] },
+    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, VENCIMIENTOS, HORARIO_CON_RESERVAS] },
     {
       name: "disponibilidad-escritorio",
       use: { ...devices["Desktop Chrome"] },
@@ -82,6 +83,13 @@ export default defineConfig({
       use: { ...devices["Pixel 7"] },
       testMatch: VENCIMIENTOS,
       dependencies: ["vencimientos-escritorio"],
+    },
+    // Cambiar el horario con reservas es de administración, en escritorio: corre una sola vez, al final.
+    {
+      name: "horario-con-reservas",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: HORARIO_CON_RESERVAS,
+      dependencies: ["vencimientos-celular"],
     },
   ],
   webServer: [
