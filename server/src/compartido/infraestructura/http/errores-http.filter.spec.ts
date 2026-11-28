@@ -45,6 +45,8 @@ describe('ErroresHttpFilter', () => {
     expect(enviado).toEqual({
       estado: 400,
       cuerpo: {
+        statusCode: 400,
+        message: 'Revisa los datos marcados.',
         mensaje: 'Revisa los datos marcados.',
         errores: { celular: 'El celular debe empezar con 9.' },
       },
@@ -60,6 +62,8 @@ describe('ErroresHttpFilter', () => {
 
     expect(enviado.estado).toBe(409);
     expect(enviado.cuerpo).toEqual({
+      statusCode: 409,
+      message: 'Ya existe una cuenta con estos datos.',
       mensaje: 'Ya existe una cuenta con estos datos.',
       errores: { correo: 'Ya existe una cuenta con este correo.' },
     });
@@ -68,9 +72,11 @@ describe('ErroresHttpFilter', () => {
   it('conserva el cuerpo en español que arma la validación de entrada', () => {
     const cuerpo = { mensaje: 'Revisa los datos marcados.', errores: {} };
 
-    expect(capturarRespuesta(new BadRequestException(cuerpo)).cuerpo).toEqual(
-      cuerpo,
-    );
+    expect(capturarRespuesta(new BadRequestException(cuerpo)).cuerpo).toEqual({
+      ...cuerpo,
+      statusCode: 400,
+      message: cuerpo.mensaje,
+    });
   });
 
   it('responde 429 con su motivo cuando se supera un límite de cambios', () => {
@@ -78,7 +84,12 @@ describe('ErroresHttpFilter', () => {
       capturarRespuesta(new LimiteExcedidoError('Espera una hora.')),
     ).toEqual({
       estado: 429,
-      cuerpo: { mensaje: 'Espera una hora.', errores: {} },
+      cuerpo: {
+        statusCode: 429,
+        message: 'Espera una hora.',
+        mensaje: 'Espera una hora.',
+        errores: {},
+      },
     });
   });
 
@@ -99,7 +110,7 @@ describe('ErroresHttpFilter', () => {
   ])('traduce %s a un mensaje en español', (error, estado, mensaje) => {
     expect(capturarRespuesta(error)).toEqual({
       estado,
-      cuerpo: { mensaje, errores: {} },
+      cuerpo: { statusCode: estado, message: mensaje, mensaje, errores: {} },
     });
   });
 
@@ -111,6 +122,8 @@ describe('ErroresHttpFilter', () => {
     expect(enviado.estado).toBe(500);
     expect(JSON.stringify(enviado.cuerpo)).not.toContain('ECONNREFUSED');
     expect(enviado.cuerpo).toEqual({
+      statusCode: 500,
+      message: 'Ocurrió un error inesperado. Inténtalo de nuevo.',
       mensaje: 'Ocurrió un error inesperado. Inténtalo de nuevo.',
       errores: {},
     });

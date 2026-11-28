@@ -50,7 +50,8 @@ function estadoDelError(error: DominioError): HttpStatus {
 
 /**
  * Convierte cualquier error en una respuesta en español con la forma
- * `{ mensaje, errores }`. Los errores inesperados se registran y responden 500
+ * `{ statusCode, message, errores }`, con `mensaje` para los clientes existentes.
+ * Los errores inesperados se registran y responden 500
  * sin trazas ni mensajes internos.
  */
 @Catch()
@@ -60,7 +61,9 @@ export class ErroresHttpFilter implements ExceptionFilter {
   catch(error: unknown, host: ArgumentsHost): void {
     const respuesta = host.switchToHttp().getResponse<Response>();
     const [estado, cuerpo] = this.traducir(error);
-    respuesta.status(estado).json(cuerpo);
+    respuesta
+      .status(estado)
+      .json({ ...cuerpo, statusCode: estado, message: cuerpo.mensaje });
   }
 
   private traducir(error: unknown): [number, CuerpoDeError] {

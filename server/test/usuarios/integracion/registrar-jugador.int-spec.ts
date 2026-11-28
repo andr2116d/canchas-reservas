@@ -188,6 +188,8 @@ describe('POST /api/jugadores', () => {
 
       expect(respuesta.status).toBe(400);
       expect(respuesta.body).toEqual({
+        statusCode: 400,
+        message: 'Revisa los datos marcados.',
         mensaje: 'Revisa los datos marcados.',
         errores: {
           numeroDocumento: 'El DNI solo debe contener números.',
