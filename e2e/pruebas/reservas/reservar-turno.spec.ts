@@ -185,7 +185,8 @@ test("50 pedidos a la vez por el mismo turno crean una sola reserva", async ({ b
   const respuestas = await Promise.all(jugadores.map((contexto) => pedirSeparar(contexto.request, turno("Disp Dos", "14:30"))));
 
   const estados = respuestas.map((respuesta) => respuesta.status());
-  expect(estados.filter((estado) => estado === 201)).toHaveLength(1);
+  const cuenta = JSON.stringify(Object.groupBy(estados, (estado) => estado));
+  expect(estados.filter((estado) => estado === 201), cuenta).toHaveLength(1);
   expect(estados.filter((estado) => estado === 409)).toHaveLength(49);
   await Promise.all(jugadores.map((contexto) => contexto.close()));
 });
