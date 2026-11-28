@@ -46,7 +46,7 @@ export interface ReservaSeparada {
 }
 
 export type PedidoDeRecepcion = Omit<PedidoDeReserva, 'adicionales'> & {
-  cobro?: CobroSolicitado;
+  cobro: CobroSolicitado;
 };
 
 export interface DependenciasDeLaReserva extends DependenciasDelTurno {
@@ -101,21 +101,19 @@ export class ReservarTurnoUseCase {
 
   async desdeRecepcion(pedido: PedidoDeRecepcion, creadaPorId: number) {
     const reserva = await this.preparar(pedido);
-    const cobro = pedido.cobro
-      ? validarCobro(pedido.cobro, (monto) => {
-          if (monto.centimos < reserva.adelanto.centimos) {
-            throw new ValorInvalidoError(
-              `El adelanto mínimo es S/ ${reserva.adelanto.enSoles()}.`,
-            );
-          }
-          if (monto.centimos > reserva.precio.centimos) {
-            throw new ValorInvalidoError(
-              `El monto no puede superar el precio total de S/ ${reserva.precio.enSoles()}.`,
-            );
-          }
-        })
-      : undefined;
-    const venceEn = cobro ? null : reserva.venceEn;
+    const cobro = validarCobro(pedido.cobro, (monto) => {
+      if (monto.centimos < reserva.adelanto.centimos) {
+        throw new ValorInvalidoError(
+          `El adelanto mínimo es S/ ${reserva.adelanto.enSoles()}.`,
+        );
+      }
+      if (monto.centimos > reserva.precio.centimos) {
+        throw new ValorInvalidoError(
+          `El monto no puede superar el precio total de S/ ${reserva.precio.enSoles()}.`,
+        );
+      }
+    });
+    const venceEn = null;
     const codigo = await this.guardar({
       ...reserva,
       venceEn,
@@ -127,7 +125,7 @@ export class ReservarTurnoUseCase {
     await this.de.avisos.nuevaReserva(codigo);
     return {
       codigo,
-      estado: cobro ? ('CONFIRMADA' as const) : ('PENDIENTE_DE_PAGO' as const),
+      estado: 'CONFIRMADA' as const,
       venceEn,
       ahora: this.de.reloj.ahora(),
     };

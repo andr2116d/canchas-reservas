@@ -3,28 +3,24 @@
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { ErrorGeneral } from "@/compartido/formulario/error-general";
 import { marcarErroresDelServer } from "@/compartido/formulario/marcar-errores-del-server";
 import type { TurnoElegido } from "@/compartido/sesion/turno-elegido";
 import { CargaDeContenido } from "@/compartido/ui/carga-de-contenido";
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO, TARJETA } from "@/compartido/ui/estilos";
-import { horaEnLima } from "@/compartido/ui/fecha-en-lima";
 import { TextoDeEnvio } from "@/compartido/ui/texto-de-envio";
 import { diaLargo, enSoles } from "@/compartido/ui/textos-del-local";
 import { cobroParaEnviar, esquemaDeCobro, type DatosDeCobro } from "../esquemas/recepcion.schema";
-import { useCuentaRegresiva } from "../hooks/use-cuenta-regresiva";
 import { useResumenDeRecepcion } from "../hooks/use-reserva-en-recepcion";
 import { mensajeDeRecepcion, reservarDesdeRecepcion, type ClienteDeRecepcion, type ReservaDeRecepcion, type ResumenDeRecepcion } from "../servicios/recepcion.api";
-import { tiempoRestante } from "../utilidades/textos-de-la-reserva";
 import { CamposDelCobro } from "./campos-del-cobro";
 import { ElegirCliente, identidad } from "./elegir-cliente";
 import { PlazosDeCancelacion } from "./plazos-de-cancelacion";
 
 function ConfirmarEnRecepcion({ turno, cliente, resumen, alReservar, actualizar }: { turno: TurnoElegido; cliente: ClienteDeRecepcion; resumen: ResumenDeRecepcion; alReservar: (reserva: ReservaDeRecepcion) => void; actualizar: () => void }) {
   const [error, setError] = useState<string>();
-  const formulario = useForm<DatosDeCobro>({ resolver: zodResolver(esquemaDeCobro(resumen.adelanto, resumen.precio)), defaultValues: { cobrar: false, monto: resumen.adelanto, metodo: "", numeroOperacion: "" } });
-  const cobrar = useWatch({ control: formulario.control, name: "cobrar" });
+  const formulario = useForm<DatosDeCobro>({ resolver: zodResolver(esquemaDeCobro(resumen.adelanto, resumen.precio)), defaultValues: { cobrar: true, monto: resumen.adelanto, metodo: "", numeroOperacion: "" } });
   const { isSubmitting } = formulario.formState;
   const enviar = formulario.handleSubmit(async (datos) => {
     setError(undefined);
@@ -55,9 +51,7 @@ function ConfirmarEnRecepcion({ turno, cliente, resumen, alReservar, actualizar 
         </dl>
         <FormProvider {...formulario}>
           <form noValidate onSubmit={enviar} className="flex flex-col gap-4">
-            <label className="flex items-center gap-2 font-semibold"><input type="checkbox" className="accent-botella" {...formulario.register("cobrar")} /> Registrar adelanto</label>
-            {cobrar && <CamposDelCobro />}
-            {!cobrar && <p className="text-sm text-grava">El turno queda pendiente de pago por hasta {resumen.minutosDeRetencion} minutos.</p>}
+            <CamposDelCobro ayuda="Cobra al menos el adelanto mínimo para confirmar la reserva." />
             <ErrorGeneral mensaje={error} />
             <button type="submit" className={`${BOTON_PRINCIPAL} self-start`} disabled={isSubmitting}><TextoDeEnvio enviando={isSubmitting} texto="Confirmar reserva" textoAlEnviar="Guardando…" /></button>
           </form>
@@ -76,15 +70,10 @@ function TurnoDelCliente({ turno, cliente, alReservar }: { turno: TurnoElegido; 
 }
 
 function ReservaRegistrada({ reserva, fecha }: { reserva: ReservaDeRecepcion; fecha: string }) {
-  const segundos = useCuentaRegresiva(reserva.venceEn, reserva.ahora);
-  const estado = reserva.estado === "CONFIRMADA" ? "Reserva confirmada" : segundos === 0 ? "Reserva expirada" : "Reserva pendiente de pago";
   return (
     <section className={`${TARJETA} flex flex-col items-start gap-3`}>
-      <h2 className="font-titular text-3xl font-black text-cancha">{estado}</h2>
+      <h2 className="font-titular text-3xl font-black text-cancha">Reserva confirmada</h2>
       <p>Código de la reserva <strong>{reserva.codigo}</strong></p>
-      {reserva.venceEn && segundos !== undefined && segundos > 0 && (
-        <p className="tabular-nums">Retención restante <strong role="timer" aria-label="Tiempo restante de la reserva">{tiempoRestante(segundos)}</strong> · Hasta las {horaEnLima(reserva.venceEn)}.</p>
-      )}
       <Link href={`/recepcion?fecha=${fecha}`} className={BOTON_PRINCIPAL}>Ir a la agenda</Link>
     </section>
   );

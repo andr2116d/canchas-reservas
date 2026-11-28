@@ -14,7 +14,7 @@ export type ResumenDeRecepcion = Omit<ResumenDeReserva, "adicionales">;
 
 export interface ReservaDeRecepcion {
   codigo: string;
-  estado: "CONFIRMADA" | "PENDIENTE_DE_PAGO";
+  estado: "CONFIRMADA";
   venceEn: string | null;
   ahora: string;
 }

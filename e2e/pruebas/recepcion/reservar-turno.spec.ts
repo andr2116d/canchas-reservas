@@ -1,7 +1,6 @@
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { datosDeReserva } from "../../soporte/base-de-pruebas";
-import { registrarPorApi } from "../../soporte/jugador-de-prueba";
 import { type CanchasDelLocal, fechaDeLima, prepararElLocal } from "../../soporte/local-de-prueba";
 import { abrirElDia, celda, tuTurno } from "../../soporte/mapa-de-prueba";
 import { altaPorRecepcion, buscarDocumento, campo, cobrosDeReserva, datosDeCliente, datosDelAviso, llenarAlta, pedirDesdeRecepcion, reservarPorRecepcion, rutaDeReservaEnRecepcion } from "../../soporte/recepcion-de-prueba";
@@ -129,6 +128,7 @@ test("8. una disputa por el turno deja una sola reserva y avisa que se elija otr
   const otra = await alta();
   const respuestas = await Promise.all([pedirDesdeRecepcion(api(), turno("09:30"), id, efectivo), pedirDesdeRecepcion(api(), turno("09:30"), otra, efectivo)]);
   expect(respuestas.map((respuesta) => respuesta.status()).sort((a, b) => a - b)).toEqual([201, 409]);
+  await campo(pagina, "Método de pago").selectOption("EFECTIVO");
   await pagina.getByRole("button", { name: "Confirmar reserva" }).click();
   await expect(pagina.getByText(/ya no está libre/)).toBeVisible();
 });
@@ -165,33 +165,19 @@ test("11. rechaza adelantos por debajo del mínimo y por encima del total", asyn
 
 test("12. un adelanto válido confirma de inmediato desde la pantalla", async () => {
   await elegirCliente("15:30");
-  await pagina.getByRole("checkbox", { name: "Registrar adelanto" }).check();
   await campo(pagina, "Método de pago").selectOption("EFECTIVO");
   await expect(campo(pagina, "Número de operación")).toHaveCount(0);
   await pagina.getByRole("button", { name: "Confirmar reserva" }).click();
   await expect(pagina.getByRole("heading", { name: "Reserva confirmada" })).toBeVisible();
 });
 
-test("13. sin adelanto la reserva queda pendiente y solo recepción ve el plazo", async ({ browser }) => {
-  const contexto = await browser.newContext();
-  try {
-    const jugador = await registrarPorApi(contexto.request);
-    await elegirCliente("16:30", { ...datosDeCliente(), numeroDocumento: jugador.numeroDocumento, correo: jugador.correo });
-    const guardado = pagina.waitForResponse((r) => r.url().endsWith("/api/recepcion/reservas") && r.request().method() === "POST");
-    await pagina.getByRole("button", { name: "Confirmar reserva" }).click();
-    const { codigo, estado } = await (await guardado).json();
-    expect(estado).toBe("PENDIENTE_DE_PAGO");
-    await expect(pagina.getByRole("timer", { name: "Tiempo restante de la reserva" })).toHaveText(/^(14:\d{2}|15:00)$/);
-    expect(await datosDeReserva(codigo)).toMatchObject({ minutosDeRetencion: 15 });
-    const ficha = await contexto.newPage();
-    await ficha.goto(`/inicio/mis-reservas/${codigo}`);
-    await expect(ficha.getByRole("heading", { name: "Turno separado" })).toBeVisible();
-    await expect(ficha.getByRole("timer")).toHaveCount(0);
-    await pagina.goto(`/recepcion?fecha=${fecha}`);
-    await expect(pagina.getByRole("listitem").filter({ hasText: codigo })).toContainText("Retiene el turno hasta las");
-  } finally {
-    await contexto.close();
-  }
+test("13. sin adelanto no se crea la reserva desde recepción", async () => {
+  const id = await elegirCliente("16:30");
+  const respuesta = await pedirDesdeRecepcion(api(), turno("16:30"), id);
+  expect(respuesta.status()).toBe(400);
+  await pagina.getByRole("button", { name: "Confirmar reserva" }).click();
+  await expect(campo(pagina, "Método de pago")).toBeVisible();
+  await expect(pagina.getByText("Elige el método de pago.")).toBeVisible();
 });
 
 test("14. atribuye el adelanto a la caja de quien lo cobró", async () => {

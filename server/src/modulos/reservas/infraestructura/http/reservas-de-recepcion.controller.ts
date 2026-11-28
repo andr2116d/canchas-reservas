@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsInt,
   IsObject,
-  IsOptional,
+  IsDefined,
   IsString,
   Matches,
   Max,
@@ -36,11 +36,11 @@ class ReservarEnRecepcionDto extends TurnoConMontosDto {
   @Max(MAXIMO_ID, CLIENTE)
   titularId: number;
 
-  @IsOptional()
+  @IsDefined({ message: 'Registra el adelanto para confirmar la reserva.' })
   @IsObject({ message: 'Revisa los datos del cobro.' })
   @ValidateNested()
   @Type(() => CobroDeReservaDto)
-  cobro?: CobroDeReservaDto;
+  cobro: CobroDeReservaDto;
 }
 
 @Controller('recepcion/reservas')

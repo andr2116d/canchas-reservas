@@ -202,10 +202,7 @@ describe('Reservar en recepción', () => {
       },
     });
     expect(await prisma.pago.count()).toBe(0);
-    const pendiente = await reservar(Number(body.cliente.id)).expect(201);
-    expect(pendiente.body).toMatchObject({
-      estado: 'PENDIENTE_DE_PAGO',
-      venceEn: expect.any(String),
-    });
+    await reservar(Number(body.cliente.id)).expect(400);
+    expect(await prisma.reserva.count()).toBe(0);
   });
 });
