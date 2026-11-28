@@ -6,6 +6,7 @@ import { limpiarTablas } from '../../compartido/soporte/limpiar-tablas';
 import {
   sesionDeAdministrador,
   sesionDeJugador,
+  sesionDeRecepcionista,
 } from '../../compartido/soporte/sesiones-de-prueba';
 
 describe('Plazo para pagar el adelanto', () => {
@@ -106,6 +107,20 @@ describe('Plazo para pagar el adelanto', () => {
     await definir().set('Cookie', jugador).expect(403);
     await api().get('/api/plazo-de-pago').set('Cookie', jugador).expect(403);
     await definir().expect(401);
+  });
+
+  it('recepción tampoco lo consulta ni lo define', async () => {
+    const recepcion = await sesionDeRecepcionista(app, administrador);
+
+    await definir().set('Cookie', recepcion).expect(403);
+    await api().get('/api/plazo-de-pago').set('Cookie', recepcion).expect(403);
+  });
+
+  it('texto hostil en los minutos responde 400 sin guardar nada', async () => {
+    for (const minutos of ['30\u0000', '3\u00070', '30\uD800']) {
+      await definir({ minutos }).set('Cookie', administrador).expect(400);
+    }
+    expect(await prisma.plazoDePago.count()).toBe(0);
   });
 
   it('la base también rechaza minutos fuera de rango', async () => {
