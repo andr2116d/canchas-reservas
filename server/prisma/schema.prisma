@@ -69,6 +69,7 @@ model Usuario {
   bloqueosCreados              BloqueoDeCancha[]
   cambiosDeAdicionales         CambioDeAdicional[]
   adelantosGuardados           AdelantoMinimo[]
+  plazosDePagoGuardados        PlazoDePago[]
   reservasComoTitular          Reserva[]            @relation("ReservasComoTitular")
   reservasCreadas              Reserva[]            @relation("ReservasCreadas")
   hojasDeReclamacion           HojaDeReclamacion[]
@@ -387,6 +388,19 @@ model AdelantoMinimo {
 
   @@index([guardadoEn])
   @@map("adelanto_minimo")
+}
+
+/// Cuánto tiempo tiene quien separa un turno para pagar el adelanto. Cada guardado es una versión.
+model PlazoDePago {
+  id            Int      @id @default(autoincrement())
+  /// Minutos enteros, de 1 a 1440.
+  minutos       Int      @db.SmallInt
+  guardadoPorId Int      @map("guardado_por_id")
+  guardadoEn    DateTime @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  guardadoPor   Usuario  @relation(fields: [guardadoPorId], references: [id])
+
+  @@index([guardadoEn])
+  @@map("plazo_de_pago")
 }
 
 /// Etapas en que una reserva ocupa su turno.
