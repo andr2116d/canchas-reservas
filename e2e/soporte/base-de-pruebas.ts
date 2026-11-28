@@ -65,3 +65,23 @@ export function vencerReserva(codigo: string) {
 export function cambiarEstadoDeReserva(codigo: string, estado: "confirmada" | "en_juego") {
   return enLaBase((cliente) => cliente.query("UPDATE reserva SET estado = $2, vence_en = NULL WHERE codigo = $1", [codigo, estado]));
 }
+
+/** Lo que guardó una reserva al crearse, leído directo de la base. */
+export function datosDeReserva(codigo: string) {
+  return enLaBase(async (cliente) => {
+    const { rows } = await cliente.query<{
+      estado: string; canal: string; creadaPorElTitular: boolean; precio: string; porcentaje: number; adelanto: string;
+      reglaId: number; reglaVigenteId: number; minutosDeRetencion: number; adicionales: string[];
+    }>(
+      `SELECT r.estado, r.canal, r.creada_por_id = r.titular_id AS "creadaPorElTitular", r.precio::text AS precio,
+         r.porcentaje_de_adelanto AS porcentaje, r.adelanto::text AS adelanto, r.regla_de_cancelacion_id AS "reglaId",
+         (SELECT id FROM regla_de_cancelacion ORDER BY guardada_en DESC LIMIT 1) AS "reglaVigenteId",
+         round(extract(epoch FROM r.vence_en - r.creado_en) / 60)::int AS "minutosDeRetencion",
+         coalesce(array_agg(a.nombre) FILTER (WHERE a.nombre IS NOT NULL), '{}') AS adicionales
+       FROM reserva r LEFT JOIN adicional_pedido p ON p.reserva_id = r.id LEFT JOIN adicional a ON a.id = p.adicional_id
+       WHERE r.codigo = $1 GROUP BY r.id`,
+      [codigo],
+    );
+    return rows[0];
+  });
+}

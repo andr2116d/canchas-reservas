@@ -5,7 +5,7 @@ const DIA_LARGO = new Intl.DateTimeFormat("es-PE", { weekday: "long", day: "nume
 /** Una fecha `AAAA-MM-DD` como la nombra la tira de días: «sábado, 5 de diciembre». */
 export const diaLargo = (fecha: string) => DIA_LARGO.format(new Date(`${fecha}T00:00:00Z`));
 
-export const mapa = (pagina: Page) => pagina.getByRole("table");
+export const mapa = (pagina: Page) => pagina.getByRole("table", { name: "Mapa de turnos" });
 export const fila = (pagina: Page, hora: string) => mapa(pagina).getByRole("row").filter({ has: pagina.getByRole("rowheader", { name: new RegExp(`^${hora}`) }) });
 export const celda = (pagina: Page, cancha: string, hora: string) => mapa(pagina).getByLabel(new RegExp(`^${cancha}, de ${hora} a`));
 export const tuTurno = (pagina: Page) => pagina.getByRole("complementary", { name: "Tu turno" });
