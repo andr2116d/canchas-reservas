@@ -69,4 +69,51 @@ describe('HorarioSemanal', () => {
     );
     expect(uno.igualA(HorarioSemanal.crear('18:00', new Map()))).toBe(false);
   });
+
+  describe('si atiende un rato de una fecha', () => {
+    // El sábado 28 de noviembre de 2026 abre de 08:00 a 22:00; el domingo 29, cerrado.
+    const horario = HorarioSemanal.crear('18:00', lunesASabado());
+    const hora = (texto: string) =>
+      Number(texto.slice(0, 2)) * 60 + Number(texto.slice(3));
+
+    it.each([
+      {
+        caso: 'dentro de la atención',
+        fecha: '2026-11-28',
+        desde: '19:00',
+        hasta: '20:00',
+        atiende: true,
+      },
+      {
+        caso: 'justo de la apertura al cierre',
+        fecha: '2026-11-28',
+        desde: '08:00',
+        hasta: '22:00',
+        atiende: true,
+      },
+      {
+        caso: 'empieza antes de abrir',
+        fecha: '2026-11-28',
+        desde: '07:30',
+        hasta: '08:30',
+        atiende: false,
+      },
+      {
+        caso: 'termina después de cerrar',
+        fecha: '2026-11-28',
+        desde: '21:30',
+        hasta: '22:30',
+        atiende: false,
+      },
+      {
+        caso: 'el día cierra',
+        fecha: '2026-11-29',
+        desde: '19:00',
+        hasta: '20:00',
+        atiende: false,
+      },
+    ])('$caso', ({ fecha, desde, hasta, atiende }) => {
+      expect(horario.atiende(fecha, hora(desde), hora(hasta))).toBe(atiende);
+    });
+  });
 });

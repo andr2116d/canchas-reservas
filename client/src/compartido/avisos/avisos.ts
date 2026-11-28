@@ -1,7 +1,7 @@
 import { enviarJson, type RespuestaDeLaApi } from "../api/enviar-json";
 import type { Rol } from "../sesion/destino-de-sesion";
 
-export type TipoDeAviso = "NUEVO_RECLAMO" | "RECLAMO_RESPONDIDO" | "NUEVA_RESERVA";
+export type TipoDeAviso = "NUEVO_RECLAMO" | "RECLAMO_RESPONDIDO" | "NUEVA_RESERVA" | "RESERVA_VENCIDA";
 
 export interface Aviso {
   id: number;
@@ -38,6 +38,7 @@ const RESERVAS_DEL_ROL: Record<Rol, string> = {
 /** El texto y el destino de cada tipo de aviso; la API solo manda el tipo y la referencia. */
 export function describirAviso({ tipo, referencia }: Pick<Aviso, "tipo" | "referencia">, rol: Rol): { titulo: string; enlace: string } {
   if (tipo === "NUEVA_RESERVA") return { titulo: `Nueva reserva ${referencia}`, enlace: RESERVAS_DEL_ROL[rol] };
+  if (tipo === "RESERVA_VENCIDA") return { titulo: `Tu reserva ${referencia} venció`, enlace: `/inicio/mis-reservas/${referencia}` };
   if (tipo === "NUEVO_RECLAMO") return { titulo: `Nueva hoja de reclamación ${referencia}`, enlace: `/administracion/reclamos/${referencia}` };
   return { titulo: `Respondimos tu hoja ${referencia}`, enlace: `/inicio/reclamos/${referencia}` };
 }

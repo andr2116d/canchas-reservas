@@ -1,4 +1,5 @@
 import { EnMemoriaHorarioRepository } from '../../../../test/horario/dobles/en-memoria-horario.repository';
+import { ReservasPorJugarDePrueba } from '../../../../test/horario/dobles/reservas-por-jugar-de-prueba';
 import { RelojDePrueba } from '../../../../test/compartido/dobles/reloj-de-prueba';
 import type { ReglaInvalidaError } from '../../../compartido/dominio/dominio.error';
 import { DIAS_DE_LA_SEMANA } from '../dominio/dia-de-la-semana';
@@ -31,7 +32,11 @@ function preparar() {
   return {
     horarios,
     reloj,
-    definir: new DefinirHorarioUseCase(horarios, reloj),
+    definir: new DefinirHorarioUseCase(
+      horarios,
+      new ReservasPorJugarDePrueba(),
+      reloj,
+    ),
     consultar: new ConsultarHorarioUseCase(horarios),
   };
 }

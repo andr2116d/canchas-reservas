@@ -45,4 +45,9 @@ export class DefinirHorarioDto implements DatosDelHorario {
   @ValidateNested({ each: true })
   @Type(() => DiaDelHorarioDto)
   dias: DiaDelHorarioDto[];
+
+  /** Guardar aunque queden reservas fuera del horario nuevo: se respetan. */
+  @IsOptional()
+  @IsBoolean({ message: 'Indica si se confirma el cambio.' })
+  confirmar?: boolean;
 }

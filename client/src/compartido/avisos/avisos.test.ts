@@ -2,13 +2,20 @@ import { describe, expect, it } from "vitest";
 import { describirAviso } from "./avisos";
 
 describe("describirAviso", () => {
-  it("una reserva nueva lleva a recepción a su mapa de turnos y a administración al historial de reservas", () => {
+  it("una reserva nueva lleva a recepción a su agenda y a administración al historial de reservas", () => {
     const aviso = { tipo: "NUEVA_RESERVA", referencia: "7K3Q9X" } as const;
 
     expect(describirAviso(aviso, "RECEPCIONISTA")).toEqual({ titulo: "Nueva reserva 7K3Q9X", enlace: "/recepcion" });
     expect(describirAviso(aviso, "ADMINISTRADOR")).toEqual({
       titulo: "Nueva reserva 7K3Q9X",
       enlace: "/administracion/historial?categoria=RESERVAS",
+    });
+  });
+
+  it("al jugador le avisa que su reserva venció y lo lleva a ella", () => {
+    expect(describirAviso({ tipo: "RESERVA_VENCIDA", referencia: "7K3Q9X" }, "JUGADOR")).toEqual({
+      titulo: "Tu reserva 7K3Q9X venció",
+      enlace: "/inicio/mis-reservas/7K3Q9X",
     });
   });
 

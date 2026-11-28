@@ -11,10 +11,12 @@ import { ConflictoError } from '../../../../compartido/dominio/dominio.error';
 import { Monto } from '../../../../compartido/dominio/monto.value-object';
 import { VersionesLeidas } from '../../../../compartido/infraestructura/prisma/versiones-leidas';
 import { indiceUnicoViolado } from '../../../../compartido/infraestructura/prisma/indice-unico-violado';
+import { llaveForaneaViolada } from '../../../../compartido/infraestructura/prisma/llave-foranea-violada';
 import { PrismaService } from '../../../../compartido/infraestructura/prisma/prisma.service';
 import type { Prisma } from '../../../../generated/prisma/client';
 import { Adicional } from '../../dominio/adicional.entity';
 import { AdicionalNoEncontradoError } from '../../dominio/adicional-no-encontrado.error';
+import { AdicionalUsadoError } from '../../dominio/adicional-usado.error';
 import type {
   AdicionalRepository,
   Autoria,
@@ -126,24 +128,34 @@ export class PrismaAdicionalRepository implements AdicionalRepository {
         });
         if (count === 0) throw await this.porQueNoSeEscribio(tx, adicional);
         await tx.cambioDeAdicional.create({
-          data: { ...this.cambio(adicional, cambio), adicionalId: adicional.id },
+          data: {
+            ...this.cambio(adicional, cambio),
+            adicionalId: adicional.id,
+          },
         });
       })
       .catch(rechazarNombreRepetido(adicional));
     this.versiones.recordar(adicional, version + 1);
   }
 
+  /** Si una reserva lo pidió mientras tanto, la base no deja borrarlo: se pide desactivarlo. */
   async eliminar(adicional: Adicional, autoria: Autoria): Promise<void> {
     const version = this.versiones.de(adicional);
-    await this.prisma.$transaction(async (tx) => {
-      const { count } = await tx.adicional.deleteMany({
-        where: { id: adicional.id, version },
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const { count } = await tx.adicional.deleteMany({
+          where: { id: adicional.id, version },
+        });
+        if (count === 0) throw await this.porQueNoSeEscribio(tx, adicional);
+        await tx.cambioDeAdicional.create({
+          data: this.cambio(adicional, { ...autoria, accion: 'ELIMINACION' }),
+        });
       });
-      if (count === 0) throw await this.porQueNoSeEscribio(tx, adicional);
-      await tx.cambioDeAdicional.create({
-        data: this.cambio(adicional, { ...autoria, accion: 'ELIMINACION' }),
-      });
-    });
+    } catch (error) {
+      if (llaveForaneaViolada(error) === 'adicional_pedido_adicional_id_fkey')
+        throw new AdicionalUsadoError();
+      throw error;
+    }
   }
 
   /** Otro dispositivo lo eliminó o lo cambió entre la lectura y la escritura. */

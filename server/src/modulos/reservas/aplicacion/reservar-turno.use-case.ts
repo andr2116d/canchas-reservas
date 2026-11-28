@@ -4,10 +4,7 @@ import { Monto } from '../../../compartido/dominio/monto.value-object';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
 import { CodigoRepetidoError } from '../dominio/codigo-repetido.error';
 import { MontosCambiaronError } from '../dominio/montos-cambiaron.error';
-import {
-  finDeLaRetencion,
-  MAXIMO_DE_PENDIENTES_DE_PAGO,
-} from '../dominio/reglas-de-la-reserva';
+import { MAXIMO_DE_PENDIENTES_DE_PAGO } from '../dominio/reglas-de-la-reserva';
 import type {
   ReservaNueva,
   ReservaRepository,
@@ -83,9 +80,9 @@ export class ReservarTurnoUseCase {
     await exigirTitularHabilitado(this.de.titulares, pedido.titularId, ahora);
     const elegido = await turnoParaReservar(this.de, pedido);
     exigirMismosMontos(pedido, elegido);
-    const { turno, regla } = elegido;
-    const venceEn = finDeLaRetencion(ahora, turno.inicio);
-    const codigo = await this.guardar({
+    const { turno, regla, plazo } = elegido;
+    const venceEn = plazo.vencimiento(ahora, turno.inicio);
+    const { codigo, expiradas } = await this.guardar({
       canchaId: turno.cancha.id,
       titularId: pedido.titularId,
       creadaPorId: pedido.titularId,
@@ -100,7 +97,12 @@ export class ReservarTurnoUseCase {
       venceEn,
       adicionalIds: await this.adicionalesActivos(pedido.adicionales),
     });
-    await this.de.avisos.nuevaReserva(codigo);
+    await Promise.all([
+      this.de.avisos.nuevaReserva(codigo),
+      ...expiradas.map((vencida) =>
+        this.de.avisos.reservaVencida(vencida.codigo, vencida.titularId),
+      ),
+    ]);
     return { codigo, estado: 'PENDIENTE_DE_PAGO', venceEn };
   }
 
@@ -118,15 +120,16 @@ export class ReservarTurnoUseCase {
       .map((activo) => activo.id);
   }
 
-  private async guardar(datos: Omit<ReservaNueva, 'codigo'>): Promise<string> {
+  /** Guarda con un código nuevo; devuelve el código y las reservas vencidas que expiró. */
+  private async guardar(datos: Omit<ReservaNueva, 'codigo'>) {
     for (let intento = 1; ; intento++) {
       const codigo = this.de.codigos.nuevo();
       try {
-        await this.de.reservas.crear(
+        const expiradas = await this.de.reservas.crear(
           { ...datos, codigo },
           MAXIMO_DE_PENDIENTES_DE_PAGO,
         );
-        return codigo;
+        return { codigo, expiradas };
       } catch (error) {
         const repetido = error instanceof CodigoRepetidoError;
         if (!repetido || intento >= INTENTOS_DE_CODIGO) throw error;

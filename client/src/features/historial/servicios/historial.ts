@@ -1,4 +1,4 @@
-export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS" | "RECLAMOS" | "RESERVAS";
+export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "PLAZO_DE_PAGO" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS" | "RECLAMOS" | "RESERVAS";
 
 export type Accion =
   | "ALTA"
@@ -20,7 +20,8 @@ export type Accion =
   | "CLASIFICACION"
   | "CAMBIO_DE_TIPO"
   | "RESPUESTA"
-  | "SEPARACION";
+  | "SEPARACION"
+  | "EXPIRACION";
 
 export interface LineaDeDetalle {
   campo: string;
@@ -35,7 +36,8 @@ export interface Registro {
   categoria: Categoria;
   accion: Accion;
   importante: boolean;
-  autor: { id: number; nombre: string };
+  /** Sin id cuando lo hizo el sistema, como una reserva que vence. */
+  autor: { id: number | null; nombre: string };
   sujeto: string | null;
   detalle: LineaDeDetalle[];
 }
@@ -60,6 +62,7 @@ export const CATEGORIAS: { valor: Categoria; texto: string }[] = [
   { valor: "HORARIO", texto: "Horario" },
   { valor: "CANCELACION", texto: "Cancelación" },
   { valor: "ADELANTO", texto: "Adelanto" },
+  { valor: "PLAZO_DE_PAGO", texto: "Plazo de pago" },
   { valor: "CANCHAS", texto: "Canchas" },
   { valor: "MANTENIMIENTO", texto: "Mantenimiento" },
   { valor: "ADICIONALES", texto: "Adicionales" },
@@ -89,6 +92,7 @@ export const ACCIONES: { valor: Accion; texto: string }[] = [
   { valor: "CAMBIO_DE_TIPO", texto: "Queja pasada a reclamo" },
   { valor: "RESPUESTA", texto: "Respuesta" },
   { valor: "SEPARACION", texto: "Reserva separada" },
+  { valor: "EXPIRACION", texto: "Reserva vencida" },
 ];
 
 /** Las acciones que puede tener cada categoría, para no ofrecer combinaciones vacías. */
@@ -109,12 +113,13 @@ export const ACCIONES_POR_CATEGORIA: Record<Categoria, Accion[]> = {
   HORARIO: ["ALTA", "EDICION"],
   CANCELACION: ["ALTA", "EDICION"],
   ADELANTO: ["ALTA", "EDICION"],
+  PLAZO_DE_PAGO: ["ALTA", "EDICION"],
   CANCHAS: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],
   MANTENIMIENTO: ["BLOQUEO", "LIBERACION_DE_BLOQUEO", "RETIRO_DE_BLOQUEO"],
   ADICIONALES: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],
   ACCESOS: ["INICIO_DE_SESION"],
   RECLAMOS: ["APERTURA", "CLASIFICACION", "CAMBIO_DE_TIPO", "RESPUESTA"],
-  RESERVAS: ["SEPARACION"],
+  RESERVAS: ["SEPARACION", "EXPIRACION"],
 };
 
 export const TEXTO_DE_CATEGORIA = Object.fromEntries(CATEGORIAS.map(({ valor, texto }) => [valor, texto])) as Record<Categoria, string>;

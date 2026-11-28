@@ -54,6 +54,16 @@ describe('Reservar un turno', () => {
     expect(alLimite.venceEn).toEqual(enLima('2026-11-28', '19:00'));
   });
 
+  it('con el plazo que guardó administración, vence a esos minutos', async () => {
+    const local = prepararReservas();
+    local.plazos.minutos = 30;
+
+    const { venceEn } = await local.reservar.ejecutar(unPedido());
+
+    expect(venceEn).toEqual(enLima('2026-11-27', '10:30'));
+    expect(local.reservas.reservas[0].venceEn).toEqual(venceEn);
+  });
+
   it('no separa un turno que no está libre o que no existe', async () => {
     const { reservar, turnos } = prepararReservas();
     turnos.turnos[0] = unTurnoLibre({ libre: false });
@@ -152,6 +162,26 @@ describe('Reservar un turno', () => {
         TitularNoHabilitadoError,
       );
     }
+  });
+
+  it('al separar un turno cuya reserva anterior venció, la expira y avisa a su titular', async () => {
+    const local = prepararReservas({ codigos: ['PRIMER', 'SEGUND'] });
+    await local.reservar.ejecutar(unPedido());
+    local.titulares.cuentas.set(8, {
+      esJugadorActivo: true,
+      fechaNacimiento: '1990-01-01',
+    });
+    local.reloj.avanzarMinutos(20);
+
+    await local.reservar.ejecutar(unPedido({ titularId: 8 }));
+
+    expect(local.reservas.reservas[0]).toMatchObject({
+      estado: 'EXPIRADA',
+      expiradaEn: local.reloj.ahora(),
+    });
+    expect(local.avisos.vencidas).toEqual([
+      { codigo: 'PRIMER', titularId: JUGADOR },
+    ]);
   });
 
   it('si el código elegido ya existe, separa con otro', async () => {

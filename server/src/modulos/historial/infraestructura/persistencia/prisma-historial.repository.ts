@@ -8,16 +8,18 @@ import { PrismaService } from '../../../../compartido/infraestructura/prisma/pri
 import { Prisma } from '../../../../generated/prisma/client';
 import type { Accion, Categoria } from '../../dominio/categorias-del-historial';
 import type { FiltroDelHistorial } from '../../dominio/filtro-del-historial';
-import type {
-  Autor,
-  HistorialRepository,
-  RegistroGuardado,
+import {
+  type Autor,
+  AUTOR_SISTEMA,
+  type HistorialRepository,
+  type RegistroGuardado,
 } from '../../dominio/historial.repository';
 
 interface FilaDelHistorial {
   id: string;
   ocurrido_en: Date;
-  ejecutado_por_id: number;
+  /** Vacío cuando lo hizo el sistema. */
+  ejecutado_por_id: number | null;
   categoria: Categoria;
   accion: Accion;
   sujeto: string | null;
@@ -67,7 +69,7 @@ export class PrismaHistorialRepository implements HistorialRepository {
     ]);
     const nombres = await this.nombres(
       filas.flatMap((f) =>
-        [f.ejecutado_por_id, f.sujeto_usuario_id ?? []].flat(),
+        [f.ejecutado_por_id ?? [], f.sujeto_usuario_id ?? []].flat(),
       ),
     );
     return {
@@ -77,10 +79,13 @@ export class PrismaHistorialRepository implements HistorialRepository {
         categoria: fila.categoria,
         accion: fila.accion,
         importante: fila.importante,
-        autor: {
-          id: fila.ejecutado_por_id,
-          nombre: nombres.get(fila.ejecutado_por_id)!.nombre,
-        },
+        autor:
+          fila.ejecutado_por_id === null
+            ? AUTOR_SISTEMA
+            : {
+                id: fila.ejecutado_por_id,
+                nombre: nombres.get(fila.ejecutado_por_id)!.nombre,
+              },
         sujeto:
           fila.sujeto_usuario_id === null
             ? fila.sujeto
@@ -93,7 +98,8 @@ export class PrismaHistorialRepository implements HistorialRepository {
 
   async autores(): Promise<Autor[]> {
     const filas = await this.prisma.$queryRaw<{ id: number }[]>`
-      SELECT DISTINCT ejecutado_por_id AS id FROM historial_de_cambios`;
+      SELECT DISTINCT ejecutado_por_id AS id FROM historial_de_cambios
+      WHERE ejecutado_por_id IS NOT NULL`;
     const nombres = await this.nombres(filas.map((f) => f.id));
     return [...nombres.values()]
       .filter((autor): autor is Autor => autor.rol !== 'JUGADOR')

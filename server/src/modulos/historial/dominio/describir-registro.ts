@@ -3,11 +3,12 @@ import {
   detalleDeLaRegla,
   detalleDelAdelanto,
   detalleDelHorario,
+  detalleDelPlazo,
   detalleDeTarifa,
   type RangoDeLaRegla,
   type VersionDeTarifa,
   type VersionDelAdelanto,
-  type VersionDelHorario,
+  type VersionDelPlazo,
   type Versiones,
 } from './detalle-de-configuracion';
 import {
@@ -32,6 +33,7 @@ const SUJETO_FIJO: Partial<Record<Categoria, string>> = {
   HORARIO: 'Horario de atención',
   CANCELACION: 'Regla de cancelación',
   ADELANTO: 'Adelanto mínimo',
+  PLAZO_DE_PAGO: 'Plazo para pagar el adelanto',
 };
 
 function sujetoLegible({
@@ -52,11 +54,15 @@ function lineas({
     case 'TARIFAS':
       return detalleDeTarifa(detalle as Versiones<VersionDeTarifa>);
     case 'HORARIO':
-      return detalleDelHorario(detalle as Versiones<VersionDelHorario>);
+      return detalleDelHorario(
+        detalle as Parameters<typeof detalleDelHorario>[0],
+      );
     case 'CANCELACION':
       return detalleDeLaRegla(detalle as Versiones<RangoDeLaRegla[]>);
     case 'ADELANTO':
       return detalleDelAdelanto(detalle as Versiones<VersionDelAdelanto>);
+    case 'PLAZO_DE_PAGO':
+      return detalleDelPlazo(detalle as Versiones<VersionDelPlazo>);
     case 'CANCHAS':
       return accion === 'EDICION'
         ? detalleDeCancha(detalle as Parameters<typeof detalleDeCancha>[0])

@@ -8,6 +8,10 @@ import {
 import { AvisosModule } from '../avisos/api-avisos';
 import { DisponibilidadModule } from '../disponibilidad/api-disponibilidad';
 import {
+  PlazoDePagoModule,
+  PlazoVigenteUseCase,
+} from '../plazo-de-pago/api-plazo-de-pago';
+import {
   AVISOS_DE_RESERVA,
   type AvisosDeReserva,
 } from './aplicacion/avisos-de-reserva.port';
@@ -21,6 +25,7 @@ import {
 } from './aplicacion/catalogo-de-adicionales.port';
 import { ConsultarAgendaUseCase } from './aplicacion/consultar-agenda.use-case';
 import { ConsultarMiReservaUseCase } from './aplicacion/consultar-mi-reserva.use-case';
+import { ExpirarReservasVencidasUseCase } from './aplicacion/expirar-reservas-vencidas.use-case';
 import {
   GENERADOR_DE_CODIGO,
   type GeneradorDeCodigo,
@@ -53,14 +58,15 @@ import { PrismaCatalogoDeAdicionalesAdapter } from './infraestructura/persistenc
 import { PrismaReservaRepository } from './infraestructura/persistencia/prisma-reserva.repository';
 import { PrismaTitularesAdapter } from './infraestructura/persistencia/prisma-titulares.adapter';
 import { SinPagosAdapter } from './infraestructura/persistencia/sin-pagos.adapter';
+import { VencimientosDeReservasTarea } from './infraestructura/tareas/vencimientos-de-reservas.tarea';
 
 const LO_QUE_SE_OFRECE = Symbol('LO_QUE_SE_OFRECE');
 const REGISTRO = Symbol('REGISTRO_DE_RESERVAS');
 
-/** El turno, la regla de cancelación y el material: lo que se muestra antes de separar. */
+/** El turno, la regla de cancelación, el plazo para pagar y el material: lo que se muestra antes de separar. */
 type LoQueSeOfrece = Pick<
   DependenciasDeLaReserva,
-  'turnos' | 'reglas' | 'catalogo'
+  'turnos' | 'reglas' | 'plazos' | 'catalogo'
 >;
 /** Dónde se guarda, con qué código y a quién se avisa. */
 type Registro = Pick<
@@ -76,9 +82,14 @@ const dependencias = (
 ): DependenciasDeLaReserva => ({ ...ofrece, ...registro, titulares, reloj });
 const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
 
-/** Reservas: el jugador separa un turno y ve la suya; el personal consulta la agenda del día. */
+/** Reservas: el jugador separa un turno y ve la suya, vencen solas y el personal ve la agenda. */
 @Module({
-  imports: [DisponibilidadModule, CancelacionModule, AvisosModule],
+  imports: [
+    DisponibilidadModule,
+    CancelacionModule,
+    PlazoDePagoModule,
+    AvisosModule,
+  ],
   controllers: [ReservasController, AgendaController],
   providers: [
     { provide: TURNOS_DEL_LOCAL, useClass: MapaTurnosDelLocalAdapter },
@@ -97,11 +108,13 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
       useFactory: (
         turnos: TurnosDelLocal,
         reglas: ReglaDeCancelacionRepository,
+        plazos: PlazoVigenteUseCase,
         catalogo: CatalogoDeAdicionales,
-      ): LoQueSeOfrece => ({ turnos, reglas, catalogo }),
+      ): LoQueSeOfrece => ({ turnos, reglas, plazos, catalogo }),
       inject: [
         TURNOS_DEL_LOCAL,
         REGLA_DE_CANCELACION_REPOSITORY,
+        PlazoVigenteUseCase,
         CATALOGO_DE_ADICIONALES,
       ],
     },
@@ -132,6 +145,16 @@ const INYECTADAS = [LO_QUE_SE_OFRECE, REGISTRO, TITULARES, RELOJ];
         new ConsultarMiReservaUseCase(reservas, reloj),
       inject: [RESERVA_REPOSITORY, RELOJ],
     },
+    {
+      provide: ExpirarReservasVencidasUseCase,
+      useFactory: (
+        reservas: ReservaRepository,
+        avisos: AvisosDeReserva,
+        reloj: Reloj,
+      ) => new ExpirarReservasVencidasUseCase(reservas, avisos, reloj),
+      inject: [RESERVA_REPOSITORY, AVISOS_DE_RESERVA, RELOJ],
+    },
+    VencimientosDeReservasTarea,
     {
       provide: ConsultarAgendaUseCase,
       useFactory: (

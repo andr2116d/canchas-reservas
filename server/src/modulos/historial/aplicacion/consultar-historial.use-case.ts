@@ -6,6 +6,7 @@ import {
 } from '../dominio/filtro-del-historial';
 import type {
   Autor,
+  AutorDelRegistro,
   HistorialRepository,
 } from '../dominio/historial.repository';
 import type { LineaDeDetalle } from '../dominio/linea-de-detalle';
@@ -17,7 +18,7 @@ export interface VistaDeRegistro {
   categoria: Categoria;
   accion: Accion;
   importante: boolean;
-  autor: { id: number; nombre: string };
+  autor: AutorDelRegistro;
   sujeto: string | null;
   detalle: LineaDeDetalle[];
 }

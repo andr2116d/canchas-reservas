@@ -20,6 +20,7 @@ const PERMISOS_POR_ROL = {
     'horario:gestionar',
     'cancelacion:gestionar',
     'adelanto:gestionar',
+    'plazo-de-pago:gestionar',
     'canchas:gestionar',
     'adicionales:gestionar',
     'historial:consultar',

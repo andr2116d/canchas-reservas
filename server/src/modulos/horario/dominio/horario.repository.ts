@@ -17,10 +17,14 @@ export interface HorarioRepository {
   /** Versiones guardadas, de la más reciente a la más antigua. */
   historial(): Promise<VersionDeHorario[]>;
 
-  /** Agrega una versión solo si cambia algo, sin duplicar con guardados simultáneos. */
+  /**
+   * Agrega una versión solo si cambia algo, sin duplicar con guardados simultáneos. Anota
+   * los códigos de las reservas que quedaron fuera y se respetan.
+   */
   guardarSiCambia(
     horario: HorarioSemanal,
     guardadoPorId: number,
     guardadoEn: Date,
+    reservasFueraDeHorario: string[],
   ): Promise<{ cambio: boolean; version: VersionDeHorario }>;
 }

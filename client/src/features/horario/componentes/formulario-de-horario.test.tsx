@@ -129,4 +129,53 @@ describe("FormularioDeHorario", () => {
     expect(await screen.findByText("No pudimos conectar con La Previa. Inténtalo de nuevo.")).toBeInTheDocument();
     expect(chip("lunes")).toHaveAttribute("aria-pressed", "false");
   });
+
+  describe("si el horario nuevo deja reservas fuera", () => {
+    const FUERA = {
+      tipo: "reservas-fuera",
+      mensaje: "Hay reservas que quedan fuera del nuevo horario. No se anulan: avisa a cada cliente y confirma para guardar igual.",
+      reservas: [
+        { codigo: "7K3Q9X", cancha: "Cancha 1", fecha: "2026-11-28", desde: "19:00", hasta: "20:00", estado: "CONFIRMADA", titular: "Lucía Ramos Vega", celular: "987654321" },
+      ],
+    } as const;
+
+    it("no guarda todavía: muestra cada reserva con su cliente para avisarle", async () => {
+      vi.mocked(guardarHorario).mockResolvedValue(FUERA);
+      mostrar();
+
+      await userEvent.click(screen.getByRole("button", { name: "Guardar horario" }));
+
+      const aviso = await screen.findByRole("region", { name: "1 reserva queda fuera del nuevo horario" });
+      expect(aviso).toHaveTextContent("No se anulan: el local las atiende igual. Avisa a cada cliente antes de guardar.");
+      const fila = within(aviso).getByRole("listitem");
+      expect(fila).toHaveTextContent("sábado, 28 de noviembre · 19:00–20:00 · Cancha 1");
+      expect(fila).toHaveTextContent("Lucía Ramos Vega");
+      expect(within(fila).getByRole("link", { name: "987 654 321" })).toHaveAttribute("href", "tel:+51987654321");
+      expect(fila).toHaveTextContent("7K3Q9X");
+      expect(navegar.refresh).not.toHaveBeenCalled();
+    });
+
+    it("guardar igual vuelve a enviar con la confirmación y respeta las reservas", async () => {
+      vi.mocked(guardarHorario).mockResolvedValueOnce(FUERA).mockResolvedValueOnce({ tipo: "guardado", cambio: true });
+      mostrar();
+      await userEvent.click(screen.getByRole("button", { name: "Guardar horario" }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Guardar igual y respetar estas reservas" }));
+
+      expect(vi.mocked(guardarHorario).mock.calls[1][1]).toBe(true);
+      expect(await screen.findByRole("status")).toHaveTextContent("Horario guardado.");
+      expect(screen.queryByRole("region", { name: /queda fuera/ })).not.toBeInTheDocument();
+    });
+
+    it("revisar el horario cierra el aviso sin guardar", async () => {
+      vi.mocked(guardarHorario).mockResolvedValue(FUERA);
+      mostrar();
+      await userEvent.click(screen.getByRole("button", { name: "Guardar horario" }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Revisar el horario" }));
+
+      expect(screen.queryByRole("region", { name: /queda fuera/ })).not.toBeInTheDocument();
+      expect(guardarHorario).toHaveBeenCalledTimes(1);
+    });
+  });
 });

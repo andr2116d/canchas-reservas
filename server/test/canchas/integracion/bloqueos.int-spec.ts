@@ -1,6 +1,5 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import { fechaEnLima } from '../../../src/compartido/dominio/momento-en-lima';
 import type { PrismaService } from '../../../src/compartido/infraestructura/prisma/prisma.service';
 import { RESERVAS_DE_CANCHA } from '../../../src/modulos/canchas/aplicacion/reservas-de-cancha.port';
 import { ReservasDeCanchaDePrueba } from '../dobles/reservas-de-cancha-de-prueba';
@@ -8,12 +7,9 @@ import { unBloqueoValido } from '../fabricas/datos-bloqueo';
 import { unaCanchaValida } from '../fabricas/datos-cancha';
 import { crearAppDePrueba } from '../../compartido/soporte/crear-app-de-prueba';
 import { limpiarTablas } from '../../compartido/soporte/limpiar-tablas';
+import { dentroDe } from '../../compartido/soporte/fechas-de-prueba';
 import { sesionDeAdministrador } from '../../compartido/soporte/sesiones-de-prueba';
 
-const MS_POR_DIA = 24 * 60 * 60 * 1000;
-/** Fecha de Lima dentro de tantos días, para que el bloqueo siempre sea futuro. */
-const dentroDe = (dias: number) =>
-  fechaEnLima(new Date(Date.now() + dias * MS_POR_DIA));
 const enTresDias = (cambios = {}) =>
   unBloqueoValido({
     desdeFecha: dentroDe(3),
