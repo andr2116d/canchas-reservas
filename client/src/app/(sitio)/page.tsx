@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { consultarElClub } from "@/compartido/club/servicios/club.servidor";
+import { sesionDeLaVisita } from "@/compartido/sesion/sesion.servidor";
 import { CargaDeContenido } from "@/compartido/ui/carga-de-contenido";
 import { MapaDeTurnos } from "@/features/disponibilidad/componentes/mapa-de-turnos";
 import { ProximosTurnos } from "@/features/disponibilidad/componentes/proximos-turnos";
+import { contextoDeLaVisita } from "@/features/disponibilidad/utilidades/contexto-de-la-visita";
 import { CanchasDelClub } from "@/features/portada/componentes/canchas-del-club";
 import { ComoReservar } from "@/features/portada/componentes/como-reservar";
 import { ContactoDelClub } from "@/features/portada/componentes/contacto-del-club";
@@ -12,9 +14,9 @@ import { Presentacion } from "@/features/portada/componentes/presentacion";
 import { Promesas } from "@/features/portada/componentes/promesas";
 import { SeccionDeLaPortada } from "@/features/portada/componentes/seccion-de-la-portada";
 
-/** Las secciones que dependen de lo que guardó administración: canchas, precios, reglas y horario. */
+/** Las secciones que dependen de lo que guardó administración; el mapa deja reservar si entra un jugador. */
 async function SeccionesDelClub() {
-  const club = await consultarElClub();
+  const [club, sesion] = await Promise.all([consultarElClub(), sesionDeLaVisita()]);
   return (
     <>
       <Promesas adelanto={club.adelanto} />
@@ -25,7 +27,7 @@ async function SeccionesDelClub() {
         <PreciosDelClub tarifas={club.tarifas} horario={club.horario} adelanto={club.adelanto} />
       </SeccionDeLaPortada>
       <SeccionDeLaPortada id="turnos" antetitulo="En vivo" titulo="Turnos libres." bajada="Elige el día y toca un turno libre. Para mirar no necesitas cuenta." conFranjas>
-        <MapaDeTurnos contexto="publico" />
+        <MapaDeTurnos contexto={contextoDeLaVisita(sesion)} />
       </SeccionDeLaPortada>
       <SeccionDeLaPortada id="como-reservar" antetitulo="Cómo reservar" titulo="De la previa al pitazo.">
         <ComoReservar />
