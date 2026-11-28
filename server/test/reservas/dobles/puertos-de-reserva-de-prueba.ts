@@ -40,12 +40,18 @@ export class CodigosDePrueba implements GeneradorDeCodigo {
   }
 }
 
-/** Guarda los códigos de las reservas avisadas. */
+/** Guarda las reservas avisadas: las nuevas al personal y las vencidas a su titular. */
 export class AvisosDeReservaDePrueba implements AvisosDeReserva {
   readonly nuevas: string[] = [];
+  readonly vencidas: { codigo: string; titularId: number }[] = [];
 
   nuevaReserva(codigo: string): Promise<void> {
     this.nuevas.push(codigo);
+    return Promise.resolve();
+  }
+
+  reservaVencida(codigo: string, titularId: number): Promise<void> {
+    this.vencidas.push({ codigo, titularId });
     return Promise.resolve();
   }
 }

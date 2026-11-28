@@ -164,6 +164,26 @@ describe('Reservar un turno', () => {
     }
   });
 
+  it('al separar un turno cuya reserva anterior venció, la expira y avisa a su titular', async () => {
+    const local = prepararReservas({ codigos: ['PRIMER', 'SEGUND'] });
+    await local.reservar.ejecutar(unPedido());
+    local.titulares.cuentas.set(8, {
+      esJugadorActivo: true,
+      fechaNacimiento: '1990-01-01',
+    });
+    local.reloj.avanzarMinutos(20);
+
+    await local.reservar.ejecutar(unPedido({ titularId: 8 }));
+
+    expect(local.reservas.reservas[0]).toMatchObject({
+      estado: 'EXPIRADA',
+      expiradaEn: local.reloj.ahora(),
+    });
+    expect(local.avisos.vencidas).toEqual([
+      { codigo: 'PRIMER', titularId: JUGADOR },
+    ]);
+  });
+
   it('si el código elegido ya existe, separa con otro', async () => {
     const { reservar, reservas } = prepararReservas({
       codigos: ['AAAAAA', 'AAAAAA', 'BBBBBB'],

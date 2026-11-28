@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { leerLimiteGeneral } from './compartido/infraestructura/configuracion/configuracion';
 import { CompartidoModule } from './compartido/compartido.module';
 import { AdelantoModule } from './modulos/adelanto/adelanto.module';
@@ -30,6 +31,7 @@ const LIMITE_GENERAL = {
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([LIMITE_GENERAL]),
+    ScheduleModule.forRoot(),
     CompartidoModule,
     CorreoModule,
     UsuariosModule,
