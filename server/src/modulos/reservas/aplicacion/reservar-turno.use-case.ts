@@ -2,6 +2,11 @@ import type { Reloj } from '../../../compartido/aplicacion/reloj.port';
 import { ConflictoError } from '../../../compartido/dominio/dominio.error';
 import { Monto } from '../../../compartido/dominio/monto.value-object';
 import { validarCampos } from '../../../compartido/dominio/validar-campos';
+import { ValorInvalidoError } from '../../../compartido/dominio/valor-invalido.error';
+import {
+  type CobroSolicitado,
+  validarCobro,
+} from '../dominio/cobro-de-reserva';
 import { CodigoRepetidoError } from '../dominio/codigo-repetido.error';
 import { MontosCambiaronError } from '../dominio/montos-cambiaron.error';
 import { MAXIMO_DE_PENDIENTES_DE_PAGO } from '../dominio/reglas-de-la-reserva';
@@ -37,6 +42,10 @@ export interface ReservaSeparada {
   venceEn: Date;
 }
 
+export type PedidoDeRecepcion = Omit<PedidoDeReserva, 'adicionales'> & {
+  cobro: CobroSolicitado;
+};
+
 export interface DependenciasDeLaReserva extends DependenciasDelTurno {
   catalogo: CatalogoDeAdicionales;
   titulares: Titulares;
@@ -48,7 +57,7 @@ export interface DependenciasDeLaReserva extends DependenciasDelTurno {
 
 /** Los montos que vio la persona deben ser los vigentes: el precio no cambia al confirmar. */
 function exigirMismosMontos(
-  pedido: PedidoDeReserva,
+  pedido: Pick<PedidoDeReserva, 'precio' | 'adelanto'>,
   { turno }: TurnoParaReservar,
 ): void {
   const vistos = validarCampos({
@@ -76,34 +85,77 @@ export class ReservarTurnoUseCase {
   constructor(private readonly de: DependenciasDeLaReserva) {}
 
   async ejecutar(pedido: PedidoDeReserva): Promise<ReservaSeparada> {
+    const reserva = await this.preparar(pedido);
+    const { codigo, expiradas } = await this.guardar({
+      ...reserva,
+      creadaPorId: pedido.titularId,
+      canal: 'WEB',
+      adicionalIds: await this.adicionalesActivos(pedido.adicionales),
+    });
+    await this.avisar(codigo, expiradas);
+    return { codigo, estado: 'PENDIENTE_DE_PAGO', venceEn: reserva.venceEn };
+  }
+
+  async desdeRecepcion(pedido: PedidoDeRecepcion, creadaPorId: number) {
+    const reserva = await this.preparar(pedido);
+    const cobro = validarCobro(pedido.cobro, (monto) => {
+      if (monto.centimos < reserva.adelanto.centimos) {
+        throw new ValorInvalidoError(
+          `El adelanto mínimo es S/ ${reserva.adelanto.enSoles()}.`,
+        );
+      }
+      if (monto.centimos > reserva.precio.centimos) {
+        throw new ValorInvalidoError(
+          `El monto no puede superar el precio total de S/ ${reserva.precio.enSoles()}.`,
+        );
+      }
+    });
+    const venceEn = null;
+    const { codigo, expiradas } = await this.guardar({
+      ...reserva,
+      venceEn,
+      cobro,
+      creadaPorId,
+      canal: 'RECEPCION',
+      adicionalIds: [],
+    });
+    await this.avisar(codigo, expiradas);
+    return {
+      codigo,
+      estado: 'CONFIRMADA' as const,
+      venceEn,
+      ahora: this.de.reloj.ahora(),
+    };
+  }
+
+  private async preparar(pedido: Omit<PedidoDeReserva, 'adicionales'>) {
     const ahora = this.de.reloj.ahora();
     await exigirTitularHabilitado(this.de.titulares, pedido.titularId, ahora);
     const elegido = await turnoParaReservar(this.de, pedido);
     exigirMismosMontos(pedido, elegido);
     const { turno, regla, plazo } = elegido;
     const venceEn = plazo.vencimiento(ahora, turno.inicio);
-    const { codigo, expiradas } = await this.guardar({
+    return {
       canchaId: turno.cancha.id,
       titularId: pedido.titularId,
-      creadaPorId: pedido.titularId,
       inicio: turno.inicio,
       fin: turno.fin,
       precio: Monto.crear(turno.precio),
       porcentajeDeAdelanto: turno.adelanto.porcentaje,
       adelanto: Monto.crear(turno.adelanto.monto),
       reglaDeCancelacionId: regla.id,
-      canal: 'WEB',
       creadaEn: ahora,
       venceEn,
-      adicionalIds: await this.adicionalesActivos(pedido.adicionales),
-    });
+    };
+  }
+
+  private async avisar(codigo: string, expiradas: { codigo: string; titularId: number }[]) {
     await Promise.all([
       this.de.avisos.nuevaReserva(codigo),
       ...expiradas.map((vencida) =>
         this.de.avisos.reservaVencida(vencida.codigo, vencida.titularId),
       ),
     ]);
-    return { codigo, estado: 'PENDIENTE_DE_PAGO', venceEn };
   }
 
   /** Los pedidos sin repetir y en el orden del catálogo; uno inactivo o inexistente se rechaza. */

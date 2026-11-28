@@ -11,6 +11,9 @@ const TITULO_DEL_ESTADO: Record<MiReserva["estado"], string> = {
   CONFIRMADA: "Reserva confirmada",
   EN_JUEGO: "En juego",
   EXPIRADA: "La reserva venció",
+  CANCELADA: "Reserva cancelada",
+  AUSENTE: "Ausente",
+  FINALIZADA: "Reserva finalizada",
 };
 
 function Codigo({ codigo }: { codigo: string }) {

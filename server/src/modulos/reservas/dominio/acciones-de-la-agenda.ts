@@ -12,6 +12,9 @@ const ACCIONES_POR_ESTADO: Record<EstadoDeReserva, AccionDeLaAgenda[]> = {
   CONFIRMADA: ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
   EN_JUEGO: ['FINALIZAR'],
   EXPIRADA: [],
+  CANCELADA: [],
+  AUSENTE: [],
+  FINALIZADA: [],
 };
 
 /** Lo que el estado de la reserva permite hacer desde la agenda. */

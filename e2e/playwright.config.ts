@@ -13,6 +13,7 @@ baseDePruebas.pathname = `${baseDePruebas.pathname.replace(/_pruebas$/, "")}_pru
 const DISPONIBILIDAD = /pruebas\/disponibilidad\/.*\.spec\.ts/;
 const RESERVAS = /pruebas\/reservas\/.*\.spec\.ts/;
 const AGENDA = /pruebas\/agenda\/.*\.spec\.ts/;
+const RECEPCION = /pruebas\/recepcion\/.*\.spec\.ts/;
 const VENCIMIENTOS = /pruebas\/vencimientos\/.*\.spec\.ts/;
 const HORARIO_CON_RESERVAS = /pruebas\/horario-con-reservas\/.*\.spec\.ts/;
 
@@ -34,8 +35,8 @@ export default defineConfig({
   // La disponibilidad, las reservas, la agenda y los vencimientos usan y cambian reglas del local entero
   // (horario, tarifas, regla, plazo y canchas): corren al final, una tras otra, en escritorio y celular.
   projects: [
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, VENCIMIENTOS, HORARIO_CON_RESERVAS] },
-    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, VENCIMIENTOS, HORARIO_CON_RESERVAS] },
+    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, RECEPCION, VENCIMIENTOS, HORARIO_CON_RESERVAS] },
+    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, RECEPCION, VENCIMIENTOS, HORARIO_CON_RESERVAS] },
     {
       name: "disponibilidad-escritorio",
       use: { ...devices["Desktop Chrome"] },
@@ -73,10 +74,26 @@ export default defineConfig({
       dependencies: ["agenda-escritorio"],
     },
     {
+      name: "recepcion-escritorio",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: RECEPCION,
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ["agenda-celular"],
+    },
+    {
+      name: "recepcion-celular",
+      use: { ...devices["Pixel 7"] },
+      testMatch: RECEPCION,
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ["recepcion-escritorio"],
+    },
+    {
       name: "vencimientos-escritorio",
       use: { ...devices["Desktop Chrome"] },
       testMatch: VENCIMIENTOS,
-      dependencies: ["agenda-celular"],
+      dependencies: ["recepcion-celular"],
     },
     {
       name: "vencimientos-celular",

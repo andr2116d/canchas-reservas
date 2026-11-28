@@ -18,9 +18,13 @@ describe("leerFiltros", () => {
     ["cancha=abc"],
     ["cancha=0"],
     ["cancha=99999999999"],
-    ["estado=CANCELADA"],
+    ["estado=DESCONOCIDA"],
   ])("ignora lo que no pasaría los topes de la API: %s", (direccion) => {
     expect(leerFiltros(new URLSearchParams(direccion))).toEqual({});
+  });
+
+  it.each(["CANCELADA", "AUSENTE", "FINALIZADA"])("reconoce el estado %s", (estado) => {
+    expect(leerFiltros(new URLSearchParams({ estado }))).toEqual({ estado });
   });
 });
 

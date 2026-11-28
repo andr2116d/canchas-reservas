@@ -1,6 +1,7 @@
 import type { Monto } from '../../../compartido/dominio/monto.value-object';
 import type { TipoDeCancha } from '../../../compartido/dominio/tipo-de-cancha';
 import type { EstadoDeReserva } from '../dominio/reserva.repository';
+import type { VentanaDeLlegada } from '../../adelanto/api-adelanto';
 
 export const AGENDA_DEL_LOCAL = Symbol('AGENDA_DEL_LOCAL');
 
@@ -18,6 +19,7 @@ export interface ReservaDeLaAgenda {
   inicio: Date;
   fin: Date;
   venceEn: Date | null;
+  ventanaDeLlegada?: VentanaDeLlegada | null;
   cancha: CanchaDeLaAgenda;
   precio: Monto;
   adelanto: Monto;

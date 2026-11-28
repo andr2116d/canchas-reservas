@@ -21,6 +21,7 @@ import type {
 import {
   aEntidad,
   aFilaNueva,
+  hashDeCelular,
   hashDeCorreo,
   hashDeDocumento,
 } from './usuario.mapper';
@@ -195,7 +196,10 @@ function columnasPropias(datos: DatosPropios, cifrador: Cifrador) {
       correoCifrado: cifrar(datos.correo.direccion),
       correoHash: hashDeCorreo(datos.correo, cifrador),
     }),
-    ...(datos.celular && { celularCifrado: cifrar(datos.celular.numero) }),
+    ...(datos.celular && {
+      celularCifrado: cifrar(datos.celular.numero),
+      celularHash: hashDeCelular(datos.celular, cifrador),
+    }),
     ...(datos.dorsal !== undefined && { dorsal: datos.dorsal?.numero ?? null }),
   };
 }

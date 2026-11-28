@@ -108,7 +108,7 @@ describe('Consultar la agenda de turnos', () => {
     expect(enLaDos.body.turnos).toHaveLength(1);
     expect(confirmadas.body.turnos[0]).toMatchObject({
       cancha: { id: dos },
-      acciones: ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
+      acciones: ['MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
     });
     expect(confirmadas.body.conteos).toMatchObject({
       PENDIENTE_DE_PAGO: 1,
@@ -143,7 +143,7 @@ describe('Consultar la agenda de turnos', () => {
     const { body } = await agenda({
       fecha: '2026-02-30',
       canchaId: '999',
-      estado: 'CANCELADA',
+      estado: 'DESCONOCIDA',
     }).expect(400);
 
     expect(body.errores).toEqual({

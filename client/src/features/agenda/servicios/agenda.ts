@@ -1,6 +1,6 @@
 import type { TipoDeCancha } from "@/compartido/canchas/tipo-de-cancha";
 
-export const ESTADOS_DE_RESERVA = ["PENDIENTE_DE_PAGO", "PENDIENTE_DE_VALIDACION", "CONFIRMADA", "EN_JUEGO", "EXPIRADA"] as const;
+export const ESTADOS_DE_RESERVA = ["PENDIENTE_DE_PAGO", "PENDIENTE_DE_VALIDACION", "CONFIRMADA", "EN_JUEGO", "EXPIRADA", "CANCELADA", "AUSENTE", "FINALIZADA"] as const;
 export type EstadoDeReserva = (typeof ESTADOS_DE_RESERVA)[number];
 
 /** Cómo llama el personal a cada estado: distingue lo que falta pagar de lo que falta validar. */
@@ -10,6 +10,9 @@ export const NOMBRE_DEL_ESTADO: Record<EstadoDeReserva, string> = {
   CONFIRMADA: "Confirmada",
   EN_JUEGO: "En juego",
   EXPIRADA: "Expirada",
+  CANCELADA: "Cancelada",
+  AUSENTE: "Ausente",
+  FINALIZADA: "Finalizada",
 };
 
 export type AccionDeLaAgenda = "CHECK_IN" | "MARCAR_AUSENTE" | "FINALIZAR" | "CANCELAR" | "REUBICAR";

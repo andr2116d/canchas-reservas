@@ -142,12 +142,18 @@ type FilaDeAcceso = Prisma.UsuarioGetPayload<{
 function aCredenciales(
   fila: FilaDeAcceso | null,
 ): CredencialesGuardadas | undefined {
-  if (!fila) return undefined;
-  const { id, contrasenaTemporalVenceEn, datosConfirmadosEn, ...credenciales } =
-    fila;
+  if (!fila?.contrasenaHash) return undefined;
+  const {
+    id,
+    contrasenaHash,
+    contrasenaTemporalVenceEn,
+    datosConfirmadosEn,
+    ...credenciales
+  } = fila;
   return {
     usuarioId: id,
     ...credenciales,
+    contrasenaHash,
     contrasenaTemporalVenceEn: contrasenaTemporalVenceEn ?? undefined,
     requiereCompletarDatos: debeCompletarDatos(fila.rol, datosConfirmadosEn),
   };

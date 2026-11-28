@@ -1,4 +1,4 @@
-export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "PLAZO_DE_PAGO" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS" | "RECLAMOS" | "RESERVAS";
+export type Categoria = "CUENTAS" | "TARIFAS" | "HORARIO" | "CANCELACION" | "ADELANTO" | "PLAZO_DE_PAGO" | "VENTANA_DE_LLEGADA" | "CANCHAS" | "MANTENIMIENTO" | "ADICIONALES" | "ACCESOS" | "RECLAMOS" | "RESERVAS";
 
 export type Accion =
   | "ALTA"
@@ -21,6 +21,7 @@ export type Accion =
   | "CAMBIO_DE_TIPO"
   | "RESPUESTA"
   | "SEPARACION"
+  | "CHECK_IN"
   | "EXPIRACION";
 
 export interface LineaDeDetalle {
@@ -69,6 +70,7 @@ export const CATEGORIAS: { valor: Categoria; texto: string }[] = [
   { valor: "ACCESOS", texto: "Accesos" },
   { valor: "RECLAMOS", texto: "Reclamos" },
   { valor: "RESERVAS", texto: "Reservas" },
+  { valor: "VENTANA_DE_LLEGADA", texto: "Ventana de llegada" },
 ];
 
 export const ACCIONES: { valor: Accion; texto: string }[] = [
@@ -92,6 +94,7 @@ export const ACCIONES: { valor: Accion; texto: string }[] = [
   { valor: "CAMBIO_DE_TIPO", texto: "Queja pasada a reclamo" },
   { valor: "RESPUESTA", texto: "Respuesta" },
   { valor: "SEPARACION", texto: "Reserva separada" },
+  { valor: "CHECK_IN", texto: "Check-in" },
   { valor: "EXPIRACION", texto: "Reserva vencida" },
 ];
 
@@ -119,7 +122,8 @@ export const ACCIONES_POR_CATEGORIA: Record<Categoria, Accion[]> = {
   ADICIONALES: ["ALTA", "EDICION", "DESACTIVACION", "REACTIVACION", "ELIMINACION"],
   ACCESOS: ["INICIO_DE_SESION"],
   RECLAMOS: ["APERTURA", "CLASIFICACION", "CAMBIO_DE_TIPO", "RESPUESTA"],
-  RESERVAS: ["SEPARACION", "EXPIRACION"],
+  RESERVAS: ["SEPARACION", "CHECK_IN", "EXPIRACION"],
+  VENTANA_DE_LLEGADA: ["ALTA", "EDICION"],
 };
 
 export const TEXTO_DE_CATEGORIA = Object.fromEntries(CATEGORIAS.map(({ valor, texto }) => [valor, texto])) as Record<Categoria, string>;

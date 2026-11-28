@@ -9,7 +9,9 @@ export interface ProcesoDeLaAgenda {
  * Dónde se hace cada acción. La agenda solo enlaza: la lógica vive en su proceso.
  * Una acción aparece en la agenda cuando su proceso se agrega aquí.
  */
-export const PROCESOS_DE_LA_AGENDA: Partial<Record<AccionDeLaAgenda, ProcesoDeLaAgenda>> = {};
+export const PROCESOS_DE_LA_AGENDA: Partial<Record<AccionDeLaAgenda, ProcesoDeLaAgenda>> = {
+  CHECK_IN: { texto: "Hacer check-in", ruta: (codigo) => `/recepcion/reservas/${encodeURIComponent(codigo)}/check-in` },
+};
 
 /** Los procesos que el estado permite y que ya existen, en el orden que dio el server. */
 export function procesosDisponibles(acciones: AccionDeLaAgenda[]): ProcesoDeLaAgenda[] {

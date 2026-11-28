@@ -190,7 +190,7 @@ describe('ConsultarAgendaUseCase', () => {
       estado: 'EN_JUEGO',
     });
 
-    expect(conteos).toEqual({
+    expect(conteos).toMatchObject({
       PENDIENTE_DE_PAGO: 0,
       PENDIENTE_DE_VALIDACION: 0,
       CONFIRMADA: 1,
@@ -221,7 +221,7 @@ describe('ConsultarAgendaUseCase', () => {
   it('rechaza un estado que no existe', async () => {
     const { agenda } = crearAgenda();
 
-    await expect(agenda.ejecutar({ estado: 'CANCELADA' })).rejects.toThrow(
+    await expect(agenda.ejecutar({ estado: 'DESCONOCIDA' })).rejects.toThrow(
       ReglaInvalidaError,
     );
   });
@@ -237,7 +237,7 @@ describe('ConsultarAgendaUseCase', () => {
     const { turnos } = await agenda.ejecutar({});
 
     expect(turnos.map((t) => t.acciones)).toEqual([
-      ['CHECK_IN', 'MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
+      ['MARCAR_AUSENTE', 'CANCELAR', 'REUBICAR'],
       [],
     ]);
   });

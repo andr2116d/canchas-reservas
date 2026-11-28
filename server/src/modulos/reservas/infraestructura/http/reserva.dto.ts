@@ -32,7 +32,7 @@ export class ResumenDeReservaDto {
 }
 
 /** Cuerpo de `POST /api/reservas`: el turno, los montos que se mostraron y el material pedido. */
-export class SepararTurnoDto {
+export class TurnoConMontosDto {
   @IsInt(CANCHA)
   @Min(1, CANCHA)
   @Max(MAXIMO_ID, CANCHA)
@@ -53,7 +53,9 @@ export class SepararTurnoDto {
   @IsString(MONTO)
   @MaxLength(12, MONTO)
   adelanto: string;
+}
 
+export class SepararTurnoDto extends TurnoConMontosDto {
   @IsArray(MATERIAL)
   @ArrayMaxSize(20, MATERIAL)
   @IsInt({ each: true, ...MATERIAL })

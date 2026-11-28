@@ -97,6 +97,31 @@ describe('Permisos de sesión', () => {
     );
   });
 
+  it.each(['ADMINISTRADOR', 'RECEPCIONISTA', 'JUGADOR'] as const)(
+    'solo recepción puede reservar en mostrador (%s)',
+    (rol) => {
+      expect(
+        puedeAcceder(
+          { rol, requiereCambiarContrasena: false },
+          'reservas:gestionar-en-recepcion',
+        ),
+      ).toBe(rol === 'RECEPCIONISTA');
+    },
+  );
+
+  it.each(['ADMINISTRADOR', 'RECEPCIONISTA', 'JUGADOR'] as const)(
+    'el permiso para configurar la llegada es independiente del check-in (%s)',
+    (rol) => {
+      const acceso = { rol, requiereCambiarContrasena: false };
+      expect(puedeAcceder(acceso, 'ventana-de-llegada:gestionar')).toBe(
+        rol === 'ADMINISTRADOR',
+      );
+      expect(puedeAcceder(acceso, 'reservas:hacer-check-in')).toBe(
+        rol === 'RECEPCIONISTA',
+      );
+    },
+  );
+
   it('ignora la omisión si la contraseña ya no es temporal', () => {
     expect(
       puedeAcceder(

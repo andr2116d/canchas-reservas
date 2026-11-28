@@ -2,10 +2,12 @@ import type { EstadoQueOcupa } from '../../../compartido/dominio/reserva-que-ocu
 import type { Monto } from '../../../compartido/dominio/monto.value-object';
 import type { TipoDeCancha } from '../../../compartido/dominio/tipo-de-cancha';
 import type { RangoDeCancelacion } from '../../cancelacion/api-cancelacion';
+import type { CobroDeReserva } from './cobro-de-reserva';
 
 export const RESERVA_REPOSITORY = Symbol('RESERVA_REPOSITORY');
 
-export type EstadoDeReserva = EstadoQueOcupa | 'EXPIRADA';
+export type EstadoDeReserva =
+  EstadoQueOcupa | 'EXPIRADA' | 'CANCELADA' | 'AUSENTE' | 'FINALIZADA';
 
 /** Una reserva por guardar, con los montos y la regla de su momento. */
 export interface ReservaNueva {
@@ -19,9 +21,10 @@ export interface ReservaNueva {
   porcentajeDeAdelanto: number;
   adelanto: Monto;
   reglaDeCancelacionId: number;
-  canal: 'WEB';
+  canal: 'WEB' | 'RECEPCION';
   creadaEn: Date;
-  venceEn: Date;
+  venceEn: Date | null;
+  cobro?: CobroDeReserva;
   adicionalIds: number[];
 }
 
@@ -36,6 +39,7 @@ export interface ReservaGuardada {
   porcentajeDeAdelanto: number;
   adelanto: Monto;
   venceEn: Date | null;
+  canal?: ReservaNueva['canal'];
   creadaEn: Date;
   /** Los rangos de la regla de cancelación que regía al crearla. */
   rangos: RangoDeCancelacion[];

@@ -35,6 +35,10 @@ export interface VersionDelAdelanto {
   porcentaje: number;
 }
 
+export interface VersionDeVentana {
+  minutosAntes: number;
+  minutosDespues: number;
+}
 export interface VersionDelPlazo {
   minutos: number;
 }
@@ -43,6 +47,20 @@ export interface VersionDelPlazo {
 export interface Versiones<T> {
   antes: T | null;
   despues: T;
+}
+
+export function detalleDeVentana({
+  antes,
+  despues,
+}: Versiones<VersionDeVentana>): LineaDeDetalle[] {
+  return lineasQueCambian(
+    [
+      ['Minutos antes', (version) => String(version.minutosAntes)],
+      ['Minutos después', (version) => String(version.minutosDespues)],
+    ],
+    antes,
+    despues,
+  );
 }
 
 const CAMPOS_DE_TARIFA: [string, (t: VersionDeTarifa) => string][] = [

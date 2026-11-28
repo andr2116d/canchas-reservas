@@ -24,6 +24,10 @@ export function hashDeCorreo(correo: Correo, cifrador: Cifrador): string {
   return cifrador.hashParaBuscar(correo.direccion);
 }
 
+export function hashDeCelular(celular: Celular, cifrador: Cifrador): string {
+  return cifrador.hashParaBuscar(`celular:${celular.numero}`);
+}
+
 /** Datos personales que se guardan cifrados, con los hashes para buscarlos. */
 export type DatosPersonalesDeCuenta = Pick<
   Usuario,
@@ -37,7 +41,7 @@ export type DatosPersonalesDeCuenta = Pick<
 
 /** Columnas de los datos personales, cada uno cifrado. */
 export function aColumnasPersonales(
-  datos: DatosPersonalesDeCuenta,
+  datos: Omit<DatosPersonalesDeCuenta, 'correo'> & { correo?: Correo },
   cifrador: Cifrador,
 ) {
   return {
@@ -50,9 +54,10 @@ export function aColumnasPersonales(
       datos.documento && cifrador.cifrar(datos.documento.numero),
     documentoHash:
       datos.documento && hashDeDocumento(datos.documento, cifrador),
-    correoCifrado: cifrador.cifrar(datos.correo.direccion),
-    correoHash: hashDeCorreo(datos.correo, cifrador),
+    correoCifrado: datos.correo && cifrador.cifrar(datos.correo.direccion),
+    correoHash: datos.correo && hashDeCorreo(datos.correo, cifrador),
     celularCifrado: datos.celular && cifrador.cifrar(datos.celular.numero),
+    celularHash: datos.celular && hashDeCelular(datos.celular, cifrador),
   };
 }
 
@@ -73,7 +78,11 @@ export function aFilaNueva(
 }
 
 /** Reconstruye el usuario de una fila guardada, descifrando sus datos personales. */
-export function aEntidad(fila: FilaUsuario, cifrador: Cifrador): Usuario {
+export function aEntidad(
+  fila: FilaUsuario,
+  cifrador: Cifrador,
+): Usuario | undefined {
+  if (!fila.correoCifrado || !fila.contrasenaHash) return undefined;
   const descifrar = (valor: string) => cifrador.descifrar(valor);
   return Usuario.restaurar({
     id: fila.id,

@@ -50,7 +50,7 @@ function QueHacer({ contexto, fecha, elegido }: { contexto: ContextoDelMapa; fec
       </div>
     );
   }
-  return <p className="rounded-xl bg-tiza px-3 py-2 text-sm text-grava">Pronto podrás crear la reserva desde aquí.</p>;
+  return <Link href={conElTurno("/recepcion/disponibilidad/reservar", elegidoEnLaDireccion)} className={BOTON_PRINCIPAL}>Reservar {cancha.nombre} · {turno.desde}–{turno.hasta}</Link>;
 }
 
 function Detalle({ fecha, porcentaje, elegido }: { fecha: string; porcentaje: number | null; elegido: TurnoParaMostrar }) {

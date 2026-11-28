@@ -17,16 +17,19 @@ import { FormularioDeHorario } from "@/features/horario/componentes/formulario-d
 import { TarifasDelLocal } from "@/features/tarifas/componentes/tarifas-del-local";
 import { TurnosDelDia } from "@/features/tarifas/componentes/turnos-del-dia";
 import { consultarTarifas } from "@/features/tarifas/servicios/tarifas.servidor";
+import { TarjetaDeVentanaDeLlegada } from "@/features/ventana-de-llegada/componentes/tarjeta-de-ventana-de-llegada";
+import { consultarVentanaDeLlegada } from "@/features/ventana-de-llegada/servicios/ventana-de-llegada.servidor";
 
 export const metadata: Metadata = { title: "Reglas de reserva · La Previa" };
 
 /** Horario, tarifas y cancelación en pestañas; al costado, la vista previa de la pestaña elegida. */
 async function ReglasDeReserva() {
-  const [horario, { tarifas }, regla, adelanto, plazo] = await Promise.all([
+  const [horario, { tarifas }, regla, adelanto, ventana, plazo] = await Promise.all([
     consultarHorario(),
     consultarTarifas(),
     consultarRegla(),
     consultarAdelanto(),
+    consultarVentanaDeLlegada(),
     consultarPlazo(),
   ]);
   return (
@@ -34,7 +37,12 @@ async function ReglasDeReserva() {
       <ProveedorDeLaRegla>
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="min-w-0">
-            <PanelDePestana pestana="horario"><FormularioDeHorario consultado={horario} /></PanelDePestana>
+            <PanelDePestana pestana="horario">
+              <div className="flex flex-col gap-6">
+                <FormularioDeHorario consultado={horario} />
+                <TarjetaDeVentanaDeLlegada consultada={ventana} />
+              </div>
+            </PanelDePestana>
             <PanelDePestana pestana="tarifas">
               <div className="flex flex-col gap-6">
                 <TarifasDelLocal tarifas={tarifas} />

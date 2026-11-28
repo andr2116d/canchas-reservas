@@ -44,6 +44,12 @@ import { LimiteDeInicios } from './infraestructura/http/limite-de-inicios';
 import { PrismaAccesoRepository } from './infraestructura/persistencia/prisma-acceso.repository';
 import { PrismaUsuarioRepository } from './infraestructura/persistencia/prisma-usuario.repository';
 import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/argon2-hasheador-contrasena.adapter';
+import {
+  CLIENTES_DE_RECEPCION,
+  ClientesDeRecepcionUseCase,
+} from './aplicacion/clientes-de-recepcion.use-case';
+import { ClientesDeRecepcionController } from './infraestructura/http/clientes-de-recepcion.controller';
+import { PrismaClientesDeRecepcionAdapter } from './infraestructura/persistencia/prisma-clientes-de-recepcion.adapter';
 
 /** Cuentas de usuario: registro de jugadores y consulta de la propia cuenta. */
 @Module({
@@ -56,11 +62,17 @@ import { Argon2HasheadorContrasenaAdapter } from './infraestructura/seguridad/ar
     InicioDeSesionController,
     RecepcionistasController,
     CuentaDeRecepcionistaController,
+    ClientesDeRecepcionController,
   ],
   exports: [RegistrarPersonalUseCase],
   providers: [
     ...PROVIDERS_DE_RECEPCIONISTAS,
     LimiteDeInicios,
+    ClientesDeRecepcionUseCase,
+    {
+      provide: CLIENTES_DE_RECEPCION,
+      useClass: PrismaClientesDeRecepcionAdapter,
+    },
     Argon2HasheadorContrasenaAdapter,
     { provide: ACCESO_REPOSITORY, useClass: PrismaAccesoRepository },
     { provide: USUARIO_REPOSITORY, useClass: PrismaUsuarioRepository },

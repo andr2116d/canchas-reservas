@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
 import { Client } from 'pg';
 import { urlBaseDePruebas } from './url-base-de-pruebas';
 
@@ -27,7 +28,12 @@ async function recrearBase(url: URL): Promise<void> {
 export default async function prepararBaseDePruebas(): Promise<void> {
   const url = urlBaseDePruebas();
   await recrearBase(new URL(url));
-  execFileSync('npx', ['prisma', 'migrate', 'deploy'], {
+  const prisma = join(
+    dirname(require.resolve('prisma/package.json')),
+    'build',
+    'index.js',
+  );
+  execFileSync(process.execPath, [prisma, 'migrate', 'deploy'], {
     env: { ...process.env, DATABASE_URL: url },
     stdio: 'ignore',
   });

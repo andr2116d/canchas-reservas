@@ -58,7 +58,7 @@ export class ConsultarMiReservaUseCase {
       precio: reserva.precio.enSoles(),
       adelanto: reserva.adelanto.enSoles(),
       porcentajeDeAdelanto: reserva.porcentajeDeAdelanto,
-      venceEn: reserva.venceEn,
+      venceEn: reserva.canal === 'RECEPCION' ? null : reserva.venceEn,
       ahora,
       plazos: ReglaDeCancelacion.restaurar(reserva.rangos).plazosPara(
         reserva.inicio,

@@ -165,6 +165,9 @@ describe('POST /api/recepcionistas', () => {
       const respuesta = await crear().set('Cookie', administrador).expect(409);
 
       expect(respuesta.body).toEqual({
+        statusCode: 409,
+        message:
+          'Esta persona ya tuvo una cuenta de recepción. Reactívala para recuperar sus datos.',
         mensaje:
           'Esta persona ya tuvo una cuenta de recepción. Reactívala para recuperar sus datos.',
         errores: {},

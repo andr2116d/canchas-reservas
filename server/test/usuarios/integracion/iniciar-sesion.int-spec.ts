@@ -106,6 +106,8 @@ describe('Inicio de sesión y autorización por rol', () => {
 
     expect([inexistente.status, incorrecta.status]).toEqual([401, 401]);
     expect(inexistente.body).toEqual({
+      statusCode: 401,
+      message: 'Correo o contraseña incorrectos.',
       mensaje: 'Correo o contraseña incorrectos.',
       errores: {},
     });
@@ -202,6 +204,8 @@ describe('Inicio de sesión y autorización por rol', () => {
         .set('Cookie', renovada)
         .expect(403);
       expect(rechazo.body).toEqual({
+        statusCode: 403,
+        message: 'Esta cuenta no tiene permiso para hacer esto.',
         mensaje: 'Esta cuenta no tiene permiso para hacer esto.',
         errores: {},
       });

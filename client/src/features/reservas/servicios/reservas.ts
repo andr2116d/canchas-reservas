@@ -36,7 +36,7 @@ export interface ResumenDeReserva {
   adicionales: AdicionalOfrecido[];
 }
 
-export type EstadoDeReserva = "PENDIENTE_DE_PAGO" | "PENDIENTE_DE_VALIDACION" | "CONFIRMADA" | "EN_JUEGO" | "EXPIRADA";
+export type EstadoDeReserva = "PENDIENTE_DE_PAGO" | "PENDIENTE_DE_VALIDACION" | "CONFIRMADA" | "EN_JUEGO" | "EXPIRADA" | "CANCELADA" | "AUSENTE" | "FINALIZADA";
 
 /** Una reserva propia, con la hora del server para medir cuánto falta. */
 export interface MiReserva {

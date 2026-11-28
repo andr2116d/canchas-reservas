@@ -32,52 +32,60 @@ enum EstadoUsuario {
 }
 
 model Usuario {
-  id                           Int                  @id @default(autoincrement())
-  nombresCifrado               String               @map("nombres_cifrado")
-  apellidosCifrado             String               @map("apellidos_cifrado")
-  fechaNacimientoCifrada       String?              @map("fecha_nacimiento_cifrada")
-  dorsal                       Int?                 @db.SmallInt
-  tipoDocumento                TipoDocumento?       @map("tipo_documento")
-  numeroDocumentoCifrado       String?              @map("numero_documento_cifrado")
-  documentoHash                String?              @map("documento_hash")
-  correoCifrado                String               @map("correo_cifrado")
-  correoHash                   String               @unique @map("correo_hash")
-  celularCifrado               String?              @map("celular_cifrado")
-  contrasenaHash               String               @map("contrasena_hash")
-  rol                          RolUsuario
-  estado                       EstadoUsuario
-  creadoEn                     DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
-  actualizadoEn                DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz(3)
-  versionLegalAceptada         String?              @map("version_legal_aceptada")
-  aceptacionLegalEn            DateTime?            @map("aceptacion_legal_en") @db.Timestamptz(3)
-  canalAceptacionLegal         String?              @map("canal_aceptacion_legal")
-  sesiones                     Sesion[]
-  requiereCambiarContrasena    Boolean              @default(false) @map("requiere_cambiar_contrasena")
+  id                              Int                  @id @default(autoincrement())
+  nombresCifrado                  String               @map("nombres_cifrado")
+  apellidosCifrado                String               @map("apellidos_cifrado")
+  fechaNacimientoCifrada          String?              @map("fecha_nacimiento_cifrada")
+  dorsal                          Int?                 @db.SmallInt
+  tipoDocumento                   TipoDocumento?       @map("tipo_documento")
+  numeroDocumentoCifrado          String?              @map("numero_documento_cifrado")
+  documentoHash                   String?              @map("documento_hash")
+  correoCifrado                   String?              @map("correo_cifrado")
+  correoHash                      String?              @unique @map("correo_hash")
+  celularCifrado                  String?              @map("celular_cifrado")
+  celularHash                     String?              @map("celular_hash")
+  contrasenaHash                  String?              @map("contrasena_hash")
+  rol                             RolUsuario
+  estado                          EstadoUsuario
+  creadoEn                        DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn                   DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  versionLegalAceptada            String?              @map("version_legal_aceptada")
+  aceptacionLegalEn               DateTime?            @map("aceptacion_legal_en") @db.Timestamptz(3)
+  canalAceptacionLegal            String?              @map("canal_aceptacion_legal")
+  avisoDePrivacidadInformadoPorId Int?                 @map("aviso_de_privacidad_informado_por_id")
+  avisoDePrivacidadInformadoPor   Usuario?             @relation("AvisosDePrivacidadInformados", fields: [avisoDePrivacidadInformadoPorId], references: [id])
+  avisosDePrivacidadInformados    Usuario[]            @relation("AvisosDePrivacidadInformados")
+  sesiones                        Sesion[]
+  requiereCambiarContrasena       Boolean              @default(false) @map("requiere_cambiar_contrasena")
   /// Hasta cuándo sirve la contraseña temporal; vacío si la contraseña ya no es temporal.
-  contrasenaTemporalVenceEn    DateTime?            @map("contrasena_temporal_vence_en") @db.Timestamptz(3)
+  contrasenaTemporalVenceEn       DateTime?            @map("contrasena_temporal_vence_en") @db.Timestamptz(3)
   /// Cuándo la persona del personal completó o confirmó sus datos; vacío hasta su primer ingreso.
-  datosConfirmadosEn           DateTime?            @map("datos_confirmados_en") @db.Timestamptz(3)
+  datosConfirmadosEn              DateTime?            @map("datos_confirmados_en") @db.Timestamptz(3)
   /// Cuándo pasó de DNI a carné de extranjería o al revés: solo se permite una vez.
-  documentoCambiadoEn          DateTime?            @map("documento_cambiado_en") @db.Timestamptz(3)
-  accesos                      RegistroAcceso[]
-  accionesRecibidas            RegistroAuditoria[]  @relation("AccionesRecibidas")
-  accionesEjecutadas           RegistroAuditoria[]  @relation("AccionesEjecutadas")
-  tarifasGuardadas             TarifaDeCancha[]
-  horariosGuardados            HorarioDeAtencion[]
-  reglasDeCancelacionGuardadas ReglaDeCancelacion[]
-  cambiosDeCanchas             CambioDeCancha[]
-  bloqueosCreados              BloqueoDeCancha[]
-  cambiosDeAdicionales         CambioDeAdicional[]
-  adelantosGuardados           AdelantoMinimo[]
-  plazosDePagoGuardados        PlazoDePago[]
-  reservasComoTitular          Reserva[]            @relation("ReservasComoTitular")
-  reservasCreadas              Reserva[]            @relation("ReservasCreadas")
-  hojasDeReclamacion           HojaDeReclamacion[]
-  hojasRespondidas             HojaDeReclamacion[]  @relation("HojasRespondidas")
-  cambiosDeHojas               CambioDeHoja[]
-  avisos                       Aviso[]
+  documentoCambiadoEn             DateTime?            @map("documento_cambiado_en") @db.Timestamptz(3)
+  accesos                         RegistroAcceso[]
+  accionesRecibidas               RegistroAuditoria[]  @relation("AccionesRecibidas")
+  accionesEjecutadas              RegistroAuditoria[]  @relation("AccionesEjecutadas")
+  tarifasGuardadas                TarifaDeCancha[]
+  horariosGuardados               HorarioDeAtencion[]
+  reglasDeCancelacionGuardadas    ReglaDeCancelacion[]
+  cambiosDeCanchas                CambioDeCancha[]
+  bloqueosCreados                 BloqueoDeCancha[]
+  cambiosDeAdicionales            CambioDeAdicional[]
+  adelantosGuardados              AdelantoMinimo[]
+  plazosDePagoGuardados           PlazoDePago[]
+  reservasComoTitular             Reserva[]            @relation("ReservasComoTitular")
+  reservasCreadas                 Reserva[]            @relation("ReservasCreadas")
+  pagosRegistrados                Pago[]
+  ventanasDeLlegadaGuardadas      VentanaDeLlegada[]
+  checkInsRegistrados             Reserva[]            @relation("CheckInsRegistrados")
+  hojasDeReclamacion              HojaDeReclamacion[]
+  hojasRespondidas                HojaDeReclamacion[]  @relation("HojasRespondidas")
+  cambiosDeHojas                  CambioDeHoja[]
+  avisos                          Aviso[]
 
   @@unique([documentoHash, rol])
+  @@index([rol, celularHash])
   @@map("usuario")
 }
 
@@ -392,6 +400,19 @@ model AdelantoMinimo {
   @@map("adelanto_minimo")
 }
 
+/// Versiones de la ventana de llegada asignadas a las reservas nuevas.
+model VentanaDeLlegada {
+  id             Int       @id @default(autoincrement())
+  minutosAntes   Int       @map("minutos_antes") @db.SmallInt
+  minutosDespues Int       @map("minutos_despues") @db.SmallInt
+  guardadoPorId  Int       @map("guardado_por_id")
+  guardadoEn     DateTime  @default(now()) @map("guardado_en") @db.Timestamptz(3)
+  guardadoPor    Usuario   @relation(fields: [guardadoPorId], references: [id])
+  reservas       Reserva[]
+
+  @@index([guardadoEn])
+  @@map("ventana_de_llegada")
+}
 /// Cuánto tiempo tiene quien separa un turno para pagar el adelanto. Cada guardado es una versión.
 model PlazoDePago {
   id            Int      @id @default(autoincrement())
@@ -413,13 +434,17 @@ enum EstadoDeReserva {
   EN_JUEGO                @map("en_juego")
   /// Venció sin pago: ya no ocupa el turno.
   EXPIRADA                @map("expirada")
+  CANCELADA               @map("cancelada")
+  AUSENTE                 @map("ausente")
+  FINALIZADA              @map("finalizada")
 
   @@map("estado_de_reserva")
 }
 
 /// Por dónde se creó la reserva.
 enum CanalDeReserva {
-  WEB @map("web")
+  WEB       @map("web")
+  RECEPCION @map("recepcion")
 
   @@map("canal_de_reserva")
 }
@@ -440,10 +465,13 @@ model Reserva {
   adelanto             Decimal            @db.Decimal(10, 2)
   /// La regla de cancelación vigente al crearla.
   reglaDeCancelacionId Int                @map("regla_de_cancelacion_id")
+  ventanaDeLlegadaId   Int?               @map("ventana_de_llegada_id")
   canal                CanalDeReserva
   creadaPorId          Int                @map("creada_por_id")
   /// Hasta cuándo retiene el turno sin pago; vacío si ya no espera pago.
   venceEn              DateTime?          @map("vence_en") @db.Timestamptz(3)
+  checkInEn            DateTime?          @map("check_in_en") @db.Timestamptz(3)
+  checkInPorId         Int?               @map("check_in_por_id")
   /// Cuándo pasó a expirada por vencer sin pago; vacío si no expiró.
   expiradaEn           DateTime?          @map("expirada_en") @db.Timestamptz(3)
   creadoEn             DateTime           @default(now()) @map("creado_en") @db.Timestamptz(3)
@@ -452,12 +480,48 @@ model Reserva {
   titular              Usuario            @relation("ReservasComoTitular", fields: [titularId], references: [id])
   creadaPor            Usuario            @relation("ReservasCreadas", fields: [creadaPorId], references: [id])
   reglaDeCancelacion   ReglaDeCancelacion @relation(fields: [reglaDeCancelacionId], references: [id])
+  ventanaDeLlegada     VentanaDeLlegada?  @relation(fields: [ventanaDeLlegadaId], references: [id], onDelete: Restrict)
+  checkInPor           Usuario?           @relation("CheckInsRegistrados", fields: [checkInPorId], references: [id], onDelete: Restrict)
   adicionalesPedidos   AdicionalPedido[]
+  pagos                Pago[]
 
   @@index([canchaId, inicio])
   @@index([inicio])
   @@index([titularId, estado])
   @@map("reserva")
+}
+
+enum MetodoDePago {
+  EFECTIVO @map("efectivo")
+  YAPE     @map("yape")
+  PLIN     @map("plin")
+
+  @@map("metodo_de_pago")
+}
+
+enum ConceptoDePago {
+  ADELANTO @map("adelanto")
+  SALDO    @map("saldo")
+
+  @@map("concepto_de_pago")
+}
+
+/// Cobro efectuado en recepción y atribuible a la caja de quien lo registró.
+model Pago {
+  id              Int            @id @default(autoincrement())
+  reservaId       Int            @map("reserva_id")
+  concepto        ConceptoDePago
+  monto           Decimal        @db.Decimal(10, 2)
+  metodo          MetodoDePago
+  numeroOperacion String?        @unique @map("numero_operacion")
+  registradoPorId Int            @map("registrado_por_id")
+  registradoEn    DateTime       @map("registrado_en") @db.Timestamptz(3)
+  reserva         Reserva        @relation(fields: [reservaId], references: [id])
+  registradoPor   Usuario        @relation(fields: [registradoPorId], references: [id])
+
+  @@index([reservaId])
+  @@index([registradoPorId, registradoEn])
+  @@map("pago")
 }
 
 /// Material que el jugador pidió que le tengan listo. No es un cobro.
