@@ -7,7 +7,7 @@ function urlDePruebas(): string {
   return base.toString();
 }
 
-async function enLaBase<T>(trabajo: (cliente: Client) => Promise<T>): Promise<T> {
+export async function enLaBase<T>(trabajo: (cliente: Client) => Promise<T>): Promise<T> {
   const cliente = new Client({ connectionString: urlDePruebas() });
   await cliente.connect();
   try {

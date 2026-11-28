@@ -13,6 +13,7 @@ baseDePruebas.pathname = `${baseDePruebas.pathname.replace(/_pruebas$/, "")}_pru
 const DISPONIBILIDAD = /pruebas\/disponibilidad\/.*\.spec\.ts/;
 const RESERVAS = /pruebas\/reservas\/.*\.spec\.ts/;
 const AGENDA = /pruebas\/agenda\/.*\.spec\.ts/;
+const RECEPCION = /pruebas\/recepcion\/.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./pruebas",
@@ -32,8 +33,8 @@ export default defineConfig({
   // La disponibilidad, las reservas y la agenda usan y cambian el horario, las tarifas, la regla y las
   // canchas, que son del local entero: corren al final, una tras otra, en escritorio y en celular.
   projects: [
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA] },
-    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA] },
+    { name: "escritorio", use: { ...devices["Desktop Chrome"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, RECEPCION] },
+    { name: "celular", use: { ...devices["Pixel 7"] }, testIgnore: [DISPONIBILIDAD, RESERVAS, AGENDA, RECEPCION] },
     {
       name: "disponibilidad-escritorio",
       use: { ...devices["Desktop Chrome"] },
@@ -69,6 +70,22 @@ export default defineConfig({
       use: { ...devices["Pixel 7"] },
       testMatch: AGENDA,
       dependencies: ["agenda-escritorio"],
+    },
+    {
+      name: "recepcion-escritorio",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: RECEPCION,
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ["agenda-celular"],
+    },
+    {
+      name: "recepcion-celular",
+      use: { ...devices["Pixel 7"] },
+      testMatch: RECEPCION,
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ["recepcion-escritorio"],
     },
   ],
   webServer: [
