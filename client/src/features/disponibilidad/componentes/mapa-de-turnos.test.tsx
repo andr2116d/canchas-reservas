@@ -38,7 +38,7 @@ describe("MapaDeTurnos", () => {
   it("dice el estado de cada turno y solo deja elegir los libres", async () => {
     mostrar();
 
-    await screen.findByRole("table");
+    await screen.findByRole("table", { name: "Mapa de turnos" });
     expect(within(fila("17:00")).getByLabelText(/Cancha 2, de 17:00 a 18:00: pendiente/)).toBeInTheDocument();
     expect(within(fila("19:00")).getByText("Mantenimiento")).toBeInTheDocument();
     expect(within(fila("20:00")).getByText("Ocupado")).toBeInTheDocument();
